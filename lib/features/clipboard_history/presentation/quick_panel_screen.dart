@@ -47,7 +47,8 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
     final items = ref.read(historyControllerProvider).visibleItems;
     if (items.isEmpty) return;
     setState(() {
-      _selectedIndex = (_selectedIndex + direction).clamp(0, items.length - 1);
+      _selectedIndex =
+          (_selectedIndex + direction).clamp(0, items.length - 1).toInt();
     });
     ref
         .read(historyControllerProvider.notifier)
