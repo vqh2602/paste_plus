@@ -686,37 +686,41 @@ class _HistoryPane extends ConsumerWidget {
             ],
           ),
         ),
-        SizedBox(
-          height: 43,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 22),
-            children: [
-              _FilterPill(
-                label: 'Tất cả',
-                selected: state.typeFilter == null,
-                onPressed: () => ref
-                    .read(historyControllerProvider.notifier)
-                    .filterByType(null),
-              ),
-              for (final entry in const {
-                ClipboardContentType.text: 'Văn bản',
-                ClipboardContentType.url: 'Liên kết',
-                ClipboardContentType.code: 'Code',
-                ClipboardContentType.image: 'Hình ảnh',
-                ClipboardContentType.file: 'Tệp',
-              }.entries)
+        if (state.section == HistorySection.all ||
+            state.section == HistorySection.pinned ||
+            state.section == HistorySection.collection) ...[
+          SizedBox(
+            height: 43,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 22),
+              children: [
                 _FilterPill(
-                  label: entry.value,
-                  selected: state.typeFilter == entry.key,
+                  label: 'Tất cả',
+                  selected: state.typeFilter == null,
                   onPressed: () => ref
                       .read(historyControllerProvider.notifier)
-                      .filterByType(entry.key),
+                      .filterByType(null),
                 ),
-            ],
+                for (final entry in const {
+                  ClipboardContentType.text: 'Văn bản',
+                  ClipboardContentType.url: 'Liên kết',
+                  ClipboardContentType.code: 'Code',
+                  ClipboardContentType.image: 'Hình ảnh',
+                  ClipboardContentType.file: 'Tệp',
+                }.entries)
+                  _FilterPill(
+                    label: entry.value,
+                    selected: state.typeFilter == entry.key,
+                    onPressed: () => ref
+                        .read(historyControllerProvider.notifier)
+                        .filterByType(entry.key),
+                  ),
+              ],
+            ),
           ),
-        ),
-        const CupertinoDivider(),
+          const CupertinoDivider(),
+        ],
         Expanded(
           child: state.isLoading
               ? const Center(child: CupertinoActivityIndicator())
