@@ -288,6 +288,29 @@ class MainFlutterWindow: NSWindow {
         self.pickApplicationFile(result: result)
       case "pasteToPreviousApplication":
         self.pasteToPreviousApplication(result: result)
+      case "openUrl":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let urlString = arguments["url"] as? String,
+          let url = URL(string: urlString)
+        else {
+          result(FlutterError(code: "invalid_arguments", message: "Missing url", details: nil))
+          return
+        }
+        NSWorkspace.shared.open(url)
+        result(nil)
+      case "getAppBundlePath":
+        result(Bundle.main.bundlePath)
+      case "restartApp":
+        let bundleUrl = Bundle.main.bundleURL
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: bundleUrl, configuration: configuration) { _, _ in
+          DispatchQueue.main.async {
+            NSApp.terminate(nil)
+          }
+        }
+        result(nil)
       default:
         result(FlutterMethodNotImplemented)
       }

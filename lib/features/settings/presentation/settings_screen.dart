@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -9,6 +10,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/platform/shortcut_config.dart';
+import '../../../core/services/update_service.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/app_settings.dart';
@@ -400,6 +402,23 @@ class _GeneralSettings extends ConsumerWidget {
                           ),
                   );
                 },
+              ),
+              _SettingsTile(
+                title: 'Khởi động lại ứng dụng',
+                subtitle: 'Khởi động lại ClipFlow để nhận diện quyền mới sau khi cấp trong Cài đặt hệ thống.',
+                leading: const Icon(
+                  CupertinoIcons.arrow_counterclockwise,
+                  color: CupertinoColors.activeBlue,
+                ),
+                trailing: CupertinoButton(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  onPressed: () async {
+                    await ref
+                        .read(desktopIntegrationProvider)
+                        .restartApp();
+                  },
+                  child: const Text('Khởi động lại'),
+                ),
               ),
             ],
           ),
@@ -1325,15 +1344,100 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
   }
 }
 
-class _AboutSettings extends StatelessWidget {
+class _AboutSettings extends ConsumerStatefulWidget {
   const _AboutSettings();
 
   @override
+  ConsumerState<_AboutSettings> createState() => _AboutSettingsState();
+}
+
+class _AboutSettingsState extends ConsumerState<_AboutSettings> {
+  bool _checkingUpdate = false;
+  bool _isDownloading = false;
+  double _downloadProgress = 0.0;
+  String? _updateStatus;
+  UpdateInfo? _updateInfo;
+
+  Future<void> _checkUpdate() async {
+    setState(() {
+      _checkingUpdate = true;
+      _updateStatus = null;
+      _updateInfo = null;
+    });
+
+    const service = UpdateService();
+    final info = await service.checkForUpdate();
+
+    if (!mounted) return;
+    if (info == null) {
+      setState(() {
+        _checkingUpdate = false;
+        _updateStatus = 'Không thể kiểm tra cập nhật. Vui lòng thử lại sau.';
+      });
+      return;
+    }
+
+    setState(() {
+      _checkingUpdate = false;
+      _updateInfo = info;
+      _updateStatus = info.hasUpdate
+          ? 'Có phiên bản mới (${info.latestVersion})!'
+          : 'Bạn đang ở phiên bản mới nhất (v${info.currentVersion}).';
+    });
+  }
+
+  Future<void> _downloadAndInstall() async {
+    final info = _updateInfo;
+    final desktop = ref.read(desktopIntegrationProvider);
+    if (info == null) return;
+
+    if (info.downloadUrl == null) {
+      await desktop.openUrl(
+        info.releasePageUrl ?? 'https://github.com/vqh2602/paste_plus/releases',
+      );
+      return;
+    }
+
+    setState(() {
+      _isDownloading = true;
+      _downloadProgress = 0.0;
+      _updateStatus = 'Đang tải bản cập nhật... (0%)';
+    });
+
+    const service = UpdateService();
+    final success = await service.downloadAndInstallUpdate(
+      downloadUrl: info.downloadUrl!,
+      onProgress: (progress) {
+        if (mounted) {
+          setState(() {
+            _downloadProgress = progress;
+            final percent = (progress * 100).toInt();
+            _updateStatus = 'Đang tải bản cập nhật... ($percent%)';
+          });
+        }
+      },
+    );
+
+    if (!mounted) return;
+    if (!success) {
+      setState(() {
+        _isDownloading = false;
+        _updateStatus = 'Không thể tự động cài đặt. Đang mở trang phát hành...';
+      });
+      await desktop.openUrl(
+        info.releasePageUrl ?? 'https://github.com/vqh2602/paste_plus/releases',
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final desktop = ref.read(desktopIntegrationProvider);
+    final hasUpdate = _updateInfo?.hasUpdate ?? false;
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: 30),
+          const SizedBox(height: 20),
           Container(
             width: 82,
             height: 82,
@@ -1355,15 +1459,81 @@ class _AboutSettings extends StatelessWidget {
           const SizedBox(height: 5),
           Text(
             'Phiên bản 1.0.2',
-            style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
+            style: TextStyle(
+              color: resolveColor(context, ClipFlowColors.secondaryText),
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 18),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
-            child: Text(
+            child: const Text(
               'Trình quản lý clipboard riêng tư, local-first và được thiết kế cho trải nghiệm macOS.',
               textAlign: TextAlign.center,
               style: TextStyle(height: 1.5),
+            ),
+          ),
+          const SizedBox(height: 28),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: _SettingsGroup(
+              children: [
+                _SettingsTile(
+                  title: 'Mã nguồn trên GitHub',
+                  subtitle: 'github.com/vqh2602/paste_plus',
+                  leading: const Icon(
+                    CupertinoIcons.square_arrow_up_on_square,
+                    color: CupertinoColors.activeBlue,
+                  ),
+                  trailing: CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    onPressed: () =>
+                        desktop.openUrl('https://github.com/vqh2602/paste_plus'),
+                    child: const Text('Truy cập'),
+                  ),
+                ),
+                _SettingsTile(
+                  title: 'Kiểm tra cập nhật',
+                  subtitle:
+                      _updateStatus ??
+                      'Kiểm tra phiên bản mới từ GitHub Release',
+                  leading: Icon(
+                    hasUpdate
+                        ? CupertinoIcons.arrow_down_circle_fill
+                        : CupertinoIcons.refresh_circled,
+                    color:
+                        hasUpdate
+                            ? CupertinoColors.activeGreen
+                            : CupertinoColors.activeBlue,
+                  ),
+                  trailing: _checkingUpdate || _isDownloading
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_isDownloading)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: Text(
+                                  '${(_downloadProgress * 100).toInt()}%',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: resolveColor(
+                                      context,
+                                      ClipFlowColors.secondaryText,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            const CupertinoActivityIndicator(radius: 8),
+                          ],
+                        )
+                      : CupertinoButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          onPressed:
+                              hasUpdate ? _downloadAndInstall : _checkUpdate,
+                          child: Text(hasUpdate ? 'Cập nhật ngay' : 'Kiểm tra'),
+                        ),
+                ),
+              ],
             ),
           ),
         ],
