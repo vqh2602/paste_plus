@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/platform/shortcut_config.dart';
+import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
@@ -509,16 +510,66 @@ class _QuickClipboardCard extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(13),
                   child:
-                      item.contentType == ClipboardContentType.image &&
-                          item.imagePath != null &&
-                          File(item.imagePath!).existsSync()
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(9),
-                          child: Image.file(
-                            File(item.imagePath!),
-                            width: double.infinity,
-                            fit: BoxFit.cover,
-                          ),
+                      item.contentType == ClipboardContentType.image
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(9),
+                                child: (item.imagePath != null &&
+                                        File(item.imagePath!).existsSync())
+                                    ? Image.file(
+                                        File(item.imagePath!),
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : CachedNetworkImage(
+                                        url: item.content,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
+                              ),
+                            ),
+                            if (item.content.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                item.content,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: ClipFlowColors.secondaryText,
+                                ),
+                              ),
+                            ],
+                          ],
+                        )
+                      : isImageUrl(item.content)
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(9),
+                                child: CachedNetworkImage(
+                                  url: item.content,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              item.content,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ],
                         )
                       : Text(
                           item.content,
@@ -527,12 +578,21 @@ class _QuickClipboardCard extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 13,
                             height: 1.45,
+                            color: item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue
+                                : null,
+                            decoration: item.contentType == ClipboardContentType.url
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                            decorationColor: item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
+                                : null,
                             fontFamily:
                                 item.contentType == ClipboardContentType.code ||
                                     item.contentType ==
                                         ClipboardContentType.json
                                 ? 'monospace'
-                               : null,
+                                : null,
                           ),
                         ),
                 ),
@@ -572,11 +632,16 @@ class _QuickClipboardCard extends ConsumerWidget {
       context: context,
       builder: (context) => CupertinoActionSheet(
         actions: [
-          if (isImage)
+          if (isImage) ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'ocr'),
               child: const Text('Trích xuất văn bản (OCR)'),
-            )
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'cloud_upload'),
+              child: const Text('Tải lên Cloud'),
+            ),
+          ]
           else
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'translate'),
@@ -609,6 +674,18 @@ class _QuickClipboardCard extends ConsumerWidget {
           text != null
               ? 'Đã trích xuất văn bản & tạo bản sao'
               : 'Không tìm thấy văn bản trong hình ảnh',
+        );
+      }
+    } else if (action == 'cloud_upload') {
+      final url = await ref
+          .read(historyControllerProvider.notifier)
+          .uploadImageToCloud(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          url != null
+              ? 'Đã tải ảnh lên cloud & sao chép link'
+              : 'Không thể tải ảnh lên cloud',
         );
       }
     } else if (action == 'translate') {

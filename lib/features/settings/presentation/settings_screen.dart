@@ -469,6 +469,34 @@ class _GeneralSettings extends ConsumerWidget {
             ),
           ],
         ),
+        const SizedBox(height: 22),
+        const CupertinoSectionLabel('Lưu trữ ảnh Cloud (Image Hosting)'),
+        _SettingsGroup(
+          children: [
+            _PickerRow<String>(
+              title: 'Nhà cung cấp Cloud',
+              subtitle: 'Chỉ bật 1 tùy chọn host duy nhất để tải ảnh lên',
+              value: settings.cloudImageHost,
+              items: const {
+                'freeimage': 'FreeImage.host (Đang sử dụng)',
+                'gdrive': 'Google Drive (Sắp có)',
+              },
+              onChanged: (value) {
+                if (value == 'gdrive') return;
+                _update(ref, (current) => current.copyWith(cloudImageHost: value));
+              },
+            ),
+            _TextRow(
+              title: 'FreeImage API Key',
+              value: settings.freeImageApiKey,
+              placeholder: 'Nhập API key...',
+              onChanged: (value) => _update(
+                ref,
+                (current) => current.copyWith(freeImageApiKey: value),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 14),
         CupertinoSurface(
           padding: const EdgeInsets.all(16),
@@ -1757,6 +1785,58 @@ class _NumberRowState extends State<_NumberRow> {
               widget.onChanged(parsed.clamp(widget.min, widget.max));
             }
           },
+        ),
+      ),
+    );
+  }
+}
+
+class _TextRow extends StatefulWidget {
+  const _TextRow({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+    this.placeholder,
+  });
+
+  final String title;
+  final String value;
+  final ValueChanged<String> onChanged;
+  final String? placeholder;
+
+  @override
+  State<_TextRow> createState() => _TextRowState();
+}
+
+class _TextRowState extends State<_TextRow> {
+  late final controller = TextEditingController(text: widget.value);
+
+  @override
+  void didUpdateWidget(covariant _TextRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value && controller.text != widget.value) {
+      controller.text = widget.value;
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _SettingsTile(
+      title: widget.title,
+      trailing: SizedBox(
+        width: 240,
+        child: CupertinoTextField(
+          controller: controller,
+          textAlign: TextAlign.end,
+          placeholder: widget.placeholder,
+          style: const TextStyle(fontSize: 13),
+          onChanged: widget.onChanged,
         ),
       ),
     );

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/clipboard_watcher.dart';
+import '../../../core/services/cloud_upload_service.dart';
 import '../../../core/services/ocr_service.dart';
 import '../../../core/services/translation_service.dart';
 import '../../settings/domain/app_settings.dart';
@@ -285,6 +286,19 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     if (translated == null || translated.trim().isEmpty) return null;
     await addTextItem(translated);
     return translated;
+  }
+
+  Future<String?> uploadImageToCloud(ClipboardItem item) async {
+    final path = item.imagePath ?? item.content;
+    if (path.isEmpty) return null;
+    const uploadService = CloudUploadService();
+    final url = await uploadService.uploadImage(
+      imagePath: path,
+      settings: _readSettings(),
+    );
+    if (url == null || url.trim().isEmpty) return null;
+    await addTextItem(url);
+    return url;
   }
 
   @override

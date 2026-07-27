@@ -15,6 +15,8 @@ class AppSettings {
     this.accentColor = 'indigo',
     this.language = 'vi',
     this.targetTranslationLanguage = 'vi',
+    this.cloudImageHost = 'freeimage',
+    this.freeImageApiKey = '6d207e02198a847aa98d0a2a901485a5',
     this.ignoreDuplicates = true,
     this.ignoreSensitive = true,
     this.ignoreOtp = true,
@@ -59,6 +61,8 @@ class AppSettings {
   final String accentColor;
   final String language;
   final String targetTranslationLanguage;
+  final String cloudImageHost;
+  final String freeImageApiKey;
   final bool ignoreDuplicates;
   final bool ignoreSensitive;
   final bool ignoreOtp;
@@ -93,6 +97,8 @@ class AppSettings {
     String? accentColor,
     String? language,
     String? targetTranslationLanguage,
+    String? cloudImageHost,
+    String? freeImageApiKey,
     bool? ignoreDuplicates,
     bool? ignoreSensitive,
     bool? ignoreOtp,
@@ -129,6 +135,8 @@ class AppSettings {
       language: language ?? this.language,
       targetTranslationLanguage:
           targetTranslationLanguage ?? this.targetTranslationLanguage,
+      cloudImageHost: cloudImageHost ?? this.cloudImageHost,
+      freeImageApiKey: freeImageApiKey ?? this.freeImageApiKey,
       ignoreDuplicates: ignoreDuplicates ?? this.ignoreDuplicates,
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
       ignoreOtp: ignoreOtp ?? this.ignoreOtp,
@@ -165,6 +173,8 @@ class AppSettings {
     'accentColor': accentColor,
     'language': language,
     'targetTranslationLanguage': targetTranslationLanguage,
+    'cloudImageHost': cloudImageHost,
+    'freeImageApiKey': freeImageApiKey,
     'ignoreDuplicates': ignoreDuplicates,
     'ignoreSensitive': ignoreSensitive,
     'ignoreOtp': ignoreOtp,
@@ -210,6 +220,8 @@ class AppSettings {
       accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),
       targetTranslationLanguage: value('targetTranslationLanguage', 'vi'),
+      cloudImageHost: value('cloudImageHost', 'freeimage'),
+      freeImageApiKey: value('freeImageApiKey', '6d207e02198a847aa98d0a2a901485a5'),
       ignoreDuplicates: value('ignoreDuplicates', true),
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),

@@ -9,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/platform/shortcut_config.dart';
+import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
@@ -889,11 +890,40 @@ class _ClipboardItemCard extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 7),
-                      if (item.contentType == ClipboardContentType.image)
+                      if (item.contentType == ClipboardContentType.image) ...[
                         _ClipboardImagePreview(
-                          path: item.imagePath,
+                          path: item.imagePath ?? item.content,
                           height: 118,
-                        )
+                        ),
+                        if (item.content.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            item.content,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: resolveColor(context, ClipFlowColors.secondaryText),
+                            ),
+                          ),
+                        ],
+                      ]
+                      else if (isImageUrl(item.content)) ...[
+                        _ClipboardImagePreview(
+                          path: item.content,
+                          height: 118,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          item.content,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: resolveColor(context, ClipFlowColors.secondaryText),
+                          ),
+                        ),
+                      ]
                       else
                         Text(
                           item.content,
@@ -906,6 +936,15 @@ class _ClipboardItemCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 14,
                             height: 1.4,
+                            color: item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue
+                                : null,
+                            decoration: item.contentType == ClipboardContentType.url
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                            decorationColor: item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
+                                : null,
                             fontFamily:
                                 item.contentType == ClipboardContentType.code ||
                                     item.contentType ==
@@ -977,6 +1016,7 @@ class _DetailPane extends ConsumerStatefulWidget {
 
 class _DetailPaneState extends ConsumerState<_DetailPane> {
   bool _isProcessing = false;
+  bool _isUploading = false;
 
   Future<void> _handleOcr(ClipboardItem item) async {
     setState(() => _isProcessing = true);
@@ -1013,6 +1053,23 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
     }
   }
 
+  Future<void> _handleCloudUpload(ClipboardItem item) async {
+    setState(() => _isUploading = true);
+    try {
+      final url = await ref
+          .read(historyControllerProvider.notifier)
+          .uploadImageToCloud(item);
+      if (!mounted) return;
+      if (url != null) {
+        showCupertinoNotice(context, 'Đã tải ảnh lên cloud & sao chép link');
+      } else {
+        showCupertinoNotice(context, 'Không thể tải ảnh lên cloud');
+      }
+    } finally {
+      if (mounted) setState(() => _isUploading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(historyControllerProvider);
@@ -1024,6 +1081,7 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
       return const Center(child: Text('Chọn một mục để xem chi tiết'));
     }
     final isImage = item.contentType == ClipboardContentType.image;
+    final isOnlineImage = isImageUrl(item.content);
     return ColoredBox(
       color: resolveColor(context, ClipFlowColors.sidebar),
       child: Padding(
@@ -1045,12 +1103,56 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
             Expanded(
               child: SingleChildScrollView(
                 child: isImage
-                    ? _ClipboardImagePreview(path: item.imagePath, height: 260)
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ClipboardImagePreview(
+                            path: item.imagePath ?? item.content,
+                            height: 260,
+                          ),
+                          if (item.content.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              item.content,
+                              style: TextStyle(
+                                fontSize: 13,
+                                height: 1.5,
+                                color: resolveColor(context, ClipFlowColors.secondaryText),
+                              ),
+                            ),
+                          ],
+                        ],
+                      )
+                    : isOnlineImage
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _ClipboardImagePreview(path: item.content, height: 260),
+                          const SizedBox(height: 12),
+                          Text(
+                            item.content,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.5,
+                              color: resolveColor(context, ClipFlowColors.secondaryText),
+                            ),
+                          ),
+                        ],
+                      )
                     : Text(
                         item.content,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.55,
+                          color: item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue
+                              : null,
+                          decoration: item.contentType == ClipboardContentType.url
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                          decorationColor: item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
+                              : null,
                           fontFamily:
                               item.contentType == ClipboardContentType.code ||
                                   item.contentType == ClipboardContentType.json
@@ -1096,6 +1198,43 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             color: CupertinoColors.activeBlue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  color: CupertinoColors.activeGreen.withValues(alpha: 0.15),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  onPressed: _isUploading ? null : () => _handleCloudUpload(item!),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isUploading)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: CupertinoActivityIndicator(radius: 8),
+                        )
+                      else
+                        const Icon(
+                          CupertinoIcons.cloud_upload,
+                          size: 16,
+                          color: CupertinoColors.activeGreen,
+                        ),
+                      const SizedBox(width: 6),
+                      const Flexible(
+                        child: Text(
+                          'Tải lên Cloud',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: CupertinoColors.activeGreen,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
                           ),
@@ -1189,6 +1328,17 @@ class _ClipboardImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (path != null && isImageUrl(path!)) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: CachedNetworkImage(
+          url: path!,
+          width: double.infinity,
+          height: height,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
     if (path == null || !File(path!).existsSync()) {
       return Container(
         height: height,
@@ -1300,11 +1450,16 @@ Future<void> _showItemActions(
     context: context,
     builder: (context) => CupertinoActionSheet(
       actions: [
-        if (isImage)
+        if (isImage) ...[
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ocr'),
             child: const Text('Trích xuất văn bản (OCR)'),
-          )
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'cloud_upload'),
+            child: const Text('Tải lên Cloud'),
+          ),
+        ]
         else
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'translate'),
@@ -1337,6 +1492,18 @@ Future<void> _showItemActions(
         text != null
             ? 'Đã trích xuất văn bản & tạo bản sao'
             : 'Không tìm thấy văn bản trong hình ảnh',
+      );
+    }
+  } else if (action == 'cloud_upload') {
+    final url = await ref
+        .read(historyControllerProvider.notifier)
+        .uploadImageToCloud(item);
+    if (context.mounted) {
+      showCupertinoNotice(
+        context,
+        url != null
+            ? 'Đã tải ảnh lên cloud & sao chép link'
+            : 'Không thể tải ảnh lên cloud',
       );
     }
   } else if (action == 'translate') {

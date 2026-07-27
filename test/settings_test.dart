@@ -16,6 +16,8 @@ void main() {
       monitoringEnabled: false,
       retentionDays: 90,
       targetTranslationLanguage: 'ja',
+      cloudImageHost: 'freeimage',
+      freeImageApiKey: '6d207e02198a847aa98d0a2a901485a5',
       allowedTypes: {'text', 'url'},
       excludedApplications: ['Password App'],
       openPanelShortcut: openShortcut,
@@ -27,6 +29,8 @@ void main() {
     expect(loaded.monitoringEnabled, isFalse);
     expect(loaded.retentionDays, 90);
     expect(loaded.targetTranslationLanguage, 'ja');
+    expect(loaded.cloudImageHost, 'freeimage');
+    expect(loaded.freeImageApiKey, '6d207e02198a847aa98d0a2a901485a5');
     expect(loaded.allowedTypes, {'text', 'url'});
     expect(loaded.excludedApplications, ['Password App']);
     expect(
