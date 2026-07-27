@@ -105,6 +105,11 @@ flutter test
 flutter build macos --release
 ```
 
+### 🚀 Tự động Build & Phát hành qua GitHub Actions (CI/CD)
+Dự án được tích hợp sẵn GitHub Actions workflow tại [.github/workflows/release_macos.yml](file:///Users/vuongquanghuy/code/flutter_project/paste_plus/.github/workflows/release_macos.yml):
+- **Tự động kích hoạt khi push tag**: Khi push một tag mới (vd: `git tag v1.0.0 && git push origin v1.0.0`), GitHub Actions sẽ tự động chạy test, build bản phát hành macOS `--release`, đóng gói thành `ClipFlow-macOS.zip` và tạo **GitHub Release** đính kèm file ứng dụng.
+- **Kích hoạt thủ công (Workflow Dispatch)**: Bạn cũng có thể vào tab *Actions* trên GitHub, chọn workflow *Build & Release macOS App* và nhấn *Run workflow* để tạo bản release thủ công.
+
 ---
 
 ## 🔐 Quyền hạn Hệ thống & Cấu hình macOS (Entitlements)
