@@ -258,6 +258,41 @@ class _QuickToolbar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final historyNotifier = ref.read(historyControllerProvider.notifier);
+    final collectionsState = ref.watch(collectionsControllerProvider);
+    final collections = collectionsState.value ?? [];
+
+    final systemTabs = [
+      (
+        label: 'Tất cả',
+        icon: CupertinoIcons.doc_on_clipboard,
+        section: HistorySection.all,
+      ),
+      (
+        label: 'Đã ghim',
+        icon: CupertinoIcons.pin,
+        section: HistorySection.pinned,
+      ),
+    ];
+
+    final typeTabs = [
+      (
+        label: 'Hình ảnh',
+        icon: CupertinoIcons.photo,
+        section: HistorySection.images,
+      ),
+      (
+        label: 'Liên kết',
+        icon: CupertinoIcons.link,
+        section: HistorySection.links,
+      ),
+      (
+        label: 'Code',
+        icon: CupertinoIcons.chevron_left_slash_chevron_right,
+        section: HistorySection.code,
+      ),
+    ];
+
     return SizedBox(
       height: 62,
       child: Row(
@@ -274,42 +309,78 @@ class _QuickToolbar extends ConsumerWidget {
                   .update(
                     (current) => current.copyWith(monitoringEnabled: enabled),
                   );
-              await ref
-                  .read(historyControllerProvider.notifier)
-                  .setMonitoring(enabled);
+              await historyNotifier.setMonitoring(enabled);
             },
           ),
-          CupertinoChoicePill(
-            label: 'Clipboard',
-            icon: CupertinoIcons.doc_on_clipboard,
-            selected: state.section != HistorySection.pinned,
-            onPressed: () => ref
-                .read(historyControllerProvider.notifier)
-                .selectSection(HistorySection.all),
+          const SizedBox(width: 4),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final tab in systemTabs) ...[
+                    CupertinoChoicePill(
+                      label: tab.label,
+                      icon: tab.icon,
+                      selected: state.section == tab.section,
+                      onPressed: () =>
+                          historyNotifier.selectSection(tab.section),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  for (final collection in collections) ...[
+                    CupertinoChoicePill(
+                      label: collection.name,
+                      icon: CupertinoIcons.folder,
+                      selected: state.section == HistorySection.collection &&
+                          state.collectionId == collection.id,
+                      onPressed: () => historyNotifier.selectSection(
+                        HistorySection.collection,
+                        collectionId: collection.id,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  for (final tab in typeTabs) ...[
+                    CupertinoChoicePill(
+                      label: tab.label,
+                      icon: tab.icon,
+                      selected: state.section == tab.section,
+                      onPressed: () =>
+                          historyNotifier.selectSection(tab.section),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  if (state.typeFilter != null) ...[
+                    CupertinoChoicePill(
+                      label: _typeName(state.typeFilter!),
+                      icon: _typeIcon(state.typeFilter!),
+                      selected: true,
+                      onPressed: () => historyNotifier.filterByType(null),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                ],
+              ),
+            ),
           ),
-          const SizedBox(width: 7),
-          CupertinoChoicePill(
-            label: 'Đã ghim',
-            icon: CupertinoIcons.pin,
-            selected: state.section == HistorySection.pinned,
-            onPressed: () => ref
-                .read(historyControllerProvider.notifier)
-                .selectSection(HistorySection.pinned),
-          ),
-          const Spacer(),
+          const SizedBox(width: 8),
           SizedBox(
-            width: 410,
+            width: 260,
             child: CupertinoSearchTextField(
               key: const Key('quick-panel-search'),
               controller: controller,
               focusNode: focusNode,
               placeholder: 'Tìm trong clipboard',
-              onChanged: ref.read(historyControllerProvider.notifier).search,
+              onChanged: historyNotifier.search,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
           CupertinoIconControl(
             icon: CupertinoIcons.slider_horizontal_3,
+            color: state.typeFilter != null
+                ? CupertinoTheme.of(context).primaryColor
+                : null,
             onPressed: () => _chooseType(context, ref),
           ),
           CupertinoIconControl(
