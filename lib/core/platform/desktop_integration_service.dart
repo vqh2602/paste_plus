@@ -368,6 +368,30 @@ class DesktopIntegrationService with TrayListener {
     _onQuickPanelDismissed?.call();
   }
 
+  Future<bool> checkAccessibilityPermission() async {
+    if (!Platform.isMacOS) return true;
+    try {
+      return await _windowChannel.invokeMethod<bool>(
+            'checkAccessibilityPermission',
+          ) ??
+          true;
+    } on Object catch (_) {
+      return true;
+    }
+  }
+
+  Future<bool> requestAccessibilityPermission() async {
+    if (!Platform.isMacOS) return true;
+    try {
+      return await _windowChannel.invokeMethod<bool>(
+            'requestAccessibilityPermission',
+          ) ??
+          false;
+    } on Object catch (_) {
+      return false;
+    }
+  }
+
   Future<bool> pasteToPreviousApplication() async {
     if (!Platform.isMacOS) return false;
     try {

@@ -1,6 +1,7 @@
 import Cocoa
 import FlutterMacOS
 import ServiceManagement
+import Accessibility
 
 class MainFlutterWindow: NSWindow {
   private var standardCollectionBehavior: NSWindow.CollectionBehavior = []
@@ -9,6 +10,7 @@ class MainFlutterWindow: NSWindow {
   private var standardHasShadow = true
   private var standardIsMovable = true
   private var previousApplication: NSRunningApplication?
+  private var lastActiveApplication: NSRunningApplication?
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -22,6 +24,13 @@ class MainFlutterWindow: NSWindow {
     standardHasShadow = self.hasShadow
     standardIsMovable = self.isMovable
     Self.migrateLegacySandboxPreferences()
+
+    NSWorkspace.shared.notificationCenter.addObserver(
+      self,
+      selector: #selector(handleAppActivation(_:)),
+      name: NSWorkspace.didActivateApplicationNotification,
+      object: nil
+    )
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
@@ -164,6 +173,7 @@ class MainFlutterWindow: NSWindow {
             frontmostApplication.processIdentifier != ProcessInfo.processInfo.processIdentifier
           {
             self.previousApplication = frontmostApplication
+            self.lastActiveApplication = frontmostApplication
           }
           flutterViewController.backgroundColor = .clear
           self.isOpaque = false
@@ -180,7 +190,6 @@ class MainFlutterWindow: NSWindow {
             .ignoresCycle,
           ]
         } else {
-          self.previousApplication = nil
           flutterViewController.backgroundColor = .windowBackgroundColor
           self.isOpaque = self.standardIsOpaque
           self.backgroundColor = self.standardBackgroundColor
@@ -191,6 +200,11 @@ class MainFlutterWindow: NSWindow {
           self.collectionBehavior = self.standardCollectionBehavior
         }
         result(nil)
+      case "checkAccessibilityPermission":
+        result(AXIsProcessTrusted())
+      case "requestAccessibilityPermission":
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        result(AXIsProcessTrustedWithOptions(options))
       case "pasteToPreviousApplication":
         self.pasteToPreviousApplication(result: result)
       default:
@@ -199,6 +213,16 @@ class MainFlutterWindow: NSWindow {
     }
 
     super.awakeFromNib()
+  }
+
+  @objc private func handleAppActivation(_ notification: Notification) {
+    guard let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication else {
+      return
+    }
+    if app.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+      self.lastActiveApplication = app
+      self.previousApplication = app
+    }
   }
 
   private static func pngDataFromTiff(_ pasteboard: NSPasteboard) -> Data? {
@@ -234,21 +258,23 @@ class MainFlutterWindow: NSWindow {
   }
 
   private func pasteToPreviousApplication(result: @escaping FlutterResult) {
+    guard AXIsProcessTrusted() else {
+      let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+      AXIsProcessTrustedWithOptions(options)
+      result(false)
+      return
+    }
+
     guard
-      let targetApplication = previousApplication,
+      let targetApplication = lastActiveApplication ?? previousApplication,
       !targetApplication.isTerminated
     else {
       result(false)
       return
     }
 
-    guard CGPreflightPostEventAccess() || CGRequestPostEventAccess() else {
-      result(false)
-      return
-    }
-
     targetApplication.activate(options: [.activateIgnoringOtherApps])
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
       let source = CGEventSource(stateID: .hidSystemState)
       guard
         let keyDown = CGEvent(
@@ -269,7 +295,6 @@ class MainFlutterWindow: NSWindow {
       keyUp.flags = .maskCommand
       keyDown.post(tap: .cghidEventTap)
       keyUp.post(tap: .cghidEventTap)
-      self.previousApplication = nil
       result(true)
     }
   }

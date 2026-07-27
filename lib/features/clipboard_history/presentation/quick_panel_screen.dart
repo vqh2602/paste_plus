@@ -64,7 +64,13 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
     await controller.copy(item);
     await desktop.hideQuickPanel();
     ref.read(quickPanelModeProvider.notifier).state = false;
-    await desktop.pasteToPreviousApplication();
+    final pasted = await desktop.pasteToPreviousApplication();
+    if (!pasted && Platform.isMacOS) {
+      final hasPermission = await desktop.checkAccessibilityPermission();
+      if (!hasPermission) {
+        await desktop.requestAccessibilityPermission();
+      }
+    }
     unawaited(controller.reload());
   }
 

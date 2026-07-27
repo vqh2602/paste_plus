@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -333,6 +335,53 @@ class _GeneralSettings extends ConsumerWidget {
             ),
           ],
         ),
+        if (Platform.isMacOS) ...[
+          const SizedBox(height: 22),
+          const CupertinoSectionLabel('Quyền hệ thống'),
+          _SettingsGroup(
+            children: [
+              FutureBuilder<bool>(
+                future: ref
+                    .read(desktopIntegrationProvider)
+                    .checkAccessibilityPermission(),
+                builder: (context, snapshot) {
+                  final hasPermission = snapshot.data ?? false;
+                  return _SettingsTile(
+                    title: 'Quyền Trợ năng (Accessibility)',
+                    subtitle: hasPermission
+                        ? 'Đã cấp quyền. ClipFlow tự động dán (paste) khi bạn chọn item.'
+                        : 'Cần cấp quyền để ClipFlow tự động điền giá trị vào ô soạn thảo.',
+                    leading: Icon(
+                      hasPermission
+                          ? CupertinoIcons.checkmark_shield
+                          : CupertinoIcons.exclamationmark_shield,
+                      color: hasPermission
+                          ? CupertinoColors.systemGreen
+                          : CupertinoColors.systemOrange,
+                    ),
+                    trailing: hasPermission
+                        ? const Text(
+                            'Đã cấp',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: ClipFlowColors.secondaryText,
+                            ),
+                          )
+                        : CupertinoButton(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            onPressed: () async {
+                              await ref
+                                  .read(desktopIntegrationProvider)
+                                  .requestAccessibilityPermission();
+                            },
+                            child: const Text('Cấp quyền'),
+                          ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 22),
         const CupertinoSectionLabel('Giao diện'),
         _SettingsGroup(
