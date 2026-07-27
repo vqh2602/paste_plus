@@ -60,9 +60,11 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
 
   Future<void> _copy(ClipboardItem item) async {
     final controller = ref.read(historyControllerProvider.notifier);
+    final desktop = ref.read(desktopIntegrationProvider);
     await controller.copy(item);
-    await ref.read(desktopIntegrationProvider).hideQuickPanel();
+    await desktop.hideQuickPanel();
     ref.read(quickPanelModeProvider.notifier).state = false;
+    await desktop.pasteToPreviousApplication();
     unawaited(controller.reload());
   }
 
@@ -189,23 +191,17 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
                                   14,
                                   14,
                                 ),
-                                itemCount: items.length + 1,
+                                itemCount: items.length,
                                 separatorBuilder: (_, _) =>
                                     const SizedBox(width: 12),
                                 itemBuilder: (context, index) {
-                                  if (index == 0) {
-                                    return const _LocalPrivacyCard();
-                                  }
-                                  final itemIndex = index - 1;
-                                  final item = items[itemIndex];
+                                  final item = items[index];
                                   return _QuickClipboardCard(
                                     item: item,
-                                    number: itemIndex + 1,
-                                    selected: itemIndex == _selectedIndex,
+                                    number: index + 1,
+                                    selected: index == _selectedIndex,
                                     onTap: () {
-                                      setState(
-                                        () => _selectedIndex = itemIndex,
-                                      );
+                                      setState(() => _selectedIndex = index);
                                       ref
                                           .read(
                                             historyControllerProvider.notifier,
@@ -348,44 +344,6 @@ class _QuickToolbar extends ConsumerWidget {
       ),
     );
     ref.read(historyControllerProvider.notifier).filterByType(selected);
-  }
-}
-
-class _LocalPrivacyCard extends StatelessWidget {
-  const _LocalPrivacyCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = CupertinoTheme.of(context).primaryColor;
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: primary.withValues(alpha: 0.25)),
-      ),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(CupertinoIcons.lock_shield, size: 22),
-          Spacer(),
-          Text(
-            'Riêng tư & cục bộ',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 6),
-          Text(
-            'Dữ liệu clipboard chỉ được lưu trên thiết bị này.',
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.4,
-              color: ClipFlowColors.secondaryText,
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

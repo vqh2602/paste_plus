@@ -368,6 +368,23 @@ class DesktopIntegrationService with TrayListener {
     _onQuickPanelDismissed?.call();
   }
 
+  Future<bool> pasteToPreviousApplication() async {
+    if (!Platform.isMacOS) return false;
+    try {
+      return await _windowChannel.invokeMethod<bool>(
+            'pasteToPreviousApplication',
+          ) ??
+          false;
+    } on Object catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'Could not paste into the previously active application',
+        error: error,
+      );
+      return false;
+    }
+  }
+
   Future<void> handleWindowBlur() async {
     if (_windowMode != DesktopWindowMode.quickPanel) return;
     if (DateTime.now().isBefore(_ignoreBlurUntil)) return;

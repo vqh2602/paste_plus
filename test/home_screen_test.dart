@@ -227,7 +227,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('quick-panel-search')), findsOneWidget);
-    expect(find.text('Riêng tư & cục bộ'), findsOneWidget);
+    expect(find.text('Riêng tư & cục bộ'), findsNothing);
     expect(find.text('Liên kết'), findsOneWidget);
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pump();

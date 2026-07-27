@@ -8,6 +8,7 @@ class MainFlutterWindow: NSWindow {
   private var standardIsOpaque = true
   private var standardHasShadow = true
   private var standardIsMovable = true
+  private var previousApplication: NSRunningApplication?
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -20,6 +21,7 @@ class MainFlutterWindow: NSWindow {
     standardIsOpaque = self.isOpaque
     standardHasShadow = self.hasShadow
     standardIsMovable = self.isMovable
+    Self.migrateLegacySandboxPreferences()
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
@@ -138,47 +140,62 @@ class MainFlutterWindow: NSWindow {
       binaryMessenger: flutterViewController.engine.binaryMessenger
     )
     windowChannel.setMethodCallHandler { [weak self] call, result in
-      guard call.method == "setQuickPanelMode", let self else {
+      guard let self else {
         result(FlutterMethodNotImplemented)
         return
       }
-      guard let enabled = call.arguments as? Bool else {
-        result(
-          FlutterError(
-            code: "invalid_arguments",
-            message: "Expected a boolean quick-panel state.",
-            details: nil
-          )
-        )
-        return
-      }
 
-      if enabled {
-        flutterViewController.backgroundColor = .clear
-        self.isOpaque = false
-        self.backgroundColor = .clear
-        self.hasShadow = false
-        self.isMovable = false
-        self.level = .popUpMenu
-        self.hidesOnDeactivate = true
-        self.collectionBehavior = [
-          .canJoinAllSpaces,
-          .fullScreenAuxiliary,
-          .transient,
-          .stationary,
-          .ignoresCycle,
-        ]
-      } else {
-        flutterViewController.backgroundColor = .windowBackgroundColor
-        self.isOpaque = self.standardIsOpaque
-        self.backgroundColor = self.standardBackgroundColor
-        self.hasShadow = self.standardHasShadow
-        self.isMovable = self.standardIsMovable
-        self.level = .normal
-        self.hidesOnDeactivate = false
-        self.collectionBehavior = self.standardCollectionBehavior
+      switch call.method {
+      case "setQuickPanelMode":
+        guard let enabled = call.arguments as? Bool else {
+          result(
+            FlutterError(
+              code: "invalid_arguments",
+              message: "Expected a boolean quick-panel state.",
+              details: nil
+            )
+          )
+          return
+        }
+
+        if enabled {
+          if
+            let frontmostApplication = NSWorkspace.shared.frontmostApplication,
+            frontmostApplication.processIdentifier != ProcessInfo.processInfo.processIdentifier
+          {
+            self.previousApplication = frontmostApplication
+          }
+          flutterViewController.backgroundColor = .clear
+          self.isOpaque = false
+          self.backgroundColor = .clear
+          self.hasShadow = false
+          self.isMovable = false
+          self.level = .popUpMenu
+          self.hidesOnDeactivate = true
+          self.collectionBehavior = [
+            .canJoinAllSpaces,
+            .fullScreenAuxiliary,
+            .transient,
+            .stationary,
+            .ignoresCycle,
+          ]
+        } else {
+          self.previousApplication = nil
+          flutterViewController.backgroundColor = .windowBackgroundColor
+          self.isOpaque = self.standardIsOpaque
+          self.backgroundColor = self.standardBackgroundColor
+          self.hasShadow = self.standardHasShadow
+          self.isMovable = self.standardIsMovable
+          self.level = .normal
+          self.hidesOnDeactivate = false
+          self.collectionBehavior = self.standardCollectionBehavior
+        }
+        result(nil)
+      case "pasteToPreviousApplication":
+        self.pasteToPreviousApplication(result: result)
+      default:
+        result(FlutterMethodNotImplemented)
       }
-      result(nil)
     }
 
     super.awakeFromNib()
@@ -192,6 +209,69 @@ class MainFlutterWindow: NSWindow {
       return nil
     }
     return representation.representation(using: .png, properties: [:])
+  }
+
+  private static func migrateLegacySandboxPreferences() {
+    let settingsKey = "flutter.clipflow.settings.v1"
+    let defaults = UserDefaults.standard
+    guard defaults.object(forKey: settingsKey) == nil else { return }
+
+    let legacyPreferencesURL = FileManager.default.homeDirectoryForCurrentUser
+      .appendingPathComponent("Library")
+      .appendingPathComponent("Containers")
+      .appendingPathComponent("com.clipflow.clipflow")
+      .appendingPathComponent("Data")
+      .appendingPathComponent("Library")
+      .appendingPathComponent("Preferences")
+      .appendingPathComponent("com.clipflow.clipflow.plist")
+    guard
+      let preferences = NSDictionary(contentsOf: legacyPreferencesURL),
+      let settings = preferences[settingsKey]
+    else {
+      return
+    }
+    defaults.set(settings, forKey: settingsKey)
+  }
+
+  private func pasteToPreviousApplication(result: @escaping FlutterResult) {
+    guard
+      let targetApplication = previousApplication,
+      !targetApplication.isTerminated
+    else {
+      result(false)
+      return
+    }
+
+    guard CGPreflightPostEventAccess() || CGRequestPostEventAccess() else {
+      result(false)
+      return
+    }
+
+    targetApplication.activate(options: [.activateIgnoringOtherApps])
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+      let source = CGEventSource(stateID: .hidSystemState)
+      guard
+        let keyDown = CGEvent(
+          keyboardEventSource: source,
+          virtualKey: 9,
+          keyDown: true
+        ),
+        let keyUp = CGEvent(
+          keyboardEventSource: source,
+          virtualKey: 9,
+          keyDown: false
+        )
+      else {
+        result(false)
+        return
+      }
+      keyDown.flags = .maskCommand
+      keyUp.flags = .maskCommand
+      keyDown.post(tap: .cghidEventTap)
+      keyUp.post(tap: .cghidEventTap)
+      self.previousApplication = nil
+      result(true)
+    }
   }
 
   @available(macOS 13.0, *)

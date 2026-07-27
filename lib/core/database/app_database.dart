@@ -17,12 +17,15 @@ class AppDatabase {
       databaseFactory = databaseFactoryFfi;
     }
 
+    final supportDirectory = inMemory
+        ? null
+        : await getApplicationSupportDirectory();
+    final legacySupportPath = supportDirectory == null
+        ? null
+        : await _legacyMacOSSupportPath(supportDirectory);
     final dbPath = inMemory
         ? inMemoryDatabasePath
-        : p.join(
-            (await getApplicationSupportDirectory()).path,
-            'clipflow.sqlite',
-          );
+        : p.join(supportDirectory!.path, 'clipflow.sqlite');
     final db = await openDatabase(
       dbPath,
       version: version,
@@ -32,7 +35,106 @@ class AppDatabase {
       onCreate: _createV1,
       onUpgrade: _migrate,
     );
+    if (legacySupportPath != null) {
+      await _mergeLegacyMacOSData(
+        db,
+        legacySupportPath: legacySupportPath,
+        supportDirectory: supportDirectory!,
+      );
+    }
     return AppDatabase._(db, dbPath);
+  }
+
+  static Future<String?> _legacyMacOSSupportPath(
+    Directory supportDirectory,
+  ) async {
+    if (!Platform.isMacOS) return null;
+    final marker = File(p.join(supportDirectory.path, '.sandbox_migration_v1'));
+    if (await marker.exists()) return null;
+    final userHome = Platform.environment['HOME'];
+    if (userHome == null || userHome.isEmpty) return null;
+
+    final legacySupport = Directory(
+      p.join(
+        userHome,
+        'Library',
+        'Containers',
+        'com.clipflow.clipflow',
+        'Data',
+        'Library',
+        'Application Support',
+        'com.clipflow.clipflow',
+      ),
+    );
+    final legacyDatabase = File(p.join(legacySupport.path, 'clipflow.sqlite'));
+    if (!await legacyDatabase.exists()) return null;
+    return legacySupport.path;
+  }
+
+  static Future<void> _mergeLegacyMacOSData(
+    Database db, {
+    required String legacySupportPath,
+    required Directory supportDirectory,
+  }) async {
+    await supportDirectory.create(recursive: true);
+    final legacyDatabasePath = p.join(legacySupportPath, 'clipflow.sqlite');
+    var attached = false;
+    try {
+      await db.execute('ATTACH DATABASE ? AS legacy_clipflow', [
+        legacyDatabasePath,
+      ]);
+      attached = true;
+      await db.transaction((transaction) async {
+        await transaction.execute(
+          'INSERT OR IGNORE INTO collections SELECT * FROM legacy_clipflow.collections',
+        );
+        await transaction.execute(
+          'INSERT OR IGNORE INTO clipboard_items SELECT * FROM legacy_clipflow.clipboard_items',
+        );
+        await transaction.execute('''
+          INSERT OR IGNORE INTO clipboard_item_collections
+          SELECT * FROM legacy_clipflow.clipboard_item_collections
+          ''');
+      });
+
+      final legacyImages = Directory(
+        p.join(legacySupportPath, 'clipboard_images'),
+      );
+      if (await legacyImages.exists()) {
+        final currentImages = Directory(
+          p.join(supportDirectory.path, 'clipboard_images'),
+        );
+        await currentImages.create(recursive: true);
+        await for (final entry in legacyImages.list()) {
+          if (entry is File) {
+            final destination = File(
+              p.join(currentImages.path, p.basename(entry.path)),
+            );
+            if (!await destination.exists()) {
+              await entry.copy(destination.path);
+            }
+          }
+        }
+      }
+
+      await db.rawUpdate(
+        '''
+        UPDATE clipboard_items
+        SET image_path = REPLACE(image_path, ?, ?)
+        WHERE image_path LIKE ?
+        ''',
+        [legacySupportPath, supportDirectory.path, '$legacySupportPath%'],
+      );
+      await File(
+        p.join(supportDirectory.path, '.sandbox_migration_v1'),
+      ).writeAsString('complete', flush: true);
+    } on Object {
+      // Keep the current database usable and retry on the next launch.
+    } finally {
+      if (attached) {
+        await db.execute('DETACH DATABASE legacy_clipflow');
+      }
+    }
   }
 
   static Future<void> _createV1(Database db, int version) async {
