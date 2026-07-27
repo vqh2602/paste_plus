@@ -24,6 +24,14 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   var _page = _SettingsPage.general;
 
+  void _close(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
@@ -47,7 +55,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const Spacer(),
                   CupertinoIconControl(
                     icon: CupertinoIcons.xmark,
-                    onPressed: context.pop,
+                    onPressed: () => _close(context),
                   ),
                   const SizedBox(width: 8),
                 ],
@@ -132,12 +140,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ),
     );
-    return CupertinoPageScaffold(
-      backgroundColor: const Color(0x00000000),
-      child: Center(
-        child: Padding(
-          padding: compact ? EdgeInsets.zero : const EdgeInsets.all(24),
-          child: panel,
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.escape): () => _close(context),
+      },
+      child: Focus(
+        autofocus: true,
+        child: CupertinoPageScaffold(
+          backgroundColor: const Color(0x00000000),
+          child: Center(
+            child: Padding(
+              padding: compact ? EdgeInsets.zero : const EdgeInsets.all(24),
+              child: panel,
+            ),
+          ),
         ),
       ),
     );
@@ -314,10 +330,15 @@ class _GeneralSettings extends ConsumerWidget {
             _SwitchRow(
               title: 'Hiển thị trong Dock',
               value: settings.showInDock,
-              onChanged: (value) => _update(
-                ref,
-                (current) => current.copyWith(showInDock: value),
-              ),
+              onChanged: (value) async {
+                await ref
+                    .read(desktopIntegrationProvider)
+                    .setShowInDock(value);
+                await _update(
+                  ref,
+                  (current) => current.copyWith(showInDock: value),
+                );
+              },
             ),
           ],
         ),

@@ -200,6 +200,22 @@ class MainFlutterWindow: NSWindow {
           self.collectionBehavior = self.standardCollectionBehavior
         }
         result(nil)
+      case "setShowInDock":
+        guard let show = call.arguments as? Bool else {
+          result(
+            FlutterError(
+              code: "invalid_arguments",
+              message: "Expected a boolean showInDock state.",
+              details: nil
+            )
+          )
+          return
+        }
+        NSApp.setActivationPolicy(show ? .regular : .accessory)
+        if show {
+          NSApp.activate(ignoringOtherApps: true)
+        }
+        result(nil)
       case "checkAccessibilityPermission":
         result(AXIsProcessTrusted())
       case "requestAccessibilityPermission":

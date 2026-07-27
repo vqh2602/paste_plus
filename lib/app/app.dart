@@ -36,6 +36,7 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
           .initialize(
             runInTray: settings.runInTray,
             openAtLogin: settings.openAtLogin,
+            showInDock: settings.showInDock,
             openPanelShortcut: settings.openPanelShortcut,
             onQuickPanelRequested: () {
               router.go('/');

@@ -63,6 +63,7 @@ class DesktopIntegrationService with TrayListener {
   Future<void> initialize({
     required bool runInTray,
     required bool openAtLogin,
+    required bool showInDock,
     String? openPanelShortcut,
     required VoidCallback onQuickPanelRequested,
     required VoidCallback onMainWindowRequested,
@@ -75,6 +76,7 @@ class DesktopIntegrationService with TrayListener {
     _onQuickPanelRequested = onQuickPanelRequested;
     _onMainWindowRequested = onMainWindowRequested;
     _onQuickPanelDismissed = onQuickPanelDismissed;
+    await setShowInDock(showInDock);
     launchAtStartup.setup(
       appName: 'ClipFlow',
       appPath: Platform.resolvedExecutable,
@@ -377,6 +379,21 @@ class DesktopIntegrationService with TrayListener {
           true;
     } on Object catch (_) {
       return true;
+    }
+  }
+
+  Future<bool> setShowInDock(bool showInDock) async {
+    if (!Platform.isMacOS) return true;
+    try {
+      await _windowChannel.invokeMethod<void>('setShowInDock', showInDock);
+      return true;
+    } on Object catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'Could not update show in Dock status',
+        error: error,
+      );
+      return false;
     }
   }
 

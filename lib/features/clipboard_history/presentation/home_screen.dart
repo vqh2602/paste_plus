@@ -392,7 +392,7 @@ class _Sidebar extends ConsumerWidget {
                 selected: false,
                 onTap: () {
                   onNavigate?.call();
-                  context.go('/settings');
+                  context.push('/settings');
                 },
               ),
               const Padding(
