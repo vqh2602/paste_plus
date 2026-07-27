@@ -424,7 +424,7 @@ class _QuickToolbar extends ConsumerWidget {
   }
 }
 
-class _QuickClipboardCard extends StatelessWidget {
+class _QuickClipboardCard extends ConsumerWidget {
   const _QuickClipboardCard({
     required this.item,
     required this.number,
@@ -442,7 +442,7 @@ class _QuickClipboardCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final color = _typeColor(item.contentType);
     return SizedBox(
       width: 292,
@@ -500,7 +500,7 @@ class _QuickClipboardCard extends StatelessWidget {
                       icon: CupertinoIcons.ellipsis,
                       color: CupertinoColors.white,
                       size: 17,
-                      onPressed: () => _actions(context),
+                      onPressed: () => _actions(context, ref),
                     ),
                   ],
                 ),
@@ -532,7 +532,7 @@ class _QuickClipboardCard extends StatelessWidget {
                                     item.contentType ==
                                         ClipboardContentType.json
                                 ? 'monospace'
-                                : null,
+                               : null,
                           ),
                         ),
                 ),
@@ -566,11 +566,22 @@ class _QuickClipboardCard extends StatelessWidget {
     );
   }
 
-  Future<void> _actions(BuildContext context) async {
+  Future<void> _actions(BuildContext context, WidgetRef ref) async {
+    final isImage = item.contentType == ClipboardContentType.image;
     final action = await showCupertinoModalPopup<String>(
       context: context,
       builder: (context) => CupertinoActionSheet(
         actions: [
+          if (isImage)
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'ocr'),
+              child: const Text('Trích xuất văn bản (OCR)'),
+            )
+          else
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'translate'),
+              child: const Text('Dịch văn bản'),
+            ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'pin'),
             child: Text(item.isPinned ? 'Bỏ ghim' : 'Ghim'),
@@ -587,8 +598,35 @@ class _QuickClipboardCard extends StatelessWidget {
         ),
       ),
     );
-    if (action == 'pin') onPin();
-    if (action == 'delete') onDelete();
+    if (!context.mounted) return;
+    if (action == 'ocr') {
+      final text = await ref
+          .read(historyControllerProvider.notifier)
+          .performOcr(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null
+              ? 'Đã trích xuất văn bản & tạo bản sao'
+              : 'Không tìm thấy văn bản trong hình ảnh',
+        );
+      }
+    } else if (action == 'translate') {
+      final settings = ref.read(settingsControllerProvider);
+      final text = await ref
+          .read(historyControllerProvider.notifier)
+          .translateItem(item, settings.targetTranslationLanguage);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null ? 'Đã dịch & tạo bản sao' : 'Không thể dịch văn bản',
+        );
+      }
+    } else if (action == 'pin') {
+      onPin();
+    } else if (action == 'delete') {
+      onDelete();
+    }
   }
 }
 

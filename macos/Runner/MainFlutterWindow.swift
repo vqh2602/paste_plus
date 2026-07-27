@@ -2,6 +2,7 @@ import Cocoa
 import FlutterMacOS
 import ServiceManagement
 import Accessibility
+import Vision
 
 class MainFlutterWindow: NSWindow {
   private var standardCollectionBehavior: NSWindow.CollectionBehavior = []
@@ -79,6 +80,66 @@ class MainFlutterWindow: NSWindow {
         pasteboard.clearContents()
         pasteboard.setData(imageData, forType: .png)
         result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
+    let ocrChannel = FlutterMethodChannel(
+      name: "clipflow/ocr",
+      binaryMessenger: flutterViewController.engine.binaryMessenger
+    )
+    ocrChannel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "performOcr":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let imagePath = arguments["imagePath"] as? String
+        else {
+          result(FlutterError(code: "invalid_arguments", message: "Missing imagePath", details: nil))
+          return
+        }
+
+        guard let nsImage = NSImage(contentsOfFile: imagePath),
+              let cgImage = nsImage.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
+          result(FlutterError(code: "invalid_image", message: "Could not load image file", details: nil))
+          return
+        }
+
+        let requestHandler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let request = VNRecognizeTextRequest { request, error in
+          if let error = error {
+            DispatchQueue.main.async {
+              result(FlutterError(code: "ocr_failed", message: error.localizedDescription, details: nil))
+            }
+            return
+          }
+          guard let observations = request.results as? [VNRecognizedTextObservation] else {
+            DispatchQueue.main.async {
+              result("")
+            }
+            return
+          }
+          let recognizedStrings = observations.compactMap { observation in
+            observation.topCandidates(1).first?.string
+          }
+          let fullText = recognizedStrings.joined(separator: "\n")
+          DispatchQueue.main.async {
+            result(fullText)
+          }
+        }
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+          do {
+            try requestHandler.perform([request])
+          } catch {
+            DispatchQueue.main.async {
+              result(FlutterError(code: "ocr_error", message: error.localizedDescription, details: nil))
+            }
+          }
+        }
       default:
         result(FlutterMethodNotImplemented)
       }

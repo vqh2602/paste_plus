@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/services/clipboard_watcher.dart';
+import '../../../core/services/ocr_service.dart';
+import '../../../core/services/translation_service.dart';
 import '../../settings/domain/app_settings.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
@@ -253,6 +255,36 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<Set<String>> collectionIdsForItem(String itemId) {
     return _repository.collectionIdsForItem(itemId);
+  }
+
+  Future<String?> addTextItem(String text) async {
+    final payload = ClipboardPayload(text: text);
+    await _watcher.write(payload);
+    await _repository.store(payload, _readSettings());
+    await _repository.cleanup(_readSettings());
+    await reload();
+    return text;
+  }
+
+  Future<String?> performOcr(ClipboardItem item) async {
+    if (item.imagePath == null) return null;
+    const ocrService = OcrService();
+    final extractedText = await ocrService.extractTextFromImage(item.imagePath!);
+    if (extractedText == null || extractedText.trim().isEmpty) return null;
+    await addTextItem(extractedText);
+    return extractedText;
+  }
+
+  Future<String?> translateItem(ClipboardItem item, String targetLang) async {
+    if (item.content.trim().isEmpty) return null;
+    const translationService = TranslationService();
+    final translated = await translationService.translate(
+      text: item.content,
+      targetLanguage: targetLang,
+    );
+    if (translated == null || translated.trim().isEmpty) return null;
+    await addTextItem(translated);
+    return translated;
   }
 
   @override

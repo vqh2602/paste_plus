@@ -14,6 +14,7 @@ class AppSettings {
     this.themeMode = 'system',
     this.accentColor = 'indigo',
     this.language = 'vi',
+    this.targetTranslationLanguage = 'vi',
     this.ignoreDuplicates = true,
     this.ignoreSensitive = true,
     this.ignoreOtp = true,
@@ -57,6 +58,7 @@ class AppSettings {
   final String themeMode;
   final String accentColor;
   final String language;
+  final String targetTranslationLanguage;
   final bool ignoreDuplicates;
   final bool ignoreSensitive;
   final bool ignoreOtp;
@@ -90,6 +92,7 @@ class AppSettings {
     String? themeMode,
     String? accentColor,
     String? language,
+    String? targetTranslationLanguage,
     bool? ignoreDuplicates,
     bool? ignoreSensitive,
     bool? ignoreOtp,
@@ -124,6 +127,8 @@ class AppSettings {
       themeMode: themeMode ?? this.themeMode,
       accentColor: accentColor ?? this.accentColor,
       language: language ?? this.language,
+      targetTranslationLanguage:
+          targetTranslationLanguage ?? this.targetTranslationLanguage,
       ignoreDuplicates: ignoreDuplicates ?? this.ignoreDuplicates,
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
       ignoreOtp: ignoreOtp ?? this.ignoreOtp,
@@ -159,6 +164,7 @@ class AppSettings {
     'themeMode': themeMode,
     'accentColor': accentColor,
     'language': language,
+    'targetTranslationLanguage': targetTranslationLanguage,
     'ignoreDuplicates': ignoreDuplicates,
     'ignoreSensitive': ignoreSensitive,
     'ignoreOtp': ignoreOtp,
@@ -203,6 +209,7 @@ class AppSettings {
       themeMode: value('themeMode', 'system'),
       accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),
+      targetTranslationLanguage: value('targetTranslationLanguage', 'vi'),
       ignoreDuplicates: value('ignoreDuplicates', true),
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),

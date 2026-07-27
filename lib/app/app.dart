@@ -93,13 +93,26 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
+    final theme = AppTheme.theme(
+      settings.themeMode,
+      accentKey: settings.accentColor,
+    );
     return CupertinoApp.router(
       title: 'ClipFlow',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme(
-        settings.themeMode,
-        accentKey: settings.accentColor,
-      ),
+      theme: theme,
+      builder: (context, child) {
+        Widget current = child ?? const SizedBox.shrink();
+        final brightness = theme.brightness;
+        if (brightness != null) {
+          final mediaQuery = MediaQuery.of(context);
+          current = MediaQuery(
+            data: mediaQuery.copyWith(platformBrightness: brightness),
+            child: current,
+          );
+        }
+        return CupertinoTheme(data: theme, child: current);
+      },
       routerConfig: router,
     );
   }

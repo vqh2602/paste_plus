@@ -145,9 +145,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         if (!compact) ...[
                           const SizedBox(width: 244, child: _Sidebar()),
-                          const SizedBox(
+                          SizedBox(
                             width: 1,
-                            child: ColoredBox(color: ClipFlowColors.border),
+                            child: ColoredBox(color: resolveColor(context, ClipFlowColors.border)),
                           ),
                         ],
                         Expanded(
@@ -164,9 +164,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         if (showPreview) ...[
-                          const SizedBox(
+                          SizedBox(
                             width: 1,
-                            child: ColoredBox(color: ClipFlowColors.border),
+                            child: ColoredBox(color: resolveColor(context, ClipFlowColors.border)),
                           ),
                           const SizedBox(width: 330, child: _DetailPane()),
                         ],
@@ -323,7 +323,7 @@ class _Sidebar extends ConsumerWidget {
     final state = ref.watch(historyControllerProvider);
     final collections = ref.watch(collectionsControllerProvider);
     return ColoredBox(
-      color: ClipFlowColors.sidebar,
+      color: resolveColor(context, ClipFlowColors.sidebar),
       child: SafeArea(
         top: false,
         child: Padding(
@@ -331,14 +331,14 @@ class _Sidebar extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.fromLTRB(10, 2, 10, 8),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
                 child: Text(
                   'THƯ VIỆN',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: ClipFlowColors.secondaryText,
+                    color: resolveColor(context, ClipFlowColors.secondaryText),
                   ),
                 ),
               ),
@@ -375,15 +375,15 @@ class _Sidebar extends ConsumerWidget {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 10),
+                      padding: const EdgeInsets.only(left: 10),
                       child: Text(
                         'COLLECTIONS',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: ClipFlowColors.secondaryText,
+                          color: resolveColor(context, ClipFlowColors.secondaryText),
                         ),
                       ),
                     ),
@@ -435,23 +435,23 @@ class _Sidebar extends ConsumerWidget {
                   context.push('/settings');
                 },
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(10, 8, 10, 2),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
                 child: Row(
                   children: [
                     Icon(
                       CupertinoIcons.lock_shield,
                       size: 13,
-                      color: ClipFlowColors.secondaryText,
+                      color: resolveColor(context, ClipFlowColors.secondaryText),
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         'Dữ liệu chỉ lưu trên thiết bị',
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
-                          color: ClipFlowColors.secondaryText,
+                          color: resolveColor(context, ClipFlowColors.secondaryText),
                         ),
                       ),
                     ),
@@ -592,7 +592,7 @@ class _NavTile extends StatelessWidget {
                     size: 14,
                     color: selected
                         ? CupertinoColors.white
-                        : ClipFlowColors.secondaryText,
+                        : resolveColor(context, ClipFlowColors.secondaryText),
                     onPressed: onOptionsPressed,
                   ),
                 ],
@@ -755,6 +755,7 @@ class _HistoryPane extends ConsumerWidget {
                           .togglePinned(item),
                       onMore: () => _showItemActions(
                         context,
+                        ref,
                         item,
                         onDelete,
                         onAddToCollection,
@@ -871,18 +872,18 @@ class _ClipboardItemCard extends StatelessWidget {
                             child: Text(
                               _relativeTime(item.lastCopiedAt),
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: ClipFlowColors.secondaryText,
+                                color: resolveColor(context, ClipFlowColors.secondaryText),
                               ),
                             ),
                           ),
                           if (index < 9)
                             Text(
                               '${Platform.isMacOS ? '⌘' : 'Ctrl+'}${index + 1}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: ClipFlowColors.secondaryText,
+                                color: resolveColor(context, ClipFlowColors.secondaryText),
                               ),
                             ),
                         ],
@@ -916,9 +917,9 @@ class _ClipboardItemCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         item.sourceAppName ?? 'Thiết bị này',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: ClipFlowColors.secondaryText,
+                          color: resolveColor(context, ClipFlowColors.secondaryText),
                         ),
                       ),
                     ],
@@ -967,11 +968,53 @@ class _ClipboardItemCard extends StatelessWidget {
   }
 }
 
-class _DetailPane extends ConsumerWidget {
+class _DetailPane extends ConsumerStatefulWidget {
   const _DetailPane();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DetailPane> createState() => _DetailPaneState();
+}
+
+class _DetailPaneState extends ConsumerState<_DetailPane> {
+  bool _isProcessing = false;
+
+  Future<void> _handleOcr(ClipboardItem item) async {
+    setState(() => _isProcessing = true);
+    try {
+      final result = await ref
+          .read(historyControllerProvider.notifier)
+          .performOcr(item);
+      if (!mounted) return;
+      if (result != null) {
+        showCupertinoNotice(context, 'Đã trích xuất văn bản & tạo bản sao');
+      } else {
+        showCupertinoNotice(context, 'Không tìm thấy văn bản trong hình ảnh');
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleTranslate(ClipboardItem item) async {
+    final settings = ref.read(settingsControllerProvider);
+    setState(() => _isProcessing = true);
+    try {
+      final result = await ref
+          .read(historyControllerProvider.notifier)
+          .translateItem(item, settings.targetTranslationLanguage);
+      if (!mounted) return;
+      if (result != null) {
+        showCupertinoNotice(context, 'Đã dịch & tạo bản sao mới');
+      } else {
+        showCupertinoNotice(context, 'Không thể dịch văn bản này');
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(historyControllerProvider);
     ClipboardItem? item;
     for (final entry in state.visibleItems) {
@@ -980,8 +1023,9 @@ class _DetailPane extends ConsumerWidget {
     if (item == null) {
       return const Center(child: Text('Chọn một mục để xem chi tiết'));
     }
+    final isImage = item.contentType == ClipboardContentType.image;
     return ColoredBox(
-      color: ClipFlowColors.sidebar,
+      color: resolveColor(context, ClipFlowColors.sidebar),
       child: Padding(
         padding: const EdgeInsets.all(22),
         child: Column(
@@ -1000,7 +1044,7 @@ class _DetailPane extends ConsumerWidget {
             const SizedBox(height: 22),
             Expanded(
               child: SingleChildScrollView(
-                child: item.contentType == ClipboardContentType.image
+                child: isImage
                     ? _ClipboardImagePreview(path: item.imagePath, height: 260)
                     : Text(
                         item.content,
@@ -1028,6 +1072,75 @@ class _DetailPane extends ConsumerWidget {
             ),
             _MetadataRow(label: 'Số lần dùng', value: '${item.copyCount}'),
             const SizedBox(height: 14),
+            if (isImage) ...[
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  color: CupertinoColors.activeBlue.withValues(alpha: 0.15),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  onPressed: _isProcessing ? null : () => _handleOcr(item!),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isProcessing)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: CupertinoActivityIndicator(radius: 8),
+                        )
+                      else
+                        const Icon(CupertinoIcons.doc_text_search, size: 16),
+                      const SizedBox(width: 6),
+                      const Flexible(
+                        child: Text(
+                          'Trích xuất văn bản (OCR)',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: CupertinoColors.activeBlue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ] else ...[
+              SizedBox(
+                width: double.infinity,
+                child: CupertinoButton(
+                  color: CupertinoColors.activeBlue.withValues(alpha: 0.15),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  onPressed: _isProcessing ? null : () => _handleTranslate(item!),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isProcessing)
+                        const Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: CupertinoActivityIndicator(radius: 8),
+                        )
+                      else
+                        const Icon(CupertinoIcons.globe, size: 16),
+                      const SizedBox(width: 6),
+                      const Flexible(
+                        child: Text(
+                          'Dịch văn bản',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: CupertinoColors.activeBlue,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             SizedBox(
               width: double.infinity,
               child: CupertinoButton.filled(
@@ -1058,7 +1171,7 @@ class _MetadataRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: ClipFlowColors.secondaryText),
+              style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
             ),
           ),
           Text(value),
@@ -1141,7 +1254,7 @@ class _EmptyState extends StatelessWidget {
                   ? 'Thử từ khóa hoặc bộ lọc khác.'
                   : 'Hãy sao chép một nội dung. ClipFlow sẽ giữ nó an toàn trên thiết bị này.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: ClipFlowColors.secondaryText),
+              style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
             ),
           ],
         ),
@@ -1177,14 +1290,26 @@ class _ErrorState extends ConsumerWidget {
 
 Future<void> _showItemActions(
   BuildContext context,
+  WidgetRef ref,
   ClipboardItem item,
   ValueChanged<ClipboardItem> onDelete,
   ValueChanged<ClipboardItem> onAddToCollection,
 ) async {
+  final isImage = item.contentType == ClipboardContentType.image;
   final action = await showCupertinoModalPopup<String>(
     context: context,
     builder: (context) => CupertinoActionSheet(
       actions: [
+        if (isImage)
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'ocr'),
+            child: const Text('Trích xuất văn bản (OCR)'),
+          )
+        else
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'translate'),
+            child: const Text('Dịch văn bản (Translate)'),
+          ),
         CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context, 'collection'),
           child: const Text('Thêm vào collection'),
@@ -1201,8 +1326,35 @@ Future<void> _showItemActions(
       ),
     ),
   );
-  if (action == 'collection') onAddToCollection(item);
-  if (action == 'delete') onDelete(item);
+  if (!context.mounted) return;
+  if (action == 'ocr') {
+    final text = await ref
+        .read(historyControllerProvider.notifier)
+        .performOcr(item);
+    if (context.mounted) {
+      showCupertinoNotice(
+        context,
+        text != null
+            ? 'Đã trích xuất văn bản & tạo bản sao'
+            : 'Không tìm thấy văn bản trong hình ảnh',
+      );
+    }
+  } else if (action == 'translate') {
+    final settings = ref.read(settingsControllerProvider);
+    final text = await ref
+        .read(historyControllerProvider.notifier)
+        .translateItem(item, settings.targetTranslationLanguage);
+    if (context.mounted) {
+      showCupertinoNotice(
+        context,
+        text != null ? 'Đã dịch & tạo bản sao mới' : 'Không thể dịch văn bản',
+      );
+    }
+  } else if (action == 'collection') {
+    onAddToCollection(item);
+  } else if (action == 'delete') {
+    onDelete(item);
+  }
 }
 
 Future<String?> _textDialog(

@@ -94,7 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         SizedBox(
                           width: 220,
                           child: ColoredBox(
-                            color: ClipFlowColors.sidebar,
+                            color: resolveColor(context, ClipFlowColors.sidebar),
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -107,19 +107,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       onTap: () => setState(() => _page = page),
                                     ),
                                   const Spacer(),
-                                  const Row(
+                                  Row(
                                     children: [
                                       Icon(
                                         CupertinoIcons.lock_shield,
                                         size: 15,
-                                        color: ClipFlowColors.secondaryText,
+                                        color: resolveColor(context, ClipFlowColors.secondaryText),
                                       ),
-                                      SizedBox(width: 7),
+                                      const SizedBox(width: 7),
                                       Text(
                                         'Dữ liệu lưu cục bộ',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: ClipFlowColors.secondaryText,
+                                          color: resolveColor(context, ClipFlowColors.secondaryText),
                                         ),
                                       ),
                                     ],
@@ -129,9 +129,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(
+                        SizedBox(
                           width: 1,
-                          child: ColoredBox(color: ClipFlowColors.border),
+                          child: ColoredBox(color: resolveColor(context, ClipFlowColors.border)),
                         ),
                         Expanded(child: _SettingsContent(page: _page)),
                       ],
@@ -382,11 +382,11 @@ class _GeneralSettings extends ConsumerWidget {
                           : CupertinoColors.systemOrange,
                     ),
                     trailing: hasPermission
-                        ? const Text(
+                        ? Text(
                             'Đã cấp',
                             style: TextStyle(
                               fontSize: 13,
-                              color: ClipFlowColors.secondaryText,
+                              color: resolveColor(context, ClipFlowColors.secondaryText),
                             ),
                           )
                         : CupertinoButton(
@@ -420,11 +420,33 @@ class _GeneralSettings extends ConsumerWidget {
                   _update(ref, (current) => current.copyWith(themeMode: value)),
             ),
             _PickerRow<String>(
-              title: 'Ngôn ngữ',
+              title: 'Ngôn ngữ ứng dụng',
               value: settings.language,
               items: const {'vi': 'Tiếng Việt', 'en': 'English'},
               onChanged: (value) =>
                   _update(ref, (current) => current.copyWith(language: value)),
+            ),
+            _PickerRow<String>(
+              title: 'Ngôn ngữ dịch thuật',
+              subtitle: 'Ngôn ngữ đích khi sử dụng chức năng Dịch',
+              value: settings.targetTranslationLanguage,
+              items: const {
+                'vi': 'Tiếng Việt',
+                'en': 'Tiếng Anh (English)',
+                'zh-CN': 'Tiếng Trung (Chinese)',
+                'ja': 'Tiếng Nhật (Japanese)',
+                'ko': 'Tiếng Hàn (Korean)',
+                'fr': 'Tiếng Pháp (French)',
+                'de': 'Tiếng Đức (German)',
+                'es': 'Tiếng Tây Ban Nha (Spanish)',
+                'ru': 'Tiếng Nga (Russian)',
+                'th': 'Tiếng Thái (Thai)',
+              },
+              onChanged: (value) => _update(
+                ref,
+                (current) =>
+                    current.copyWith(targetTranslationLanguage: value),
+              ),
             ),
           ],
         ),
@@ -1086,9 +1108,9 @@ class _ShortcutSettings extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        Text(
           'Nhấn vào một hàng để ghi tổ hợp mới. Phím mở ClipFlow được đăng ký toàn hệ thống ngay sau khi lưu.',
-          style: TextStyle(color: ClipFlowColors.secondaryText, height: 1.5),
+          style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText), height: 1.5),
         ),
       ],
     );
@@ -1266,7 +1288,7 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
             const SizedBox(height: 14),
             CupertinoSurface(
               padding: const EdgeInsets.all(14),
-              color: ClipFlowColors.elevatedSurface,
+              color: resolveColor(context, ClipFlowColors.elevatedSurface),
               child: Center(child: _KeyCaps(label: shortcutLabel(value))),
             ),
             if (_error != null) ...[
@@ -1331,9 +1353,9 @@ class _AboutSettings extends StatelessWidget {
             style: TextStyle(fontSize: 25, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 5),
-          const Text(
-            'Phiên bản 1.0.0',
-            style: TextStyle(color: ClipFlowColors.secondaryText),
+          Text(
+            'Phiên bản 1.0.2',
+            style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
           ),
           const SizedBox(height: 24),
           ConstrainedBox(
@@ -1402,9 +1424,9 @@ class _SettingsTile extends StatelessWidget {
                   const SizedBox(height: 3),
                   Text(
                     subtitle!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: ClipFlowColors.secondaryText,
+                      color: resolveColor(context, ClipFlowColors.secondaryText),
                     ),
                   ),
                 ],
@@ -1450,9 +1472,11 @@ class _PickerRow<T> extends StatelessWidget {
     required this.value,
     required this.items,
     required this.onChanged,
+    this.subtitle,
   });
 
   final String title;
+  final String? subtitle;
   final T value;
   final Map<T, String> items;
   final ValueChanged<T> onChanged;
@@ -1461,13 +1485,14 @@ class _PickerRow<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return _SettingsTile(
       title: title,
+      subtitle: subtitle,
       onTap: () => _pick(context),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             items[value] ?? '',
-            style: const TextStyle(color: ClipFlowColors.secondaryText),
+            style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
           ),
           const SizedBox(width: 6),
           const Icon(CupertinoIcons.chevron_right, size: 14),
@@ -1550,9 +1575,9 @@ class _NumberRowState extends State<_NumberRow> {
             padding: const EdgeInsets.only(right: 8),
             child: Text(
               widget.suffix,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: ClipFlowColors.secondaryText,
+                color: resolveColor(context, ClipFlowColors.secondaryText),
               ),
             ),
           ),

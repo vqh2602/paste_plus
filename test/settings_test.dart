@@ -15,6 +15,7 @@ void main() {
     final changed = const AppSettings().copyWith(
       monitoringEnabled: false,
       retentionDays: 90,
+      targetTranslationLanguage: 'ja',
       allowedTypes: {'text', 'url'},
       excludedApplications: ['Password App'],
       openPanelShortcut: openShortcut,
@@ -25,6 +26,7 @@ void main() {
 
     expect(loaded.monitoringEnabled, isFalse);
     expect(loaded.retentionDays, 90);
+    expect(loaded.targetTranslationLanguage, 'ja');
     expect(loaded.allowedTypes, {'text', 'url'});
     expect(loaded.excludedApplications, ['Password App']);
     expect(
