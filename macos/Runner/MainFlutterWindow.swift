@@ -285,15 +285,23 @@ class MainFlutterWindow: NSWindow {
       return
     }
 
-    guard
-      let targetApplication = lastActiveApplication ?? previousApplication,
-      !targetApplication.isTerminated
-    else {
+    let myPid = ProcessInfo.processInfo.processIdentifier
+    var targetApplication: NSRunningApplication? = lastActiveApplication ?? previousApplication
+
+    if targetApplication == nil || targetApplication?.isTerminated == true || targetApplication?.processIdentifier == myPid {
+      targetApplication = NSWorkspace.shared.runningApplications.first { app in
+        app.activationPolicy == .regular &&
+        app.processIdentifier != myPid &&
+        !app.isTerminated
+      }
+    }
+
+    guard let appToActivate = targetApplication, !appToActivate.isTerminated else {
       result(false)
       return
     }
 
-    targetApplication.activate(options: [.activateIgnoringOtherApps])
+    appToActivate.activate(options: [.activateIgnoringOtherApps])
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.18) {
       let source = CGEventSource(stateID: .hidSystemState)
       guard

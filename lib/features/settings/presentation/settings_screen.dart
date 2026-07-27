@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 
 import '../../../app/providers.dart';
+import '../../../app/theme/app_theme.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
@@ -404,11 +405,11 @@ class _GeneralSettings extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Giao diện'),
+        const CupertinoSectionLabel('Giao diện & Bảng màu'),
         _SettingsGroup(
           children: [
             _PickerRow<String>(
-              title: 'Chủ đề',
+              title: 'Chế độ hiển thị',
               value: settings.themeMode,
               items: const {
                 'system': 'Theo hệ thống',
@@ -426,6 +427,108 @@ class _GeneralSettings extends ConsumerWidget {
                   _update(ref, (current) => current.copyWith(language: value)),
             ),
           ],
+        ),
+        const SizedBox(height: 14),
+        CupertinoSurface(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Tông màu chủ đề (Accent Color)',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: AppTheme.accentColors.entries.map((entry) {
+                  final key = entry.key;
+                  final color = entry.value;
+                  final selected = settings.accentColor == key;
+                  final name = switch (key) {
+                    'indigo' => 'Indigo Mac',
+                    'blue' => 'Ocean Blue',
+                    'mint' => 'Emerald Mint',
+                    'orange' => 'Sunset Orange',
+                    'rose' => 'Rose Pink',
+                    'violet' => 'Cyber Violet',
+                    'slate' => 'Monochrome Slate',
+                    'pastel_lavender' => 'Lavender Pastel 🌸',
+                    'pastel_sky' => 'Sky Blue Pastel ☁️',
+                    'pastel_mint' => 'Mint Pastel 🌿',
+                    'pastel_matcha' => 'Matcha Green 🍵',
+                    'pastel_butter' => 'Butter Yellow 🧈',
+                    'pastel_peach' => 'Peach Pastel 🍑',
+                    'pastel_coral' => 'Soft Coral 🪸',
+                    'pastel_rose' => 'Soft Rose 🎀',
+                    'pastel_lilac' => 'Lilac Pastel 🪻',
+                    _ => key,
+                  };
+                  return CupertinoPressable(
+                    onPressed: () => _update(
+                      ref,
+                      (current) => current.copyWith(accentColor: key),
+                    ),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: selected ? 0.18 : 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: selected
+                              ? color
+                              : resolveColor(context, ClipFlowColors.border),
+                          width: selected ? 2 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.35),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: selected
+                                ? const Icon(
+                                    CupertinoIcons.checkmark,
+                                    size: 10,
+                                    color: CupertinoColors.white,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            name,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight:
+                                  selected ? FontWeight.w600 : FontWeight.w400,
+                              color: selected ? color : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
         ),
       ],
     );

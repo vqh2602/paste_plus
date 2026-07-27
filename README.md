@@ -1,66 +1,122 @@
-# ClipFlow
+# ClipFlow (Paste Plus) 📋✨
 
-ClipFlow là ứng dụng quản lý clipboard local-first bằng Flutter. Bản MVP ưu tiên macOS, có giao diện responsive cho desktop/mobile và không cần backend.
+**ClipFlow** là ứng dụng quản lý lịch sử Clipboard local-first, riêng tư và bảo mật được xây dựng bằng Flutter. Đội ngũ phát triển ưu tiên tối ưu trải nghiệm người dùng trên macOS, đồng thời sẵn sàng mở rộng giao diện responsive cho các nền tảng Desktop và Mobile khác mà không cần phụ thuộc vào bất kỳ server backend nào.
 
-## Tính năng đã có
+---
 
-- Theo dõi clipboard khi ứng dụng chạy; polling được cô lập sau `ClipboardWatcher`.
-- Native channel macOS cho text, PNG và thông tin ứng dụng đang hoạt động.
-- SQLite có migration, index, transaction và bảng liên kết collection.
-- Nhận diện text, URL, email, số điện thoại, code, màu HEX, JSON, file path và hình ảnh.
-- Hash SHA-256, chống trùng, đếm số lần dùng và tránh vòng lặp khi sao chép lại.
-- Tìm kiếm tức thì, filter trực quan và cú pháp `type:`, `is:pinned`, `app:`, `after:`.
-- Ghim, xóa, xóa toàn bộ, collection mặc định và collection tùy chỉnh.
-- Retention theo ngày/số item/dung lượng; bảo vệ item ghim hoặc nằm trong collection.
-- Privacy rules cho OTP, token dài, giới hạn độ dài/kích thước và ứng dụng loại trừ.
-- Onboarding 5 bước, dark mode, Settings và empty/error states.
-- Menu bar/system tray, mở cùng hệ điều hành và global shortcut (`⌃V` hoặc `⌘⇧V` trên macOS).
+## 🌟 Tính năng nổi bật
 
-## Kiến trúc
+### ⚡ Tự động Dán (Auto-Paste) & Quyền Trợ năng (macOS)
+- **Dán tự động**: Khi chọn hoặc nhấp vào một mục trong Quick Panel, ứng dụng sẽ tự động sao chép vào bộ nhớ tạm, ẩn cửa sổ panel và tự động thực hiện thao tác dán (`⌘V`) trực tiếp vào ứng dụng đang làm việc trước đó.
+- **Quản lý quyền Trợ năng (Accessibility)**: Tích hợp workflow kiểm tra và yêu cầu cấp quyền Trợ năng (`AXIsProcessTrusted`) trực quan. Cung cấp lối tắt mở thẳng phần *Quyền riêng tư & Bảo mật > Trợ năng* trong System Settings của macOS.
 
-Mã nguồn theo feature-first, dùng Riverpod + repository/service layer:
+### 🎨 Tùy chỉnh Giao diện & Bảng màu (Accent Colors & Themes)
+- **Bảng màu phong phú**: Hỗ trợ hàng loạt bộ Accent Color đa dạng và hiện đại (Indigo Mac, Ocean Blue, Emerald Mint, Sunset Orange, Cyber Violet, Monochrome Slate, cùng các tông màu Pastel như Lavender, Sky Blue, Matcha Green, Peach, Soft Coral, Soft Rose...).
+- **Chế độ hiển thị**: Chuyển đổi linh hoạt giữa Sáng (Light Mode), Tối (Dark Mode) hoặc Tự động theo Hệ thống (System Theme).
+
+### 🚫 Quản lý Ứng dụng Loại trừ (Excluded Apps Picker)
+- **Chọn tiến trình đang chạy**: Giao diện chọn ứng dụng bị loại trừ trực quan từ danh sách các tiến trình active trên hệ thống macOS mà không cần gõ thủ công ID.
+- **Duyệt từ Finder**: Cho phép mở trình chọn tệp `NSOpenPanel` để chọn trực tiếp ứng dụng `.app` cần bỏ qua việc theo dõi clipboard.
+
+### 📑 Điều hướng Tab & Phân loại Linh hoạt (Quick Panel Navigation)
+- **Thanh cuộn Tab loại nội dung & Collection**: Tùy chọn chuyển đổi nhanh giữa các Collection cá nhân và các loại nội dung clipboard bằng thanh tab cuộn ngang mượt mà.
+- **Tự động nhận diện định dạng**: Tự động phân loại Text, URL/Link, Email, Số điện thoại, Code snippet, Màu sắc (HEX Color), JSON, Đường dẫn tệp (File Path) và Hình ảnh (PNG/JPEG).
+
+### 🛡️ Quyền riêng tư & Lưu trữ Cục cục bộ (Local-first & Privacy)
+- **Lưu trữ bảo mật**: Dữ liệu lưu hoàn toàn cục bộ trên thiết bị qua SQLite database (có hỗ trợ migration, index, transaction). Nội dung clipboard không bao giờ bị đưa vào file log.
+- **Mã hóa SHA-256 & Chống trùng**: Loại bỏ item trùng lặp bằng hash SHA-256, đếm số lần sử dụng và ngăn chặn vòng lặp re-copy clipboard.
+- **Bộ lọc dữ liệu nhạy cảm**: Tự động phát hiện và bỏ qua mã OTP, token/chuỗi nhạy cảm độ dài lớn, cùng tùy chỉnh giới hạn kích thước tệp/độ dài văn bản.
+
+### 🔍 Tìm kiếm Thông minh & Cú pháp Lọc
+- **Tìm kiếm tức thì**: Lọc theo từ khóa trong nội dung.
+- **Cú pháp tìm kiếm nâng cao**: Hỗ trợ kết hợp các bộ lọc `type:` (vd: `type:link`), `is:pinned`, `app:` (vd: `app:Xcode`), và `after:` (thời gian).
+
+### ⌨️ Menu Bar, Tray Icon & Hotkey Toàn cục
+- **Phím tắt toàn cục (Global Hotkey)**: Kích hoạt nhanh Quick Panel từ bất kỳ đâu qua `⌘ShiftV` (hoặc `CtrlV`).
+- **Khay hệ thống (System Tray / Menu Bar)**: Truy cập nhanh từ thanh menu bar macOS.
+- **Khởi động cùng hệ thống**: Tùy chọn tự động khởi chạy ứng dụng khi đăng nhập hệ thống (`Launch at Startup`).
+- **Tùy chỉnh ẩn/hiện Dock**: Cho phép ẩn hoặc hiện biểu tượng ứng dụng trên thanh macOS Dock.
+- **Đóng nhanh**: Phím `Esc` hỗ trợ đóng nhanh cửa sổ Quick Panel hoặc ứng dụng Settings.
+
+---
+
+## 🏗️ Cấu trúc Kiến trúc (Architecture)
+
+Dự án được tổ chức theo mô hình **Feature-First Architecture** kết hợp với **Riverpod** cho State Management và tầng Repository / Service rõ ràng:
 
 ```text
 lib/
-  app/                         # app, router, theme, providers
+  app/                         # Router (GoRouter), Theme, App Providers & Configuration
   core/
-    database/                  # SQLite schema và migration
-    platform/                  # tray, hotkey, startup, window
-    services/                  # clipboard watcher, logging
+    database/                  # SQLite schema, migration & helper logic
+    platform/                  # macOS native channels, tray, hotkey, startup, window manager
+    services/                  # Isolation Clipboard Watcher, Logging & Policy services
+    ui/                        # macOS Cupertino shared components & UI primitives
   features/
     clipboard_history/
-      data/                    # SQLite repository
-      domain/                  # model, classifier, search, policy
-      presentation/            # controller và màn hình chính
-    onboarding/presentation/
+      data/                    # SQLite repository implementation
+      domain/                  # Data models, content classifier, search syntax & retention policy
+      presentation/            # Quick panel screen, Home screen, cards & controllers
+    onboarding/
+      presentation/            # 5-step onboarding page
     settings/
+      domain/                  # AppSettings data model
+      presentation/            # General settings, Privacy, Storage & App Exclusions settings
 ```
 
-Nội dung clipboard không được ghi vào log. Hình ảnh nằm trong Application Support và SQLite chỉ giữ đường dẫn.
+- **Lưu trữ hình ảnh**: Ảnh clipboard được lưu trực tiếp vào thư mục `Application Support` của ứng dụng; SQLite chỉ lưu trữ đường dẫn tệp để tối ưu hiệu năng database.
 
-## Chạy
+---
 
+## 🚀 Hướng dẫn Cài đặt & Chạy ứng dụng
+
+### Yêu cầu
+- Flutter SDK `>=3.11.5`
+- Xcode 15+ (đối với macOS build)
+
+### 1. Cài đặt Dependencies
 ```bash
 flutter pub get
+```
+
+### 2. Chạy ứng dụng trên macOS
+```bash
 flutter run -d macos
 ```
 
-Android/iOS dùng cùng giao diện responsive. Trên mobile, nút **Lưu clipboard** đọc nội dung hiện tại theo giới hạn của hệ điều hành.
+---
 
-## Kiểm thử và build
+## 🧪 Kiểm thử và Build
 
+Ứng dụng đi kèm bộ unit test và widget test đầy đủ nhằm bảo đảm tính ổn định của cơ chế mã hóa, phân loại, tìm kiếm và lưu trữ database.
+
+### Chạy phân tích mã nguồn (Linting)
 ```bash
 flutter analyze
-flutter test
-flutter build macos
 ```
 
-Widget test dùng watcher/repository in-memory; database test dùng SQLite FFI và chạy tuần tự qua `dart_test.yaml`.
+### Chạy toàn bộ Unit & Widget Tests
+```bash
+flutter test
+```
 
-## Giới hạn hiện tại
+### Build bản phát hành macOS
+```bash
+flutter build macos --release
+```
 
-- Quick panel dùng cùng native window và chuyển đổi kích thước/trạng thái khi gọi bằng hotkey; chưa tách thành native window thứ hai độc lập.
-- Lấy source app là best-effort và phụ thuộc nền tảng; macOS dùng ứng dụng đang active khi phát hiện thay đổi.
-- Theo dõi nền trên iOS/Android bị giới hạn bởi hệ điều hành, nên mobile hoạt động theo mô hình ứng dụng đồng hành.
-- Đồng bộ cloud, khóa sinh trắc học và share extension thuộc giai đoạn sau.
-- Scaffold Windows/Linux không thể sinh hoặc build trên Flutter host hiện tại; Dart/service layer và plugin đã chọn có hỗ trợ hai nền tảng này.
+---
+
+## 🔐 Quyền hạn Hệ thống & Cấu hình macOS (Entitlements)
+
+Để tính năng **Auto-Paste** và gửi phím tắt mô phỏng (`⌘V`) hoạt động ổn định sang các ứng dụng khác trên macOS:
+1. Quyền **Accessibility**: Cần được cấp phép trong *System Settings > Privacy & Security > Accessibility*.
+2. **App Sandbox**: File `DebugProfile.entitlements` và `Release.entitlements` đã được định cấu hình tắt App Sandbox (`com.apple.security.app-sandbox = false`) để cho phép thực thi AppleScript / System Events paste command sang ứng dụng tiền nhiệm.
+
+---
+
+## 📌 Giới hạn hiện tại & Định hướng tiếp theo
+
+- **Quick Panel Window**: Hiện tại Quick Panel chia sẻ cùng native window và điều chỉnh kích thước động khi gọi từ hotkey.
+- **Đồng bộ hóa**: Chưa tích hợp đồng bộ Cloud (iCloud/e2e encrypted sync) và khóa sinh trắc học (Touch ID/Face ID).
+- **Nền tảng Mobile**: iOS/Android đang hoạt động theo dạng mô hình ứng dụng đồng hành do giới hạn background clipboard restriction từ phía OS.

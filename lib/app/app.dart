@@ -96,7 +96,10 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
     return CupertinoApp.router(
       title: 'ClipFlow',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.theme(settings.themeMode),
+      theme: AppTheme.theme(
+        settings.themeMode,
+        accentKey: settings.accentColor,
+      ),
       routerConfig: router,
     );
   }

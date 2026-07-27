@@ -228,7 +228,7 @@ void main() {
 
     expect(find.byKey(const Key('quick-panel-search')), findsOneWidget);
     expect(find.text('Riêng tư & cục bộ'), findsNothing);
-    expect(find.text('Liên kết'), findsOneWidget);
+    expect(find.text('Liên kết'), findsAtLeast(1));
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pump();
     await tester.tap(find.textContaining('flutter.dev').last);

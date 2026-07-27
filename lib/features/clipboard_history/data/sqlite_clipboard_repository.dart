@@ -282,6 +282,11 @@ class SqliteClipboardRepository implements ClipboardRepository {
 
   @override
   Future<void> deleteCollection(String id) async {
+    await _db.delete(
+      'clipboard_item_collections',
+      where: 'collection_id = ?',
+      whereArgs: [id],
+    );
     await _db.delete('collections', where: 'id = ?', whereArgs: [id]);
   }
 

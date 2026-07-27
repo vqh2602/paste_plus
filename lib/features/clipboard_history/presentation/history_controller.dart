@@ -111,18 +111,20 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> reload() async {
     try {
-      ClipboardContentType? type;
-      switch (state.section) {
-        case HistorySection.images:
-          type = ClipboardContentType.image;
-        case HistorySection.links:
-          type = ClipboardContentType.url;
-        case HistorySection.code:
-          type = ClipboardContentType.code;
-        case HistorySection.all ||
-            HistorySection.pinned ||
-            HistorySection.collection:
-          type = null;
+      ClipboardContentType? type = state.typeFilter;
+      if (type == null) {
+        switch (state.section) {
+          case HistorySection.images:
+            type = ClipboardContentType.image;
+          case HistorySection.links:
+            type = ClipboardContentType.url;
+          case HistorySection.code:
+            type = ClipboardContentType.code;
+          case HistorySection.all ||
+              HistorySection.pinned ||
+              HistorySection.collection:
+            type = null;
+        }
       }
       final items = await _repository.getItems(
         pinnedOnly: state.section == HistorySection.pinned,
@@ -163,23 +165,35 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   void search(String value) => state = state.copyWith(query: value);
 
-  void filterByType(ClipboardContentType? type) {
+  Future<void> filterByType(ClipboardContentType? type) async {
     state = type == null
         ? state.copyWith(clearTypeFilter: true)
         : state.copyWith(typeFilter: type);
+    await reload();
   }
 
   Future<void> selectSection(
     HistorySection section, {
     String? collectionId,
+    bool preserveTypeFilter = false,
   }) async {
     state = state.copyWith(
       section: section,
       collectionId: collectionId,
       clearCollection: section != HistorySection.collection,
+      clearTypeFilter: !preserveTypeFilter,
       clearSelection: true,
     );
     await reload();
+  }
+
+  Future<void> onCollectionDeleted(String id) async {
+    if (state.section == HistorySection.collection &&
+        state.collectionId == id) {
+      await selectSection(HistorySection.all);
+    } else {
+      await reload();
+    }
   }
 
   void select(String id) => state = state.copyWith(selectedItemId: id);

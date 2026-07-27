@@ -12,6 +12,7 @@ class AppSettings {
     this.closeAfterCopy = false,
     this.soundEnabled = true,
     this.themeMode = 'system',
+    this.accentColor = 'indigo',
     this.language = 'vi',
     this.ignoreDuplicates = true,
     this.ignoreSensitive = true,
@@ -54,6 +55,7 @@ class AppSettings {
   final bool closeAfterCopy;
   final bool soundEnabled;
   final String themeMode;
+  final String accentColor;
   final String language;
   final bool ignoreDuplicates;
   final bool ignoreSensitive;
@@ -86,6 +88,7 @@ class AppSettings {
     bool? closeAfterCopy,
     bool? soundEnabled,
     String? themeMode,
+    String? accentColor,
     String? language,
     bool? ignoreDuplicates,
     bool? ignoreSensitive,
@@ -119,6 +122,7 @@ class AppSettings {
       closeAfterCopy: closeAfterCopy ?? this.closeAfterCopy,
       soundEnabled: soundEnabled ?? this.soundEnabled,
       themeMode: themeMode ?? this.themeMode,
+      accentColor: accentColor ?? this.accentColor,
       language: language ?? this.language,
       ignoreDuplicates: ignoreDuplicates ?? this.ignoreDuplicates,
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
@@ -153,6 +157,7 @@ class AppSettings {
     'closeAfterCopy': closeAfterCopy,
     'soundEnabled': soundEnabled,
     'themeMode': themeMode,
+    'accentColor': accentColor,
     'language': language,
     'ignoreDuplicates': ignoreDuplicates,
     'ignoreSensitive': ignoreSensitive,
@@ -196,6 +201,7 @@ class AppSettings {
       closeAfterCopy: value('closeAfterCopy', false),
       soundEnabled: value('soundEnabled', true),
       themeMode: value('themeMode', 'system'),
+      accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),
       ignoreDuplicates: value('ignoreDuplicates', true),
       ignoreSensitive: value('ignoreSensitive', true),

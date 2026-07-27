@@ -51,8 +51,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _copy(ClipboardItem item) async {
-    await ref.read(historyControllerProvider.notifier).copy(item);
-    if (mounted) showCupertinoNotice(context, 'Đã sao chép');
+    final controller = ref.read(historyControllerProvider.notifier);
+    await controller.copy(item);
+    final settings = ref.read(settingsControllerProvider);
+    final desktop = ref.read(desktopIntegrationProvider);
+
+    if (settings.closeAfterCopy) {
+      await desktop.hideQuickPanel();
+      final pasted = await desktop.pasteToPreviousApplication();
+      if (!pasted && Platform.isMacOS) {
+        final hasPermission = await desktop.checkAccessibilityPermission();
+        if (!hasPermission) {
+          await desktop.requestAccessibilityPermission();
+        }
+      }
+    } else {
+      if (mounted) showCupertinoNotice(context, 'Đã sao chép');
+    }
   }
 
   @override
@@ -210,11 +225,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _showCollections(ClipboardItem item) async {
-    final collections = ref.read(collectionsControllerProvider).value ?? [];
-    final selected = await ref
-        .read(historyControllerProvider.notifier)
-        .collectionIdsForItem(item.id);
+    final collectionsNotifier =
+        ref.read(collectionsControllerProvider.notifier);
+    final historyNotifier = ref.read(historyControllerProvider.notifier);
+
+    var collections = ref.read(collectionsControllerProvider).value ?? [];
+    final selected = await historyNotifier.collectionIdsForItem(item.id);
     if (!mounted) return;
+
     await showCupertinoDialog<void>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
@@ -222,48 +240,68 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           title: const Text('Thêm vào collection'),
           content: SizedBox(
             width: 360,
-            child: collections.isEmpty
-                ? const Padding(
-                    padding: EdgeInsets.only(top: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (collections.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 12, bottom: 8),
                     child: Text('Chưa có collection nào.'),
                   )
-                : Column(
-                    children: collections.map((collection) {
-                      final checked = selected.contains(collection.id);
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Row(
-                          children: [
-                            const Icon(CupertinoIcons.folder, size: 18),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text(collection.name)),
-                            CupertinoSwitch(
-                              value: checked,
-                              onChanged: (value) async {
-                                if (value) {
-                                  await ref
-                                      .read(clipboardRepositoryProvider)
-                                      .addToCollection(item.id, collection.id);
-                                  selected.add(collection.id);
-                                } else {
-                                  await ref
-                                      .read(clipboardRepositoryProvider)
-                                      .removeFromCollection(
-                                        item.id,
-                                        collection.id,
-                                      );
-                                  selected.remove(collection.id);
-                                }
-                                setDialogState(() {});
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
-                  ),
+                else
+                  ...collections.map((collection) {
+                    final checked = selected.contains(collection.id);
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        children: [
+                          const Icon(CupertinoIcons.folder, size: 18),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(collection.name)),
+                          CupertinoSwitch(
+                            value: checked,
+                            onChanged: (value) async {
+                              if (value) {
+                                await ref
+                                    .read(clipboardRepositoryProvider)
+                                    .addToCollection(item.id, collection.id);
+                                selected.add(collection.id);
+                              } else {
+                                await ref
+                                    .read(clipboardRepositoryProvider)
+                                    .removeFromCollection(
+                                      item.id,
+                                      collection.id,
+                                    );
+                                selected.remove(collection.id);
+                              }
+                              setDialogState(() {});
+                              await historyNotifier.reload();
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+              ],
+            ),
           ),
           actions: [
+            CupertinoDialogAction(
+              onPressed: () async {
+                final name = await _textDialog(
+                  context,
+                  title: 'Collection mới',
+                );
+                if (name != null && name.trim().isNotEmpty) {
+                  await collectionsNotifier.create(name.trim());
+                  collections =
+                      ref.read(collectionsControllerProvider).value ?? [];
+                  setDialogState(() {});
+                }
+              },
+              child: const Text('+ Collection mới'),
+            ),
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text('Xong'),
@@ -379,6 +417,8 @@ class _Sidebar extends ConsumerWidget {
                         ),
                         onLongPress: () =>
                             _collectionActions(context, ref, collection),
+                        onOptionsPressed: () =>
+                            _collectionActions(context, ref, collection),
                       );
                     }).toList(),
                   ),
@@ -485,6 +525,9 @@ class _Sidebar extends ConsumerWidget {
       await ref
           .read(collectionsControllerProvider.notifier)
           .delete(collection.id);
+      await ref
+          .read(historyControllerProvider.notifier)
+          .onCollectionDeleted(collection.id);
     }
   }
 }
@@ -496,6 +539,7 @@ class _NavTile extends StatelessWidget {
     required this.selected,
     required this.onTap,
     this.onLongPress,
+    this.onOptionsPressed,
   });
 
   final IconData icon;
@@ -503,6 +547,7 @@ class _NavTile extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onOptionsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -511,11 +556,12 @@ class _NavTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 3),
       child: GestureDetector(
         onLongPress: onLongPress,
+        onSecondaryTap: onOptionsPressed ?? onLongPress,
         child: CupertinoPressable(
           onPressed: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
-            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+            padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
             decoration: BoxDecoration(
               color: selected ? primary : const Color(0x00000000),
               borderRadius: BorderRadius.circular(9),
@@ -539,6 +585,17 @@ class _NavTile extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (onOptionsPressed != null) ...[
+                  const SizedBox(width: 4),
+                  CupertinoIconControl(
+                    icon: CupertinoIcons.ellipsis,
+                    size: 14,
+                    color: selected
+                        ? CupertinoColors.white
+                        : ClipFlowColors.secondaryText,
+                    onPressed: onOptionsPressed,
+                  ),
+                ],
               ],
             ),
           ),
