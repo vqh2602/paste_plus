@@ -409,6 +409,34 @@ class DesktopIntegrationService with TrayListener {
     }
   }
 
+  Future<List<Map<String, String>>> getRunningApplications() async {
+    if (!Platform.isMacOS) return [];
+    try {
+      final list = await _windowChannel.invokeListMethod<Map>(
+        'getRunningApplications',
+      );
+      if (list == null) return [];
+      return list
+          .map((item) => Map<String, String>.from(item.cast<String, String>()))
+          .toList();
+    } on Object catch (_) {
+      return [];
+    }
+  }
+
+  Future<Map<String, String>?> pickApplicationFile() async {
+    if (!Platform.isMacOS) return null;
+    try {
+      final result = await _windowChannel.invokeMapMethod<String, String>(
+        'pickApplicationFile',
+      );
+      if (result == null) return null;
+      return Map<String, String>.from(result);
+    } on Object catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> pasteToPreviousApplication() async {
     if (!Platform.isMacOS) return false;
     try {

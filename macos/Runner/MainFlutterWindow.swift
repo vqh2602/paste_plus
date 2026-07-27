@@ -221,6 +221,10 @@ class MainFlutterWindow: NSWindow {
       case "requestAccessibilityPermission":
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         result(AXIsProcessTrustedWithOptions(options))
+      case "getRunningApplications":
+        self.getRunningApplications(result: result)
+      case "pickApplicationFile":
+        self.pickApplicationFile(result: result)
       case "pasteToPreviousApplication":
         self.pasteToPreviousApplication(result: result)
       default:
@@ -312,6 +316,49 @@ class MainFlutterWindow: NSWindow {
       keyDown.post(tap: .cghidEventTap)
       keyUp.post(tap: .cghidEventTap)
       result(true)
+    }
+  }
+
+  private func getRunningApplications(result: @escaping FlutterResult) {
+    let runningApps = NSWorkspace.shared.runningApplications.filter { app in
+      app.activationPolicy == .regular &&
+      app.processIdentifier != ProcessInfo.processInfo.processIdentifier
+    }
+    var seenNames = Set<String>()
+    let appsData: [[String: String]] = runningApps.compactMap { app in
+      guard let name = app.localizedName, !name.isEmpty else { return nil }
+      if seenNames.contains(name) { return nil }
+      seenNames.insert(name)
+      return [
+        "name": name,
+        "bundleId": app.bundleIdentifier ?? ""
+      ]
+    }
+    result(appsData)
+  }
+
+  private func pickApplicationFile(result: @escaping FlutterResult) {
+    let openPanel = NSOpenPanel()
+    openPanel.canChooseFiles = true
+    openPanel.canChooseDirectories = true
+    openPanel.allowsMultipleSelection = false
+    openPanel.allowedFileTypes = ["app"]
+    openPanel.directoryURL = URL(fileURLWithPath: "/Applications")
+    openPanel.begin { response in
+      if response == .OK, let url = openPanel.url {
+        let bundle = Bundle(url: url)
+        let appName = bundle?.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
+          ?? bundle?.object(forInfoDictionaryKey: "CFBundleName") as? String
+          ?? url.deletingPathExtension().lastPathComponent
+        let bundleId = bundle?.bundleIdentifier ?? ""
+        result([
+          "name": appName,
+          "bundleId": bundleId,
+          "path": url.path
+        ])
+      } else {
+        result(nil)
+      }
     }
   }
 

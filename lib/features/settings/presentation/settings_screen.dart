@@ -658,17 +658,117 @@ class _PrivacySettings extends ConsumerWidget {
   }
 
   Future<void> _addExcludedApp(BuildContext context, WidgetRef ref) async {
-    final value = await _inputDialog(
-      context,
-      title: 'Loại trừ ứng dụng',
-      placeholder: 'Ví dụ: Bitwarden',
+    final desktop = ref.read(desktopIntegrationProvider);
+    final action = await showCupertinoModalPopup<String>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Thêm ứng dụng loại trừ'),
+        message: const Text(
+          'Nội dung sao chép từ ứng dụng bị loại trừ sẽ không được lưu vào lịch sử.',
+        ),
+        actions: [
+          if (Platform.isMacOS) ...[
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'running'),
+              child: const Text('Chọn từ ứng dụng đang chạy'),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'finder'),
+              child: const Text('Chọn tệp ứng dụng (.app) từ Finder'),
+            ),
+          ],
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'manual'),
+            child: const Text('Nhập tên ứng dụng thủ công'),
+          ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Hủy'),
+        ),
+      ),
     );
-    if (value == null) return;
+
+    if (action == null || !context.mounted) return;
+
+    String? selectedAppName;
+    if (action == 'finder') {
+      final picked = await desktop.pickApplicationFile();
+      if (picked != null &&
+          picked['name'] != null &&
+          picked['name']!.isNotEmpty) {
+        selectedAppName = picked['name'];
+      }
+    } else if (action == 'running') {
+      final apps = await desktop.getRunningApplications();
+      if (!context.mounted) return;
+      if (apps.isEmpty) {
+        showCupertinoNotice(context, 'Không tìm thấy ứng dụng đang chạy nào.');
+        return;
+      }
+      selectedAppName = await showCupertinoDialog<String>(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Chọn ứng dụng đang chạy'),
+          content: SizedBox(
+            height: 240,
+            width: 300,
+            child: ListView.separated(
+              padding: const EdgeInsets.only(top: 10),
+              itemCount: apps.length,
+              separatorBuilder: (_, _) => const CupertinoDivider(),
+              itemBuilder: (context, index) {
+                final app = apps[index];
+                final name = app['name'] ?? '';
+                return CupertinoPressable(
+                  onPressed: () => Navigator.pop(context, name),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 8,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(CupertinoIcons.app, size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Hủy'),
+            ),
+          ],
+        ),
+      );
+    } else if (action == 'manual') {
+      selectedAppName = await _inputDialog(
+        context,
+        title: 'Loại trừ ứng dụng',
+        placeholder: 'Ví dụ: Bitwarden',
+      );
+    }
+
+    if (selectedAppName == null || selectedAppName.trim().isEmpty) return;
     final current = ref.read(settingsControllerProvider);
+    final appName = selectedAppName.trim();
+    if (current.excludedApplications.contains(appName)) return;
     await _update(
       ref,
       (settings) => settings.copyWith(
-        excludedApplications: [...current.excludedApplications, value],
+        excludedApplications: [...current.excludedApplications, appName],
       ),
     );
   }
