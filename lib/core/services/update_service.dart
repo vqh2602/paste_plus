@@ -26,7 +26,7 @@ class UpdateInfo {
 class UpdateService {
   const UpdateService();
 
-  static const String currentVersion = '1.0.2';
+  static const String currentVersion = '1.0.3';
   static const MethodChannel _windowChannel = MethodChannel('clipflow/window');
 
   /// Check GitHub releases for available update

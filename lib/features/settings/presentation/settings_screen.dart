@@ -1486,7 +1486,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
           ),
           const SizedBox(height: 5),
           Text(
-            'Phiên bản 1.0.2',
+            'Phiên bản ${UpdateService.currentVersion}',
             style: TextStyle(
               color: resolveColor(context, ClipFlowColors.secondaryText),
             ),
