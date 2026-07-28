@@ -673,17 +673,6 @@ class _HistoryPane extends ConsumerWidget {
                       .setMonitoring(enabled);
                 },
               ),
-              CupertinoIconControl(
-                icon: CupertinoIcons.add_circled,
-                onPressed: () async {
-                  final captured = await ref
-                      .read(historyControllerProvider.notifier)
-                      .captureCurrent();
-                  if (!captured && context.mounted) {
-                    showCupertinoNotice(context, 'Clipboard hiện đang trống.');
-                  }
-                },
-              ),
             ],
           ),
         ),
