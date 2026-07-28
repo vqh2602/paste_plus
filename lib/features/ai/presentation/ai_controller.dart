@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/services/ai_debug_service.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
@@ -240,6 +241,13 @@ class AiController extends StateNotifier<AiState> {
   }
 
   void stopGeneration() {
+    _ref
+        .read(aiDebugControllerProvider.notifier)
+        .log(
+          level: AiDebugLevel.warning,
+          stage: 'generation',
+          message: 'Người dùng yêu cầu dừng quá trình sinh',
+        );
     _localEngine.cancelGeneration();
   }
 
@@ -286,6 +294,10 @@ class AiController extends StateNotifier<AiState> {
     if (state.isGenerating) return;
     await _restoreFuture;
 
+    final debug = _ref.read(aiDebugControllerProvider.notifier);
+    final requestId = DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+    final stopwatch = Stopwatch()..start();
+
     final selectedContext = contextItem ?? state.activeClipboardContext;
     final availableConversationContext = _buildConversationContext(
       state.chatMessages,
@@ -314,6 +326,42 @@ class AiController extends StateNotifier<AiState> {
               .where((item) => !item.isSensitive)
               .toList(growable: false)
         : const <ClipboardItem>[];
+    debug.log(
+      level: AiDebugLevel.info,
+      stage: 'request',
+      requestId: requestId,
+      message: 'Nhận yêu cầu AI',
+      details:
+          'prompt:\n$userText\n\n'
+          'feature: ${featureGroup?.name ?? 'none'}\n'
+          'option: ${selectedOption ?? 'none'}\n'
+          'temperature: ${state.temperature}\n'
+          'configuredContextSize: ${state.contextSize}',
+    );
+    debug.log(
+      level: AiDebugLevel.info,
+      stage: 'planner',
+      requestId: requestId,
+      message: 'Đã lập kế hoạch request',
+      details:
+          'intent: ${requestPlan.intent.name}\n'
+          'useSelectedClipboard: ${requestPlan.useSelectedClipboard}\n'
+          'useClipboardHistory: ${requestPlan.useClipboardHistory}\n'
+          'maxOutputTokens: ${requestPlan.maxOutputTokens}\n'
+          'responseLanguage: ${requestPlan.responseLanguage}\n'
+          'conversationMessages: ${conversationMessages.length}',
+    );
+    debug.log(
+      level: AiDebugLevel.info,
+      stage: 'context',
+      requestId: requestId,
+      message: 'Context sẽ được gửi tới AI',
+      details: _debugContextDetails(
+        activeContext: activeContext,
+        clipboardHistory: clipboardHistory,
+        conversationContext: conversationContext,
+      ),
+    );
     final userMsg = AiChatMessage(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       role: AiMessageRole.user,
@@ -338,6 +386,18 @@ class AiController extends StateNotifier<AiState> {
     state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
     final requestModel = _modelForRequest();
+    debug.log(
+      level: AiDebugLevel.info,
+      stage: 'model',
+      requestId: requestId,
+      message: 'Đã chọn model ${requestModel.name}',
+      details:
+          'id: ${requestModel.id}\n'
+          'thinkingModel: ${requestModel.isThinkingModel}\n'
+          'contextWindow: ${requestModel.contextWindow}\n'
+          'effectiveContextSize: '
+          '${state.contextSize.clamp(2048, requestModel.contextWindow)}',
+    );
     final stream = _localEngine.processStream(
       model: requestModel,
       prompt: userText,
@@ -350,13 +410,32 @@ class AiController extends StateNotifier<AiState> {
       conversationMessages: conversationMessages,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
+      debugRequestId: requestId,
     );
 
+    var eventCount = 0;
+    var firstEventLogged = false;
+    var finalThinking = '';
+    var finalOutput = '';
     try {
       await for (final event in stream) {
+        eventCount++;
         final type = event['type'] ?? '';
         final thinking = event['thinking'] ?? '';
         final output = event['output'] ?? '';
+        finalThinking = thinking;
+        finalOutput = output;
+        if (!firstEventLogged) {
+          firstEventLogged = true;
+          debug.log(
+            level: AiDebugLevel.info,
+            stage: 'stream',
+            requestId: requestId,
+            message:
+                'Nhận event đầu tiên sau ${stopwatch.elapsedMilliseconds} ms',
+            details: 'type: $type\nchunk: ${event['chunk'] ?? ''}',
+          );
+        }
 
         final currentMsgs = [...state.chatMessages];
         final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
@@ -368,7 +447,25 @@ class AiController extends StateNotifier<AiState> {
           state = state.copyWith(chatMessages: currentMsgs);
         }
       }
-    } catch (error) {
+      debug.log(
+        level: AiDebugLevel.success,
+        stage: 'response',
+        requestId: requestId,
+        message:
+            'Hoàn tất phản hồi sau ${stopwatch.elapsedMilliseconds} ms '
+            '($eventCount events)',
+        details:
+            'thinking:\n$finalThinking\n\n'
+            'output:\n$finalOutput',
+      );
+    } catch (error, stackTrace) {
+      debug.log(
+        level: AiDebugLevel.error,
+        stage: 'error',
+        requestId: requestId,
+        message: 'AI thất bại sau ${stopwatch.elapsedMilliseconds} ms: $error',
+        details: 'errorType: ${error.runtimeType}\nstackTrace:\n$stackTrace',
+      );
       final currentMsgs = [...state.chatMessages];
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
       if (index != -1) {
@@ -381,6 +478,7 @@ class AiController extends StateNotifier<AiState> {
         state = state.copyWith(chatMessages: currentMsgs);
       }
     } finally {
+      stopwatch.stop();
       final currentMsgs = [...state.chatMessages];
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
       if (index != -1) {
@@ -389,6 +487,32 @@ class AiController extends StateNotifier<AiState> {
         await _saveConversation();
       }
     }
+  }
+
+  String _debugContextDetails({
+    required ClipboardItem? activeContext,
+    required List<ClipboardItem> clipboardHistory,
+    required String conversationContext,
+  }) {
+    final buffer = StringBuffer()
+      ..writeln('selectedClipboard: ${activeContext?.id ?? 'none'}');
+    if (activeContext != null) {
+      buffer
+        ..writeln('selectedType: ${activeContext.contentType.name}')
+        ..writeln('selectedSensitive: ${activeContext.isSensitive}')
+        ..writeln('selectedContent:')
+        ..writeln(activeContext.content);
+    }
+    buffer
+      ..writeln('\nconversationContext:')
+      ..writeln(conversationContext.isEmpty ? '[empty]' : conversationContext)
+      ..writeln('\nclipboardHistoryCount: ${clipboardHistory.length}');
+    for (final item in clipboardHistory) {
+      buffer
+        ..writeln('\n--- clip:${item.id} type:${item.contentType.name} ---')
+        ..writeln(item.content);
+    }
+    return buffer.toString();
   }
 
   Future<void> _restoreConversation() async {

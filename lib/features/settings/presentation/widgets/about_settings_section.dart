@@ -21,14 +21,30 @@ class AboutSettingsSection extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/branding/clipflow_app_icon.png'),
-                    fit: BoxFit.cover,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  final changed = ref
+                      .read(aiDebugControllerProvider.notifier)
+                      .registerAppIconTap();
+                  if (!changed) return;
+                  final enabled = ref.read(aiDebugControllerProvider).isEnabled;
+                  showCupertinoNotice(
+                    context,
+                    enabled ? 'Đã bật AI Debug' : 'Đã tắt AI Debug',
+                  );
+                },
+                child: Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: const DecorationImage(
+                      image: AssetImage(
+                        'assets/branding/clipflow_app_icon.png',
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),

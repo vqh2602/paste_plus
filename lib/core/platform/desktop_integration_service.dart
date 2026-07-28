@@ -24,7 +24,7 @@ class OpenAtLoginResult {
   final String? errorMessage;
 }
 
-enum DesktopWindowMode { main, quickPanel, aiWindow, hidden }
+enum DesktopWindowMode { main, quickPanel, aiWindow, aiWithQuickPanel, hidden }
 
 class _MainWindowSnapshot {
   const _MainWindowSnapshot({
@@ -52,6 +52,7 @@ class DesktopIntegrationService with TrayListener {
   VoidCallback? _onAiWindowRequested;
   DesktopWindowMode _windowMode = DesktopWindowMode.main;
   _MainWindowSnapshot? _mainWindowSnapshot;
+  Rect? _aiWindowBounds;
   DateTime _ignoreBlurUntil = DateTime.fromMillisecondsSinceEpoch(0);
   bool _trayActive = false;
 
@@ -256,6 +257,16 @@ class DesktopIntegrationService with TrayListener {
 
   Future<void> toggleQuickPanel() async {
     if (!isDesktop) return;
+    if (_windowMode == DesktopWindowMode.aiWithQuickPanel &&
+        await windowManager.isVisible()) {
+      await _restoreAiWindowAfterQuickPanel();
+      return;
+    }
+    if (_windowMode == DesktopWindowMode.aiWindow &&
+        await windowManager.isVisible()) {
+      await _showQuickPanelBesideAi();
+      return;
+    }
     if (_windowMode == DesktopWindowMode.quickPanel &&
         await windowManager.isVisible()) {
       await hideQuickPanel();
@@ -336,6 +347,7 @@ class DesktopIntegrationService with TrayListener {
     final returningFromAlternateWindow =
         _windowMode == DesktopWindowMode.quickPanel ||
         _windowMode == DesktopWindowMode.aiWindow ||
+        _windowMode == DesktopWindowMode.aiWithQuickPanel ||
         _windowMode == DesktopWindowMode.hidden;
     _windowMode = DesktopWindowMode.main;
     _onMainWindowRequested?.call();
@@ -409,6 +421,7 @@ class DesktopIntegrationService with TrayListener {
       aiSize.width,
       aiSize.height,
     );
+    _aiWindowBounds = aiBounds;
 
     _windowMode = DesktopWindowMode.aiWindow;
     _onAiWindowRequested?.call();
@@ -438,7 +451,68 @@ class DesktopIntegrationService with TrayListener {
     }
   }
 
+  Future<void> _showQuickPanelBesideAi() async {
+    final currentBounds = await windowManager.getBounds();
+    _aiWindowBounds = currentBounds;
+
+    final displays = await screenRetriever.getAllDisplays();
+    final primary = await screenRetriever.getPrimaryDisplay();
+    final display = displays.firstWhere((item) {
+      final position = item.visiblePosition ?? Offset.zero;
+      final size = item.visibleSize ?? item.size;
+      return (position & size).contains(currentBounds.center);
+    }, orElse: () => primary);
+    final visibleSize = display.visibleSize ?? display.size;
+    final visiblePosition = display.visiblePosition ?? Offset.zero;
+    const panelWidth = 460.0;
+    final combinedWidth = math.min(
+      currentBounds.width + panelWidth,
+      math.max(0.0, visibleSize.width - 32),
+    );
+    final combinedHeight = math.min(
+      math.max(currentBounds.height, 640.0),
+      math.max(0.0, visibleSize.height - 32),
+    );
+    final combinedBounds = Rect.fromLTWH(
+      visiblePosition.dx + (visibleSize.width - combinedWidth) / 2,
+      visiblePosition.dy + (visibleSize.height - combinedHeight) / 2,
+      combinedWidth,
+      combinedHeight,
+    );
+
+    _windowMode = DesktopWindowMode.aiWithQuickPanel;
+    _ignoreBlurUntil = DateTime.now().add(const Duration(milliseconds: 450));
+    _onQuickPanelRequested?.call();
+    if (Platform.isMacOS) {
+      await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
+      await windowManager.setVisibleOnAllWorkspaces(false);
+    }
+    await windowManager.setAlwaysOnTop(false);
+    await windowManager.setSkipTaskbar(false);
+    await windowManager.setHasShadow(true);
+    await windowManager.setResizable(true);
+    await windowManager.setMinimumSize(const Size(980, 560));
+    await windowManager.setBounds(combinedBounds);
+    await windowManager.show();
+    await windowManager.focus();
+  }
+
+  Future<void> _restoreAiWindowAfterQuickPanel() async {
+    _windowMode = DesktopWindowMode.aiWindow;
+    _onQuickPanelDismissed?.call();
+    _onAiWindowRequested?.call();
+    await windowManager.setMinimumSize(const Size(760, 560));
+    final bounds = _aiWindowBounds;
+    if (bounds != null) await windowManager.setBounds(bounds);
+    await windowManager.show();
+    await windowManager.focus();
+  }
+
   Future<void> hideQuickPanel() async {
+    if (_windowMode == DesktopWindowMode.aiWithQuickPanel) {
+      await _restoreAiWindowAfterQuickPanel();
+      return;
+    }
     _windowMode = DesktopWindowMode.hidden;
     if (isDesktop) {
       await windowManager.hide();

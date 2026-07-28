@@ -229,10 +229,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (ref.watch(aiWindowModeProvider)) {
+    final aiWindowMode = ref.watch(aiWindowModeProvider);
+    final quickPanelMode = ref.watch(quickPanelModeProvider);
+    if (aiWindowMode && quickPanelMode) {
+      return Row(
+        children: [
+          const Expanded(child: AiChatScreen()),
+          ColoredBox(
+            color: resolveColor(context, ClipFlowColors.border),
+            child: const SizedBox(width: 1, height: double.infinity),
+          ),
+          const SizedBox(width: 460, child: QuickPanelScreen()),
+        ],
+      );
+    }
+    if (aiWindowMode) {
       return const AiChatScreen();
     }
-    if (ref.watch(quickPanelModeProvider)) {
+    if (quickPanelMode) {
       return const QuickPanelScreen();
     }
     final settings = ref.watch(settingsControllerProvider);

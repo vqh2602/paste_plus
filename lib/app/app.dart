@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../core/localization/app_translations.dart';
+import '../core/ui/ai_debug_overlay.dart';
 import 'providers.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -41,7 +42,7 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
             openPanelShortcut: settings.openPanelShortcut,
             onQuickPanelRequested: () {
               router.go('/');
-              ref.read(aiWindowModeProvider.notifier).state = false;
+              // Preserve AI mode when the clipboard panel is opened beside it.
               ref.read(quickPanelModeProvider.notifier).state = true;
             },
             onMainWindowRequested: () {
@@ -120,7 +121,10 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
             child: current,
           );
         }
-        return CupertinoTheme(data: theme, child: current);
+        return CupertinoTheme(
+          data: theme,
+          child: AiDebugOverlay(child: current),
+        );
       },
       routerConfig: router,
     );

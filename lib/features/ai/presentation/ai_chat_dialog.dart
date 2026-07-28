@@ -10,9 +10,12 @@ import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
 import '../data/ai_conversation_repository.dart';
 import 'widgets/ai_context_banner_widget.dart';
+import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
 import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
+
+enum _ConversationAction { rename, togglePin, delete }
 
 class AiChatDialog extends ConsumerStatefulWidget {
   const AiChatDialog({super.key, this.initialContextItem});
@@ -138,118 +141,132 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
     });
   }
 
-  void _showConversations() {
+  Future<void> _showConversations() async {
     final conversations = ref.read(aiControllerProvider).savedConversations;
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: const Text('Lịch sử hội thoại'),
-        actions: [
-          CupertinoActionSheetAction(
-            isDefaultAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(aiControllerProvider.notifier).startNewConversation();
-            },
-            child: const Text('＋ Hội thoại mới'),
-          ),
-          for (final conversation in conversations)
-            CupertinoActionSheetAction(
-              onPressed: () {
-                Navigator.pop(context);
-                ref
-                    .read(aiControllerProvider.notifier)
-                    .openConversation(conversation);
-              },
-              child: Row(
-                children: [
-                  if (conversation.isPinned)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Icon(CupertinoIcons.pin_fill, size: 14),
-                    ),
-                  Expanded(child: Text(conversation.title)),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(30, 30),
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _showConversationActions(conversation);
-                    },
-                    child: const Icon(CupertinoIcons.ellipsis, size: 16),
-                  ),
-                ],
-              ),
-            ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
-        ),
-      ),
-    );
-  }
-
-  void _showConversationActions(SavedAiConversation conversation) {
-    showCupertinoModalPopup<void>(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text(conversation.title),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () async {
-              Navigator.pop(context);
-              final controller = TextEditingController(
-                text: conversation.title,
-              );
-              final title = await showCupertinoDialog<String>(
-                context: this.context,
-                builder: (context) => CupertinoAlertDialog(
-                  title: const Text('Đổi tên hội thoại'),
-                  content: CupertinoTextField(controller: controller),
+    SavedAiConversation? actionConversation;
+    final selection =
+        await showCupertinoModalPopup<
+          ({SavedAiConversation conversation, _ConversationAction action})
+        >(
+          context: context,
+          builder: (popupContext) => StatefulBuilder(
+            builder: (context, setModalState) {
+              final selected = actionConversation;
+              if (selected != null) {
+                return CupertinoActionSheet(
+                  title: Text(selected.title),
+                  message: const Text('Tùy chọn hội thoại'),
                   actions: [
-                    CupertinoDialogAction(
-                      onPressed: () => Navigator.pop(context),
-                      child: Text('cancel'.tr),
+                    CupertinoActionSheetAction(
+                      onPressed: () => Navigator.pop(context, (
+                        conversation: selected,
+                        action: _ConversationAction.rename,
+                      )),
+                      child: const Text('Đổi tên'),
                     ),
-                    CupertinoDialogAction(
-                      onPressed: () => Navigator.pop(context, controller.text),
-                      child: const Text('Lưu'),
+                    CupertinoActionSheetAction(
+                      onPressed: () => Navigator.pop(context, (
+                        conversation: selected,
+                        action: _ConversationAction.togglePin,
+                      )),
+                      child: Text(selected.isPinned ? 'Bỏ ghim' : 'Ghim'),
+                    ),
+                    CupertinoActionSheetAction(
+                      isDestructiveAction: true,
+                      onPressed: () => Navigator.pop(context, (
+                        conversation: selected,
+                        action: _ConversationAction.delete,
+                      )),
+                      child: const Text('Xóa'),
                     ),
                   ],
+                  cancelButton: CupertinoActionSheetAction(
+                    onPressed: () =>
+                        setModalState(() => actionConversation = null),
+                    child: const Text('Quay lại'),
+                  ),
+                );
+              }
+
+              return CupertinoActionSheet(
+                title: const Text('Lịch sử hội thoại'),
+                actions: [
+                  CupertinoActionSheetAction(
+                    isDefaultAction: true,
+                    onPressed: () {
+                      Navigator.pop(context);
+                      ref
+                          .read(aiControllerProvider.notifier)
+                          .startNewConversation();
+                    },
+                    child: const Text('＋ Hội thoại mới'),
+                  ),
+                  for (final conversation in conversations)
+                    AiConversationHistoryAction(
+                      conversation: conversation,
+                      onOpen: () {
+                        Navigator.pop(context);
+                        ref
+                            .read(aiControllerProvider.notifier)
+                            .openConversation(conversation);
+                      },
+                      onMore: () => setModalState(
+                        () => actionConversation = conversation,
+                      ),
+                    ),
+                ],
+                cancelButton: CupertinoActionSheetAction(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('cancel'.tr),
                 ),
               );
-              controller.dispose();
-              if (title != null && mounted) {
-                await ref
-                    .read(aiControllerProvider.notifier)
-                    .renameConversation(conversation.id, title);
-              }
             },
-            child: const Text('Đổi tên'),
           ),
-          CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(aiControllerProvider.notifier)
-                  .toggleConversationPinned(conversation.id);
-            },
-            child: Text(conversation.isPinned ? 'Bỏ ghim' : 'Ghim'),
+        );
+    if (selection != null && mounted) {
+      await _handleConversationAction(selection.conversation, selection.action);
+    }
+  }
+
+  Future<void> _handleConversationAction(
+    SavedAiConversation conversation,
+    _ConversationAction action,
+  ) async {
+    switch (action) {
+      case _ConversationAction.rename:
+        final controller = TextEditingController(text: conversation.title);
+        final title = await showCupertinoDialog<String>(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: const Text('Đổi tên hội thoại'),
+            content: CupertinoTextField(controller: controller),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(context),
+                child: Text('cancel'.tr),
+              ),
+              CupertinoDialogAction(
+                onPressed: () => Navigator.pop(context, controller.text),
+                child: const Text('Lưu'),
+              ),
+            ],
           ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(aiControllerProvider.notifier)
-                  .deleteConversation(conversation.id);
-            },
-            child: const Text('Xóa'),
-          ),
-        ],
-      ),
-    );
+        );
+        controller.dispose();
+        if (title != null && mounted) {
+          await ref
+              .read(aiControllerProvider.notifier)
+              .renameConversation(conversation.id, title);
+        }
+      case _ConversationAction.togglePin:
+        await ref
+            .read(aiControllerProvider.notifier)
+            .toggleConversationPinned(conversation.id);
+      case _ConversationAction.delete:
+        await ref
+            .read(aiControllerProvider.notifier)
+            .deleteConversation(conversation.id);
+    }
   }
 
   void _showGenerationSettings() {

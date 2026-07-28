@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/legacy.dart';
 import '../core/database/app_database.dart';
 import '../core/platform/desktop_integration_service.dart';
 import '../core/services/clipboard_watcher.dart';
+import '../core/services/ai_debug_service.dart';
 import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
@@ -30,6 +31,11 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 );
 
 final loggingServiceProvider = Provider((ref) => const LoggingService());
+
+final aiDebugControllerProvider =
+    StateNotifierProvider<AiDebugController, AiDebugState>((ref) {
+      return AiDebugController();
+    });
 
 final quickPanelModeProvider = StateProvider<bool>((ref) => false);
 final aiWindowModeProvider = StateProvider<bool>((ref) => false);
@@ -81,7 +87,10 @@ final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
 });
 
 final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
-  final engine = LocalAiEngine(ref.watch(aiModelDownloaderProvider));
+  final engine = LocalAiEngine(
+    ref.watch(aiModelDownloaderProvider),
+    ref.read(aiDebugControllerProvider.notifier),
+  );
   ref.onDispose(engine.dispose);
   return engine;
 });

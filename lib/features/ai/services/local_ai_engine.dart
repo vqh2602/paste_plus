@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:math';
 
+import '../../../core/services/ai_debug_service.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
+import 'ai_clipboard_relevance_ranker.dart';
 import 'ai_model_downloader_service.dart';
 import 'ai_token_budget_manager.dart';
 import 'llama_inference_service.dart';
@@ -18,13 +20,15 @@ class LocalAiResponse {
 }
 
 class LocalAiEngine {
-  LocalAiEngine([this._modelDownloader])
+  LocalAiEngine([this._modelDownloader, this._debug])
     : _inferenceService = _modelDownloader == null
           ? null
           : LlamaInferenceService();
 
   final AiModelDownloaderService? _modelDownloader;
+  final AiDebugController? _debug;
   final LlamaInferenceService? _inferenceService;
+  static const _clipboardRanker = AiClipboardRelevanceRanker();
 
   /// Process prompt locally and stream tokens back.
   /// Yields pairs of (thinkingChunk, outputChunk).
@@ -40,6 +44,7 @@ class LocalAiEngine {
     int? contextSize,
     AiRequestPlan? requestPlan,
     List<AiChatMessage> conversationMessages = const [],
+    String? debugRequestId,
   }) async* {
     final effectiveHistory = clipboardContext == null
         ? clipboardHistory
@@ -54,15 +59,44 @@ class LocalAiEngine {
       requestPlan?.intent ?? AiRequestIntent.conversation,
       requestPlan?.responseLanguage ?? 'the same language as the user',
     );
+    _debug?.log(
+      level: AiDebugLevel.info,
+      stage: 'engine',
+      requestId: debugRequestId,
+      message: 'Đã dựng prompt cho inference',
+      details:
+          'systemPrompt:\n$systemPrompt\n\n'
+          'userPrompt:\n$prompt\n\n'
+          'contextText (${contextText.length} chars):\n$contextText\n\n'
+          'conversationContext (${conversationContext.length} chars):\n'
+          '$conversationContext',
+    );
 
     if (_modelDownloader != null && _inferenceService != null) {
       final modelFile = await _modelDownloader.getModelFile(model.id);
-      if (await modelFile.exists() &&
-          await modelFile.length() > 10 * 1024 * 1024) {
+      final fileExists = await modelFile.exists();
+      final fileSize = fileExists ? await modelFile.length() : 0;
+      _debug?.log(
+        level: fileExists ? AiDebugLevel.info : AiDebugLevel.warning,
+        stage: 'model-file',
+        requestId: debugRequestId,
+        message: fileExists
+            ? 'Đã tìm thấy file model'
+            : 'Không tìm thấy file model',
+        details: 'path: ${modelFile.path}\nsizeBytes: $fileSize',
+      );
+      if (fileExists && fileSize > 10 * 1024 * 1024) {
         final effectiveContextSize = contextSize ?? model.contextWindow;
         await _inferenceService.prepareModel(
           modelFile.path,
           effectiveContextSize,
+        );
+        _debug?.log(
+          level: AiDebugLevel.success,
+          stage: 'model-load',
+          requestId: debugRequestId,
+          message: 'Model đã sẵn sàng',
+          details: 'contextSize: $effectiveContextSize',
         );
         final budgetManager = AiTokenBudgetManager(
           tokenize: _inferenceService.tokenize,
@@ -76,6 +110,16 @@ class LocalAiEngine {
             contextSize: effectiveContextSize,
           );
           contextText = _buildHistoryContext(semanticItems);
+          _debug?.log(
+            level: AiDebugLevel.info,
+            stage: 'retrieval',
+            requestId: debugRequestId,
+            message: 'Đã xếp hạng semantic clipboard history',
+            details:
+                'inputItems: ${effectiveHistory.length}\n'
+                'selectedItems: ${semanticItems.length}\n'
+                'effectiveContext:\n$contextText',
+          );
         }
         yield* _runBudgetedModel(
           modelPath: modelFile.path,
@@ -91,10 +135,18 @@ class LocalAiEngine {
           maxOutputTokens: requestPlan?.maxOutputTokens ?? 700,
           thinkingModel: model.isThinkingModel,
           conversationMessages: conversationMessages,
+          debugRequestId: debugRequestId,
         );
         return;
       }
     }
+
+    _debug?.log(
+      level: AiDebugLevel.warning,
+      stage: 'engine',
+      requestId: debugRequestId,
+      message: 'Đang dùng bộ sinh mô phỏng vì model local chưa sẵn sàng',
+    );
 
     // Stream local LLM thinking & generation based on systemPrompt
     final isThinkingModel = model.isThinkingModel;
@@ -160,6 +212,7 @@ class LocalAiEngine {
     required int maxOutputTokens,
     required bool thinkingModel,
     required List<AiChatMessage> conversationMessages,
+    String? debugRequestId,
   }) async* {
     final conversation = _toConversationTurns(conversationMessages);
     final userPrompt = _buildModelUserPrompt(prompt, contextText);
@@ -174,7 +227,27 @@ class LocalAiEngine {
       conversation: conversation,
     );
 
+    _debug?.log(
+      level: AiDebugLevel.info,
+      stage: 'token-budget',
+      requestId: debugRequestId,
+      message: 'Đã tính token budget',
+      details:
+          'promptTokens: $promptTokens\n'
+          'contextWindow: ${budget.contextWindow}\n'
+          'maximumPromptTokens: ${budget.maximumPromptTokens}\n'
+          'outputReserve: ${budget.outputReserve}\n'
+          'safetyReserve: ${budget.safetyReserve}\n'
+          'acceptedDirectly: ${budget.accepts(promptTokens)}',
+    );
+
     if (budget.accepts(promptTokens)) {
+      _debug?.log(
+        level: AiDebugLevel.info,
+        stage: 'strategy',
+        requestId: debugRequestId,
+        message: 'Chọn chiến lược direct',
+      );
       yield* _streamModelCall(
         modelPath: modelPath,
         contextSize: contextSize,
@@ -193,6 +266,13 @@ class LocalAiEngine {
       prompt: prompt,
       featureName: featureGroup?.name,
       selectedOption: selectedOption,
+    );
+    _debug?.log(
+      level: AiDebugLevel.warning,
+      stage: 'strategy',
+      requestId: debugRequestId,
+      message: 'Prompt vượt budget, chọn chiến lược ${task.name}',
+      details: 'promptTokens: $promptTokens',
     );
     switch (task) {
       case AiTokenTask.losslessTranslation:
@@ -808,11 +888,14 @@ class LocalAiEngine {
     required String modelPath,
     required int contextSize,
   }) async {
-    final candidates = items
-        .where((item) => item.content.trim().isNotEmpty && !item.isSensitive)
+    final candidates = _clipboardRanker
+        .rank(prompt: prompt, items: items)
         .take(80)
         .toList(growable: false);
     if (candidates.isEmpty || prompt.trim().isEmpty) return candidates;
+    if (_clipboardRanker.hasExactFileConstraint(prompt)) {
+      return candidates.take(24).toList(growable: false);
+    }
     try {
       final vectors = await _inferenceService!.embedBatch(
         modelPath: modelPath,
@@ -823,18 +906,25 @@ class LocalAiEngine {
             item.content.substring(0, item.content.length.clamp(0, 1200)),
         ],
       );
-      if (vectors.length != candidates.length + 1) return candidates;
-      final query = vectors.first;
-      final ranked = <({ClipboardItem item, double score})>[];
-      for (var index = 0; index < candidates.length; index++) {
-        var score = _cosineSimilarity(query, vectors[index + 1]);
-        if (candidates[index].isPinned) score += 0.08;
-        final age = DateTime.now().difference(candidates[index].lastCopiedAt);
-        if (age.inDays <= 7) score += 0.05;
-        ranked.add((item: candidates[index], score: score));
+      if (vectors.length != candidates.length + 1) {
+        return candidates.take(24).toList(growable: false);
       }
-      ranked.sort((a, b) => b.score.compareTo(a.score));
-      return ranked.take(24).map((entry) => entry.item).toList(growable: false);
+      final query = vectors.first;
+      final semanticScores = <String, double>{};
+      for (var index = 0; index < candidates.length; index++) {
+        semanticScores[candidates[index].id] = _cosineSimilarity(
+          query,
+          vectors[index + 1],
+        );
+      }
+      return _clipboardRanker
+          .rank(
+            prompt: prompt,
+            items: candidates,
+            semanticScores: semanticScores,
+          )
+          .take(24)
+          .toList(growable: false);
     } on Object {
       return candidates.take(24).toList(growable: false);
     }
@@ -881,9 +971,13 @@ class LocalAiEngine {
               '$responseLanguage with proportional detail.',
         AiRequestIntent.clipboardSearch =>
           'You are a clipboard retrieval assistant. Answer only the current '
-              'search request from clipboard_data. Return the most relevant '
-              'matches directly and concisely, preserve every clip:id citation, '
-              'and say clearly when nothing matches. Reply in $responseLanguage. '
+              'search request from clipboard_data. Apply every explicit type, '
+              'file-extension, and keyword constraint strictly. Return up to 12 '
+              'actual matching records, preserve each [clip:id] citation, and '
+              'copy URLs and values verbatim. A clipboard entry that merely '
+              'repeats the current request is not a result. Do not include '
+              'nearby but non-matching records. Say clearly when nothing '
+              'matches. Reply in $responseLanguage. '
               '$safety',
         AiRequestIntent.clipboardAction =>
           'You process selected clipboard content. Perform exactly the current '
@@ -1134,7 +1228,7 @@ class LocalAiEngine {
       final content = items[index].content.trim();
       if (content.isEmpty) continue;
       final entry =
-          '[${index + 1}] (${items[index].contentType.name}) '
+          '[clip:${items[index].id}] (${items[index].contentType.name}) '
           '${items[index].sourceAppName ?? 'Unknown'}: $content\n';
       if (buffer.length + entry.length > maximumCharacters) break;
       buffer.write(entry);
