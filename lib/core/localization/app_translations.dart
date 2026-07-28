@@ -99,6 +99,10 @@ class AppTranslations {
       'ai_all_clipboard_context':
           'Đang sử dụng toàn bộ lịch sử Clipboard (@count mục)',
       'ai_select_clip_hint': 'Chọn một clip để giới hạn ngữ cảnh',
+      'copy_part': 'Sao chép phần này',
+      'copy_all': 'Sao chép tất cả',
+      'paste_all': 'Dán tất cả',
+      'copy_clipboard_content': 'Sao chép nội dung clipboard',
 
       // Settings - General
       'appearance_and_theme': 'Giao diện & Bảng màu',
@@ -817,6 +821,10 @@ class AppTranslations {
       'ai_delete_partial': 'Delete temp file',
       'ai_all_clipboard_context': 'Using all Clipboard history (@count items)',
       'ai_select_clip_hint': 'Select a clip to limit context',
+      'copy_part': 'Copy this section',
+      'copy_all': 'Copy all',
+      'paste_all': 'Paste all',
+      'copy_clipboard_content': 'Copy clipboard content',
     },
   };
 

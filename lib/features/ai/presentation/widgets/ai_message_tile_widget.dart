@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/ai_chat_message.dart';
+import 'ai_markdown_content_widget.dart';
 
 class AiMessageTileWidget extends StatefulWidget {
   const AiMessageTileWidget({
@@ -150,12 +151,13 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
             ],
 
             const SizedBox(height: 10),
-            Text(
-              widget.message.content.isEmpty
-                  ? (widget.message.isThinking ? 'Đang suy luận...' : '')
-                  : widget.message.content,
-              style: const TextStyle(fontSize: 14, height: 1.4),
-            ),
+            if (widget.message.content.isEmpty)
+              Text(widget.message.isThinking ? 'Đang suy luận...' : '')
+            else
+              AiMarkdownContentWidget(
+                content: widget.message.content,
+                onCopy: widget.onCopy,
+              ),
 
             if (widget.message.content.isNotEmpty) ...[
               const SizedBox(height: 12),
@@ -179,7 +181,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'copy'.tr,
+                          'copy_all'.tr,
                           style: TextStyle(fontSize: 12, color: primary),
                         ),
                       ],
@@ -194,7 +196,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     color: CupertinoColors.activeGreen.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(8),
                     onPressed: () => widget.onPaste(widget.message.content),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
@@ -204,8 +206,8 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'Dán kết quả',
-                          style: TextStyle(
+                          'paste_all'.tr,
+                          style: const TextStyle(
                             fontSize: 12,
                             color: CupertinoColors.activeGreen,
                           ),

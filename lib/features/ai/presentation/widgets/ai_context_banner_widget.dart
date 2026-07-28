@@ -9,10 +9,12 @@ class AiContextBannerWidget extends StatelessWidget {
     super.key,
     required this.item,
     required this.onClear,
+    required this.onCopy,
   });
 
   final ClipboardItem item;
   final VoidCallback onClear;
+  final VoidCallback onCopy;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +47,13 @@ class AiContextBannerWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
+          CupertinoIconControl(
+            icon: CupertinoIcons.doc_on_doc,
+            size: 13,
+            tooltip: 'copy_clipboard_content'.tr,
+            onPressed: onCopy,
+          ),
+          const SizedBox(width: 4),
           CupertinoPressable(
             onPressed: onClear,
             child: Text(

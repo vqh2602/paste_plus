@@ -206,6 +206,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             if (aiState.activeClipboardContext != null)
               AiContextBannerWidget(
                 item: aiState.activeClipboardContext!,
+                onCopy: () {
+                  Clipboard.setData(
+                    ClipboardData(
+                      text: aiState.activeClipboardContext!.content,
+                    ),
+                  );
+                  showCupertinoNotice(context, 'copied'.tr);
+                },
                 onClear: () {
                   ref
                       .read(aiControllerProvider.notifier)
