@@ -36,6 +36,8 @@ class AppSettings {
     this.togglePinShortcut,
     this.deleteItemShortcut,
     this.duplicateBehavior = DuplicateBehavior.bringToTop,
+    this.aiEnabled = true,
+    this.selectedAiModel = 'deepseek-r1-1.5b',
     this.allowedTypes = const {
       'text',
       'url',
@@ -57,6 +59,8 @@ class AppSettings {
   final bool showInDock;
   final bool closeAfterCopy;
   final bool soundEnabled;
+  final bool aiEnabled;
+  final String selectedAiModel;
   final String themeMode;
   final String accentColor;
   final String language;
@@ -93,6 +97,8 @@ class AppSettings {
     bool? showInDock,
     bool? closeAfterCopy,
     bool? soundEnabled,
+    bool? aiEnabled,
+    String? selectedAiModel,
     String? themeMode,
     String? accentColor,
     String? language,
@@ -130,6 +136,8 @@ class AppSettings {
       showInDock: showInDock ?? this.showInDock,
       closeAfterCopy: closeAfterCopy ?? this.closeAfterCopy,
       soundEnabled: soundEnabled ?? this.soundEnabled,
+      aiEnabled: aiEnabled ?? this.aiEnabled,
+      selectedAiModel: selectedAiModel ?? this.selectedAiModel,
       themeMode: themeMode ?? this.themeMode,
       accentColor: accentColor ?? this.accentColor,
       language: language ?? this.language,
@@ -169,6 +177,8 @@ class AppSettings {
     'showInDock': showInDock,
     'closeAfterCopy': closeAfterCopy,
     'soundEnabled': soundEnabled,
+    'aiEnabled': aiEnabled,
+    'selectedAiModel': selectedAiModel,
     'themeMode': themeMode,
     'accentColor': accentColor,
     'language': language,
@@ -216,6 +226,8 @@ class AppSettings {
       showInDock: value('showInDock', true),
       closeAfterCopy: value('closeAfterCopy', false),
       soundEnabled: value('soundEnabled', true),
+      aiEnabled: value('aiEnabled', true),
+      selectedAiModel: value('selectedAiModel', 'deepseek-r1-1.5b'),
       themeMode: value('themeMode', 'system'),
       accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),

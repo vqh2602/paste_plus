@@ -12,6 +12,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
+import '../../ai/presentation/ai_chat_dialog.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'history_controller.dart';
@@ -654,6 +655,22 @@ class _HistoryPane extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 10),
+              if (settings.aiEnabled) ...[
+                CupertinoIconControl(
+                  icon: CupertinoIcons.sparkles,
+                  color: CupertinoColors.activeBlue,
+                  onPressed: () {
+                    final selectedItem = state.visibleItems.isNotEmpty
+                        ? state.visibleItems.firstWhere(
+                            (item) => item.id == state.selectedItemId,
+                            orElse: () => state.visibleItems.first,
+                          )
+                        : null;
+                    AiChatDialog.show(context, contextItem: selectedItem);
+                  },
+                ),
+                const SizedBox(width: 6),
+              ],
               CupertinoIconControl(
                 icon: settings.monitoringEnabled
                     ? CupertinoIcons.pause_circle
@@ -804,7 +821,6 @@ class _FilterPill extends StatelessWidget {
 
 class _ClipboardItemCard extends StatelessWidget {
   const _ClipboardItemCard({
-    super.key,
     required this.item,
     required this.index,
     required this.selected,

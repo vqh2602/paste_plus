@@ -11,6 +11,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
+import '../../ai/presentation/ai_chat_dialog.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'history_controller.dart';
@@ -339,6 +340,18 @@ class _QuickToolbar extends ConsumerWidget {
       child: Row(
         children: [
           const SizedBox(width: 10),
+          if (ref.watch(settingsControllerProvider).aiEnabled) ...[
+            CupertinoIconControl(
+              icon: CupertinoIcons.sparkles,
+              color: CupertinoColors.activeBlue,
+              onPressed: () {
+                final visible = state.visibleItems;
+                final selectedItem = visible.isNotEmpty ? visible.first : null;
+                AiChatDialog.show(context, contextItem: selectedItem);
+              },
+            ),
+            const SizedBox(width: 4),
+          ],
           CupertinoIconControl(
             icon: monitoringEnabled
                 ? CupertinoIcons.pause_circle

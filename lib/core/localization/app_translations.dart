@@ -63,7 +63,28 @@ class AppTranslations {
       'tab_privacy': 'Quyền riêng tư',
       'tab_storage': 'Dung lượng',
       'tab_shortcuts': 'Phím tắt',
+      'tab_ai': 'Về AI',
       'tab_about': 'Giới thiệu',
+
+      // AI Settings & Chat Assistant
+      'ai_settings_title': 'Tính năng Local AI (Ngoại tuyến)',
+      'ai_enabled': 'Bật tính năng Local AI',
+      'ai_enabled_sub': 'Cho phép sử dụng mô hình trí tuệ nhân tạo chạy trực tiếp trên thiết bị.',
+      'ai_privacy_notice': 'ClipFlow tích hợp AI chạy hoàn toàn trên thiết bị, giúp xử lý nội dung clipboard mà không cần gửi dữ liệu lên máy chủ bên ngoài. Không cần tài khoản, API key hay Internet.',
+      'ai_model_selection': 'Mô hình AI Thinking (Reasoning Models)',
+      'ai_model_selection_sub': 'Chỉ danh sách các model có khả năng suy luận chuyên sâu (Thinking capabilities).',
+      'ai_download_model': 'Tải model',
+      'ai_delete_model': 'Xóa model',
+      'ai_downloaded': 'Đã tải',
+      'ai_not_downloaded': 'Chưa tải',
+      'ai_downloading': 'Đang tải...',
+      'ai_active_model': 'Model đang dùng',
+      'ai_chat_assistant': 'ClipFlow Local AI Assistant',
+      'ai_thinking_process': 'Quá trình suy luận (Thinking process)',
+      'ai_context_clip': 'Đang đính kèm Clipboard:',
+      'ai_clear_context': 'Gỡ clipboard',
+      'ai_send_prompt': 'Hỏi AI...',
+
 
       // Settings - General
       'appearance_and_theme': 'Giao diện & Bảng màu',

@@ -7,9 +7,12 @@ import '../core/database/app_database.dart';
 import '../core/platform/desktop_integration_service.dart';
 import '../core/services/clipboard_watcher.dart';
 import '../core/services/logging_service.dart';
+import '../features/ai/presentation/ai_controller.dart';
+import '../features/ai/services/ai_model_downloader_service.dart';
+import '../features/ai/services/local_ai_engine.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
-import '../features/clipboard_history/domain/clipboard_repository.dart';
 import '../features/clipboard_history/domain/clipboard_item.dart';
+import '../features/clipboard_history/domain/clipboard_repository.dart';
 import '../features/clipboard_history/presentation/history_controller.dart';
 import '../features/settings/data/settings_repository.dart';
 import '../features/settings/domain/app_settings.dart';
@@ -70,3 +73,21 @@ final collectionsControllerProvider =
     >((ref) {
       return CollectionsController(ref.watch(clipboardRepositoryProvider));
     });
+
+final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
+  return AiModelDownloaderService();
+});
+
+final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
+  return LocalAiEngine();
+});
+
+final aiControllerProvider =
+    StateNotifierProvider<AiController, AiState>((ref) {
+  return AiController(
+    ref.watch(aiModelDownloaderProvider),
+    ref.watch(localAiEngineProvider),
+    ref,
+  );
+});
+
