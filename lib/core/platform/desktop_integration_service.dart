@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
@@ -51,7 +52,6 @@ class DesktopIntegrationService with TrayListener {
   VoidCallback? _onAiWindowRequested;
   DesktopWindowMode _windowMode = DesktopWindowMode.main;
   _MainWindowSnapshot? _mainWindowSnapshot;
-  _MainWindowSnapshot? _aiWindowSnapshot;
   DateTime _ignoreBlurUntil = DateTime.fromMillisecondsSinceEpoch(0);
   bool _trayActive = false;
 
@@ -333,8 +333,9 @@ class DesktopIntegrationService with TrayListener {
 
   Future<void> showMainWindow() async {
     if (!isDesktop) return;
-    final returningFromQuickPanel =
+    final returningFromAlternateWindow =
         _windowMode == DesktopWindowMode.quickPanel ||
+        _windowMode == DesktopWindowMode.aiWindow ||
         _windowMode == DesktopWindowMode.hidden;
     _windowMode = DesktopWindowMode.main;
     _onMainWindowRequested?.call();
@@ -351,7 +352,7 @@ class DesktopIntegrationService with TrayListener {
       windowButtonVisibility: true,
     );
     await windowManager.setMinimumSize(const Size(820, 560));
-    final snapshot = returningFromQuickPanel ? _mainWindowSnapshot : null;
+    final snapshot = returningFromAlternateWindow ? _mainWindowSnapshot : null;
     if (snapshot == null) {
       await windowManager.setSize(const Size(1180, 760), animate: true);
       await windowManager.center(animate: true);
@@ -369,14 +370,46 @@ class DesktopIntegrationService with TrayListener {
 
   Future<void> showAiWindow() async {
     if (!isDesktop) return;
-    if (_windowMode == DesktopWindowMode.main && await windowManager.isVisible()) {
+    final currentPosition = await windowManager.getPosition();
+    final currentSize = await windowManager.getSize();
+    final wasFullScreen = await windowManager.isFullScreen();
+    final wasMaximized = await windowManager.isMaximized();
+    if (_windowMode == DesktopWindowMode.main &&
+        await windowManager.isVisible()) {
       _mainWindowSnapshot = _MainWindowSnapshot(
-        position: await windowManager.getPosition(),
-        size: await windowManager.getSize(),
-        wasMaximized: await windowManager.isMaximized(),
-        wasFullScreen: await windowManager.isFullScreen(),
+        position: currentPosition,
+        size: currentSize,
+        wasMaximized: wasMaximized,
+        wasFullScreen: wasFullScreen,
       );
     }
+    if (wasFullScreen) await windowManager.setFullScreen(false);
+    if (wasMaximized) await windowManager.unmaximize();
+
+    final displays = await screenRetriever.getAllDisplays();
+    final primary = await screenRetriever.getPrimaryDisplay();
+    final currentCenter =
+        currentPosition + Offset(currentSize.width / 2, currentSize.height / 2);
+    final display = displays.firstWhere((item) {
+      final position = item.visiblePosition ?? Offset.zero;
+      final size = item.visibleSize ?? item.size;
+      return (position & size).contains(currentCenter);
+    }, orElse: () => primary);
+    final visibleSize = display.visibleSize ?? display.size;
+    final visiblePosition = display.visiblePosition ?? Offset.zero;
+    final availableWidth = math.max(0.0, visibleSize.width - 48);
+    final availableHeight = math.max(0.0, visibleSize.height - 48);
+    final aiSize = Size(
+      math.min((visibleSize.width * 0.72).clamp(900, 1180), availableWidth),
+      math.min((visibleSize.height * 0.78).clamp(640, 820), availableHeight),
+    );
+    final aiBounds = Rect.fromLTWH(
+      visiblePosition.dx + (visibleSize.width - aiSize.width) / 2,
+      visiblePosition.dy + (visibleSize.height - aiSize.height) / 2,
+      aiSize.width,
+      aiSize.height,
+    );
+
     _windowMode = DesktopWindowMode.aiWindow;
     _onAiWindowRequested?.call();
     if (Platform.isMacOS) {
@@ -391,17 +424,18 @@ class DesktopIntegrationService with TrayListener {
       TitleBarStyle.hidden,
       windowButtonVisibility: true,
     );
-    await windowManager.setMinimumSize(const Size(680, 500));
-    final snapshot = _aiWindowSnapshot;
-    if (snapshot == null) {
-      await windowManager.setSize(const Size(960, 680), animate: true);
-      await windowManager.center(animate: true);
-    } else {
-      await windowManager.setSize(snapshot.size);
-      await windowManager.setPosition(snapshot.position);
-    }
+    await windowManager.setMinimumSize(
+      Size(math.min(760, aiSize.width), math.min(560, aiSize.height)),
+    );
+    await windowManager.setBounds(aiBounds);
     await windowManager.show();
     await windowManager.focus();
+    // macOS can briefly restore the previous Quick Panel frame while changing
+    // the native window level. Reapply the complete frame after that handoff.
+    if (Platform.isMacOS) {
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      await windowManager.setBounds(aiBounds);
+    }
   }
 
   Future<void> hideQuickPanel() async {
@@ -496,10 +530,9 @@ class DesktopIntegrationService with TrayListener {
   }) async {
     if (!Platform.isMacOS) return null;
     try {
-      return await _windowChannel.invokeMethod<String>(
-        'saveConfigFile',
-        {'defaultName': defaultName},
-      );
+      return await _windowChannel.invokeMethod<String>('saveConfigFile', {
+        'defaultName': defaultName,
+      });
     } on Object catch (_) {
       return null;
     }
@@ -508,9 +541,7 @@ class DesktopIntegrationService with TrayListener {
   Future<String?> pickConfigFile() async {
     if (!Platform.isMacOS) return null;
     try {
-      return await _windowChannel.invokeMethod<String>(
-        'pickConfigFile',
-      );
+      return await _windowChannel.invokeMethod<String>('pickConfigFile');
     } on Object catch (_) {
       return null;
     }

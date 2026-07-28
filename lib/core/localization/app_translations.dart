@@ -44,7 +44,8 @@ class AppTranslations {
       'upload_cloud': 'Tải lên Cloud',
       'delete': 'Xóa',
       'delete_item_title': 'Xóa mục này?',
-      'delete_item_confirm': 'Bạn có chắc chắn muốn xóa mục clipboard này không?',
+      'delete_item_confirm':
+          'Bạn có chắc chắn muốn xóa mục clipboard này không?',
       'cancel': 'Hủy',
       'clipboard_empty': 'Clipboard hiện đang trống.',
 
@@ -69,10 +70,13 @@ class AppTranslations {
       // AI Settings & Chat Assistant
       'ai_settings_title': 'Tính năng Local AI (Ngoại tuyến)',
       'ai_enabled': 'Bật tính năng Local AI',
-      'ai_enabled_sub': 'Cho phép sử dụng mô hình trí tuệ nhân tạo chạy trực tiếp trên thiết bị.',
-      'ai_privacy_notice': 'ClipFlow tích hợp AI chạy hoàn toàn trên thiết bị, giúp xử lý nội dung clipboard mà không cần gửi dữ liệu lên máy chủ bên ngoài. Không cần tài khoản, API key hay Internet.',
+      'ai_enabled_sub':
+          'Cho phép sử dụng mô hình trí tuệ nhân tạo chạy trực tiếp trên thiết bị.',
+      'ai_privacy_notice':
+          'ClipFlow tích hợp AI chạy hoàn toàn trên thiết bị, giúp xử lý nội dung clipboard mà không cần gửi dữ liệu lên máy chủ bên ngoài. Không cần tài khoản, API key hay Internet.',
       'ai_model_selection': 'Mô hình AI Thinking (Reasoning Models)',
-      'ai_model_selection_sub': 'Chỉ danh sách các model có khả năng suy luận chuyên sâu (Thinking capabilities).',
+      'ai_model_selection_sub':
+          'Chỉ danh sách các model có khả năng suy luận chuyên sâu (Thinking capabilities).',
       'ai_download_model': 'Tải model',
       'ai_delete_model': 'Xóa model',
       'ai_downloaded': 'Đã tải',
@@ -85,13 +89,13 @@ class AppTranslations {
       'ai_clear_context': 'Gỡ clipboard',
       'ai_send_prompt': 'Hỏi AI...',
       'ai_no_model_title': 'Cần tải model AI',
-      'ai_no_model_desc': 'Vui lòng tải ít nhất 1 model AI để sử dụng tính năng trí tuệ nhân tạo. Model chạy hoàn toàn trên thiết bị, không cần Internet sau khi tải.',
+      'ai_no_model_desc':
+          'Vui lòng tải ít nhất 1 model AI để sử dụng tính năng trí tuệ nhân tạo. Model chạy hoàn toàn trên thiết bị, không cần Internet sau khi tải.',
       'ai_recommend_model': 'Đề xuất cho bạn',
       'ai_resume_download': 'Tiếp tục tải',
       'ai_partial_downloaded': 'Đã tải một phần',
       'ai_download_paused': 'Tạm dừng',
       'ai_delete_partial': 'Xóa file tạm',
-
 
       // Settings - General
       'appearance_and_theme': 'Giao diện & Bảng màu',
@@ -105,36 +109,47 @@ class AppTranslations {
 
       'system_permissions': 'Quyền hệ thống',
       'accessibility_permission': 'Quyền Trợ năng (Accessibility)',
-      'accessibility_granted': 'Đã cấp quyền. ClipFlow tự động dán (paste) khi bạn chọn item.',
-      'accessibility_required': 'Cần cấp quyền để ClipFlow tự động điền giá trị vào ô soạn thảo.',
+      'accessibility_granted':
+          'Đã cấp quyền. ClipFlow tự động dán (paste) khi bạn chọn item.',
+      'accessibility_required':
+          'Cần cấp quyền để ClipFlow tự động điền giá trị vào ô soạn thảo.',
       'granted': 'Đã cấp',
       'grant_permission': 'Cấp quyền',
       'restart_app': 'Khởi động lại ứng dụng',
-      'restart_app_sub': 'Khởi động lại ClipFlow để nhận diện quyền mới sau khi cấp trong Cài đặt hệ thống.',
+      'restart_app_sub':
+          'Khởi động lại ClipFlow để nhận diện quyền mới sau khi cấp trong Cài đặt hệ thống.',
       'restart': 'Khởi động lại',
       'reset_permission': 'Reset & Cấp lại quyền',
-      'reset_permission_sub': 'Dùng khi cài đè hoặc cập nhật ứng dụng khiến quyền Trợ năng bị vô hiệu hóa ngầm.',
+      'reset_permission_sub':
+          'Dùng khi cài đè hoặc cập nhật ứng dụng khiến quyền Trợ năng bị vô hiệu hóa ngầm.',
       'reset': 'Reset quyền',
 
       'startup_options': 'Tùy chọn Khởi động & Hành vi',
       'launch_at_login': 'Tự động mở khi đăng nhập',
-      'launch_at_login_sub': 'Tự động chạy ClipFlow khi bạn đăng nhập vào macOS.',
+      'launch_at_login_sub':
+          'Tự động chạy ClipFlow khi bạn đăng nhập vào macOS.',
       'run_in_tray': 'Chạy ngầm ở Khay hệ thống',
-      'run_in_tray_sub': 'Duy trì biểu tượng ClipFlow trên khay hệ thống (Menu Bar) để truy cập nhanh.',
+      'run_in_tray_sub':
+          'Duy trì biểu tượng ClipFlow trên khay hệ thống (Menu Bar) để truy cập nhanh.',
       'show_in_dock': 'Hiển thị icon ở thanh Dock',
-      'show_in_dock_sub': 'Bật/tắt biểu tượng ClipFlow trên thanh Dock của macOS.',
+      'show_in_dock_sub':
+          'Bật/tắt biểu tượng ClipFlow trên thanh Dock của macOS.',
       'close_after_copy': 'Tự động đóng sau khi chọn item',
-      'close_after_copy_sub': 'Tự động ẩn Quick Panel và dán nội dung vào ứng dụng đang làm việc.',
+      'close_after_copy_sub':
+          'Tự động ẩn Quick Panel và dán nội dung vào ứng dụng đang làm việc.',
       'sound_enabled': 'Phát âm thanh khi thao tác',
-      'sound_enabled_sub': 'Phát tiếng phản hồi nhẹ khi sao chép hoặc thực hiện hành động.',
+      'sound_enabled_sub':
+          'Phát tiếng phản hồi nhẹ khi sao chép hoặc thực hiện hành động.',
 
       // Settings - Backup & Restore
       'backup_restore_section': 'Sao lưu & Khôi phục cấu hình',
       'export_config': 'Xuất cấu hình cá nhân (.clipflow)',
-      'export_config_sub': 'Đóng gói toàn bộ cấu hình, theme & cài đặt có mật khẩu bảo vệ.',
+      'export_config_sub':
+          'Đóng gói toàn bộ cấu hình, theme & cài đặt có mật khẩu bảo vệ.',
       'export_button': 'Xuất file',
       'import_config': 'Nhập cấu hình (.clipflow)',
-      'import_config_sub': 'Khôi phục cài đặt từ tệp cấu hình mã hóa .clipflow.',
+      'import_config_sub':
+          'Khôi phục cài đặt từ tệp cấu hình mã hóa .clipflow.',
       'import_button': 'Nhập file',
 
       // Backup Dialogs
@@ -160,7 +175,8 @@ class AppTranslations {
       'clear_history_msg': 'Các item đã ghim sẽ được giữ lại.',
 
       // About
-      'app_description': 'Trình quản lý clipboard riêng tư, local-first và được thiết kế cho trải nghiệm macOS.',
+      'app_description':
+          'Trình quản lý clipboard riêng tư, local-first và được thiết kế cho trải nghiệm macOS.',
       'version': 'Phiên bản',
       'github_source': 'Mã nguồn trên GitHub',
       'check_updates': 'Kiểm tra cập nhật',
@@ -194,21 +210,27 @@ class AppTranslations {
       'no_results_found': 'Không tìm thấy kết quả',
       'clipboard_empty_title': 'Clipboard của bạn đang trống',
       'try_different_keyword': 'Thử từ khóa hoặc bộ lọc khác.',
-      'clipboard_empty_subtitle': 'Hãy sao chép một nội dung. ClipFlow sẽ giữ nó an toàn trên thiết bị này.',
+      'clipboard_empty_subtitle':
+          'Hãy sao chép một nội dung. ClipFlow sẽ giữ nó an toàn trên thiết bị này.',
       'try_again': 'Thử lại',
       'delete_cannot_undo': 'Thao tác này không thể hoàn tác.',
 
       // Onboarding
       'onboarding_title_1': 'Mọi thứ bạn sao chép, luôn ở đúng nơi',
-      'onboarding_desc_1': 'ClipFlow lưu lịch sử clipboard để bạn tìm lại văn bản, liên kết, code và nhiều nội dung khác trong vài giây.',
+      'onboarding_desc_1':
+          'ClipFlow lưu lịch sử clipboard để bạn tìm lại văn bản, liên kết, code và nhiều nội dung khác trong vài giây.',
       'onboarding_title_2': 'Riêng tư ngay từ thiết kế',
-      'onboarding_desc_2': 'Dữ liệu chỉ được lưu trên thiết bị này. ClipFlow không tải nội dung clipboard lên máy chủ.',
+      'onboarding_desc_2':
+          'Dữ liệu chỉ được lưu trên thiết bị này. ClipFlow không tải nội dung clipboard lên máy chủ.',
       'onboarding_title_3': 'Bạn luôn nắm quyền kiểm soát',
-      'onboarding_desc_3': 'Tạm dừng theo dõi bất cứ lúc nào, bỏ qua ứng dụng nhạy cảm và xóa sạch dữ liệu chỉ với một thao tác.',
+      'onboarding_desc_3':
+          'Tạm dừng theo dõi bất cứ lúc nào, bỏ qua ứng dụng nhạy cảm và xóa sạch dữ liệu chỉ với một thao tác.',
       'onboarding_title_4': 'Bạn muốn giữ lịch sử bao lâu?',
-      'onboarding_desc_4': 'Có thể thay đổi lựa chọn này bất kỳ lúc nào trong phần Cài đặt.',
+      'onboarding_desc_4':
+          'Có thể thay đổi lựa chọn này bất kỳ lúc nào trong phần Cài đặt.',
       'onboarding_title_5': 'Sẵn sàng để làm việc nhanh hơn',
-      'onboarding_desc_5': 'Nhấn Control + V trên macOS hoặc Control + Shift + V trên Windows/Linux để mở ClipFlow.',
+      'onboarding_desc_5':
+          'Nhấn Control + V trên macOS hoặc Control + Shift + V trên Windows/Linux để mở ClipFlow.',
       'unlimited': 'Không giới hạn',
       'start_btn': 'Bắt đầu',
       'continue_btn': 'Tiếp tục',
@@ -243,7 +265,8 @@ class AppTranslations {
       'add_app': 'Thêm',
       'no_excluded_apps': 'Chưa có ứng dụng nào bị loại trừ.',
       'add_excluded_app_title': 'Thêm ứng dụng loại trừ',
-      'add_excluded_app_msg': 'Nội dung sao chép từ ứng dụng bị loại trừ sẽ không được lưu vào lịch sử.',
+      'add_excluded_app_msg':
+          'Nội dung sao chép từ ứng dụng bị loại trừ sẽ không được lưu vào lịch sử.',
       'select_running_app': 'Chọn từ ứng dụng đang chạy',
       'select_app_finder': 'Chọn tệp ứng dụng (.app) từ Finder',
       'enter_app_manual': 'Nhập tên ứng dụng thủ công',
@@ -269,7 +292,8 @@ class AppTranslations {
       'select_and_copy': 'Chọn và sao chép',
       'delete_item': 'Xóa item',
       'restore_defaults': 'Khôi phục mặc định',
-      'shortcut_hint': 'Nhấn vào một hàng để ghi tổ hợp mới. Phím mở ClipFlow được đăng ký toàn hệ thống ngay sau khi lưu.',
+      'shortcut_hint':
+          'Nhấn vào một hàng để ghi tổ hợp mới. Phím mở ClipFlow được đăng ký toàn hệ thống ngay sau khi lưu.',
       'record_shortcut_title': 'Ghi phím tắt mới',
       'record_shortcut_msg': 'Nhấn tổ hợp bạn muốn sử dụng.',
       'system_hotkey_needs_modifier': 'Phím toàn hệ thống cần một phím bổ trợ.',
@@ -292,13 +316,16 @@ class AppTranslations {
       'select_running_app_title': 'Chọn ứng dụng đang chạy',
       'exclude_app_title': 'Loại trừ ứng dụng',
       'exclude_app_placeholder': 'Ví dụ: Bitwarden, Safari',
-      'privacy_db_notice': 'Nội dung clipboard chỉ được lưu trong cơ sở dữ liệu trên thiết bị này.',
+      'privacy_db_notice':
+          'Nội dung clipboard chỉ được lưu trong cơ sở dữ liệu trên thiết bị này.',
       'version_label': 'Phiên bản @v',
-      'update_check_failed': 'Không thể kiểm tra cập nhật. Vui lòng thử lại sau.',
+      'update_check_failed':
+          'Không thể kiểm tra cập nhật. Vui lòng thử lại sau.',
       'update_available_version': 'Có phiên bản mới (@v)!',
       'latest_version_msg': 'Bạn đang ở phiên bản mới nhất (@v).',
       'downloading_update': 'Đang tải bản cập nhật... (@p%)',
-      'cannot_auto_install': 'Không thể tự động cài đặt. Đang mở trang phát hành...',
+      'cannot_auto_install':
+          'Không thể tự động cài đặt. Đang mở trang phát hành...',
       'license': 'Giấy phép (MIT)',
       'license_sub': 'Bản quyền & Giấy phép mã nguồn mở MIT',
       'privacy_policy': 'Chính sách bảo mật',
@@ -306,6 +333,82 @@ class AppTranslations {
       'view_policy': 'Xem chính sách',
       'view_license': 'Xem giấy phép',
       'close': 'Đóng',
+
+      // Refactored UI labels
+      'about_tagline': 'Trình quản lý clipboard riêng tư, nhanh và cục bộ',
+      'added_to_collection': 'Đã thêm vào collection',
+      'all_cleared': 'Đã xóa toàn bộ lịch sử',
+      'all_clips': 'Tất cả bản sao',
+      'all_types': 'Tất cả loại',
+      'backup_export_failed': 'Không thể xuất bản sao lưu',
+      'backup_exported': 'Đã xuất bản sao lưu',
+      'backup_import_failed': 'Không thể nhập bản sao lưu',
+      'backup_imported': 'Đã nhập bản sao lưu',
+      'check_update': 'Kiểm tra cập nhật',
+      'cleanup_rules': 'Quy tắc dọn dẹp',
+      'clear': 'Xóa',
+      'clear_all': 'Xóa tất cả',
+      'clear_all_confirm_msg':
+          'Tất cả mục clipboard sẽ bị xóa. Thao tác này không thể hoàn tác.',
+      'clear_all_confirm_title': 'Xóa toàn bộ lịch sử?',
+      'clear_all_history': 'Xóa toàn bộ lịch sử',
+      'clear_all_sub': 'Xóa tất cả mục, kể cả các mục đã ghim',
+      'clear_unpinned': 'Xóa mục chưa ghim',
+      'clear_unpinned_sub': 'Giữ lại các mục đã ghim',
+      'collection_name': 'Tên collection',
+      'copy_and_paste': 'Sao chép & Dán',
+      'copy_text_hint': 'Sao chép nội dung để bắt đầu',
+      'create': 'Tạo',
+      'database_cleanup': 'Dọn dẹp cơ sở dữ liệu',
+      'days_unit': 'ngày',
+      'delete_collection_msg':
+          'Các mục trong collection vẫn được giữ trong lịch sử.',
+      'delete_collection_title': 'Xóa collection này?',
+      'delete_images_first_sub': 'Ưu tiên xóa hình ảnh khi vượt giới hạn',
+      'delete_item_shortcut': 'Xóa mục đang chọn',
+      'delete_item_sub': 'Xóa mục này khỏi lịch sử clipboard',
+      'export': 'Xuất',
+      'export_backup': 'Xuất bản sao lưu',
+      'export_backup_prompt': 'Nhập mật khẩu để bảo vệ tệp sao lưu.',
+      'export_backup_sub': 'Lưu cài đặt vào tệp .clipflow được mã hóa',
+      'export_backup_title': 'Xuất cấu hình',
+      'filter_by_type': 'Lọc theo loại nội dung',
+      'focus_search_shortcut': 'Tập trung ô tìm kiếm',
+      'focus_search_sub': 'Đưa con trỏ vào ô tìm kiếm',
+      'global_shortcut_section': 'Phím tắt toàn hệ thống',
+      'ignore_long_token': 'Bỏ qua token dài',
+      'ignore_long_token_sub': 'Không lưu chuỗi bí mật hoặc token dài',
+      'ignore_sensitive_sub': 'Không lưu nội dung có vẻ nhạy cảm',
+      'image': 'Hình ảnh',
+      'image_not_found': 'Không tìm thấy hình ảnh',
+      'import': 'Nhập',
+      'import_backup': 'Nhập bản sao lưu',
+      'import_backup_prompt': 'Nhập mật khẩu để giải mã tệp sao lưu.',
+      'import_backup_sub': 'Khôi phục cài đặt từ tệp .clipflow',
+      'import_backup_title': 'Nhập cấu hình',
+      'in_app_shortcuts': 'Phím tắt trong ứng dụng',
+      'item_deleted': 'Đã xóa mục',
+      'licenses_sub': 'Giấy phép của Flutter và thư viện mã nguồn mở',
+      'link': 'Liên kết',
+      'max_database_size': 'Dung lượng cơ sở dữ liệu tối đa',
+      'no_matching_clips': 'Không có bản sao phù hợp',
+      'open_source_licenses': 'Giấy phép mã nguồn mở',
+      'password_placeholder': 'Nhập mật khẩu',
+      'pin': 'Ghim',
+      'press_shortcut': 'Nhấn tổ hợp phím',
+      'privacy_policy_text':
+          'Dữ liệu clipboard được xử lý và lưu cục bộ trên thiết bị. ClipFlow không theo dõi hoặc gửi lịch sử clipboard lên máy chủ.',
+      'retention_and_limits': 'Lưu giữ & Giới hạn',
+      'search_history_placeholder': 'Tìm trong lịch sử clipboard',
+      'starred_clips': 'Bản sao đã ghim',
+      'toggle_panel_shortcut': 'Mở/đóng Quick Panel',
+      'toggle_panel_shortcut_sub': 'Hiển thị ClipFlow từ bất kỳ ứng dụng nào',
+      'toggle_pin_shortcut': 'Bật/tắt ghim',
+      'toggle_pin_sub': 'Ghim hoặc bỏ ghim mục đang chọn',
+      'try_different_search': 'Hãy thử từ khóa hoặc bộ lọc khác.',
+      'unpin': 'Bỏ ghim',
+      'unpinned_cleared': 'Đã xóa các mục chưa ghim',
+      'view_licenses': 'Xem giấy phép',
     },
     'en': {
       // General & Navigation
@@ -344,7 +447,8 @@ class AppTranslations {
       'upload_cloud': 'Upload to Cloud',
       'delete': 'Delete',
       'delete_item_title': 'Delete item?',
-      'delete_item_confirm': 'Are you sure you want to delete this clipboard item?',
+      'delete_item_confirm':
+          'Are you sure you want to delete this clipboard item?',
       'cancel': 'Cancel',
       'clipboard_empty': 'Clipboard is currently empty.',
 
@@ -373,45 +477,54 @@ class AppTranslations {
       'theme_dark': 'Dark',
       'app_language': 'App Language',
       'translation_language': 'Translation Language',
-      'translation_language_sub': 'Default language when using Translate action',
+      'translation_language_sub':
+          'Default language when using Translate action',
 
       'system_permissions': 'System Permissions',
       'accessibility_permission': 'Accessibility Permission',
-      'accessibility_granted': 'Granted. ClipFlow automatically pastes when item is selected.',
-      'accessibility_required': 'Required for ClipFlow to automatically paste text into active apps.',
+      'accessibility_granted':
+          'Granted. ClipFlow automatically pastes when item is selected.',
+      'accessibility_required':
+          'Required for ClipFlow to automatically paste text into active apps.',
       'granted': 'Granted',
       'grant_permission': 'Grant Permission',
       'restart_app': 'Restart Application',
       'restart_app_sub': 'Restart ClipFlow to apply newly granted permissions.',
       'restart': 'Restart',
       'reset_permission': 'Reset & Re-grant Permission',
-      'reset_permission_sub': 'Use if app update invalidates system Accessibility permission.',
+      'reset_permission_sub':
+          'Use if app update invalidates system Accessibility permission.',
       'reset': 'Reset',
 
       'startup_options': 'Startup & Behavior',
       'launch_at_login': 'Launch at Login',
-      'launch_at_login_sub': 'Automatically launch ClipFlow when logging in to macOS.',
+      'launch_at_login_sub':
+          'Automatically launch ClipFlow when logging in to macOS.',
       'run_in_tray': 'Run in Menu Bar',
       'run_in_tray_sub': 'Keep ClipFlow active in the macOS Menu Bar.',
       'show_in_dock': 'Show in Dock',
       'show_in_dock_sub': 'Show ClipFlow app icon in macOS Dock.',
       'close_after_copy': 'Auto-hide Quick Panel after copy',
-      'close_after_copy_sub': 'Automatically hide panel and paste content into previous active app.',
+      'close_after_copy_sub':
+          'Automatically hide panel and paste content into previous active app.',
       'sound_enabled': 'Sound Effects',
       'sound_enabled_sub': 'Play subtle sound effect on copy or action.',
 
       // Settings - Backup & Restore
       'backup_restore_section': 'Backup & Restore Settings',
       'export_config': 'Export Personal Settings (.clipflow)',
-      'export_config_sub': 'Package all settings & theme into an encrypted .clipflow file.',
+      'export_config_sub':
+          'Package all settings & theme into an encrypted .clipflow file.',
       'export_button': 'Export',
       'import_config': 'Import Settings (.clipflow)',
-      'import_config_sub': 'Restore settings from an encrypted .clipflow backup file.',
+      'import_config_sub':
+          'Restore settings from an encrypted .clipflow backup file.',
       'import_button': 'Import',
 
       // Backup Dialogs
       'export_dialog_title': 'Export Personal Settings',
-      'export_dialog_msg': 'Enter a password to encrypt your .clipflow backup file:',
+      'export_dialog_msg':
+          'Enter a password to encrypt your .clipflow backup file:',
       'password': 'Password',
       'confirm_password': 'Confirm Password',
       'password_empty': 'Password cannot be empty.',
@@ -432,7 +545,8 @@ class AppTranslations {
       'clear_history_msg': 'Pinned items will be preserved.',
 
       // About
-      'app_description': 'A private, local-first clipboard manager designed for macOS.',
+      'app_description':
+          'A private, local-first clipboard manager designed for macOS.',
       'version': 'Version',
       'github_source': 'Source Code on GitHub',
       'check_updates': 'Check for Updates',
@@ -466,21 +580,26 @@ class AppTranslations {
       'no_results_found': 'No results found',
       'clipboard_empty_title': 'Your clipboard is empty',
       'try_different_keyword': 'Try different keywords or filters.',
-      'clipboard_empty_subtitle': 'Copy something. ClipFlow will keep it safe on this device.',
+      'clipboard_empty_subtitle':
+          'Copy something. ClipFlow will keep it safe on this device.',
       'try_again': 'Try Again',
       'delete_cannot_undo': 'This action cannot be undone.',
 
       // Onboarding
       'onboarding_title_1': 'Everything you copy, right where you need it',
-      'onboarding_desc_1': 'ClipFlow saves your clipboard history so you can find text, links, code, and more in seconds.',
+      'onboarding_desc_1':
+          'ClipFlow saves your clipboard history so you can find text, links, code, and more in seconds.',
       'onboarding_title_2': 'Private by design',
-      'onboarding_desc_2': 'Data stays on this device only. ClipFlow does not upload your clipboard content to any server.',
+      'onboarding_desc_2':
+          'Data stays on this device only. ClipFlow does not upload your clipboard content to any server.',
       'onboarding_title_3': 'You are always in control',
-      'onboarding_desc_3': 'Pause monitoring anytime, exclude sensitive apps, and clear data with one click.',
+      'onboarding_desc_3':
+          'Pause monitoring anytime, exclude sensitive apps, and clear data with one click.',
       'onboarding_title_4': 'How long do you want to keep history?',
       'onboarding_desc_4': 'You can change this anytime in Settings.',
       'onboarding_title_5': 'Ready to work faster',
-      'onboarding_desc_5': 'Press Control + V on macOS or Control + Shift + V on Windows/Linux to open ClipFlow.',
+      'onboarding_desc_5':
+          'Press Control + V on macOS or Control + Shift + V on Windows/Linux to open ClipFlow.',
       'unlimited': 'Unlimited',
       'start_btn': 'Get Started',
       'continue_btn': 'Continue',
@@ -515,7 +634,8 @@ class AppTranslations {
       'add_app': 'Add',
       'no_excluded_apps': 'No applications excluded yet.',
       'add_excluded_app_title': 'Add Excluded Application',
-      'add_excluded_app_msg': 'Copied content from excluded apps will not be saved to history.',
+      'add_excluded_app_msg':
+          'Copied content from excluded apps will not be saved to history.',
       'select_running_app': 'Select from running applications',
       'select_app_finder': 'Select application (.app) from Finder',
       'enter_app_manual': 'Enter application name manually',
@@ -541,10 +661,13 @@ class AppTranslations {
       'select_and_copy': 'Select and Copy',
       'delete_item': 'Delete Item',
       'restore_defaults': 'Restore Defaults',
-      'shortcut_hint': 'Click a row to record a new shortcut. Global hotkey takes effect immediately after saving.',
+      'shortcut_hint':
+          'Click a row to record a new shortcut. Global hotkey takes effect immediately after saving.',
       'record_shortcut_title': 'Record New Shortcut',
-      'record_shortcut_msg': 'Press the shortcut key combination you want to use.',
-      'system_hotkey_needs_modifier': 'Global shortcuts require a modifier key (Cmd/Ctrl/Option/Shift).',
+      'record_shortcut_msg':
+          'Press the shortcut key combination you want to use.',
+      'system_hotkey_needs_modifier':
+          'Global shortcuts require a modifier key (Cmd/Ctrl/Option/Shift).',
       'choose_non_modifier': 'Please select a non-modifier key.',
       'shortcut_conflict': 'Shortcut is already used for another action.',
       'shortcut_used_by_other_app': 'Shortcut is used by another application.',
@@ -564,9 +687,11 @@ class AppTranslations {
       'select_running_app_title': 'Select Running Application',
       'exclude_app_title': 'Exclude Application',
       'exclude_app_placeholder': 'Example: Bitwarden, Safari',
-      'privacy_db_notice': 'Clipboard content is saved exclusively in the local database on this device.',
+      'privacy_db_notice':
+          'Clipboard content is saved exclusively in the local database on this device.',
       'version_label': 'Version @v',
-      'update_check_failed': 'Unable to check for updates. Please try again later.',
+      'update_check_failed':
+          'Unable to check for updates. Please try again later.',
       'update_available_version': 'New version available (@v)!',
       'latest_version_msg': 'You are on the latest version (@v).',
       'downloading_update': 'Downloading update... (@p%)',
@@ -579,13 +704,93 @@ class AppTranslations {
       'view_license': 'View License',
       'close': 'Close',
 
+      // Refactored UI labels
+      'about_tagline': 'A private, fast, local clipboard manager',
+      'added_to_collection': 'Added to collection',
+      'all_cleared': 'Clipboard history cleared',
+      'all_clips': 'All Clips',
+      'all_types': 'All Types',
+      'backup_export_failed': 'Could not export backup',
+      'backup_exported': 'Backup exported',
+      'backup_import_failed': 'Could not import backup',
+      'backup_imported': 'Backup imported',
+      'check_update': 'Check for Updates',
+      'cleanup_rules': 'Cleanup Rules',
+      'clear': 'Clear',
+      'clear_all': 'Clear All',
+      'clear_all_confirm_msg':
+          'All clipboard items will be deleted. This cannot be undone.',
+      'clear_all_confirm_title': 'Clear all history?',
+      'clear_all_history': 'Clear All History',
+      'clear_all_sub': 'Delete every item, including pinned items',
+      'clear_unpinned': 'Clear Unpinned',
+      'clear_unpinned_sub': 'Keep pinned items',
+      'collection_name': 'Collection name',
+      'copy_and_paste': 'Copy & Paste',
+      'copy_text_hint': 'Copy something to get started',
+      'create': 'Create',
+      'database_cleanup': 'Database Cleanup',
+      'days_unit': 'days',
+      'delete_collection_msg':
+          'Items in this collection will remain in clipboard history.',
+      'delete_collection_title': 'Delete this collection?',
+      'delete_images_first_sub': 'Prioritize images when storage is over limit',
+      'delete_item_shortcut': 'Delete Selected Item',
+      'delete_item_sub': 'Remove this item from clipboard history',
+      'export': 'Export',
+      'export_backup': 'Export Backup',
+      'export_backup_prompt': 'Enter a password to protect the backup file.',
+      'export_backup_sub': 'Save settings to an encrypted .clipflow file',
+      'export_backup_title': 'Export Settings',
+      'filter_by_type': 'Filter by content type',
+      'focus_search_shortcut': 'Focus Search',
+      'focus_search_sub': 'Move focus to the search field',
+      'global_shortcut_section': 'Global Shortcut',
+      'ignore_long_token': 'Ignore Long Tokens',
+      'ignore_long_token_sub': 'Do not save long secrets or token-like text',
+      'ignore_sensitive_sub': 'Do not save content that appears sensitive',
+      'image': 'Image',
+      'image_not_found': 'Image not found',
+      'import': 'Import',
+      'import_backup': 'Import Backup',
+      'import_backup_prompt': 'Enter the password to decrypt the backup file.',
+      'import_backup_sub': 'Restore settings from a .clipflow file',
+      'import_backup_title': 'Import Settings',
+      'in_app_shortcuts': 'In-App Shortcuts',
+      'item_deleted': 'Item deleted',
+      'licenses_sub': 'Licenses for Flutter and open-source packages',
+      'link': 'Link',
+      'max_database_size': 'Maximum Database Size',
+      'no_matching_clips': 'No matching clips',
+      'open_source_licenses': 'Open-Source Licenses',
+      'password_placeholder': 'Enter password',
+      'pin': 'Pin',
+      'press_shortcut': 'Press shortcut',
+      'privacy_policy_text':
+          'Clipboard data is processed and stored locally on your device. ClipFlow does not track or send clipboard history to a server.',
+      'retention_and_limits': 'Retention & Limits',
+      'search_history_placeholder': 'Search clipboard history',
+      'starred_clips': 'Starred Clips',
+      'tab_ai': 'AI',
+      'toggle_panel_shortcut': 'Toggle Quick Panel',
+      'toggle_panel_shortcut_sub': 'Show ClipFlow from any application',
+      'toggle_pin_shortcut': 'Toggle Pin',
+      'toggle_pin_sub': 'Pin or unpin the selected item',
+      'try_different_search': 'Try another keyword or filter.',
+      'unpin': 'Unpin',
+      'unpinned_cleared': 'Unpinned items cleared',
+      'view_licenses': 'View Licenses',
+
       // AI Settings & Chat Assistant
       'ai_settings_title': 'Local AI Features (Offline)',
       'ai_enabled': 'Enable Local AI',
-      'ai_enabled_sub': 'Allow using AI models that run directly on your device.',
-      'ai_privacy_notice': 'ClipFlow integrates AI running entirely on your device, processing clipboard content without sending data to external servers. No account, API key or Internet required.',
+      'ai_enabled_sub':
+          'Allow using AI models that run directly on your device.',
+      'ai_privacy_notice':
+          'ClipFlow integrates AI running entirely on your device, processing clipboard content without sending data to external servers. No account, API key or Internet required.',
       'ai_model_selection': 'AI Thinking Models (Reasoning Models)',
-      'ai_model_selection_sub': 'Only models with deep reasoning (Thinking capabilities) are listed.',
+      'ai_model_selection_sub':
+          'Only models with deep reasoning (Thinking capabilities) are listed.',
       'ai_download_model': 'Download model',
       'ai_delete_model': 'Delete model',
       'ai_downloaded': 'Downloaded',
@@ -598,7 +803,8 @@ class AppTranslations {
       'ai_clear_context': 'Remove clipboard',
       'ai_send_prompt': 'Ask AI...',
       'ai_no_model_title': 'AI Model Required',
-      'ai_no_model_desc': 'Please download at least 1 AI model to use AI features. Models run entirely on your device, no Internet needed after download.',
+      'ai_no_model_desc':
+          'Please download at least 1 AI model to use AI features. Models run entirely on your device, no Internet needed after download.',
       'ai_recommend_model': 'Recommended for you',
       'ai_resume_download': 'Resume download',
       'ai_partial_downloaded': 'Partially downloaded',
