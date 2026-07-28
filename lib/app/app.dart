@@ -41,14 +41,21 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
             openPanelShortcut: settings.openPanelShortcut,
             onQuickPanelRequested: () {
               router.go('/');
+              ref.read(aiWindowModeProvider.notifier).state = false;
               ref.read(quickPanelModeProvider.notifier).state = true;
             },
             onMainWindowRequested: () {
               router.go('/');
+              ref.read(aiWindowModeProvider.notifier).state = false;
               ref.read(quickPanelModeProvider.notifier).state = false;
             },
             onQuickPanelDismissed: () {
               ref.read(quickPanelModeProvider.notifier).state = false;
+            },
+            onAiWindowRequested: () {
+              router.go('/');
+              ref.read(quickPanelModeProvider.notifier).state = false;
+              ref.read(aiWindowModeProvider.notifier).state = true;
             },
             onTrayStatusChanged: (enabled) {
               unawaited(

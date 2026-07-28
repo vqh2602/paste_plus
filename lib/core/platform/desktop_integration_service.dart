@@ -23,7 +23,7 @@ class OpenAtLoginResult {
   final String? errorMessage;
 }
 
-enum DesktopWindowMode { main, quickPanel, hidden }
+enum DesktopWindowMode { main, quickPanel, aiWindow, hidden }
 
 class _MainWindowSnapshot {
   const _MainWindowSnapshot({
@@ -48,8 +48,10 @@ class DesktopIntegrationService with TrayListener {
   VoidCallback? _onQuickPanelRequested;
   VoidCallback? _onMainWindowRequested;
   VoidCallback? _onQuickPanelDismissed;
+  VoidCallback? _onAiWindowRequested;
   DesktopWindowMode _windowMode = DesktopWindowMode.main;
   _MainWindowSnapshot? _mainWindowSnapshot;
+  _MainWindowSnapshot? _aiWindowSnapshot;
   DateTime _ignoreBlurUntil = DateTime.fromMillisecondsSinceEpoch(0);
   bool _trayActive = false;
 
@@ -68,6 +70,7 @@ class DesktopIntegrationService with TrayListener {
     required VoidCallback onQuickPanelRequested,
     required VoidCallback onMainWindowRequested,
     required VoidCallback onQuickPanelDismissed,
+    VoidCallback? onAiWindowRequested,
     ValueChanged<bool>? onTrayStatusChanged,
     ValueChanged<bool>? onOpenAtLoginStatusChanged,
   }) async {
@@ -76,6 +79,7 @@ class DesktopIntegrationService with TrayListener {
     _onQuickPanelRequested = onQuickPanelRequested;
     _onMainWindowRequested = onMainWindowRequested;
     _onQuickPanelDismissed = onQuickPanelDismissed;
+    _onAiWindowRequested = onAiWindowRequested;
     await setShowInDock(showInDock);
     launchAtStartup.setup(
       appName: 'ClipFlow',
@@ -360,6 +364,43 @@ class DesktopIntegrationService with TrayListener {
     if (snapshot?.wasFullScreen == true) {
       await windowManager.setFullScreen(true);
     }
+    await windowManager.focus();
+  }
+
+  Future<void> showAiWindow() async {
+    if (!isDesktop) return;
+    if (_windowMode == DesktopWindowMode.main && await windowManager.isVisible()) {
+      _mainWindowSnapshot = _MainWindowSnapshot(
+        position: await windowManager.getPosition(),
+        size: await windowManager.getSize(),
+        wasMaximized: await windowManager.isMaximized(),
+        wasFullScreen: await windowManager.isFullScreen(),
+      );
+    }
+    _windowMode = DesktopWindowMode.aiWindow;
+    _onAiWindowRequested?.call();
+    if (Platform.isMacOS) {
+      await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
+      await windowManager.setVisibleOnAllWorkspaces(false);
+    }
+    await windowManager.setAlwaysOnTop(false);
+    await windowManager.setSkipTaskbar(false);
+    await windowManager.setHasShadow(true);
+    await windowManager.setResizable(true);
+    await windowManager.setTitleBarStyle(
+      TitleBarStyle.hidden,
+      windowButtonVisibility: true,
+    );
+    await windowManager.setMinimumSize(const Size(680, 500));
+    final snapshot = _aiWindowSnapshot;
+    if (snapshot == null) {
+      await windowManager.setSize(const Size(960, 680), animate: true);
+      await windowManager.center(animate: true);
+    } else {
+      await windowManager.setSize(snapshot.size);
+      await windowManager.setPosition(snapshot.position);
+    }
+    await windowManager.show();
     await windowManager.focus();
   }
 

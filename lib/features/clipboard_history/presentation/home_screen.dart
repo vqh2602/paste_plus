@@ -12,7 +12,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
-import '../../ai/presentation/ai_chat_dialog.dart';
+import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'history_controller.dart';
@@ -75,6 +75,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (ref.watch(aiWindowModeProvider)) {
+      return const AiChatScreen();
+    }
     if (ref.watch(quickPanelModeProvider)) {
       return const QuickPanelScreen();
     }
@@ -659,14 +662,17 @@ class _HistoryPane extends ConsumerWidget {
                 CupertinoIconControl(
                   icon: CupertinoIcons.sparkles,
                   color: CupertinoColors.activeBlue,
-                  onPressed: () {
+                  onPressed: () async {
                     final selectedItem = state.visibleItems.isNotEmpty
                         ? state.visibleItems.firstWhere(
                             (item) => item.id == state.selectedItemId,
                             orElse: () => state.visibleItems.first,
                           )
                         : null;
-                    AiChatDialog.show(context, contextItem: selectedItem);
+                    ref
+                        .read(aiControllerProvider.notifier)
+                        .setClipboardContext(selectedItem);
+                    await ref.read(desktopIntegrationProvider).showAiWindow();
                   },
                 ),
                 const SizedBox(width: 6),

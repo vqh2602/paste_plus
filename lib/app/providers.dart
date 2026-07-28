@@ -31,6 +31,7 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 final loggingServiceProvider = Provider((ref) => const LoggingService());
 
 final quickPanelModeProvider = StateProvider<bool>((ref) => false);
+final aiWindowModeProvider = StateProvider<bool>((ref) => false);
 
 final clipboardRepositoryProvider = Provider<ClipboardRepository>((ref) {
   return SqliteClipboardRepository(ref.watch(appDatabaseProvider));
