@@ -3,6 +3,8 @@ import 'dart:convert';
 enum DuplicateBehavior { bringToTop, createNew, keepPosition }
 
 class AppSettings {
+  static const defaultAiModel = 'gemma-4-e2b';
+
   const AppSettings({
     this.hasCompletedOnboarding = false,
     this.monitoringEnabled = true,
@@ -37,7 +39,7 @@ class AppSettings {
     this.deleteItemShortcut,
     this.duplicateBehavior = DuplicateBehavior.bringToTop,
     this.aiEnabled = true,
-    this.selectedAiModel = 'deepseek-r1-1.5b',
+    this.selectedAiModel = defaultAiModel,
     this.allowedTypes = const {
       'text',
       'url',
@@ -218,6 +220,11 @@ class AppSettings {
     final excludedApplications = map['excludedApplications'] is List
         ? (map['excludedApplications'] as List).cast<String>()
         : defaults.excludedApplications;
+    final storedAiModel = map['selectedAiModel'] as String?;
+    final selectedAiModel =
+        storedAiModel == null || storedAiModel.trim().isEmpty
+        ? defaultAiModel
+        : storedAiModel;
     return AppSettings(
       hasCompletedOnboarding: value('hasCompletedOnboarding', false),
       monitoringEnabled: value('monitoringEnabled', true),
@@ -227,13 +234,16 @@ class AppSettings {
       closeAfterCopy: value('closeAfterCopy', false),
       soundEnabled: value('soundEnabled', true),
       aiEnabled: value('aiEnabled', true),
-      selectedAiModel: value('selectedAiModel', 'deepseek-r1-1.5b'),
+      selectedAiModel: selectedAiModel,
       themeMode: value('themeMode', 'system'),
       accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),
       targetTranslationLanguage: value('targetTranslationLanguage', 'vi'),
       cloudImageHost: value('cloudImageHost', 'freeimage'),
-      freeImageApiKey: value('freeImageApiKey', '6d207e02198a847aa98d0a2a901485a5'),
+      freeImageApiKey: value(
+        'freeImageApiKey',
+        '6d207e02198a847aa98d0a2a901485a5',
+      ),
       ignoreDuplicates: value('ignoreDuplicates', true),
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),

@@ -5,6 +5,18 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('uses Gemma 4 E2B when no AI model has been selected', () {
+    expect(const AppSettings().selectedAiModel, AppSettings.defaultAiModel);
+    expect(
+      AppSettings.fromJson('{}').selectedAiModel,
+      AppSettings.defaultAiModel,
+    );
+    expect(
+      AppSettings.fromJson('{"selectedAiModel":""}').selectedAiModel,
+      AppSettings.defaultAiModel,
+    );
+  });
+
   test('settings serialize and persist with collections intact', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();

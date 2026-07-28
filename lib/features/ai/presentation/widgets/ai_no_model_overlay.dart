@@ -19,7 +19,11 @@ class AiNoModelOverlay extends ConsumerWidget {
     final aiNotifier = ref.read(aiControllerProvider.notifier);
 
     // Show top 3 lightest models as recommendations
-    final recommendedModels = AiModelInfo.thinkingModels.take(3).toList();
+    final recommendedModels = [
+      AiModelInfo.findById(AiModelInfo.defaultModelId),
+      AiModelInfo.findById('qwen3-0.6b'),
+      AiModelInfo.findById('gemma-4-e4b'),
+    ];
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),

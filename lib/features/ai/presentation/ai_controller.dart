@@ -8,6 +8,7 @@ import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
+import '../domain/ai_request_plan.dart';
 import '../services/ai_model_downloader_service.dart';
 import '../services/local_ai_engine.dart';
 
@@ -94,6 +95,7 @@ class AiController extends StateNotifier<AiState> {
   bool _chatChangedBeforeRestore = false;
   bool _contextChangedBeforeRestore = false;
   final Map<String, StreamSubscription> _downloadSubscriptions = {};
+  static const _requestPlanner = AiRequestPlanner();
 
   Future<void> _checkDownloadedModels() async {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
@@ -284,9 +286,28 @@ class AiController extends StateNotifier<AiState> {
     if (state.isGenerating) return;
     await _restoreFuture;
 
-    final activeContext = contextItem ?? state.activeClipboardContext;
-    final conversationContext = _buildConversationContext(state.chatMessages);
-    final clipboardHistory = activeContext == null
+    final selectedContext = contextItem ?? state.activeClipboardContext;
+    final availableConversationContext = _buildConversationContext(
+      state.chatMessages,
+    );
+    final requestPlan = _requestPlanner.plan(
+      prompt: userText,
+      hasSelectedClipboard: selectedContext != null,
+      hasConversation: availableConversationContext.isNotEmpty,
+      featureGroup: featureGroup,
+    );
+    final usesConversationHistory =
+        requestPlan.intent == AiRequestIntent.followUp;
+    final conversationContext = usesConversationHistory
+        ? availableConversationContext
+        : '';
+    final conversationMessages = usesConversationHistory
+        ? _recentConversationMessages(state.chatMessages)
+        : const <AiChatMessage>[];
+    final activeContext = requestPlan.useSelectedClipboard
+        ? selectedContext
+        : null;
+    final clipboardHistory = requestPlan.useClipboardHistory
         ? _ref
               .read(historyControllerProvider)
               .items
@@ -316,16 +337,19 @@ class AiController extends StateNotifier<AiState> {
     final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
     state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
+    final requestModel = _modelForRequest();
     final stream = _localEngine.processStream(
-      model: state.selectedModel,
+      model: requestModel,
       prompt: userText,
       clipboardContext: activeContext,
       clipboardHistory: clipboardHistory,
       featureGroup: featureGroup,
       selectedOption: selectedOption,
       conversationContext: conversationContext,
+      requestPlan: requestPlan,
+      conversationMessages: conversationMessages,
       temperature: state.temperature,
-      contextSize: state.contextSize,
+      contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
     );
 
     try {
@@ -343,6 +367,18 @@ class AiController extends StateNotifier<AiState> {
           target.isThinking = type == 'think';
           state = state.copyWith(chatMessages: currentMsgs);
         }
+      }
+    } catch (error) {
+      final currentMsgs = [...state.chatMessages];
+      final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
+      if (index != -1) {
+        currentMsgs[index]
+          ..isThinking = false
+          ..thinkingContent = null
+          ..content =
+              'Mình chưa thể tạo câu trả lời lúc này. Hãy thử lại hoặc '
+              'chọn một model khác.\n\nChi tiết: $error';
+        state = state.copyWith(chatMessages: currentMsgs);
       }
     } finally {
       final currentMsgs = [...state.chatMessages];
@@ -405,6 +441,35 @@ class AiController extends StateNotifier<AiState> {
       buffer.write(entry);
     }
     return buffer.toString().trim();
+  }
+
+  List<AiChatMessage> _recentConversationMessages(
+    List<AiChatMessage> messages,
+  ) {
+    final completed = messages
+        .where(
+          (message) =>
+              !message.isThinking &&
+              message.content.trim().isNotEmpty &&
+              message.role != AiMessageRole.system,
+        )
+        .toList(growable: false);
+    return completed.length > 10
+        ? completed.sublist(completed.length - 10)
+        : completed;
+  }
+
+  AiModelInfo _modelForRequest() {
+    bool downloaded(String id) =>
+        state.downloadStates[id] == DownloadState.downloaded;
+    if (downloaded(state.selectedModelId)) return state.selectedModel;
+    if (downloaded(AiModelInfo.defaultModelId)) {
+      return AiModelInfo.findById(AiModelInfo.defaultModelId);
+    }
+    for (final model in AiModelInfo.thinkingModels) {
+      if (downloaded(model.id)) return model;
+    }
+    return state.selectedModel;
   }
 
   @override

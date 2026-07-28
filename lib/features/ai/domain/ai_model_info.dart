@@ -1,4 +1,6 @@
 class AiModelInfo {
+  static const defaultModelId = 'gemma-4-e2b';
+
   const AiModelInfo({
     required this.id,
     required this.name,
@@ -30,6 +32,44 @@ class AiModelInfo {
   }
 
   static const List<AiModelInfo> thinkingModels = [
+    AiModelInfo(
+      id: 'gemma-4-e2b',
+      name: 'Gemma 4 E2B Instruct',
+      description:
+          'Model đa ngôn ngữ thế hệ mới của Google, tối ưu cho hội thoại và xử lý cục bộ trên thiết bị.',
+      parameterSize: 'E2B',
+      fileSizeMb: 3195,
+      downloadUrl:
+          'https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf',
+      recommendedFor:
+          'Chat hằng ngày, hỏi đáp Clipboard, tóm tắt và dịch thuật',
+      contextWindow: 32768,
+    ),
+    AiModelInfo(
+      id: 'gemma-4-e4b',
+      name: 'Gemma 4 E4B Instruct',
+      description:
+          'Bản Gemma 4 mạnh hơn dành cho câu hỏi phức tạp, lập luận dài và độ chính xác cao hơn.',
+      parameterSize: 'E4B',
+      fileSizeMb: 4917,
+      downloadUrl:
+          'https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf',
+      recommendedFor:
+          'Hỏi đáp chuyên sâu, phân tích nội dung dài và tác vụ phức tạp',
+      contextWindow: 32768,
+    ),
+    AiModelInfo(
+      id: 'qwen3-0.6b',
+      name: 'Qwen3 0.6B',
+      description:
+          'Model cực nhẹ, phản hồi nhanh và hỗ trợ đa ngôn ngữ tốt trên máy có ít RAM.',
+      parameterSize: '0.6B',
+      fileSizeMb: 610,
+      downloadUrl:
+          'https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf',
+      recommendedFor: 'Chat nhanh, phân loại, tiêu đề và tác vụ ngắn',
+      contextWindow: 32768,
+    ),
     AiModelInfo(
       id: 'deepseek-r1-1.5b',
       name: 'DeepSeek-R1-Distill-Qwen-1.5B (Thinking)',
@@ -85,6 +125,7 @@ class AiModelInfo {
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf',
       recommendedFor: 'Dịch thuật, phân loại thông minh, tạo tiêu đề & tag',
+      isThinkingModel: false,
     ),
   ];
 
