@@ -16,6 +16,7 @@ class SidebarWidget extends ConsumerWidget {
     required this.onOpenSettings,
     required this.onCreateCollection,
     required this.onDeleteCollection,
+    this.reserveWindowControls = false,
   });
 
   final ClipboardHistoryState state;
@@ -23,6 +24,7 @@ class SidebarWidget extends ConsumerWidget {
   final VoidCallback onOpenSettings;
   final VoidCallback onCreateCollection;
   final ValueChanged<ClipboardCollection> onDeleteCollection;
+  final bool reserveWindowControls;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,142 +34,165 @@ class SidebarWidget extends ConsumerWidget {
       color: resolveColor(context, ClipFlowColors.sidebar),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
-                child: Text(
-                  'library'.tr,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: resolveColor(context, ClipFlowColors.secondaryText),
-                  ),
-                ),
-              ),
-              SidebarTileWidget(
-                icon: CupertinoIcons.tray_full,
-                label: 'all'.tr,
-                selected: state.section == HistorySection.all,
-                onTap: () => historyNotifier.selectSection(HistorySection.all),
-              ),
-              SidebarTileWidget(
-                icon: CupertinoIcons.pin,
-                label: 'pinned'.tr,
-                selected: state.section == HistorySection.pinned,
-                onTap: () =>
-                    historyNotifier.selectSection(HistorySection.pinned),
-              ),
-              SidebarTileWidget(
-                icon: CupertinoIcons.photo,
-                label: 'images'.tr,
-                selected: state.section == HistorySection.images,
-                onTap: () =>
-                    historyNotifier.selectSection(HistorySection.images),
-              ),
-              SidebarTileWidget(
-                icon: CupertinoIcons.link,
-                label: 'links'.tr,
-                selected: state.section == HistorySection.links,
-                onTap: () =>
-                    historyNotifier.selectSection(HistorySection.links),
-              ),
-              SidebarTileWidget(
-                icon: CupertinoIcons.chevron_left_slash_chevron_right,
-                label: 'code'.tr,
-                selected: state.section == HistorySection.code,
-                onTap: () => historyNotifier.selectSection(HistorySection.code),
-              ),
-              const SizedBox(height: 18),
-              Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 10),
-                      child: Text(
-                        'collections'.tr,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: resolveColor(
-                            context,
-                            ClipFlowColors.secondaryText,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.add,
-                    size: 16,
-                    onPressed: onCreateCollection,
-                  ),
-                ],
-              ),
-              Expanded(
-                child: ListView(
-                  padding: EdgeInsets.zero,
-                  children: [
-                    for (final collection in collections)
-                      SidebarTileWidget(
-                        icon: CupertinoIcons.folder,
-                        label: collection.name,
-                        selected:
-                            state.section == HistorySection.collection &&
-                            state.collectionId == collection.id,
-                        onTap: () => historyNotifier.selectSection(
-                          HistorySection.collection,
-                          collectionId: collection.id,
-                        ),
-                        onLongPress: () =>
-                            _showCollectionActions(context, ref, collection),
-                        onOptionsPressed: () =>
-                            _showCollectionActions(context, ref, collection),
-                      ),
-                  ],
-                ),
-              ),
-              const CupertinoDivider(),
-              const SizedBox(height: 8),
-              SidebarTileWidget(
-                icon: CupertinoIcons.settings,
-                label: 'settings'.tr,
-                selected: false,
-                onTap: onOpenSettings,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
-                child: Row(
-                  children: [
-                    Icon(
-                      CupertinoIcons.lock_shield,
-                      size: 13,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0, end: 1),
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) => Opacity(
+            opacity: value,
+            child: Transform.translate(
+              offset: Offset(-10 * (1 - value), 0),
+              child: child,
+            ),
+          ),
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              12,
+              reserveWindowControls ? 50 : 14,
+              12,
+              12,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  key: const Key('sidebar-library-title'),
+                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
+                  child: Text(
+                    'library'.tr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                       color: resolveColor(
                         context,
                         ClipFlowColors.secondaryText,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                  ),
+                ),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.tray_full,
+                  label: 'all'.tr,
+                  selected: state.section == HistorySection.all,
+                  onTap: () =>
+                      historyNotifier.selectSection(HistorySection.all),
+                ),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.pin,
+                  label: 'pinned'.tr,
+                  selected: state.section == HistorySection.pinned,
+                  onTap: () =>
+                      historyNotifier.selectSection(HistorySection.pinned),
+                ),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.photo,
+                  label: 'images'.tr,
+                  selected: state.section == HistorySection.images,
+                  onTap: () =>
+                      historyNotifier.selectSection(HistorySection.images),
+                ),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.link,
+                  label: 'links'.tr,
+                  selected: state.section == HistorySection.links,
+                  onTap: () =>
+                      historyNotifier.selectSection(HistorySection.links),
+                ),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.chevron_left_slash_chevron_right,
+                  label: 'code'.tr,
+                  selected: state.section == HistorySection.code,
+                  onTap: () =>
+                      historyNotifier.selectSection(HistorySection.code),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
                     Expanded(
-                      child: Text(
-                        'local_data_only'.tr,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: resolveColor(
-                            context,
-                            ClipFlowColors.secondaryText,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 10),
+                        child: Text(
+                          'collections'.tr,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
                           ),
                         ),
                       ),
                     ),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.add,
+                      size: 16,
+                      onPressed: onCreateCollection,
+                    ),
                   ],
                 ),
-              ),
-            ],
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      for (final collection in collections)
+                        SidebarTileWidget(
+                          icon: CupertinoIcons.folder,
+                          label: collection.name,
+                          selected:
+                              state.section == HistorySection.collection &&
+                              state.collectionId == collection.id,
+                          onTap: () => historyNotifier.selectSection(
+                            HistorySection.collection,
+                            collectionId: collection.id,
+                          ),
+                          onLongPress: () =>
+                              _showCollectionActions(context, ref, collection),
+                          onOptionsPressed: () =>
+                              _showCollectionActions(context, ref, collection),
+                        ),
+                    ],
+                  ),
+                ),
+                const CupertinoDivider(),
+                const SizedBox(height: 8),
+                SidebarTileWidget(
+                  icon: CupertinoIcons.settings,
+                  label: 'settings'.tr,
+                  selected: false,
+                  onTap: onOpenSettings,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 2),
+                  child: Row(
+                    children: [
+                      Icon(
+                        CupertinoIcons.lock_shield,
+                        size: 13,
+                        color: resolveColor(
+                          context,
+                          ClipFlowColors.secondaryText,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'local_data_only'.tr,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

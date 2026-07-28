@@ -110,41 +110,66 @@ class HistoryPaneWidget extends ConsumerWidget {
         ),
         const CupertinoDivider(),
         Expanded(
-          child: state.isLoading
-              ? const Center(child: CupertinoActivityIndicator())
-              : items.isEmpty
-              ? EmptyStateWidget(hasQuery: state.query.isNotEmpty)
-              : ListView.builder(
-                  key: ValueKey(
-                    'list-${state.section}-${state.typeFilters}-${state.query}',
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            reverseDuration: const Duration(milliseconds: 160),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.025),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: state.isLoading
+                ? const Center(
+                    key: Key('history-loading'),
+                    child: CupertinoActivityIndicator(),
+                  )
+                : items.isEmpty
+                ? EmptyStateWidget(
+                    key: ValueKey('history-empty-${state.query}'),
+                    hasQuery: state.query.isNotEmpty,
+                  )
+                : ListView.builder(
+                    key: ValueKey(
+                      'list-${state.section}-${state.typeFilters}-${state.query}',
+                    ),
+                    padding: EdgeInsets.fromLTRB(
+                      compact ? 12 : 22,
+                      12,
+                      compact ? 12 : 22,
+                      24,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return _AnimatedHistoryItem(
+                        key: ValueKey('animated-${item.id}'),
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: ClipboardCardWidget(
+                            key: const Key('clipboard-item'),
+                            item: item,
+                            selected: item.id == state.selectedItemId,
+                            onTap: () {
+                              historyNotifier.select(item.id);
+                              onCopy(item);
+                            },
+                            onCopy: onCopy,
+                            onDelete: onDelete,
+                            onAddToCollection: onAddToCollection,
+                            onShowItemActions: onShowItemActions,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  padding: EdgeInsets.fromLTRB(
-                    compact ? 12 : 22,
-                    12,
-                    compact ? 12 : 22,
-                    24,
-                  ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: ClipboardCardWidget(
-                        key: const Key('clipboard-item'),
-                        item: item,
-                        selected: item.id == state.selectedItemId,
-                        onTap: () {
-                          historyNotifier.select(item.id);
-                          onCopy(item);
-                        },
-                        onCopy: onCopy,
-                        onDelete: onDelete,
-                        onAddToCollection: onAddToCollection,
-                        onShowItemActions: onShowItemActions,
-                      ),
-                    );
-                  },
-                ),
+          ),
         ),
       ],
     );
@@ -160,6 +185,30 @@ class HistoryPaneWidget extends ConsumerWidget {
       selectedTypes: currentTypes,
     );
     if (selected != null) await notifier.setTypeFilters(selected);
+  }
+}
+
+class _AnimatedHistoryItem extends StatelessWidget {
+  const _AnimatedHistoryItem({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: Transform.translate(
+          offset: Offset(0, 10 * (1 - value)),
+          child: child,
+        ),
+      ),
+      child: child,
+    );
   }
 }
 

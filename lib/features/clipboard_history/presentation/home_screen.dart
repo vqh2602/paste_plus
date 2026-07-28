@@ -334,6 +334,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: SidebarWidget(
                         state: state,
                         collections: collections,
+                        reserveWindowControls: Platform.isMacOS,
                         onOpenSettings: _openSettings,
                         onCreateCollection: _showCreateCollectionDialog,
                         onDeleteCollection: _handleDeleteCollection,
