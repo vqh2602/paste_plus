@@ -2,6 +2,17 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.4] - 2026-07-28
+
+### 🐛 Sửa lỗi & Cải tiến
+- **Sửa lỗi quyền hệ thống Trợ năng (Accessibility) khi update / cài đè app**:
+  - Thêm phương thức Native Swift `resetAccessibilityPermission` chạy lệnh `/usr/bin/tccutil reset Accessibility <bundle_id>` để làm sạch cache TCC bị hỏng khi update hoặc cài đè app.
+  - Tích hợp nút **"Reset & Cấp lại quyền"** trong mục Cài đặt hệ thống.
+- **Tối ưu giao diện (UI)**:
+  - Loại bỏ nút `(+)` thừa trên thanh tìm kiếm của màn hình chính.
+
+---
+
 ## [1.0.2] - 2026-07-27
 
 ### 🚀 Tính năng mới
