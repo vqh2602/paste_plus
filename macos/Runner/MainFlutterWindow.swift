@@ -305,6 +305,11 @@ class MainFlutterWindow: NSWindow {
         self.getRunningApplications(result: result)
       case "pickApplicationFile":
         self.pickApplicationFile(result: result)
+      case "saveConfigFile":
+        let defaultName = (call.arguments as? [String: Any])?["defaultName"] as? String ?? "clipflow_config.clipflow"
+        self.saveConfigFile(defaultName: defaultName, result: result)
+      case "pickConfigFile":
+        self.pickConfigFile(result: result)
       case "pasteToPreviousApplication":
         self.pasteToPreviousApplication(result: result)
       case "openUrl":
@@ -467,6 +472,35 @@ class MainFlutterWindow: NSWindow {
           "bundleId": bundleId,
           "path": url.path
         ])
+      } else {
+        result(nil)
+      }
+    }
+  }
+
+  private func saveConfigFile(defaultName: String, result: @escaping FlutterResult) {
+    let savePanel = NSSavePanel()
+    savePanel.canCreateDirectories = true
+    savePanel.nameFieldStringValue = defaultName
+    savePanel.allowedFileTypes = ["clipflow"]
+    savePanel.begin { response in
+      if response == .OK, let url = savePanel.url {
+        result(url.path)
+      } else {
+        result(nil)
+      }
+    }
+  }
+
+  private func pickConfigFile(result: @escaping FlutterResult) {
+    let openPanel = NSOpenPanel()
+    openPanel.canChooseFiles = true
+    openPanel.canChooseDirectories = false
+    openPanel.allowsMultipleSelection = false
+    openPanel.allowedFileTypes = ["clipflow"]
+    openPanel.begin { response in
+      if response == .OK, let url = openPanel.url {
+        result(url.path)
       } else {
         result(nil)
       }

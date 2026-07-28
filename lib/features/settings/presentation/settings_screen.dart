@@ -13,6 +13,7 @@ import '../../../core/services/update_service.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/app_settings.dart';
+import '../services/settings_backup_service.dart';
 
 enum _SettingsPage { general, clipboard, privacy, storage, shortcuts, about }
 
@@ -1048,6 +1049,38 @@ class _StorageSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
+        const CupertinoSectionLabel('Sao lưu & Khôi phục cấu hình'),
+        _SettingsGroup(
+          children: [
+            _SettingsTile(
+              title: 'Xuất cấu hình cá nhân (.clipflow)',
+              subtitle: 'Đóng gói toàn bộ cấu hình, theme & cài đặt có mật khẩu bảo vệ.',
+              leading: const Icon(
+                CupertinoIcons.square_arrow_up,
+                color: CupertinoColors.activeBlue,
+              ),
+              trailing: CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                onPressed: () => _exportConfig(context, ref),
+                child: const Text('Xuất file'),
+              ),
+            ),
+            _SettingsTile(
+              title: 'Nhập cấu hình (.clipflow)',
+              subtitle: 'Khôi phục cài đặt từ tệp cấu hình mã hóa .clipflow.',
+              leading: const Icon(
+                CupertinoIcons.square_arrow_down,
+                color: CupertinoColors.activeGreen,
+              ),
+              trailing: CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                onPressed: () => _importConfig(context, ref),
+                child: const Text('Nhập file'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 22),
         FutureBuilder<int>(
           future: ref
               .read(clipboardRepositoryProvider)
@@ -1081,6 +1114,162 @@ class _StorageSettings extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _exportConfig(BuildContext context, WidgetRef ref) async {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+
+    final pwd = await showCupertinoDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return CupertinoAlertDialog(
+          title: const Text('Xuất cấu hình cá nhân'),
+          content: Column(
+            children: [
+              const SizedBox(height: 10),
+              const Text('Nhập mật khẩu để bảo vệ tệp sao lưu .clipflow:'),
+              const SizedBox(height: 12),
+              CupertinoTextField(
+                controller: passwordController,
+                obscureText: true,
+                placeholder: 'Mật khẩu',
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              ),
+              const SizedBox(height: 8),
+              CupertinoTextField(
+                controller: confirmController,
+                obscureText: true,
+                placeholder: 'Xác nhận mật khẩu',
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              ),
+            ],
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(dialogContext, null),
+              child: const Text('Hủy'),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                final p1 = passwordController.text.trim();
+                final p2 = confirmController.text.trim();
+                if (p1.isEmpty) {
+                  showCupertinoNotice(dialogContext, 'Mật khẩu không được để trống.');
+                  return;
+                }
+                if (p1 != p2) {
+                  showCupertinoNotice(dialogContext, 'Mật khẩu xác nhận không khớp.');
+                  return;
+                }
+                Navigator.pop(dialogContext, p1);
+              },
+              child: const Text('Xuất file'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (pwd == null || pwd.isEmpty) return;
+
+    final desktop = ref.read(desktopIntegrationProvider);
+    final nowStr = DateTime.now().toString().split(' ').first.replaceAll('-', '');
+    final filePath = await desktop.saveConfigFile(
+      defaultName: 'clipflow_settings_$nowStr.clipflow',
+    );
+
+    if (filePath == null || filePath.isEmpty) return;
+
+    final backupService = const SettingsBackupService();
+    final result = await backupService.exportSettings(
+      settings: ref.read(settingsControllerProvider),
+      password: pwd,
+      filePath: filePath,
+    );
+
+    if (context.mounted) {
+      if (result.isSuccess) {
+        showCupertinoNotice(context, 'Đã xuất cấu hình thành công!');
+      } else {
+        showCupertinoNotice(context, result.errorMessage ?? 'Xuất cấu hình thất bại.');
+      }
+    }
+  }
+
+  Future<void> _importConfig(BuildContext context, WidgetRef ref) async {
+    final desktop = ref.read(desktopIntegrationProvider);
+    final filePath = await desktop.pickConfigFile();
+
+    if (filePath == null || filePath.isEmpty) return;
+
+    if (!context.mounted) return;
+
+    final passwordController = TextEditingController();
+    final pwd = await showCupertinoDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return CupertinoAlertDialog(
+          title: const Text('Nhập cấu hình cá nhân'),
+          content: Column(
+            children: [
+              const SizedBox(height: 10),
+              const Text('Nhập mật khẩu của tệp .clipflow để giải mã:'),
+              const SizedBox(height: 12),
+              CupertinoTextField(
+                controller: passwordController,
+                obscureText: true,
+                placeholder: 'Mật khẩu giải mã',
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              ),
+            ],
+          ),
+          actions: [
+            CupertinoDialogAction(
+              onPressed: () => Navigator.pop(dialogContext, null),
+              child: const Text('Hủy'),
+            ),
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                final p = passwordController.text.trim();
+                if (p.isEmpty) {
+                  showCupertinoNotice(dialogContext, 'Mật khẩu không được để trống.');
+                  return;
+                }
+                Navigator.pop(dialogContext, p);
+              },
+              child: const Text('Nhập cấu hình'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (pwd == null || pwd.isEmpty) return;
+
+    final backupService = const SettingsBackupService();
+    final result = await backupService.importSettings(
+      filePath: filePath,
+      password: pwd,
+    );
+
+    if (!context.mounted) return;
+
+    if (result.isSuccess && result.settings != null) {
+      await ref
+          .read(settingsControllerProvider.notifier)
+          .update((_) => result.settings!);
+      if (context.mounted) {
+        showCupertinoNotice(context, 'Đã nhập và áp dụng cấu hình thành công!');
+      }
+    } else {
+      showCupertinoNotice(
+        context,
+        result.errorMessage ?? 'Nhập cấu hình thất bại.',
+      );
+    }
   }
 
   Future<void> _clearHistory(BuildContext context, WidgetRef ref) async {
@@ -1482,17 +1671,13 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
       child: Column(
         children: [
           const SizedBox(height: 20),
-          Container(
-            width: 82,
-            height: 82,
-            decoration: BoxDecoration(
-              color: CupertinoTheme.of(context).primaryColor,
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: const Icon(
-              CupertinoIcons.doc_on_clipboard_fill,
-              color: CupertinoColors.white,
-              size: 40,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              'assets/branding/clipflow_app_icon.png',
+              width: 82,
+              height: 82,
+              fit: BoxFit.cover,
             ),
           ),
           const SizedBox(height: 18),

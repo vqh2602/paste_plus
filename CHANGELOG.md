@@ -2,6 +2,18 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.5] - 2026-07-28
+
+### 🚀 Tính năng mới & Cải tiến
+- **Sao lưu & Khôi phục cấu hình cá nhân (`.clipflow`)**:
+  - Hỗ trợ xuất và nhập tệp cấu hình mã hóa bảo vệ bằng mật khẩu (`AES-256` + `PBKDF2 SHA-256` + `HMAC-SHA256`).
+  - Đóng gói dữ liệu định dạng `.clipflow` (tương thích ZIP archive).
+  - Tích hợp thoại chọn vị trí lưu (`NSSavePanel`) và chọn file (`NSOpenPanel`) trực tiếp ở lớp Native macOS.
+- **Cập nhật giao diện Giới thiệu (About UI)**:
+  - Thay thế biểu tượng placeholder bằng hình ảnh logo ứng dụng ClipFlow chính thức.
+
+---
+
 ## [1.0.4] - 2026-07-28
 
 ### 🐛 Sửa lỗi & Cải tiến

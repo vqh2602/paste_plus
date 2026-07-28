@@ -449,6 +449,31 @@ class DesktopIntegrationService with TrayListener {
     }
   }
 
+  Future<String?> saveConfigFile({
+    String defaultName = 'clipflow_config.clipflow',
+  }) async {
+    if (!Platform.isMacOS) return null;
+    try {
+      return await _windowChannel.invokeMethod<String>(
+        'saveConfigFile',
+        {'defaultName': defaultName},
+      );
+    } on Object catch (_) {
+      return null;
+    }
+  }
+
+  Future<String?> pickConfigFile() async {
+    if (!Platform.isMacOS) return null;
+    try {
+      return await _windowChannel.invokeMethod<String>(
+        'pickConfigFile',
+      );
+    } on Object catch (_) {
+      return null;
+    }
+  }
+
   Future<bool> pasteToPreviousApplication() async {
     if (!Platform.isMacOS) return false;
     try {
