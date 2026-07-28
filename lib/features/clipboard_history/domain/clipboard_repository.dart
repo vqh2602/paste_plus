@@ -15,6 +15,7 @@ abstract interface class ClipboardRepository {
 
   Future<void> markCopied(String id);
   Future<void> setPinned(String id, bool pinned);
+  Future<void> updateMetadata(String id, String metadataJson);
   Future<void> deleteItem(String id);
   Future<void> clearHistory({bool includePinned = false});
   Future<List<ClipboardCollection>> getCollections();

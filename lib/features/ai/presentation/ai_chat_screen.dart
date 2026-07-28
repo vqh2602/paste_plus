@@ -10,6 +10,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
+import '../data/ai_conversation_repository.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_message_tile_widget.dart';
 import 'widgets/ai_no_model_overlay.dart';
@@ -119,6 +120,154 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     await ref.read(desktopIntegrationProvider).showMainWindow();
   }
 
+  void _showConversations() {
+    final conversations = ref.read(aiControllerProvider).savedConversations;
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Lịch sử hội thoại'),
+        message: const Text('Tối đa 20 phiên gần nhất, lưu trên thiết bị'),
+        actions: [
+          CupertinoActionSheetAction(
+            isDefaultAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(aiControllerProvider.notifier).startNewConversation();
+            },
+            child: const Text('＋ Hội thoại mới'),
+          ),
+          for (final conversation in conversations)
+            CupertinoActionSheetAction(
+              onPressed: () {
+                Navigator.pop(context);
+                ref
+                    .read(aiControllerProvider.notifier)
+                    .openConversation(conversation);
+              },
+              child: Row(
+                children: [
+                  if (conversation.isPinned)
+                    const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(CupertinoIcons.pin_fill, size: 14),
+                    ),
+                  Expanded(child: Text(conversation.title)),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(30, 30),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      _showConversationActions(conversation);
+                    },
+                    child: const Icon(CupertinoIcons.ellipsis, size: 16),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text('cancel'.tr),
+        ),
+      ),
+    );
+  }
+
+  void _showConversationActions(SavedAiConversation conversation) {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text(conversation.title),
+        actions: [
+          CupertinoActionSheetAction(
+            onPressed: () async {
+              Navigator.pop(context);
+              final controller = TextEditingController(
+                text: conversation.title,
+              );
+              final title = await showCupertinoDialog<String>(
+                context: this.context,
+                builder: (context) => CupertinoAlertDialog(
+                  title: const Text('Đổi tên hội thoại'),
+                  content: CupertinoTextField(controller: controller),
+                  actions: [
+                    CupertinoDialogAction(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('cancel'.tr),
+                    ),
+                    CupertinoDialogAction(
+                      onPressed: () => Navigator.pop(context, controller.text),
+                      child: const Text('Lưu'),
+                    ),
+                  ],
+                ),
+              );
+              controller.dispose();
+              if (title != null && mounted) {
+                await ref
+                    .read(aiControllerProvider.notifier)
+                    .renameConversation(conversation.id, title);
+              }
+            },
+            child: const Text('Đổi tên'),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () {
+              Navigator.pop(context);
+              ref
+                  .read(aiControllerProvider.notifier)
+                  .toggleConversationPinned(conversation.id);
+            },
+            child: Text(conversation.isPinned ? 'Bỏ ghim' : 'Ghim'),
+          ),
+          CupertinoActionSheetAction(
+            isDestructiveAction: true,
+            onPressed: () {
+              Navigator.pop(context);
+              ref
+                  .read(aiControllerProvider.notifier)
+                  .deleteConversation(conversation.id);
+            },
+            child: const Text('Xóa'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showGenerationSettings() {
+    showCupertinoModalPopup<void>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: const Text('Cấu hình sinh nội dung'),
+        message: const Text('Áp dụng cho các câu trả lời tiếp theo'),
+        actions: [
+          for (final profile in const [
+            ('Chính xác · 2K', 0.2, 2048),
+            ('Cân bằng · 4K', 0.55, 4096),
+            ('Sáng tạo · 8K', 0.85, 8192),
+          ])
+            CupertinoActionSheetAction(
+              onPressed: () {
+                ref
+                    .read(aiControllerProvider.notifier)
+                    .setGenerationProfile(
+                      temperature: profile.$2,
+                      contextSize: profile.$3,
+                    );
+                Navigator.pop(context);
+              },
+              child: Text(profile.$1),
+            ),
+        ],
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.pop(context),
+          child: Text('cancel'.tr),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final aiState = ref.watch(aiControllerProvider);
@@ -191,6 +340,18 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       ),
                     ),
                     const Spacer(),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.clock,
+                      size: 16,
+                      tooltip: 'Lịch sử hội thoại',
+                      onPressed: _showConversations,
+                    ),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.slider_horizontal_3,
+                      size: 16,
+                      tooltip: 'Cấu hình AI',
+                      onPressed: _showGenerationSettings,
+                    ),
                     CupertinoButton(
                       padding: const EdgeInsets.symmetric(horizontal: 10),
                       onPressed: _openMainWindow,
@@ -265,6 +426,22 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         final msg = aiState.chatMessages[index];
                         return AiMessageTileWidget(
                           message: msg,
+                          onEdit: (content) {
+                            _inputController.text = content;
+                            _inputController.selection =
+                                TextSelection.collapsed(offset: content.length);
+                            _focusNode.requestFocus();
+                          },
+                          onRegenerate: index == aiState.chatMessages.length - 1
+                              ? () => ref
+                                    .read(aiControllerProvider.notifier)
+                                    .regenerateLastResponse()
+                              : null,
+                          onContinue: index == aiState.chatMessages.length - 1
+                              ? () => ref
+                                    .read(aiControllerProvider.notifier)
+                                    .continueLastResponse()
+                              : null,
                           onCopy: (content) {
                             Clipboard.setData(ClipboardData(text: content));
                             showCupertinoNotice(context, 'copied'.tr);
@@ -314,13 +491,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     padding: const EdgeInsets.all(12),
                     borderRadius: BorderRadius.circular(16),
                     onPressed: aiState.isGenerating
-                        ? null
+                        ? () => ref
+                              .read(aiControllerProvider.notifier)
+                              .stopGeneration()
                         : () => _submitPrompt(),
                     child: aiState.isGenerating
-                        ? const CupertinoActivityIndicator(
-                            radius: 9,
-                            color: CupertinoColors.white,
-                          )
+                        ? const Icon(CupertinoIcons.stop_fill, size: 18)
                         : const Icon(CupertinoIcons.arrow_up, size: 20),
                   ),
                 ],

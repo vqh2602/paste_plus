@@ -8,6 +8,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../ai/domain/ai_feature_action.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
@@ -43,15 +44,21 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     final settings = ref.read(settingsControllerProvider);
     setState(() => _isProcessing = true);
     try {
-      final result = await ref
-          .read(historyControllerProvider.notifier)
-          .translateItem(item, settings.targetTranslationLanguage);
+      final option = settings.targetTranslationLanguage == 'en'
+          ? 'Tự động -> Tiếng Anh'
+          : 'Tự động -> Tiếng Việt';
+      ref.read(aiControllerProvider.notifier).setClipboardContext(item);
+      await ref.read(desktopIntegrationProvider).showAiWindow();
+      await ref
+          .read(aiControllerProvider.notifier)
+          .sendUserMessage(
+            'Dịch nội dung clipboard sang ${settings.targetTranslationLanguage}.',
+            featureGroup: AiFeatureGroup.translate,
+            selectedOption: option,
+            contextItem: item,
+          );
       if (!mounted) return;
-      if (result != null) {
-        showCupertinoNotice(context, 'translate_success'.tr);
-      } else {
-        showCupertinoNotice(context, 'translate_failed'.tr);
-      }
+      showCupertinoNotice(context, 'translate_success'.tr);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }

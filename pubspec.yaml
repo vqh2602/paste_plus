@@ -48,6 +48,7 @@ dependencies:
   tray_manager: ^0.5.3
   hotkey_manager: ^0.2.3
   launch_at_startup: ^0.5.1
+  llamadart: ^0.8.17
 
 dev_dependencies:
   flutter_test:

@@ -11,11 +11,17 @@ class AiMessageTileWidget extends StatefulWidget {
     required this.message,
     required this.onCopy,
     required this.onPaste,
+    this.onEdit,
+    this.onRegenerate,
+    this.onContinue,
   });
 
   final AiChatMessage message;
   final ValueChanged<String> onCopy;
   final ValueChanged<String> onPaste;
+  final ValueChanged<String>? onEdit;
+  final VoidCallback? onRegenerate;
+  final VoidCallback? onContinue;
 
   @override
   State<AiMessageTileWidget> createState() => _AiMessageTileWidgetState();
@@ -40,12 +46,32 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
               color: primary,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(
-              widget.message.content,
-              style: const TextStyle(
-                fontSize: 14,
-                color: CupertinoColors.white,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    widget.message.content,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: CupertinoColors.white,
+                    ),
+                  ),
+                ),
+                if (widget.onEdit != null) ...[
+                  const SizedBox(width: 8),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(24, 24),
+                    onPressed: () => widget.onEdit!(widget.message.content),
+                    child: const Icon(
+                      CupertinoIcons.pencil,
+                      size: 13,
+                      color: CupertinoColors.white,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ),
@@ -109,7 +135,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                           children: [
                             const Text('🧠 ', style: TextStyle(fontSize: 13)),
                             const Text(
-                              'Quá trình suy luận (Thinking process)',
+                              'Đang xử lý',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -152,7 +178,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
 
             const SizedBox(height: 10),
             if (widget.message.content.isEmpty)
-              Text(widget.message.isThinking ? 'Đang suy luận...' : '')
+              Text(widget.message.isThinking ? 'Đang xử lý...' : '')
             else
               AiMarkdownContentWidget(
                 content: widget.message.content,
@@ -215,6 +241,24 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                       ],
                     ),
                   ),
+                  if (widget.onRegenerate != null) ...[
+                    const SizedBox(width: 8),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.refresh,
+                      size: 13,
+                      tooltip: 'Tạo lại',
+                      onPressed: widget.onRegenerate!,
+                    ),
+                  ],
+                  if (widget.onContinue != null) ...[
+                    const SizedBox(width: 4),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.ellipsis_circle,
+                      size: 13,
+                      tooltip: 'Tiếp tục',
+                      onPressed: widget.onContinue!,
+                    ),
+                  ],
                 ],
               ),
             ],

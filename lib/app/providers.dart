@@ -8,6 +8,7 @@ import '../core/platform/desktop_integration_service.dart';
 import '../core/services/clipboard_watcher.dart';
 import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
+import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
 import '../features/ai/services/local_ai_engine.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
@@ -80,15 +81,24 @@ final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
 });
 
 final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
-  return LocalAiEngine();
+  final engine = LocalAiEngine(ref.watch(aiModelDownloaderProvider));
+  ref.onDispose(engine.dispose);
+  return engine;
 });
 
-final aiControllerProvider =
-    StateNotifierProvider<AiController, AiState>((ref) {
+final aiConversationRepositoryProvider = Provider<AiConversationRepository>((
+  ref,
+) {
+  return const AiConversationRepository();
+});
+
+final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
+  ref,
+) {
   return AiController(
     ref.watch(aiModelDownloaderProvider),
     ref.watch(localAiEngineProvider),
+    ref.watch(aiConversationRepositoryProvider),
     ref,
   );
 });
-

@@ -201,6 +201,19 @@ class SqliteClipboardRepository implements ClipboardRepository {
   }
 
   @override
+  Future<void> updateMetadata(String id, String metadataJson) async {
+    await _db.update(
+      'clipboard_items',
+      {
+        'metadata_json': metadataJson,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
   Future<void> deleteItem(String id) async {
     final rows = await _db.query(
       'clipboard_items',

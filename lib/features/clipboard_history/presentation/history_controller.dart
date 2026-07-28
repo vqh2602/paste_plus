@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -314,11 +315,31 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<String?> performOcr(ClipboardItem item) async {
     if (item.imagePath == null) return null;
+    if (item.metadataJson?.isNotEmpty == true) {
+      try {
+        final metadata = jsonDecode(item.metadataJson!) as Map<String, dynamic>;
+        final cachedText = metadata['ocrText'] as String?;
+        if (cachedText?.trim().isNotEmpty == true) return cachedText!.trim();
+      } on Object {
+        // Ignore malformed legacy metadata and refresh OCR below.
+      }
+    }
     const ocrService = OcrService();
     final extractedText = await ocrService.extractTextFromImage(
       item.imagePath!,
     );
     if (extractedText == null || extractedText.trim().isEmpty) return null;
+    Map<String, dynamic> metadata = {};
+    try {
+      metadata = item.metadataJson?.isNotEmpty == true
+          ? jsonDecode(item.metadataJson!) as Map<String, dynamic>
+          : {};
+    } on Object {
+      metadata = {};
+    }
+    metadata['ocrText'] = extractedText.trim();
+    metadata['ocrUpdatedAt'] = DateTime.now().toIso8601String();
+    await _repository.updateMetadata(item.id, jsonEncode(metadata));
     await addTextItem(extractedText);
     return extractedText;
   }

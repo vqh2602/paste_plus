@@ -134,6 +134,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   }
 
   @override
+  Future<void> updateMetadata(String id, String metadataJson) async {}
+
+  @override
   Future<ClipboardItem?> store(
     ClipboardPayload payload,
     AppSettings settings,

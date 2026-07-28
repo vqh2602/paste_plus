@@ -83,4 +83,22 @@ void main() {
     expect(output, contains('${selected.content.length}'));
     expect(output, isNot(contains('should-not-be-used')));
   });
+
+  test('uses recent conversation context for a follow-up request', () async {
+    final engine = LocalAiEngine();
+    const recentConversation =
+        'Người dùng: Tóm tắt ghi chú cuộc họp\n'
+        'AI: Cuộc họp thống nhất phát hành vào thứ Sáu.';
+
+    final events = await engine
+        .processStream(
+          model: AiModelInfo.thinkingModels.first,
+          prompt: 'Hãy giải thích rõ hơn kết quả vừa rồi',
+          conversationContext: recentConversation,
+        )
+        .toList();
+
+    expect(events.last['thinking'], contains('các lượt hỏi đáp gần nhất'));
+    expect(events.last['output'], contains('${recentConversation.length}'));
+  });
 }
