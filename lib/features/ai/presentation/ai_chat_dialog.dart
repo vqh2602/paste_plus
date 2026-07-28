@@ -9,6 +9,7 @@ import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_feature_action.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_message_tile_widget.dart';
+import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
 class AiChatDialog extends ConsumerStatefulWidget {
@@ -205,6 +206,11 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                 ),
                 const CupertinoDivider(),
 
+                // Show mandatory model download overlay if no model downloaded
+                if (!aiState.hasAnyDownloadedModel)
+                  const Expanded(child: AiNoModelOverlay())
+                else ...[
+
                 // Active Clipboard Context Banner
                 if (aiState.activeClipboardContext != null)
                   AiContextBannerWidget(
@@ -291,6 +297,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                     ],
                   ),
                 ),
+                ], // end else hasAnyDownloadedModel
               ],
             ),
           ),

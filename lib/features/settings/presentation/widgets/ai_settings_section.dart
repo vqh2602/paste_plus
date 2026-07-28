@@ -250,6 +250,37 @@ class AiSettingsSection extends ConsumerWidget {
                             ),
                           ),
                         ),
+                      ] else if (downloadState == DownloadState.paused) ...[
+                        CupertinoButton(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          onPressed: () => aiNotifier.deleteModel(model.id),
+                          child: Text(
+                            'ai_delete_partial'.tr,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: CupertinoColors.systemRed,
+                            ),
+                          ),
+                        ),
+                        CupertinoButton.filled(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          onPressed: () => aiNotifier.resumeDownload(model),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(CupertinoIcons.play_fill, size: 12),
+                              const SizedBox(width: 4),
+                              Text(
+                                'ai_resume_download'.tr,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
                       ] else ...[
                         CupertinoButton.filled(
                           padding: const EdgeInsets.symmetric(

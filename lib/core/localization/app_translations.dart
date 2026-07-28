@@ -84,6 +84,13 @@ class AppTranslations {
       'ai_context_clip': 'Đang đính kèm Clipboard:',
       'ai_clear_context': 'Gỡ clipboard',
       'ai_send_prompt': 'Hỏi AI...',
+      'ai_no_model_title': 'Cần tải model AI',
+      'ai_no_model_desc': 'Vui lòng tải ít nhất 1 model AI để sử dụng tính năng trí tuệ nhân tạo. Model chạy hoàn toàn trên thiết bị, không cần Internet sau khi tải.',
+      'ai_recommend_model': 'Đề xuất cho bạn',
+      'ai_resume_download': 'Tiếp tục tải',
+      'ai_partial_downloaded': 'Đã tải một phần',
+      'ai_download_paused': 'Tạm dừng',
+      'ai_delete_partial': 'Xóa file tạm',
 
 
       // Settings - General
@@ -571,6 +578,32 @@ class AppTranslations {
       'view_policy': 'View Policy',
       'view_license': 'View License',
       'close': 'Close',
+
+      // AI Settings & Chat Assistant
+      'ai_settings_title': 'Local AI Features (Offline)',
+      'ai_enabled': 'Enable Local AI',
+      'ai_enabled_sub': 'Allow using AI models that run directly on your device.',
+      'ai_privacy_notice': 'ClipFlow integrates AI running entirely on your device, processing clipboard content without sending data to external servers. No account, API key or Internet required.',
+      'ai_model_selection': 'AI Thinking Models (Reasoning Models)',
+      'ai_model_selection_sub': 'Only models with deep reasoning (Thinking capabilities) are listed.',
+      'ai_download_model': 'Download model',
+      'ai_delete_model': 'Delete model',
+      'ai_downloaded': 'Downloaded',
+      'ai_not_downloaded': 'Not downloaded',
+      'ai_downloading': 'Downloading...',
+      'ai_active_model': 'Active model',
+      'ai_chat_assistant': 'ClipFlow Local AI Assistant',
+      'ai_thinking_process': 'Thinking process',
+      'ai_context_clip': 'Attached Clipboard:',
+      'ai_clear_context': 'Remove clipboard',
+      'ai_send_prompt': 'Ask AI...',
+      'ai_no_model_title': 'AI Model Required',
+      'ai_no_model_desc': 'Please download at least 1 AI model to use AI features. Models run entirely on your device, no Internet needed after download.',
+      'ai_recommend_model': 'Recommended for you',
+      'ai_resume_download': 'Resume download',
+      'ai_partial_downloaded': 'Partially downloaded',
+      'ai_download_paused': 'Paused',
+      'ai_delete_partial': 'Delete temp file',
     },
   };
 

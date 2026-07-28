@@ -29,6 +29,10 @@ class AiState {
 
   AiModelInfo get selectedModel => AiModelInfo.findById(selectedModelId);
 
+  /// True if at least one model has been fully downloaded.
+  bool get hasAnyDownloadedModel =>
+      downloadStates.values.any((s) => s == DownloadState.downloaded);
+
   AiState copyWith({
     String? selectedModelId,
     Map<String, DownloadState>? downloadStates,
@@ -74,8 +78,14 @@ class AiController extends StateNotifier<AiState> {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
     for (final model in AiModelInfo.thinkingModels) {
       final downloaded = await _downloaderService.isModelDownloaded(model.id);
-      newStates[model.id] =
-          downloaded ? DownloadState.downloaded : DownloadState.notDownloaded;
+      if (downloaded) {
+        newStates[model.id] = DownloadState.downloaded;
+      } else {
+        // Check if a partial download (.part file) exists
+        final hasPartial = await _downloaderService.hasPartialDownload(model.id);
+        newStates[model.id] =
+            hasPartial ? DownloadState.paused : DownloadState.notDownloaded;
+      }
     }
     state = state.copyWith(downloadStates: newStates);
   }
@@ -129,6 +139,11 @@ class AiController extends StateNotifier<AiState> {
     final states = Map<String, DownloadState>.from(state.downloadStates);
     states[modelId] = DownloadState.notDownloaded;
     state = state.copyWith(downloadStates: states);
+  }
+
+  /// Resume a paused download (semantic alias for startDownload).
+  void resumeDownload(AiModelInfo model) {
+    startDownload(model);
   }
 
   Future<void> deleteModel(String modelId) async {

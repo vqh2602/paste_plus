@@ -45,8 +45,9 @@ class ModelDownloadProgress {
 class AiModelDownloaderService {
   AiModelDownloaderService();
 
-  final Map<String, HttpClientRequest> _activeRequests = {};
-  final Map<String, StreamController<ModelDownloadProgress>> _progressControllers = {};
+  final Map<String, HttpClient> _activeClients = {};
+  final Map<String, StreamController<ModelDownloadProgress>>
+      _progressControllers = {};
 
   Future<Directory> get _modelsDir async {
     final appSupport = await getApplicationSupportDirectory();
@@ -62,12 +63,34 @@ class AiModelDownloaderService {
     return File(p.join(dir.path, '$modelId.gguf'));
   }
 
+  Future<File> _getPartFile(String modelId) async {
+    final dir = await _modelsDir;
+    return File(p.join(dir.path, '$modelId.gguf.part'));
+  }
+
   Future<bool> isModelDownloaded(String modelId) async {
     final file = await getModelFile(modelId);
     if (!await file.exists()) return false;
     final len = await file.length();
     // Consider downloaded if length > 10 MB
     return len > 10 * 1024 * 1024;
+  }
+
+  /// Check if a partial download (.part file) exists for this model.
+  Future<bool> hasPartialDownload(String modelId) async {
+    final partFile = await _getPartFile(modelId);
+    if (!await partFile.exists()) return false;
+    final len = await partFile.length();
+    return len > 0;
+  }
+
+  /// Get the size of a partial download (.part file) in bytes.
+  Future<int> getPartialDownloadSize(String modelId) async {
+    final partFile = await _getPartFile(modelId);
+    if (await partFile.exists()) {
+      return partFile.length();
+    }
+    return 0;
   }
 
   Future<int> getDownloadedModelSizeBytes(String modelId) async {
@@ -95,9 +118,16 @@ class AiModelDownloaderService {
     AiModelInfo model,
     StreamController<ModelDownloadProgress> controller,
   ) async {
-    final file = await getModelFile(model.id);
+    final partFile = await _getPartFile(model.id);
     final client = HttpClient();
-    int bytesReceived = 0;
+    _activeClients[model.id] = client;
+
+    int existingBytes = 0;
+    if (await partFile.exists()) {
+      existingBytes = await partFile.length();
+    }
+
+    int bytesReceived = existingBytes;
     int totalBytes = model.fileSizeMb * 1024 * 1024;
     DateTime lastTime = DateTime.now();
     int bytesSinceLastTime = 0;
@@ -105,18 +135,57 @@ class AiModelDownloaderService {
 
     try {
       final request = await client.getUrl(Uri.parse(model.downloadUrl));
-      _activeRequests[model.id] = request;
+
+      // Send Range header for resuming partial downloads
+      if (existingBytes > 0) {
+        request.headers.set('Range', 'bytes=$existingBytes-');
+      }
 
       final response = await request.close();
-      if (response.statusCode != 200) {
+
+      // Handle response status
+      bool isResume = false;
+      if (response.statusCode == 206) {
+        // Partial Content — server supports resume
+        isResume = true;
+        // Parse Content-Range header for total size
+        final contentRange = response.headers.value('content-range');
+        if (contentRange != null) {
+          // Format: bytes start-end/total
+          final totalMatch = RegExp(r'/(\d+)').firstMatch(contentRange);
+          if (totalMatch != null) {
+            totalBytes = int.parse(totalMatch.group(1)!);
+          }
+        } else if (response.contentLength > 0) {
+          totalBytes = existingBytes + response.contentLength;
+        }
+      } else if (response.statusCode == 200) {
+        // Server doesn't support Range — start from scratch
+        isResume = false;
+        existingBytes = 0;
+        bytesReceived = 0;
+        if (response.contentLength > 0) {
+          totalBytes = response.contentLength;
+        }
+      } else {
         throw HttpException('Server HTTP ${response.statusCode}');
       }
 
-      if (response.contentLength > 0) {
-        totalBytes = response.contentLength;
-      }
+      // Open file in append mode (resume) or write mode (fresh start)
+      final sink = partFile.openWrite(
+        mode: isResume ? FileMode.append : FileMode.write,
+      );
 
-      final sink = file.openWrite();
+      // Emit initial progress immediately
+      controller.add(
+        ModelDownloadProgress(
+          modelId: model.id,
+          bytesReceived: bytesReceived,
+          totalBytes: totalBytes,
+          speedBytesPerSec: 0,
+          state: DownloadState.downloading,
+        ),
+      );
 
       await for (final chunk in response) {
         sink.add(chunk);
@@ -143,8 +212,13 @@ class AiModelDownloaderService {
       }
 
       await sink.close();
+
+      // Download complete — rename .part to .gguf
+      final finalFile = await getModelFile(model.id);
+      await partFile.rename(finalFile.path);
+
       client.close();
-      _activeRequests.remove(model.id);
+      _activeClients.remove(model.id);
 
       controller.add(
         ModelDownloadProgress(
@@ -157,10 +231,9 @@ class AiModelDownloaderService {
       );
     } catch (e) {
       client.close();
-      _activeRequests.remove(model.id);
-      if (await file.exists()) {
-        await file.delete();
-      }
+      _activeClients.remove(model.id);
+
+      // DO NOT delete the .part file — keep it for resume
       controller.add(
         ModelDownloadProgress(
           modelId: model.id,
@@ -178,17 +251,34 @@ class AiModelDownloaderService {
   }
 
   void cancelDownload(String modelId) {
-    final req = _activeRequests.remove(modelId);
-    req?.abort();
+    final client = _activeClients.remove(modelId);
+    client?.close(force: true);
   }
 
   Future<bool> deleteModel(String modelId) async {
     cancelDownload(modelId);
+
+    bool deleted = false;
     final file = await getModelFile(modelId);
     if (await file.exists()) {
       await file.delete();
-      return true;
+      deleted = true;
     }
-    return false;
+    // Also clean up any .part file
+    final partFile = await _getPartFile(modelId);
+    if (await partFile.exists()) {
+      await partFile.delete();
+      deleted = true;
+    }
+    return deleted;
+  }
+
+  /// Delete only the partial download (.part) file.
+  Future<void> deletePartialDownload(String modelId) async {
+    cancelDownload(modelId);
+    final partFile = await _getPartFile(modelId);
+    if (await partFile.exists()) {
+      await partFile.delete();
+    }
   }
 }

@@ -11,6 +11,7 @@ import '../../../core/ui/cupertino_components.dart';
 import '../domain/ai_feature_action.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_message_tile_widget.dart';
+import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
 class AiChatScreen extends ConsumerStatefulWidget {
@@ -207,6 +208,11 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             ),
           const CupertinoDivider(),
 
+          // Show mandatory model download overlay if no model downloaded
+          if (!aiState.hasAnyDownloadedModel)
+            const Expanded(child: AiNoModelOverlay())
+          else ...[
+
           // Active Clipboard Context Banner
           if (aiState.activeClipboardContext != null)
             AiContextBannerWidget(
@@ -300,7 +306,8 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ),
               ],
             ),
-          ),
+          ), // end Padding for input bar
+          ], // end else hasAnyDownloadedModel
         ],
       ),
     );
