@@ -271,6 +271,13 @@ class AppTranslations {
       'latest_version_msg': 'Bạn đang ở phiên bản mới nhất (@v).',
       'downloading_update': 'Đang tải bản cập nhật... (@p%)',
       'cannot_auto_install': 'Không thể tự động cài đặt. Đang mở trang phát hành...',
+      'license': 'Giấy phép (MIT)',
+      'license_sub': 'Bản quyền & Giấy phép mã nguồn mở MIT',
+      'privacy_policy': 'Chính sách bảo mật',
+      'privacy_policy_sub': '100% Local-First, dữ liệu không rời khỏi thiết bị',
+      'view_policy': 'Xem chính sách',
+      'view_license': 'Xem giấy phép',
+      'close': 'Đóng',
     },
     'en': {
       // General & Navigation
@@ -536,6 +543,13 @@ class AppTranslations {
       'latest_version_msg': 'You are on the latest version (@v).',
       'downloading_update': 'Downloading update... (@p%)',
       'cannot_auto_install': 'Unable to auto-install. Opening release page...',
+      'license': 'License (MIT)',
+      'license_sub': 'Open-Source MIT Software License',
+      'privacy_policy': 'Privacy Policy',
+      'privacy_policy_sub': '100% Local-First, data stays strictly on device',
+      'view_policy': 'View Policy',
+      'view_license': 'View License',
+      'close': 'Close',
     },
   };
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show showLicensePage;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -283,26 +284,27 @@ class _GeneralSettings extends ConsumerWidget {
                   await ref
                       .read(desktopIntegrationProvider)
                       .openLoginItemsSettings();
+                  if (!context.mounted) return;
                   if (context.mounted) {
                     showCupertinoNotice(
                       context,
-                      'Hãy bật ClipFlow trong Login Items.',
+                      'login_items_hint'.tr,
                     );
                   }
-                } else if (result.errorMessage != null ||
-                    result.enabled != value) {
+                } else {
+                  if (!context.mounted) return;
+                  if (result.errorMessage != null || result.enabled != value) {
+                    showCupertinoNotice(
+                      context,
+                      'open_at_login_failed'.tr,
+                    );
+                    return;
+                  }
                   showCupertinoNotice(
                     context,
-                    'open_at_login_failed'.tr,
+                    value ? 'open_at_login_on'.tr : 'open_at_login_off'.tr,
                   );
-                  return;
                 }
-                showCupertinoNotice(
-                  context,
-                  value
-                      ? 'open_at_login_on'.tr
-                      : 'open_at_login_off'.tr,
-                );
               },
             ),
             _SwitchRow(
@@ -764,6 +766,24 @@ class _PrivacySettings extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 14),
+        _SettingsGroup(
+          children: [
+            _SettingsTile(
+              title: 'privacy_policy'.tr,
+              subtitle: 'privacy_policy_sub'.tr,
+              leading: const Icon(
+                CupertinoIcons.shield_fill,
+                color: CupertinoColors.activeGreen,
+              ),
+              trailing: CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                onPressed: () => _showPrivacyPolicyDialog(context),
+                child: Text('view_policy'.tr),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 18),
         _SettingsGroup(
@@ -1765,6 +1785,32 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
                           child: Text(hasUpdate ? 'update_available'.tr : 'check'.tr),
                         ),
                 ),
+                _SettingsTile(
+                  title: 'privacy_policy'.tr,
+                  subtitle: 'privacy_policy_sub'.tr,
+                  leading: const Icon(
+                    CupertinoIcons.shield_fill,
+                    color: CupertinoColors.activeGreen,
+                  ),
+                  trailing: CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    onPressed: () => _showPrivacyPolicyDialog(context),
+                    child: Text('view_policy'.tr),
+                  ),
+                ),
+                _SettingsTile(
+                  title: 'license'.tr,
+                  subtitle: 'license_sub'.tr,
+                  leading: const Icon(
+                    CupertinoIcons.doc_text_fill,
+                    color: CupertinoColors.activeOrange,
+                  ),
+                  trailing: CupertinoButton(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    onPressed: () => _showLicenseDialog(context),
+                    child: Text('view_license'.tr),
+                  ),
+                ),
               ],
             ),
           ),
@@ -2172,3 +2218,125 @@ IconData _icon(_SettingsPage page) => switch (page) {
   _SettingsPage.shortcuts => CupertinoIcons.keyboard,
   _SettingsPage.about => CupertinoIcons.info,
 };
+
+void _showPrivacyPolicyDialog(BuildContext context) {
+  showCupertinoDialog(
+    context: context,
+    builder: (context) => CupertinoAlertDialog(
+      title: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              CupertinoIcons.shield_fill,
+              color: CupertinoColors.activeGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 6),
+            Text('privacy_policy'.tr),
+          ],
+        ),
+      ),
+      content: SizedBox(
+        width: 440,
+        height: 280,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'privacy_policy_sub'.tr,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                '• 100% Local-First: Tất cả lịch sử clipboard được lưu trữ cục bộ trong cơ sở dữ liệu SQLite trên thiết bị của bạn.\n'
+                '• Zero Tracking & Analytics: ClipFlow không thu thập bất kỳ dữ liệu cá nhân hay thống kê sử dụng nào.\n'
+                '• No Cloud Servers: Không có máy chủ đám mây lưu trữ dữ liệu clipboard của bạn.\n'
+                '• Bảo vệ dữ liệu nhạy cảm: Tự động bỏ qua trình quản lý mật khẩu (Bitwarden, 1Password), mã OTP và token bí mật.\n'
+                '• Toàn quyền kiểm soát: Người dùng có thể xóa lịch sử hoặc xuất/nhập tệp sao lưu mã hóa bất kỳ lúc nào.',
+                style: TextStyle(fontSize: 12, height: 1.4),
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('close'.tr),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showLicenseDialog(BuildContext context) {
+  showCupertinoDialog(
+    context: context,
+    builder: (context) => CupertinoAlertDialog(
+      title: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              CupertinoIcons.doc_text_fill,
+              color: CupertinoColors.activeOrange,
+              size: 20,
+            ),
+            const SizedBox(width: 6),
+            Text('license'.tr),
+          ],
+        ),
+      ),
+      content: const SizedBox(
+        width: 440,
+        height: 280,
+        child: SingleChildScrollView(
+          child: Text(
+            'MIT License\n\n'
+            'Copyright (c) 2026 ClipFlow Authors\n\n'
+            'Permission is hereby granted, free of charge, to any person obtaining a copy '
+            'of this software and associated documentation files (the "Software"), to deal '
+            'in the Software without restriction, including without limitation the rights '
+            'to use, copy, modify, merge, publish, distribute, sublicense, and/or sell '
+            'copies of the Software, and to permit persons to whom the Software is '
+            'furnished to do so, subject to the following conditions:\n\n'
+            'The above copyright notice and this permission notice shall be included in all '
+            'copies or substantial portions of the Software.\n\n'
+            'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR '
+            'IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, '
+            'FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE '
+            'AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER '
+            'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, '
+            'OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE '
+            'SOFTWARE.',
+            style: TextStyle(fontSize: 11, fontFamily: 'monospace', height: 1.3),
+          ),
+        ),
+      ),
+      actions: [
+        CupertinoDialogAction(
+          onPressed: () {
+            Navigator.of(context).pop();
+            showLicensePage(
+              context: context,
+              applicationName: 'ClipFlow',
+              applicationVersion: UpdateService.currentVersion,
+              applicationLegalese:
+                  'Copyright © 2026 ClipFlow Authors (MIT License)',
+            );
+          },
+          child: const Text('Flutter Licenses'),
+        ),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('close'.tr),
+        ),
+      ],
+    ),
+  );
+}

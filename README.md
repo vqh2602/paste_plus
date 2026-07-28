@@ -15,8 +15,12 @@
   </a>
   <img src="https://img.shields.io/badge/Platform-macOS-000000?style=for-the-badge&logo=apple" alt="macOS" />
   <img src="https://img.shields.io/badge/Built_With-Flutter-02569B?style=for-the-badge&logo=flutter" alt="Flutter" />
-  <img src="https://img.shields.io/badge/Privacy-100%25_Local--First-34C759?style=for-the-badge&logo=shields" alt="Local First" />
-  <img src="https://img.shields.io/badge/License-MIT-FF9500?style=for-the-badge" alt="License" />
+  <a href="PRIVACY_POLICY.md">
+    <img src="https://img.shields.io/badge/Privacy-100%25_Local--First-34C759?style=for-the-badge&logo=shields" alt="Local First" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-FF9500?style=for-the-badge" alt="License" />
+  </a>
 </p>
 
 ---
@@ -90,6 +94,13 @@ Are you a developer, contributor, or curious about how ClipFlow works under the 
 We maintain complete technical documentation covering data flow, SQLite database schemas, native Swift channels, AppleScript entitlements, and GitHub Actions CI/CD pipelines in a separate dedicated document:
 
 👉 [**Read Technical Architecture & Developer Guide (`ARCHITECTURE.md`)**](ARCHITECTURE.md)
+
+---
+
+## 📄 License & Privacy Policy
+
+- 📜 **Software License**: Distributed under the **MIT License**. See [**`LICENSE`**](LICENSE) for details.
+- 🛡️ **Privacy Policy**: 100% Local-First. Read our full policy in [**`PRIVACY_POLICY.md`**](PRIVACY_POLICY.md).
 
 ---
 
