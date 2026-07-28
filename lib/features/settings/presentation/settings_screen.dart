@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -418,6 +417,23 @@ class _GeneralSettings extends ConsumerWidget {
                         .restartApp();
                   },
                   child: const Text('Khởi động lại'),
+                ),
+              ),
+              _SettingsTile(
+                title: 'Reset & Cấp lại quyền',
+                subtitle: 'Dùng khi cài đè hoặc cập nhật ứng dụng khiến quyền Trợ năng bị vô hiệu hóa ngầm.',
+                leading: const Icon(
+                  CupertinoIcons.refresh_bold,
+                  color: CupertinoColors.systemOrange,
+                ),
+                trailing: CupertinoButton(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  onPressed: () async {
+                    await ref
+                        .read(desktopIntegrationProvider)
+                        .resetAccessibilityPermission();
+                  },
+                  child: const Text('Reset quyền'),
                 ),
               ),
             ],

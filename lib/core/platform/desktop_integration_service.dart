@@ -409,6 +409,18 @@ class DesktopIntegrationService with TrayListener {
     }
   }
 
+  Future<bool> resetAccessibilityPermission() async {
+    if (!Platform.isMacOS) return true;
+    try {
+      return await _windowChannel.invokeMethod<bool>(
+            'resetAccessibilityPermission',
+          ) ??
+          false;
+    } on Object catch (_) {
+      return false;
+    }
+  }
+
   Future<List<Map<String, String>>> getRunningApplications() async {
     if (!Platform.isMacOS) return [];
     try {

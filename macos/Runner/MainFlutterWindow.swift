@@ -281,7 +281,26 @@ class MainFlutterWindow: NSWindow {
         result(AXIsProcessTrusted())
       case "requestAccessibilityPermission":
         let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        result(AXIsProcessTrustedWithOptions(options))
+        let trusted = AXIsProcessTrustedWithOptions(options)
+        if !trusted {
+          if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+          }
+        }
+        result(trusted)
+      case "resetAccessibilityPermission":
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.clipflow.clipflow"
+        let task = Process()
+        task.launchPath = "/usr/bin/tccutil"
+        task.arguments = ["reset", "Accessibility", bundleID]
+        try? task.run()
+        task.waitUntilExit()
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+          NSWorkspace.shared.open(url)
+        }
+        result(true)
       case "getRunningApplications":
         self.getRunningApplications(result: result)
       case "pickApplicationFile":
