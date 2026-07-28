@@ -36,16 +36,19 @@ class ClipboardItem {
   final int copyCount;
 
   ClipboardItem copyWith({
+    String? content,
+    String? normalizedContent,
+    ClipboardContentType? contentType,
     bool? isPinned,
     DateTime? lastCopiedAt,
     int? copyCount,
   }) {
     return ClipboardItem(
       id: id,
-      content: content,
-      normalizedContent: normalizedContent,
+      content: content ?? this.content,
+      normalizedContent: normalizedContent ?? this.normalizedContent,
       contentHash: contentHash,
-      contentType: contentType,
+      contentType: contentType ?? this.contentType,
       createdAt: createdAt,
       updatedAt: DateTime.now(),
       lastCopiedAt: lastCopiedAt ?? this.lastCopiedAt,

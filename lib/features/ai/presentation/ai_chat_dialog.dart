@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
+import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_message_tile_widget.dart';
@@ -81,6 +82,23 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
   Future<void> _runFeatureAction(AiFeatureGroup group, String option) async {
     final aiState = ref.read(aiControllerProvider);
     final promptText = 'Thực hiện "${group.title}" với tùy chọn "$option".';
+    var contextItem = aiState.activeClipboardContext;
+
+    if (group == AiFeatureGroup.ocrRefine &&
+        contextItem?.contentType == ClipboardContentType.image) {
+      final extracted = await ref
+          .read(historyControllerProvider.notifier)
+          .performOcr(contextItem!);
+      if (!mounted) return;
+      if (extracted == null || extracted.trim().isEmpty) {
+        showCupertinoNotice(context, 'ocr_empty'.tr);
+        return;
+      }
+      contextItem = contextItem.copyWith(
+        content: extracted,
+        normalizedContent: extracted.trim(),
+      );
+    }
 
     await ref
         .read(aiControllerProvider.notifier)
@@ -88,7 +106,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
           promptText,
           featureGroup: group,
           selectedOption: option,
-          contextItem: aiState.activeClipboardContext,
+          contextItem: contextItem,
         );
     _scrollToBottom();
   }
@@ -223,12 +241,11 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                   if (aiState.activeClipboardContext != null)
                     AiContextBannerWidget(
                       item: aiState.activeClipboardContext!,
-                      onCopy: () {
-                        Clipboard.setData(
-                          ClipboardData(
-                            text: aiState.activeClipboardContext!.content,
-                          ),
-                        );
+                      onCopy: () async {
+                        await ref
+                            .read(historyControllerProvider.notifier)
+                            .copy(aiState.activeClipboardContext!);
+                        if (!context.mounted) return;
                         showCupertinoNotice(context, 'copied'.tr);
                       },
                       onClear: () {

@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/domain/clipboard_item.dart';
+import '../../../clipboard_history/domain/clipboard_content_type.dart';
 
 class AiContextBannerWidget extends StatelessWidget {
   const AiContextBannerWidget({
@@ -18,13 +21,16 @@ class AiContextBannerWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isImage = item.contentType == ClipboardContentType.image;
+    final imagePath = item.imagePath;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: EdgeInsets.symmetric(horizontal: 14, vertical: isImage ? 10 : 8),
       color: resolveColor(context, ClipFlowColors.sidebar),
       child: Row(
         children: [
           Icon(
-            CupertinoIcons.doc_on_clipboard,
+            isImage ? CupertinoIcons.photo : CupertinoIcons.doc_on_clipboard,
             size: 14,
             color: resolveColor(context, ClipFlowColors.secondaryText),
           ),
@@ -38,10 +44,43 @@ class AiContextBannerWidget extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
+          if (isImage) ...[
+            Container(
+              key: const Key('ai-selected-image-preview'),
+              width: 64,
+              height: 48,
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                color: resolveColor(context, ClipFlowColors.surface),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: resolveColor(context, ClipFlowColors.border),
+                ),
+              ),
+              child: imagePath != null && File(imagePath).existsSync()
+                  ? Image.file(File(imagePath), fit: BoxFit.cover)
+                  : Icon(
+                      CupertinoIcons.photo,
+                      color: resolveColor(
+                        context,
+                        ClipFlowColors.secondaryText,
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 10),
+          ],
           Expanded(
             child: Text(
-              item.content,
-              maxLines: 1,
+              isImage
+                  ? [
+                      'IMAGE',
+                      if (item.sourceAppName?.isNotEmpty == true)
+                        item.sourceAppName!,
+                      if (imagePath?.isNotEmpty == true)
+                        imagePath!.split(Platform.pathSeparator).last,
+                    ].join(' • ')
+                  : item.content,
+              maxLines: isImage ? 2 : 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
