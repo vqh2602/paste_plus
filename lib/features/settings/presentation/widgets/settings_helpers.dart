@@ -463,8 +463,8 @@ void showPrivacyPolicyDialog(BuildContext context) {
   );
 }
 
-void showLicensesDialog(BuildContext context) {
-  showCupertinoDialog(
+Future<void> showLicensesDialog(BuildContext context) async {
+  final showFlutterLicenses = await showCupertinoDialog<bool>(
     context: context,
     builder: (context) => CupertinoAlertDialog(
       title: Padding(
@@ -510,16 +510,7 @@ void showLicensesDialog(BuildContext context) {
       ),
       actions: [
         CupertinoDialogAction(
-          onPressed: () {
-            Navigator.of(context).pop();
-            showLicensePage(
-              context: context,
-              applicationName: 'ClipFlow',
-              applicationVersion: UpdateService.currentVersion,
-              applicationLegalese:
-                  'Copyright © 2026 ClipFlow Authors (MIT License)',
-            );
-          },
+          onPressed: () => Navigator.of(context).pop(true),
           child: const Text('Flutter Licenses'),
         ),
         CupertinoDialogAction(
@@ -530,6 +521,15 @@ void showLicensesDialog(BuildContext context) {
       ],
     ),
   );
+
+  if (showFlutterLicenses == true && context.mounted) {
+    showLicensePage(
+      context: context,
+      applicationName: 'ClipFlow',
+      applicationVersion: UpdateService.currentVersion,
+      applicationLegalese: 'Copyright © 2026 ClipFlow Authors (MIT License)',
+    );
+  }
 }
 
 Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {

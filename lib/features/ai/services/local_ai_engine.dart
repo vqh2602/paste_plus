@@ -7,6 +7,7 @@ import '../domain/ai_model_info.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
 import 'ai_model_downloader_service.dart';
+import 'ai_token_budget_manager.dart';
 import 'llama_inference_service.dart';
 
 class LocalAiResponse {
@@ -58,51 +59,39 @@ class LocalAiEngine {
       final modelFile = await _modelDownloader.getModelFile(model.id);
       if (await modelFile.exists() &&
           await modelFile.length() > 10 * 1024 * 1024) {
+        final effectiveContextSize = contextSize ?? model.contextWindow;
+        await _inferenceService.prepareModel(
+          modelFile.path,
+          effectiveContextSize,
+        );
+        final budgetManager = AiTokenBudgetManager(
+          tokenize: _inferenceService.tokenize,
+          detokenize: _inferenceService.detokenize,
+        );
         if (clipboardContext == null && effectiveHistory.isNotEmpty) {
           final semanticItems = await _semanticRank(
             prompt: prompt,
             items: effectiveHistory,
             modelPath: modelFile.path,
-            contextSize: contextSize ?? model.contextWindow,
+            contextSize: effectiveContextSize,
           );
           contextText = _buildHistoryContext(semanticItems);
         }
-        final promptBuffer = StringBuffer()
-          ..writeln('Current user request: $prompt');
-        if (contextText.isNotEmpty) {
-          promptBuffer
-            ..writeln('\n<clipboard_data>')
-            ..writeln(contextText)
-            ..writeln('</clipboard_data>');
-        }
-        var output = '';
-        await for (final token in _inferenceService.generate(
+        yield* _runBudgetedModel(
           modelPath: modelFile.path,
-          contextSize: contextSize ?? model.contextWindow,
+          contextSize: effectiveContextSize,
           systemPrompt: systemPrompt,
-          userPrompt: promptBuffer.toString(),
+          prompt: prompt,
+          contextText: contextText,
+          featureGroup: featureGroup,
+          selectedOption: selectedOption,
+          requestPlan: requestPlan,
+          budgetManager: budgetManager,
           temperature: temperature,
-          maxTokens: requestPlan?.maxOutputTokens ?? 700,
+          maxOutputTokens: requestPlan?.maxOutputTokens ?? 700,
           thinkingModel: model.isThinkingModel,
-          conversation: [
-            for (final message in conversationMessages)
-              LlamaConversationTurn(
-                isUser: message.role == AiMessageRole.user,
-                text: message.content,
-              ),
-          ],
-        )) {
-          if (token.content?.isNotEmpty == true) output += token.content!;
-          yield {
-            'type': token.content?.isNotEmpty == true ? 'output' : 'think',
-            'chunk': token.content ?? token.thinking ?? '',
-            'thinking': '',
-            'output': output,
-          };
-        }
-        if (output.trim().isEmpty) {
-          throw StateError('Model kết thúc mà không tạo nội dung trả lời.');
-        }
+          conversationMessages: conversationMessages,
+        );
         return;
       }
     }
@@ -155,6 +144,658 @@ class LocalAiEngine {
       };
       await Future<void>.delayed(const Duration(milliseconds: 25));
     }
+  }
+
+  Stream<Map<String, String>> _runBudgetedModel({
+    required String modelPath,
+    required int contextSize,
+    required String systemPrompt,
+    required String prompt,
+    required String contextText,
+    required AiFeatureGroup? featureGroup,
+    required String? selectedOption,
+    required AiRequestPlan? requestPlan,
+    required AiTokenBudgetManager budgetManager,
+    required double temperature,
+    required int maxOutputTokens,
+    required bool thinkingModel,
+    required List<AiChatMessage> conversationMessages,
+  }) async* {
+    final conversation = _toConversationTurns(conversationMessages);
+    final userPrompt = _buildModelUserPrompt(prompt, contextText);
+    final budget = budgetManager.budgetFor(
+      contextWindow: contextSize,
+      requestedOutputTokens: maxOutputTokens,
+    );
+    final promptTokens = await _inferenceService!.countChatTokens(
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      thinkingModel: thinkingModel,
+      conversation: conversation,
+    );
+
+    if (budget.accepts(promptTokens)) {
+      yield* _streamModelCall(
+        modelPath: modelPath,
+        contextSize: contextSize,
+        systemPrompt: systemPrompt,
+        userPrompt: userPrompt,
+        conversation: conversation,
+        temperature: temperature,
+        maxTokens: budget.outputReserve,
+        thinkingModel: thinkingModel,
+      );
+      return;
+    }
+
+    final task = budgetManager.taskFor(
+      intentName: (requestPlan?.intent ?? AiRequestIntent.conversation).name,
+      prompt: prompt,
+      featureName: featureGroup?.name,
+      selectedOption: selectedOption,
+    );
+    switch (task) {
+      case AiTokenTask.losslessTranslation:
+        yield* _translateInChunks(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          prompt: prompt,
+          text: contextText,
+          selectedOption: selectedOption,
+          manager: budgetManager,
+          temperature: temperature,
+          thinkingModel: thinkingModel,
+          outputTokens: budget.outputReserve,
+        );
+        return;
+      case AiTokenTask.contextualRewrite:
+        yield* _rewriteInChunks(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          prompt: prompt,
+          text: contextText,
+          selectedOption: selectedOption,
+          manager: budgetManager,
+          temperature: temperature,
+          thinkingModel: thinkingModel,
+          outputTokens: budget.outputReserve,
+        );
+        return;
+      case AiTokenTask.hierarchicalSummary:
+        final compressed = await _hierarchicalSummarize(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          text: contextText,
+          manager: budgetManager,
+          temperature: temperature,
+          thinkingModel: thinkingModel,
+        );
+        yield* _streamModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: _buildModelUserPrompt(prompt, compressed),
+          temperature: temperature,
+          maxTokens: budget.outputReserve,
+          thinkingModel: thinkingModel,
+        );
+        return;
+      case AiTokenTask.retrievalQa:
+        final relevant = await _retrieveRelevantText(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          query: prompt,
+          text: contextText,
+          manager: budgetManager,
+          maximumTokens: await _contentCapacity(
+            systemPrompt: systemPrompt,
+            prompt: prompt,
+            budget: budget,
+            thinkingModel: thinkingModel,
+          ),
+        );
+        yield* _streamModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: _buildModelUserPrompt(prompt, relevant),
+          temperature: temperature,
+          maxTokens: budget.outputReserve,
+          thinkingModel: thinkingModel,
+        );
+        return;
+      case AiTokenTask.rollingChat:
+        if (conversation.isEmpty) {
+          final compactPrompt = await _hierarchicalSummarize(
+            modelPath: modelPath,
+            contextSize: contextSize,
+            text: prompt,
+            manager: budgetManager,
+            temperature: temperature,
+            thinkingModel: thinkingModel,
+          );
+          yield* _streamModelCall(
+            modelPath: modelPath,
+            contextSize: contextSize,
+            systemPrompt: systemPrompt,
+            userPrompt: 'Respond to this compacted request:\n$compactPrompt',
+            temperature: temperature,
+            maxTokens: budget.outputReserve,
+            thinkingModel: thinkingModel,
+          );
+          return;
+        }
+        final fittedConversation = await _fitRollingConversation(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: userPrompt,
+          conversation: conversation,
+          manager: budgetManager,
+          budget: budget,
+          temperature: temperature,
+          thinkingModel: thinkingModel,
+        );
+        yield* _streamModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: userPrompt,
+          conversation: fittedConversation,
+          temperature: temperature,
+          maxTokens: budget.outputReserve,
+          thinkingModel: thinkingModel,
+        );
+        return;
+      case AiTokenTask.mapReduce:
+        final reduced = await _mapReduceContext(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          prompt: prompt,
+          text: contextText,
+          manager: budgetManager,
+          temperature: temperature,
+          thinkingModel: thinkingModel,
+        );
+        yield* _streamModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: _buildModelUserPrompt(prompt, reduced),
+          temperature: temperature,
+          maxTokens: budget.outputReserve,
+          thinkingModel: thinkingModel,
+        );
+        return;
+      case AiTokenTask.direct:
+        yield* _streamModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt: systemPrompt,
+          userPrompt: userPrompt,
+          conversation: conversation,
+          temperature: temperature,
+          maxTokens: budget.outputReserve,
+          thinkingModel: thinkingModel,
+        );
+        return;
+    }
+  }
+
+  String _buildModelUserPrompt(String prompt, String contextText) {
+    final buffer = StringBuffer()..writeln('Current user request: $prompt');
+    if (contextText.trim().isNotEmpty) {
+      buffer
+        ..writeln('\n<clipboard_data>')
+        ..writeln(contextText)
+        ..writeln('</clipboard_data>');
+    }
+    return buffer.toString();
+  }
+
+  List<LlamaConversationTurn> _toConversationTurns(
+    List<AiChatMessage> messages,
+  ) => [
+    for (final message in messages)
+      LlamaConversationTurn(
+        isUser: message.role == AiMessageRole.user,
+        text: message.content,
+      ),
+  ];
+
+  Stream<Map<String, String>> _streamModelCall({
+    required String modelPath,
+    required int contextSize,
+    required String systemPrompt,
+    required String userPrompt,
+    required double temperature,
+    required int maxTokens,
+    required bool thinkingModel,
+    List<LlamaConversationTurn> conversation = const [],
+    String initialOutput = '',
+  }) async* {
+    var output = initialOutput;
+    final safeMaxTokens = await _safeGenerationTokens(
+      contextSize: contextSize,
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      conversation: conversation,
+      requestedMaxTokens: maxTokens,
+      thinkingModel: thinkingModel,
+    );
+    await for (final token in _inferenceService!.generate(
+      modelPath: modelPath,
+      contextSize: contextSize,
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      temperature: temperature,
+      maxTokens: safeMaxTokens,
+      thinkingModel: thinkingModel,
+      conversation: conversation,
+    )) {
+      if (token.content?.isNotEmpty == true) output += token.content!;
+      yield {
+        'type': token.content?.isNotEmpty == true ? 'output' : 'think',
+        'chunk': token.content ?? token.thinking ?? '',
+        'thinking': '',
+        'output': output,
+      };
+    }
+    if (output.trim().isEmpty) {
+      throw StateError('Model kết thúc mà không tạo nội dung trả lời.');
+    }
+  }
+
+  Future<String> _collectModelCall({
+    required String modelPath,
+    required int contextSize,
+    required String systemPrompt,
+    required String userPrompt,
+    required double temperature,
+    required int maxTokens,
+    required bool thinkingModel,
+    List<LlamaConversationTurn> conversation = const [],
+  }) async {
+    final output = StringBuffer();
+    final safeMaxTokens = await _safeGenerationTokens(
+      contextSize: contextSize,
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      conversation: conversation,
+      requestedMaxTokens: maxTokens,
+      thinkingModel: thinkingModel,
+    );
+    await for (final token in _inferenceService!.generate(
+      modelPath: modelPath,
+      contextSize: contextSize,
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      temperature: temperature,
+      maxTokens: safeMaxTokens,
+      thinkingModel: thinkingModel,
+      conversation: conversation,
+    )) {
+      if (token.content?.isNotEmpty == true) output.write(token.content);
+    }
+    if (output.toString().trim().isEmpty) {
+      throw StateError('Model kết thúc mà không tạo nội dung trả lời.');
+    }
+    return output.toString().trim();
+  }
+
+  Future<int> _safeGenerationTokens({
+    required int contextSize,
+    required String systemPrompt,
+    required String userPrompt,
+    required List<LlamaConversationTurn> conversation,
+    required int requestedMaxTokens,
+    required bool thinkingModel,
+  }) async {
+    final promptTokens = await _inferenceService!.countChatTokens(
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      conversation: conversation,
+      thinkingModel: thinkingModel,
+    );
+    final available = contextSize - promptTokens - 64;
+    if (available < 64) {
+      throw StateError(
+        'Prompt vẫn vượt context sau khi áp dụng token budget '
+        '($promptTokens/$contextSize token).',
+      );
+    }
+    return min(requestedMaxTokens, available);
+  }
+
+  Future<int> _contentCapacity({
+    required String systemPrompt,
+    required String prompt,
+    required AiTokenBudget budget,
+    required bool thinkingModel,
+  }) async {
+    final emptyPromptTokens = await _inferenceService!.countChatTokens(
+      systemPrompt: systemPrompt,
+      userPrompt: _buildModelUserPrompt(prompt, ''),
+      thinkingModel: thinkingModel,
+    );
+    return max(128, budget.maximumPromptTokens - emptyPromptTokens - 48);
+  }
+
+  Stream<Map<String, String>> _translateInChunks({
+    required String modelPath,
+    required int contextSize,
+    required String prompt,
+    required String text,
+    required String? selectedOption,
+    required AiTokenBudgetManager manager,
+    required double temperature,
+    required bool thinkingModel,
+    required int outputTokens,
+  }) async* {
+    final chunkTokens = max(128, min(outputTokens * 3 ~/ 4, contextSize ~/ 3));
+    final chunks = await manager.chunkText(text, maximumTokens: chunkTokens);
+    var output = '';
+    for (final chunk in chunks) {
+      final translated = await _collectModelCall(
+        modelPath: modelPath,
+        contextSize: contextSize,
+        systemPrompt:
+            'Translate the supplied chunk according to "${selectedOption ?? prompt}". '
+            'Do not summarize, omit, explain, or add content. Preserve paragraphs, '
+            'lists, code, URLs, placeholders, and names. Output only the translation.',
+        userPrompt:
+            '<chunk index="${chunk.index + 1}" total="${chunk.total}">\n'
+            '${chunk.text}\n</chunk>',
+        temperature: min(temperature, 0.35),
+        maxTokens: max(outputTokens, chunk.tokenCount + 128),
+        thinkingModel: thinkingModel,
+      );
+      output += '${output.isEmpty ? '' : '\n'}$translated';
+      yield {
+        'type': 'output',
+        'chunk': translated,
+        'thinking': '',
+        'output': output,
+      };
+    }
+  }
+
+  Stream<Map<String, String>> _rewriteInChunks({
+    required String modelPath,
+    required int contextSize,
+    required String prompt,
+    required String text,
+    required String? selectedOption,
+    required AiTokenBudgetManager manager,
+    required double temperature,
+    required bool thinkingModel,
+    required int outputTokens,
+  }) async* {
+    final chunkTokens = max(128, min(outputTokens * 3 ~/ 4, contextSize ~/ 3));
+    final chunks = await manager.chunkText(
+      text,
+      maximumTokens: chunkTokens,
+      overlapTokens: 48,
+    );
+    var output = '';
+    for (final chunk in chunks) {
+      final leading = chunk.leadingContext.isEmpty
+          ? ''
+          : '<continuity_context>\n${chunk.leadingContext}\n'
+                '</continuity_context>\n';
+      final rewritten = await _collectModelCall(
+        modelPath: modelPath,
+        contextSize: contextSize,
+        systemPrompt:
+            'Rewrite or correct only content_to_write according to '
+            '"${selectedOption ?? prompt}". continuity_context is read-only context '
+            'from the preceding chunk: use it for coherence but never repeat it. '
+            'Preserve facts, placeholders, code, URLs, and paragraph structure. '
+            'Output only the rewritten content_to_write.',
+        userPrompt:
+            '$leading<content_to_write>\n${chunk.text}\n</content_to_write>',
+        temperature: temperature,
+        maxTokens: max(outputTokens, chunk.tokenCount + 128),
+        thinkingModel: thinkingModel,
+      );
+      output += '${output.isEmpty ? '' : '\n'}$rewritten';
+      yield {
+        'type': 'output',
+        'chunk': rewritten,
+        'thinking': '',
+        'output': output,
+      };
+    }
+  }
+
+  Future<String> _hierarchicalSummarize({
+    required String modelPath,
+    required int contextSize,
+    required String text,
+    required AiTokenBudgetManager manager,
+    required double temperature,
+    required bool thinkingModel,
+    bool force = false,
+  }) async {
+    var current = text;
+    for (var level = 0; level < 5; level++) {
+      final count = await manager.countText(current);
+      if (count <= contextSize ~/ 3 && (!force || level > 0)) return current;
+      final chunks = await manager.chunkText(
+        current,
+        maximumTokens: max(256, contextSize ~/ 3),
+      );
+      final summaries = <String>[];
+      for (final chunk in chunks) {
+        summaries.add(
+          await _collectModelCall(
+            modelPath: modelPath,
+            contextSize: contextSize,
+            systemPrompt:
+                'Create a faithful compact intermediate summary. Preserve names, '
+                'numbers, dates, decisions, URLs, constraints, and unresolved items. '
+                'Do not add facts. Output only the summary.',
+            userPrompt: chunk.text,
+            temperature: min(temperature, 0.35),
+            maxTokens: max(192, contextSize ~/ 10),
+            thinkingModel: thinkingModel,
+          ),
+        );
+      }
+      final next = summaries.join('\n\n');
+      if (await manager.countText(next) >= count) {
+        return manager.truncateToTokens(next, contextSize ~/ 3);
+      }
+      current = next;
+    }
+    return manager.truncateToTokens(current, contextSize ~/ 3);
+  }
+
+  Future<String> _retrieveRelevantText({
+    required String modelPath,
+    required int contextSize,
+    required String query,
+    required String text,
+    required AiTokenBudgetManager manager,
+    required int maximumTokens,
+  }) async {
+    final chunks = await manager.chunkText(
+      text,
+      maximumTokens: max(128, min(700, maximumTokens ~/ 2)),
+      overlapTokens: 48,
+    );
+    if (chunks.length <= 1) return text;
+    final queryTerms = query
+        .toLowerCase()
+        .split(RegExp(r'[^\p{L}\p{N}]+', unicode: true))
+        .where((term) => term.length > 1)
+        .toSet();
+    List<double>? queryVector;
+    List<List<double>> vectors = const [];
+    try {
+      final embedded = await _inferenceService!.embedBatch(
+        modelPath: modelPath,
+        contextSize: contextSize,
+        texts: [query, ...chunks.take(48).map((chunk) => chunk.text)],
+      );
+      if (embedded.length > 1) {
+        queryVector = embedded.first;
+        vectors = embedded.skip(1).toList(growable: false);
+      }
+    } on Object {
+      // Lexical retrieval below remains available for models without embeddings.
+    }
+    final ranked = <({AiTokenChunk chunk, double score})>[];
+    for (var index = 0; index < chunks.length; index++) {
+      final lower = chunks[index].text.toLowerCase();
+      var score = queryTerms.where(lower.contains).length.toDouble();
+      if (queryVector != null && index < vectors.length) {
+        score += _cosineSimilarity(queryVector, vectors[index]) * 4;
+      }
+      ranked.add((chunk: chunks[index], score: score));
+    }
+    ranked.sort((a, b) => b.score.compareTo(a.score));
+    final selected = <AiTokenChunk>[];
+    var used = 0;
+    for (final entry in ranked) {
+      if (used + entry.chunk.tokenCount > maximumTokens &&
+          selected.isNotEmpty) {
+        continue;
+      }
+      selected.add(entry.chunk);
+      used += entry.chunk.tokenCount;
+      if (used >= maximumTokens) break;
+    }
+    selected.sort((a, b) => a.index.compareTo(b.index));
+    return selected
+        .map(
+          (chunk) =>
+              '<relevant_chunk index="${chunk.index + 1}">\n${chunk.text}\n'
+              '</relevant_chunk>',
+        )
+        .join('\n\n');
+  }
+
+  Future<List<LlamaConversationTurn>> _fitRollingConversation({
+    required String modelPath,
+    required int contextSize,
+    required String systemPrompt,
+    required String userPrompt,
+    required List<LlamaConversationTurn> conversation,
+    required AiTokenBudgetManager manager,
+    required AiTokenBudget budget,
+    required double temperature,
+    required bool thinkingModel,
+  }) async {
+    if (conversation.isEmpty) return const [];
+    final recent = <LlamaConversationTurn>[];
+    var splitAt = conversation.length;
+    for (var index = conversation.length - 1; index >= 0; index--) {
+      final candidate = [conversation[index], ...recent];
+      final tokens = await _inferenceService!.countChatTokens(
+        systemPrompt: systemPrompt,
+        userPrompt: userPrompt,
+        conversation: candidate,
+        thinkingModel: thinkingModel,
+      );
+      if (!budget.accepts(tokens)) break;
+      recent
+        ..clear()
+        ..addAll(candidate);
+      splitAt = index;
+    }
+    if (splitAt == 0) return recent;
+    final oldText = conversation
+        .take(splitAt)
+        .map((turn) => '${turn.isUser ? 'User' : 'Assistant'}: ${turn.text}')
+        .join('\n');
+    final memory = await _hierarchicalSummarize(
+      modelPath: modelPath,
+      contextSize: contextSize,
+      text: oldText,
+      manager: manager,
+      temperature: temperature,
+      thinkingModel: thinkingModel,
+      force: true,
+    );
+    var memoryTurn = LlamaConversationTurn(
+      isUser: false,
+      text: 'Summary of earlier conversation:\n$memory',
+    );
+    var result = [memoryTurn, ...recent];
+    var tokens = await _inferenceService!.countChatTokens(
+      systemPrompt: systemPrompt,
+      userPrompt: userPrompt,
+      conversation: result,
+      thinkingModel: thinkingModel,
+    );
+    if (!budget.accepts(tokens)) {
+      final allowedMemory = max(64, budget.maximumPromptTokens ~/ 5);
+      memoryTurn = LlamaConversationTurn(
+        isUser: false,
+        text:
+            'Summary of earlier conversation:\n'
+            '${await manager.truncateToTokens(memory, allowedMemory)}',
+      );
+      result = [memoryTurn, ...recent];
+      tokens = await _inferenceService.countChatTokens(
+        systemPrompt: systemPrompt,
+        userPrompt: userPrompt,
+        conversation: result,
+        thinkingModel: thinkingModel,
+      );
+      while (!budget.accepts(tokens) && result.length > 1) {
+        result.removeAt(1);
+        tokens = await _inferenceService.countChatTokens(
+          systemPrompt: systemPrompt,
+          userPrompt: userPrompt,
+          conversation: result,
+          thinkingModel: thinkingModel,
+        );
+      }
+    }
+    return result;
+  }
+
+  Future<String> _mapReduceContext({
+    required String modelPath,
+    required int contextSize,
+    required String prompt,
+    required String text,
+    required AiTokenBudgetManager manager,
+    required double temperature,
+    required bool thinkingModel,
+  }) async {
+    final chunks = await manager.chunkText(
+      text,
+      maximumTokens: max(256, contextSize ~/ 3),
+      overlapTokens: 24,
+    );
+    final mapped = <String>[];
+    for (final chunk in chunks) {
+      mapped.add(
+        await _collectModelCall(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          systemPrompt:
+              'Extract only information from this chunk that is needed for the '
+              'user request. Preserve exact facts, identifiers, values, and source '
+              'references. Do not answer beyond this chunk.',
+          userPrompt: 'Request: $prompt\n\nChunk:\n${chunk.text}',
+          temperature: min(temperature, 0.35),
+          maxTokens: max(192, contextSize ~/ 10),
+          thinkingModel: thinkingModel,
+        ),
+      );
+    }
+    return _hierarchicalSummarize(
+      modelPath: modelPath,
+      contextSize: contextSize,
+      text: mapped.join('\n\n'),
+      manager: manager,
+      temperature: temperature,
+      thinkingModel: thinkingModel,
+    );
   }
 
   void cancelGeneration() => _inferenceService?.cancel();

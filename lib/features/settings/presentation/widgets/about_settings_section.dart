@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Tooltip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-
+import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/services/update_service.dart';
 import '../../../../core/ui/cupertino_components.dart';
@@ -45,9 +47,9 @@ class AboutSettingsSection extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Text(
                       'version_label'.tr.replaceAll(
-                            '@v',
-                            UpdateService.currentVersion,
-                          ),
+                        '@v',
+                        UpdateService.currentVersion,
+                      ),
                       style: TextStyle(
                         fontSize: 13,
                         color: resolveColor(
@@ -70,28 +72,45 @@ class AboutSettingsSection extends ConsumerWidget {
                   ],
                 ),
               ),
-              CupertinoButton.filled(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                borderRadius: BorderRadius.circular(10),
-                onPressed: () async {
-                  final update = await const UpdateService().checkForUpdate();
-                  if (!context.mounted) return;
-                  if (update != null && update.hasUpdate) {
-                    showCupertinoNotice(
-                      context,
-                      'Có bản cập nhật mới v${update.latestVersion}',
-                    );
-                  } else {
-                    showCupertinoNotice(
-                      context,
-                      'Bạn đang ở phiên bản mới nhất',
-                    );
-                  }
-                },
-                child: Text('check_update'.tr),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Tooltip(
+                    message: 'github_source'.tr,
+                    child: CupertinoButton(
+                      padding: const EdgeInsets.all(8),
+                      onPressed: () => ref
+                          .read(desktopIntegrationProvider)
+                          .openUrl('https://github.com/vqh2602/paste_plus'),
+                      child: const FaIcon(FontAwesomeIcons.github, size: 18),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  CupertinoButton.filled(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    borderRadius: BorderRadius.circular(10),
+                    onPressed: () async {
+                      final update = await const UpdateService()
+                          .checkForUpdate();
+                      if (!context.mounted) return;
+                      if (update != null && update.hasUpdate) {
+                        showCupertinoNotice(
+                          context,
+                          'Có bản cập nhật mới v${update.latestVersion}',
+                        );
+                      } else {
+                        showCupertinoNotice(
+                          context,
+                          'Bạn đang ở phiên bản mới nhất',
+                        );
+                      }
+                    },
+                    child: Text('check_update'.tr),
+                  ),
+                ],
               ),
             ],
           ),

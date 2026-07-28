@@ -15,9 +15,14 @@ class LlamaStreamToken {
 class LlamaInferenceService {
   LlamaEngine? _engine;
   String? _loadedModelPath;
+  int? _loadedContextSize;
 
   Future<void> _ensureLoaded(String modelPath, int contextSize) async {
-    if (_engine?.isReady == true && _loadedModelPath == modelPath) return;
+    if (_engine?.isReady == true &&
+        _loadedModelPath == modelPath &&
+        _loadedContextSize == contextSize) {
+      return;
+    }
     await _engine?.dispose();
     final engine = LlamaEngine(LlamaBackend());
     await engine.loadModel(
@@ -26,6 +31,44 @@ class LlamaInferenceService {
     );
     _engine = engine;
     _loadedModelPath = modelPath;
+    _loadedContextSize = contextSize;
+  }
+
+  Future<void> prepareModel(String modelPath, int contextSize) =>
+      _ensureLoaded(modelPath, contextSize);
+
+  Future<List<int>> tokenize(String text) async {
+    final engine = _engine;
+    if (engine == null || !engine.isReady) {
+      throw StateError('Model must be prepared before tokenization.');
+    }
+    return engine.tokenize(text, addSpecial: false);
+  }
+
+  Future<String> detokenize(List<int> tokens) async {
+    final engine = _engine;
+    if (engine == null || !engine.isReady) {
+      throw StateError('Model must be prepared before detokenization.');
+    }
+    return engine.detokenize(tokens);
+  }
+
+  Future<int> countChatTokens({
+    required String systemPrompt,
+    required String userPrompt,
+    bool thinkingModel = false,
+    List<LlamaConversationTurn> conversation = const [],
+  }) async {
+    final engine = _engine;
+    if (engine == null || !engine.isReady) {
+      throw StateError('Model must be prepared before counting tokens.');
+    }
+    final template = await engine.chatTemplate(
+      _messages(systemPrompt, userPrompt, conversation),
+      enableThinking: thinkingModel,
+      includeTokenCount: true,
+    );
+    return template.tokenCount ?? engine.getTokenCount(template.prompt);
   }
 
   Stream<LlamaStreamToken> generate({
@@ -39,15 +82,7 @@ class LlamaInferenceService {
     List<LlamaConversationTurn> conversation = const [],
   }) async* {
     await _ensureLoaded(modelPath, contextSize);
-    final messages = [
-      LlamaChatMessage.fromText(role: LlamaChatRole.system, text: systemPrompt),
-      for (final turn in conversation)
-        LlamaChatMessage.fromText(
-          role: turn.isUser ? LlamaChatRole.user : LlamaChatRole.assistant,
-          text: turn.text,
-        ),
-      LlamaChatMessage.fromText(role: LlamaChatRole.user, text: userPrompt),
-    ];
+    final messages = _messages(systemPrompt, userPrompt, conversation);
     await for (final chunk in _engine!.create(
       messages,
       params: GenerationParams(
@@ -57,6 +92,7 @@ class LlamaInferenceService {
         topK: 40,
         penalty: 1.08,
       ),
+      enableThinking: thinkingModel,
     )) {
       final text = chunk.choices.first.delta.content;
       final thinking = chunk.choices.first.delta.thinking;
@@ -65,6 +101,20 @@ class LlamaInferenceService {
       }
     }
   }
+
+  List<LlamaChatMessage> _messages(
+    String systemPrompt,
+    String userPrompt,
+    List<LlamaConversationTurn> conversation,
+  ) => [
+    LlamaChatMessage.fromText(role: LlamaChatRole.system, text: systemPrompt),
+    for (final turn in conversation)
+      LlamaChatMessage.fromText(
+        role: turn.isUser ? LlamaChatRole.user : LlamaChatRole.assistant,
+        text: turn.text,
+      ),
+    LlamaChatMessage.fromText(role: LlamaChatRole.user, text: userPrompt),
+  ];
 
   Future<List<List<double>>> embedBatch({
     required String modelPath,
@@ -81,5 +131,6 @@ class LlamaInferenceService {
     await _engine?.dispose();
     _engine = null;
     _loadedModelPath = null;
+    _loadedContextSize = null;
   }
 }
