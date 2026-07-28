@@ -713,47 +713,65 @@ class _HistoryPane extends ConsumerWidget {
           const CupertinoDivider(),
         ],
         Expanded(
-          child: state.isLoading
-              ? const Center(child: CupertinoActivityIndicator())
-              : state.errorMessage != null
-              ? _ErrorState(message: state.errorMessage!)
-              : items.isEmpty
-              ? _EmptyState(hasQuery: state.query.isNotEmpty)
-              : ListView.builder(
-                  key: const Key('clipboard-list'),
-                  padding: EdgeInsets.fromLTRB(
-                    compact ? 12 : 22,
-                    12,
-                    compact ? 12 : 22,
-                    24,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: state.isLoading
+                ? const Center(
+                    key: ValueKey('loading'),
+                    child: CupertinoActivityIndicator(),
+                  )
+                : state.errorMessage != null
+                ? _ErrorState(
+                    key: const ValueKey('error'),
+                    message: state.errorMessage!,
+                  )
+                : items.isEmpty
+                ? _EmptyState(
+                    key: const ValueKey('empty'),
+                    hasQuery: state.query.isNotEmpty,
+                  )
+                : ListView.builder(
+                    key: ValueKey('list-${state.section}-${state.typeFilter}-${state.query}'),
+                    padding: EdgeInsets.fromLTRB(
+                      compact ? 12 : 22,
+                      12,
+                      compact ? 12 : 22,
+                      24,
+                    ),
+                    itemCount: items.length,
+                    itemBuilder: (context, index) {
+                      final item = items[index];
+                      return StaggeredAnimatedItem(
+                        key: ValueKey(item.id),
+                        index: index,
+                        child: _ClipboardItemCard(
+                          item: item,
+                          index: index,
+                          selected: item.id == state.selectedItemId,
+                          query: state.query,
+                          onTap: () {
+                            ref
+                                .read(historyControllerProvider.notifier)
+                                .select(item.id);
+                            onCopy(item);
+                          },
+                          onPin: () => ref
+                              .read(historyControllerProvider.notifier)
+                              .togglePinned(item),
+                          onMore: () => _showItemActions(
+                            context,
+                            ref,
+                            item,
+                            onDelete,
+                            onAddToCollection,
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                  itemCount: items.length,
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _ClipboardItemCard(
-                      key: ValueKey(item.id),
-                      item: item,
-                      index: index,
-                      selected: item.id == state.selectedItemId,
-                      onTap: () {
-                        ref
-                            .read(historyControllerProvider.notifier)
-                            .select(item.id);
-                        onCopy(item);
-                      },
-                      onPin: () => ref
-                          .read(historyControllerProvider.notifier)
-                          .togglePinned(item),
-                      onMore: () => _showItemActions(
-                        context,
-                        ref,
-                        item,
-                        onDelete,
-                        onAddToCollection,
-                      ),
-                    );
-                  },
-                ),
+          ),
         ),
       ],
     );
@@ -790,6 +808,7 @@ class _ClipboardItemCard extends StatelessWidget {
     required this.item,
     required this.index,
     required this.selected,
+    this.query = '',
     required this.onTap,
     required this.onPin,
     required this.onMore,
@@ -798,6 +817,7 @@ class _ClipboardItemCard extends StatelessWidget {
   final ClipboardItem item;
   final int index;
   final bool selected;
+  final String query;
   final VoidCallback onTap;
   final VoidCallback onPin;
   final VoidCallback onMore;
@@ -808,104 +828,109 @@ class _ClipboardItemCard extends StatelessWidget {
     final primary = CupertinoTheme.of(context).primaryColor;
     final card = Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: CupertinoSurface(
-        borderRadius: BorderRadius.circular(15),
-        child: CupertinoPressable(
-          key: const Key('clipboard-item'),
-          onPressed: onTap,
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(15),
-              border: selected ? Border.all(color: primary, width: 1.5) : null,
+      child: CupertinoPressable(
+        key: const Key('clipboard-item'),
+        onPressed: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: resolveColor(context, ClipFlowColors.surface),
+            borderRadius: BorderRadius.circular(15),
+            border: Border.all(
+              color: selected
+                  ? primary
+                  : resolveColor(context, ClipFlowColors.border),
+              width: selected ? 1.8 : 1.0,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.13),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: item.contentType == ClipboardContentType.color
-                      ? Container(
-                          margin: const EdgeInsets.all(9),
-                          decoration: BoxDecoration(
-                            color: _parseHex(item.content) ?? color,
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                        )
-                      : Icon(
-                          _typeIcon(item.contentType),
-                          color: color,
-                          size: 20,
-                        ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: primary.withValues(alpha: 0.22),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF000000).withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                const SizedBox(width: 13),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            _typeLabel(item.contentType),
-                            style: TextStyle(
-                              color: color,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              _relativeTime(item.lastCopiedAt),
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: resolveColor(context, ClipFlowColors.secondaryText),
-                              ),
-                            ),
-                          ),
-                          if (index < 9)
-                            Text(
-                              '${Platform.isMacOS ? '⌘' : 'Ctrl+'}${index + 1}',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: resolveColor(context, ClipFlowColors.secondaryText),
-                              ),
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 7),
-                      if (item.contentType == ClipboardContentType.image) ...[
-                        _ClipboardImagePreview(
-                          path: item.imagePath ?? item.content,
-                          height: 118,
+                child: item.contentType == ClipboardContentType.color
+                    ? Container(
+                        margin: const EdgeInsets.all(9),
+                        decoration: BoxDecoration(
+                          color: _parseHex(item.content) ?? color,
+                          borderRadius: BorderRadius.circular(5),
                         ),
-                        if (item.content.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            item.content,
-                            maxLines: 1,
+                      )
+                    : Icon(
+                        _typeIcon(item.contentType),
+                        color: color,
+                        size: 20,
+                      ),
+              ),
+              const SizedBox(width: 13),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          _typeLabel(item.contentType),
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            _relativeTime(item.lastCopiedAt),
                             overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: resolveColor(context, ClipFlowColors.secondaryText),
+                            ),
+                          ),
+                        ),
+                        if (index < 9)
+                          Text(
+                            '${Platform.isMacOS ? '⌘' : 'Ctrl+'}${index + 1}',
                             style: TextStyle(
                               fontSize: 11,
                               color: resolveColor(context, ClipFlowColors.secondaryText),
                             ),
                           ),
-                        ],
-                      ]
-                      else if (isImageUrl(item.content)) ...[
-                        _ClipboardImagePreview(
-                          path: item.content,
-                          height: 118,
-                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 7),
+                    if (item.contentType == ClipboardContentType.image) ...[
+                      _ClipboardImagePreview(
+                        path: item.imagePath ?? item.content,
+                        height: 118,
+                      ),
+                      if (item.content.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          item.content,
+                        HighlightedText(
+                          text: item.content,
+                          query: query,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -913,64 +938,82 @@ class _ClipboardItemCard extends StatelessWidget {
                             color: resolveColor(context, ClipFlowColors.secondaryText),
                           ),
                         ),
-                      ]
-                      else
-                        Text(
-                          item.content,
-                          maxLines:
-                              item.contentType == ClipboardContentType.code ||
-                                  item.contentType == ClipboardContentType.json
-                              ? 4
-                              : 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            height: 1.4,
-                            color: item.contentType == ClipboardContentType.url
-                                ? CupertinoColors.activeBlue
-                                : null,
-                            decoration: item.contentType == ClipboardContentType.url
-                                ? TextDecoration.underline
-                                : TextDecoration.none,
-                            decorationColor: item.contentType == ClipboardContentType.url
-                                ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
-                                : null,
-                            fontFamily:
-                                item.contentType == ClipboardContentType.code ||
-                                    item.contentType ==
-                                        ClipboardContentType.json
-                                ? 'monospace'
-                                : null,
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.sourceAppName ?? 'Thiết bị này',
+                      ],
+                    ]
+                    else if (isImageUrl(item.content)) ...[
+                      _ClipboardImagePreview(
+                        path: item.content,
+                        height: 118,
+                      ),
+                      const SizedBox(height: 4),
+                      HighlightedText(
+                        text: item.content,
+                        query: query,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
                           color: resolveColor(context, ClipFlowColors.secondaryText),
                         ),
                       ),
-                    ],
-                  ),
+                    ]
+                    else
+                      HighlightedText(
+                        text: item.content,
+                        query: query,
+                        maxLines:
+                            item.contentType == ClipboardContentType.code ||
+                                item.contentType == ClipboardContentType.json
+                            ? 4
+                            : 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue
+                              : null,
+                          decoration: item.contentType == ClipboardContentType.url
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                          decorationColor: item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
+                              : null,
+                          fontFamily:
+                              item.contentType == ClipboardContentType.code ||
+                                  item.contentType ==
+                                      ClipboardContentType.json
+                              ? 'monospace'
+                              : null,
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.sourceAppName ?? 'Thiết bị này',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: resolveColor(context, ClipFlowColors.secondaryText),
+                      ),
+                    ),
+                  ],
                 ),
-                CupertinoIconControl(
-                  key: const Key('pin-button'),
-                  icon: item.isPinned
-                      ? CupertinoIcons.pin_fill
-                      : CupertinoIcons.pin,
-                  color: item.isPinned ? primary : null,
-                  size: 18,
-                  onPressed: onPin,
-                ),
-                CupertinoIconControl(
-                  key: const Key('item-more-button'),
-                  icon: CupertinoIcons.ellipsis,
-                  size: 19,
-                  onPressed: onMore,
-                ),
-              ],
-            ),
+              ),
+              CupertinoIconControl(
+                key: const Key('pin-button'),
+                icon: item.isPinned
+                    ? CupertinoIcons.pin_fill
+                    : CupertinoIcons.pin,
+                color: item.isPinned ? primary : null,
+                size: 18,
+                onPressed: onPin,
+              ),
+              CupertinoIconControl(
+                key: const Key('item-more-button'),
+                icon: CupertinoIcons.ellipsis,
+                size: 19,
+                onPressed: onMore,
+              ),
+            ],
           ),
         ),
       ),
@@ -1129,8 +1172,9 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
                           ),
                         ],
                       )
-                    : Text(
-                        item.content,
+                    : HighlightedText(
+                        text: item.content,
+                        query: state.query,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.55,
@@ -1362,7 +1406,7 @@ class _ClipboardImagePreview extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.hasQuery});
+  const _EmptyState({super.key, required this.hasQuery});
 
   final bool hasQuery;
 
@@ -1404,7 +1448,7 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _ErrorState extends ConsumerWidget {
-  const _ErrorState({required this.message});
+  const _ErrorState({super.key, required this.message});
 
   final String message;
 

@@ -22,15 +22,38 @@ class QuickPanelScreen extends ConsumerStatefulWidget {
   ConsumerState<QuickPanelScreen> createState() => _QuickPanelScreenState();
 }
 
-class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
+class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
+    with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _searchFocus = FocusNode();
   final _scrollController = ScrollController();
   var _selectedIndex = 0;
 
+  late final AnimationController _panelAnimController;
+  late final Animation<double> _panelFade;
+  late final Animation<Offset> _panelSlide;
+  late final Animation<double> _panelScale;
+
   @override
   void initState() {
     super.initState();
+    _panelAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 320),
+    );
+    final curve = CurvedAnimation(
+      parent: _panelAnimController,
+      curve: Curves.easeOutCubic,
+    );
+    _panelFade = Tween<double>(begin: 0.0, end: 1.0).animate(curve);
+    _panelSlide = Tween<Offset>(
+      begin: const Offset(0, 0.08),
+      end: Offset.zero,
+    ).animate(curve);
+    _panelScale = Tween<double>(begin: 0.94, end: 1.0).animate(curve);
+
+    _panelAnimController.forward();
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocus.requestFocus();
     });
@@ -38,6 +61,7 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
 
   @override
   void dispose() {
+    _panelAnimController.dispose();
     _searchController.dispose();
     _searchFocus.dispose();
     _scrollController.dispose();
@@ -154,85 +178,99 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
           backgroundColor: const Color(0x00000000),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(22),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: resolveColor(
-                      context,
-                      ClipFlowColors.surface,
-                    ).withValues(alpha: 0.95),
+            child: FadeTransition(
+              opacity: _panelFade,
+              child: SlideTransition(
+                position: _panelSlide,
+                child: ScaleTransition(
+                  scale: _panelScale,
+                  child: ClipRRect(
                     borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: resolveColor(context, ClipFlowColors.border),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 28, sigmaY: 28),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: resolveColor(
+                            context,
+                            ClipFlowColors.surface,
+                          ).withValues(alpha: 0.95),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(
+                            color: resolveColor(context, ClipFlowColors.border),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF000000).withValues(alpha: 0.22),
+                              blurRadius: 30,
+                              offset: const Offset(0, 12),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _QuickToolbar(
+                              controller: _searchController,
+                              focusNode: _searchFocus,
+                              state: state,
+                              monitoringEnabled: settings.monitoringEnabled,
+                              onOpenMainWindow: _openMainWindow,
+                            ),
+                            const CupertinoDivider(),
+                            Expanded(
+                              child: state.isLoading
+                                  ? const Center(child: CupertinoActivityIndicator())
+                                  : items.isEmpty
+                                  ? _QuickEmptyState(hasQuery: state.query.isNotEmpty)
+                                  : ListView.separated(
+                                      controller: _scrollController,
+                                      scrollDirection: Axis.horizontal,
+                                      padding: const EdgeInsets.fromLTRB(
+                                        14,
+                                        12,
+                                        14,
+                                        14,
+                                      ),
+                                      itemCount: items.length,
+                                      separatorBuilder: (_, _) =>
+                                          const SizedBox(width: 12),
+                                      itemBuilder: (context, index) {
+                                        final item = items[index];
+                                        return StaggeredAnimatedItem(
+                                          key: ValueKey(item.id),
+                                          index: index,
+                                          slideOffset: const Offset(0.08, 0),
+                                          child: _QuickClipboardCard(
+                                            item: item,
+                                            number: index + 1,
+                                            selected: index == _selectedIndex,
+                                            onTap: () {
+                                              setState(() => _selectedIndex = index);
+                                              ref
+                                                  .read(
+                                                    historyControllerProvider.notifier,
+                                                  )
+                                                  .select(item.id);
+                                              _copy(item);
+                                            },
+                                            onPin: () => ref
+                                                .read(
+                                                  historyControllerProvider.notifier,
+                                                )
+                                                .togglePinned(item),
+                                            onDelete: () => ref
+                                                .read(
+                                                  historyControllerProvider.notifier,
+                                                )
+                                                .delete(item),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF000000).withValues(alpha: 0.22),
-                        blurRadius: 30,
-                        offset: const Offset(0, 12),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      _QuickToolbar(
-                        controller: _searchController,
-                        focusNode: _searchFocus,
-                        state: state,
-                        monitoringEnabled: settings.monitoringEnabled,
-                        onOpenMainWindow: _openMainWindow,
-                      ),
-                      const CupertinoDivider(),
-                      Expanded(
-                        child: state.isLoading
-                            ? const Center(child: CupertinoActivityIndicator())
-                            : items.isEmpty
-                            ? _QuickEmptyState(hasQuery: state.query.isNotEmpty)
-                            : ListView.separated(
-                                controller: _scrollController,
-                                scrollDirection: Axis.horizontal,
-                                padding: const EdgeInsets.fromLTRB(
-                                  14,
-                                  12,
-                                  14,
-                                  14,
-                                ),
-                                itemCount: items.length,
-                                separatorBuilder: (_, _) =>
-                                    const SizedBox(width: 12),
-                                itemBuilder: (context, index) {
-                                  final item = items[index];
-                                  return _QuickClipboardCard(
-                                    item: item,
-                                    number: index + 1,
-                                    selected: index == _selectedIndex,
-                                    onTap: () {
-                                      setState(() => _selectedIndex = index);
-                                      ref
-                                          .read(
-                                            historyControllerProvider.notifier,
-                                          )
-                                          .select(item.id);
-                                      _copy(item);
-                                    },
-                                    onPin: () => ref
-                                        .read(
-                                          historyControllerProvider.notifier,
-                                        )
-                                        .togglePinned(item),
-                                    onDelete: () => ref
-                                        .read(
-                                          historyControllerProvider.notifier,
-                                        )
-                                        .delete(item),
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
                   ),
                 ),
               ),
@@ -447,11 +485,14 @@ class _QuickClipboardCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _typeColor(item.contentType);
+    final query = ref.watch(historyControllerProvider).query;
     return SizedBox(
       width: 292,
       child: CupertinoPressable(
         onPressed: onTap,
-        child: DecoratedBox(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOutCubic,
           decoration: BoxDecoration(
             color: resolveColor(context, ClipFlowColors.surface),
             borderRadius: BorderRadius.circular(16),
@@ -459,8 +500,25 @@ class _QuickClipboardCard extends ConsumerWidget {
               color: selected
                   ? CupertinoTheme.of(context).primaryColor
                   : resolveColor(context, ClipFlowColors.border),
-              width: selected ? 1.7 : 1,
+              width: selected ? 2.0 : 1.0,
             ),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                      color: CupertinoTheme.of(context)
+                          .primaryColor
+                          .withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: const Color(0xFF000000).withValues(alpha: 0.04),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -535,8 +593,9 @@ class _QuickClipboardCard extends ConsumerWidget {
                             ),
                             if (item.content.isNotEmpty) ...[
                               const SizedBox(height: 4),
-                              Text(
-                                item.content,
+                              HighlightedText(
+                                text: item.content,
+                                query: query,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
@@ -562,8 +621,9 @@ class _QuickClipboardCard extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              item.content,
+                            HighlightedText(
+                              text: item.content,
+                              query: query,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -573,8 +633,9 @@ class _QuickClipboardCard extends ConsumerWidget {
                             ),
                           ],
                         )
-                      : Text(
-                          item.content,
+                      : HighlightedText(
+                          text: item.content,
+                          query: query,
                           maxLines: 6,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
