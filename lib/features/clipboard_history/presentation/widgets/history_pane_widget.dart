@@ -8,6 +8,7 @@ import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
 import 'clipboard_card_widget.dart';
+import 'content_type_filter_sheet.dart';
 
 class HistoryPaneWidget extends ConsumerWidget {
   const HistoryPaneWidget({
@@ -96,11 +97,13 @@ class HistoryPaneWidget extends ConsumerWidget {
                 const SizedBox(width: 2),
               ],
               CupertinoIconControl(
+                key: const Key('history-filter-button'),
                 icon: CupertinoIcons.slider_horizontal_3,
-                color: state.typeFilter != null
+                color: state.typeFilters.isNotEmpty
                     ? CupertinoTheme.of(context).primaryColor
                     : null,
-                onPressed: () => _chooseType(context, historyNotifier),
+                onPressed: () =>
+                    _chooseType(context, historyNotifier, state.typeFilters),
               ),
             ],
           ),
@@ -113,7 +116,7 @@ class HistoryPaneWidget extends ConsumerWidget {
               ? EmptyStateWidget(hasQuery: state.query.isNotEmpty)
               : ListView.builder(
                   key: ValueKey(
-                    'list-${state.section}-${state.typeFilter}-${state.query}',
+                    'list-${state.section}-${state.typeFilters}-${state.query}',
                   ),
                   padding: EdgeInsets.fromLTRB(
                     compact ? 12 : 22,
@@ -147,36 +150,16 @@ class HistoryPaneWidget extends ConsumerWidget {
     );
   }
 
-  void _chooseType(BuildContext context, ClipboardHistoryController notifier) {
-    showCupertinoModalPopup<ClipboardContentType>(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text('filter_by_type'.tr),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              notifier.filterByType(null);
-              Navigator.pop(context);
-            },
-            child: Text('all_types'.tr),
-          ),
-          ...ClipboardContentType.values.map((type) {
-            return CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, type),
-              child: Text(type.name.toUpperCase()),
-            );
-          }),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
-        ),
-      ),
-    ).then((type) {
-      if (type != null) {
-        notifier.filterByType(type);
-      }
-    });
+  Future<void> _chooseType(
+    BuildContext context,
+    ClipboardHistoryController notifier,
+    Set<ClipboardContentType> currentTypes,
+  ) async {
+    final selected = await showContentTypeFilterSheet(
+      context,
+      selectedTypes: currentTypes,
+    );
+    if (selected != null) await notifier.setTypeFilters(selected);
   }
 }
 

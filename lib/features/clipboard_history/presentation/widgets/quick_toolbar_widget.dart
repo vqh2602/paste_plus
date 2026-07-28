@@ -7,6 +7,7 @@ import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
+import 'content_type_filter_sheet.dart';
 
 class QuickToolbarWidget extends ConsumerWidget {
   const QuickToolbarWidget({
@@ -49,19 +50,24 @@ class QuickToolbarWidget extends ConsumerWidget {
       (
         label: 'link'.tr,
         icon: CupertinoIcons.link,
-        section: HistorySection.links,
+        type: ClipboardContentType.url,
       ),
       (
         label: 'image'.tr,
         icon: CupertinoIcons.photo,
-        section: HistorySection.images,
+        type: ClipboardContentType.image,
       ),
       (
         label: 'code'.tr,
         icon: CupertinoIcons.chevron_left_slash_chevron_right,
-        section: HistorySection.code,
+        type: ClipboardContentType.code,
       ),
     ];
+    const fixedTypes = {
+      ClipboardContentType.url,
+      ClipboardContentType.image,
+      ClipboardContentType.code,
+    };
 
     return SizedBox(
       height: 62,
@@ -128,23 +134,33 @@ class QuickToolbarWidget extends ConsumerWidget {
                   ],
                   for (final tab in typeTabs) ...[
                     CupertinoChoicePill(
-                      key: ValueKey('quick-section-${tab.section.name}'),
+                      key: ValueKey('quick-type-${tab.type.name}'),
                       label: tab.label,
                       icon: tab.icon,
-                      selected: state.section == tab.section,
+                      selected:
+                          state.typeFilters.contains(tab.type) ||
+                          _sectionType(state.section) == tab.type,
                       onPressed: () =>
-                          historyNotifier.selectSection(tab.section),
+                          historyNotifier.toggleQuickTypeFilter(tab.type),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                   ],
-                  if (state.typeFilter != null) ...[
+                  for (final type in state.typeFilters.difference(
+                    fixedTypes,
+                  )) ...[
                     CupertinoChoicePill(
-                      label: typeName(state.typeFilter!),
-                      icon: typeIcon(state.typeFilter!),
+                      key: ValueKey('quick-active-type-${type.name}'),
+                      label: contentTypeLabel(type),
+                      icon: contentTypeIcon(type),
                       selected: true,
-                      onPressed: () => historyNotifier.filterByType(null),
+                      badge: const Icon(
+                        CupertinoIcons.xmark_circle_fill,
+                        size: 12,
+                        color: CupertinoColors.white,
+                      ),
+                      onPressed: () => historyNotifier.toggleTypeFilter(type),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                   ],
                 ],
               ),
@@ -163,8 +179,9 @@ class QuickToolbarWidget extends ConsumerWidget {
           ),
           const SizedBox(width: 6),
           CupertinoIconControl(
+            key: const Key('quick-filter-button'),
             icon: CupertinoIcons.slider_horizontal_3,
-            color: state.typeFilter != null
+            color: state.typeFilters.isNotEmpty
                 ? CupertinoTheme.of(context).primaryColor
                 : null,
             onPressed: () => onChooseType(context),
@@ -184,29 +201,11 @@ class QuickToolbarWidget extends ConsumerWidget {
     );
   }
 
-  String typeName(ClipboardContentType type) => switch (type) {
-    ClipboardContentType.text => 'Văn bản',
-    ClipboardContentType.url => 'Liên kết',
-    ClipboardContentType.email => 'Email',
-    ClipboardContentType.phone => 'Điện thoại',
-    ClipboardContentType.code => 'Code',
-    ClipboardContentType.color => 'Màu HEX',
-    ClipboardContentType.json => 'JSON',
-    ClipboardContentType.file => 'Đường dẫn file',
-    ClipboardContentType.image => 'Hình ảnh',
-  };
-
-  IconData typeIcon(ClipboardContentType type) => switch (type) {
-    ClipboardContentType.text => CupertinoIcons.doc_text,
-    ClipboardContentType.url => CupertinoIcons.link,
-    ClipboardContentType.email => CupertinoIcons.mail,
-    ClipboardContentType.phone => CupertinoIcons.phone,
-    ClipboardContentType.code =>
-      CupertinoIcons.chevron_left_slash_chevron_right,
-    ClipboardContentType.color => CupertinoIcons.color_filter,
-    ClipboardContentType.json =>
-      CupertinoIcons.chevron_left_slash_chevron_right,
-    ClipboardContentType.file => CupertinoIcons.folder,
-    ClipboardContentType.image => CupertinoIcons.photo,
-  };
+  ClipboardContentType? _sectionType(HistorySection section) =>
+      switch (section) {
+        HistorySection.images => ClipboardContentType.image,
+        HistorySection.links => ClipboardContentType.url,
+        HistorySection.code => ClipboardContentType.code,
+        _ => null,
+      };
 }

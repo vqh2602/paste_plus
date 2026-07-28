@@ -8,11 +8,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
-import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
 import 'widgets/quick_empty_state_widget.dart';
 import 'widgets/quick_toolbar_widget.dart';
+import 'widgets/content_type_filter_sheet.dart';
 
 class QuickPanelScreen extends ConsumerStatefulWidget {
   const QuickPanelScreen({super.key});
@@ -77,37 +77,13 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
     await desktop.showMainWindow();
   }
 
-  void _chooseType(BuildContext context) {
+  Future<void> _chooseType(BuildContext context) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
-    showCupertinoModalPopup<ClipboardContentType>(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text('filter_by_type'.tr),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () {
-              historyNotifier.filterByType(null);
-              Navigator.pop(context);
-            },
-            child: Text('all_types'.tr),
-          ),
-          ...ClipboardContentType.values.map((type) {
-            return CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, type),
-              child: Text(type.name.toUpperCase()),
-            );
-          }),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
-        ),
-      ),
-    ).then((type) {
-      if (type != null) {
-        historyNotifier.filterByType(type);
-      }
-    });
+    final selected = await showContentTypeFilterSheet(
+      context,
+      selectedTypes: ref.read(historyControllerProvider).typeFilters,
+    );
+    if (selected != null) await historyNotifier.setTypeFilters(selected);
   }
 
   void _showItemActions(BuildContext context, ClipboardItem item) {

@@ -25,7 +25,7 @@ class ClipboardHistoryState {
     this.query = '',
     this.section = HistorySection.all,
     this.collectionId,
-    this.typeFilter,
+    this.typeFilters = const {},
     this.selectedItemId,
     this.hasExplicitSelection = false,
   });
@@ -36,7 +36,7 @@ class ClipboardHistoryState {
   final String query;
   final HistorySection section;
   final String? collectionId;
-  final ClipboardContentType? typeFilter;
+  final Set<ClipboardContentType> typeFilters;
   final String? selectedItemId;
   final bool hasExplicitSelection;
 
@@ -44,7 +44,8 @@ class ClipboardHistoryState {
     final parsed = ClipboardSearchQuery.parse(query);
     return items
         .where((item) {
-          return (typeFilter == null || item.contentType == typeFilter) &&
+          return (typeFilters.isEmpty ||
+                  typeFilters.contains(item.contentType)) &&
               parsed.matches(item);
         })
         .toList(growable: false);
@@ -59,7 +60,7 @@ class ClipboardHistoryState {
     HistorySection? section,
     String? collectionId,
     bool clearCollection = false,
-    ClipboardContentType? typeFilter,
+    Set<ClipboardContentType>? typeFilters,
     bool clearTypeFilter = false,
     String? selectedItemId,
     bool clearSelection = false,
@@ -72,7 +73,9 @@ class ClipboardHistoryState {
       query: query ?? this.query,
       section: section ?? this.section,
       collectionId: clearCollection ? null : collectionId ?? this.collectionId,
-      typeFilter: clearTypeFilter ? null : typeFilter ?? this.typeFilter,
+      typeFilters: clearTypeFilter
+          ? const {}
+          : Set.unmodifiable(typeFilters ?? this.typeFilters),
       selectedItemId: clearSelection
           ? null
           : selectedItemId ?? this.selectedItemId,
@@ -121,8 +124,8 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> reload() async {
     try {
-      ClipboardContentType? type = state.typeFilter;
-      if (type == null) {
+      ClipboardContentType? type;
+      if (state.typeFilters.isEmpty) {
         switch (state.section) {
           case HistorySection.images:
             type = ClipboardContentType.image;
@@ -178,10 +181,41 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   void search(String value) => state = state.copyWith(query: value);
 
-  Future<void> filterByType(ClipboardContentType? type) async {
-    state = type == null
+  Future<void> setTypeFilters(Set<ClipboardContentType> types) async {
+    state = types.isEmpty
         ? state.copyWith(clearTypeFilter: true)
-        : state.copyWith(typeFilter: type);
+        : state.copyWith(typeFilters: types);
+    await reload();
+  }
+
+  Future<void> toggleTypeFilter(ClipboardContentType type) async {
+    final next = {...state.typeFilters};
+    if (!next.add(type)) next.remove(type);
+    state = next.isEmpty
+        ? state.copyWith(clearTypeFilter: true)
+        : state.copyWith(typeFilters: next);
+    await reload();
+  }
+
+  Future<void> toggleQuickTypeFilter(ClipboardContentType type) async {
+    final next = {...state.typeFilters};
+    if (next.isEmpty) {
+      final sectionType = switch (state.section) {
+        HistorySection.images => ClipboardContentType.image,
+        HistorySection.links => ClipboardContentType.url,
+        HistorySection.code => ClipboardContentType.code,
+        _ => null,
+      };
+      if (sectionType != null) next.add(sectionType);
+    }
+    if (!next.add(type)) next.remove(type);
+    state = state.copyWith(
+      section: HistorySection.all,
+      clearCollection: true,
+      typeFilters: next,
+      clearTypeFilter: next.isEmpty,
+      clearSelection: true,
+    );
     await reload();
   }
 

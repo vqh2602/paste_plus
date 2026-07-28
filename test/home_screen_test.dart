@@ -218,6 +218,52 @@ void main() {
     expect(find.byKey(const Key('history-ai-button')), findsOneWidget);
   });
 
+  testWidgets('content filter supports multiple checked types', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('history-filter-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('type-filter-text')));
+    await tester.tap(find.byKey(const Key('type-filter-url')));
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(
+            find.byKey(const Key('type-filter-text')),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(find.byKey(const Key('type-filter-url')))
+          .selected,
+      isTrue,
+    );
+
+    await tester.tap(find.text('Áp dụng bộ lọc'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('history-filter-button')));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(
+            find.byKey(const Key('type-filter-text')),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(find.byKey(const Key('type-filter-url')))
+          .selected,
+      isTrue,
+    );
+  });
+
   testWidgets('delete action requires confirmation and removes item', (
     tester,
   ) async {
@@ -256,6 +302,27 @@ void main() {
       isTrue,
     );
     expect(find.byKey(const Key('quick-type-text')), findsNothing);
+    await tester.tap(find.byKey(const Key('quick-type-url')));
+    await tester.tap(find.byKey(const Key('quick-type-image')));
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(find.byKey(const Key('quick-type-url')))
+          .selected,
+      isTrue,
+    );
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(
+            find.byKey(const Key('quick-type-image')),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(find.byKey(const Key('quick-active-type-url')), findsNothing);
+    expect(find.byKey(const Key('quick-active-type-image')), findsNothing);
+    await tester.tap(find.byKey(const Key('quick-type-image')));
+    await tester.pumpAndSettle();
     expect(find.text('Riêng tư & cục bộ'), findsNothing);
     expect(find.text('Liên kết'), findsAtLeast(1));
     tester.view.physicalSize = const Size(1400, 900);
