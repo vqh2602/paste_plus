@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -150,6 +152,7 @@ class HistoryPaneWidget extends ConsumerWidget {
                       final item = items[index];
                       return _AnimatedHistoryItem(
                         key: ValueKey('animated-${item.id}'),
+                        index: index,
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8),
                           child: ClipboardCardWidget(
@@ -188,26 +191,91 @@ class HistoryPaneWidget extends ConsumerWidget {
   }
 }
 
-class _AnimatedHistoryItem extends StatelessWidget {
-  const _AnimatedHistoryItem({super.key, required this.child});
+class _AnimatedHistoryItem extends StatefulWidget {
+  const _AnimatedHistoryItem({
+    super.key,
+    required this.index,
+    required this.child,
+  });
 
+  final int index;
   final Widget child;
 
   @override
+  State<_AnimatedHistoryItem> createState() => _AnimatedHistoryItemState();
+}
+
+class _AnimatedHistoryItemState extends State<_AnimatedHistoryItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<double> _scale;
+  late final Animation<Offset> _position;
+  Timer? _startTimer;
+  bool _animationScheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 420),
+    );
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.68, curve: Curves.easeOutCubic),
+    );
+    _scale = Tween<double>(begin: 0.965, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0.08, 1, curve: Curves.easeOutBack),
+      ),
+    );
+    _position = Tween<Offset>(
+      begin: Offset(widget.index.isEven ? -0.018 : 0.018, 0.075),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_animationScheduled) return;
+    _animationScheduled = true;
+
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _controller.value = 1;
+      return;
+    }
+
+    // Stagger the visible cards, but cap the wait so long lists stay snappy.
+    final delay = Duration(milliseconds: (widget.index * 36).clamp(0, 180));
+    _startTimer = Timer(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _startTimer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) return child;
-    return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 260),
-      curve: Curves.easeOutCubic,
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: Transform.translate(
-          offset: Offset(0, 10 * (1 - value)),
-          child: child,
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: _opacity,
+        child: SlideTransition(
+          position: _position,
+          child: ScaleTransition(
+            scale: _scale,
+            alignment: Alignment.topCenter,
+            child: widget.child,
+          ),
         ),
       ),
-      child: child,
     );
   }
 }

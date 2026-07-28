@@ -21,15 +21,39 @@ class QuickPanelScreen extends ConsumerStatefulWidget {
   ConsumerState<QuickPanelScreen> createState() => _QuickPanelScreenState();
 }
 
-class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
+class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
+    with SingleTickerProviderStateMixin {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
   final _itemScrollController = ScrollController();
+  late final AnimationController _entranceController;
+  late final Animation<double> _panelOpacity;
+  late final Animation<double> _panelScale;
+  late final Animation<Offset> _panelPosition;
+  bool _entranceStarted = false;
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _entranceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 190),
+    );
+    _panelOpacity = CurvedAnimation(
+      parent: _entranceController,
+      curve: const Interval(0, 0.68, curve: Curves.easeOutCubic),
+    );
+    _panelScale = Tween<double>(begin: 0.94, end: 1).animate(
+      CurvedAnimation(parent: _entranceController, curve: Curves.easeOutCubic),
+    );
+    _panelPosition =
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _entranceController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _searchFocusNode.requestFocus();
@@ -38,10 +62,23 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_entranceStarted) return;
+    _entranceStarted = true;
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _entranceController.value = 1;
+    } else {
+      _entranceController.forward();
+    }
+  }
+
+  @override
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
     _itemScrollController.dispose();
+    _entranceController.dispose();
     super.dispose();
   }
 
@@ -171,55 +208,155 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
       bindings: shortcutBindings,
       child: Focus(
         autofocus: true,
-        child: CupertinoPageScaffold(
-          backgroundColor: resolveColor(context, ClipFlowColors.sidebar),
-          child: Column(
-            children: [
-              QuickToolbarWidget(
-                state: state,
-                collections: collections,
-                monitoringEnabled: settings.monitoringEnabled,
-                searchController: _searchController,
-                searchFocusNode: _searchFocusNode,
-                onOpenMainWindow: _openMainWindow,
-                onChooseType: _chooseType,
-              ),
-              const CupertinoDivider(),
-              Expanded(
-                child: totalItems == 0
-                    ? QuickEmptyStateWidget(hasQuery: state.query.isNotEmpty)
-                    : ListView.builder(
-                        controller: _itemScrollController,
-                        scrollDirection: Axis.horizontal,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        itemCount: totalItems,
-                        itemBuilder: (context, index) {
-                          final item = visibleItems[index];
-                          final isSelected = index == _selectedIndex;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: QuickClipboardCardWidget(
-                              item: item,
-                              number: index + 1,
-                              selected: isSelected,
-                              onTap: () {
-                                setState(() => _selectedIndex = index);
-                                _pasteItem(item);
+        child: FadeTransition(
+          opacity: _panelOpacity,
+          child: SlideTransition(
+            position: _panelPosition,
+            child: ScaleTransition(
+              scale: _panelScale,
+              alignment: Alignment.bottomCenter,
+              child: CupertinoPageScaffold(
+                backgroundColor: resolveColor(context, ClipFlowColors.sidebar),
+                child: Column(
+                  children: [
+                    QuickToolbarWidget(
+                      state: state,
+                      collections: collections,
+                      monitoringEnabled: settings.monitoringEnabled,
+                      searchController: _searchController,
+                      searchFocusNode: _searchFocusNode,
+                      onOpenMainWindow: _openMainWindow,
+                      onChooseType: _chooseType,
+                    ),
+                    const CupertinoDivider(),
+                    Expanded(
+                      child: totalItems == 0
+                          ? QuickEmptyStateWidget(
+                              hasQuery: state.query.isNotEmpty,
+                            )
+                          : ListView.builder(
+                              controller: _itemScrollController,
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              itemCount: totalItems,
+                              itemBuilder: (context, index) {
+                                final item = visibleItems[index];
+                                final isSelected = index == _selectedIndex;
+                                return _AnimatedQuickPanelItem(
+                                  key: ValueKey('quick-animated-${item.id}'),
+                                  index: index,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(right: 12),
+                                    child: QuickClipboardCardWidget(
+                                      item: item,
+                                      number: index + 1,
+                                      selected: isSelected,
+                                      onTap: () {
+                                        setState(() => _selectedIndex = index);
+                                        _pasteItem(item);
+                                      },
+                                      onPin: () => ref
+                                          .read(
+                                            historyControllerProvider.notifier,
+                                          )
+                                          .togglePinned(item),
+                                      onActions: (ctx) =>
+                                          _showItemActions(ctx, item),
+                                    ),
+                                  ),
+                                );
                               },
-                              onPin: () => ref
-                                  .read(historyControllerProvider.notifier)
-                                  .togglePinned(item),
-                              onActions: (ctx) => _showItemActions(ctx, item),
                             ),
-                          );
-                        },
-                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedQuickPanelItem extends StatefulWidget {
+  const _AnimatedQuickPanelItem({
+    super.key,
+    required this.index,
+    required this.child,
+  });
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_AnimatedQuickPanelItem> createState() =>
+      _AnimatedQuickPanelItemState();
+}
+
+class _AnimatedQuickPanelItemState extends State<_AnimatedQuickPanelItem>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+  late final Animation<double> _scale;
+  late final Animation<Offset> _position;
+  Timer? _timer;
+  bool _scheduled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 220),
+    );
+    _opacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.62, curve: Curves.easeOutCubic),
+    );
+    _scale = Tween<double>(
+      begin: 0.9,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _position = Tween<Offset>(
+      begin: const Offset(0.12, 0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_scheduled) return;
+    _scheduled = true;
+    if (MediaQuery.maybeOf(context)?.disableAnimations ?? false) {
+      _controller.value = 1;
+      return;
+    }
+    final delay = Duration(milliseconds: 24 + (widget.index * 16).clamp(0, 72));
+    _timer = Timer(delay, () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: FadeTransition(
+        opacity: _opacity,
+        child: SlideTransition(
+          position: _position,
+          child: ScaleTransition(scale: _scale, child: widget.child),
         ),
       ),
     );
