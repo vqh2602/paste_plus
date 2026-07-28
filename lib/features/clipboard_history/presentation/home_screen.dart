@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
@@ -67,7 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       }
     } else {
-      if (mounted) showCupertinoNotice(context, 'Đã sao chép');
+      if (mounted) showCupertinoNotice(context, 'copied'.tr);
     }
   }
 
@@ -205,17 +206,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Xóa mục này?'),
-        content: const Text('Thao tác này không thể hoàn tác.'),
+        title: Text('delete_item_title'.tr),
+        content: Text('delete_cannot_undo'.tr),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text('cancel'.tr),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa'),
+            child: Text('delete'.tr),
           ),
         ],
       ),
@@ -238,16 +239,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => CupertinoAlertDialog(
-          title: const Text('Thêm vào collection'),
+          title: Text('add_to_collection_title'.tr),
           content: SizedBox(
             width: 360,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (collections.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 12, bottom: 8),
-                    child: Text('Chưa có collection nào.'),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    child: Text('no_collections'.tr),
                   )
                 else
                   ...collections.map((collection) {
@@ -292,7 +293,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () async {
                 final name = await _textDialog(
                   context,
-                  title: 'Collection mới',
+                  title: 'new_collection'.tr,
                 );
                 if (name != null && name.trim().isNotEmpty) {
                   await collectionsNotifier.create(name.trim());
@@ -301,11 +302,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   setDialogState(() {});
                 }
               },
-              child: const Text('+ Collection mới'),
+              child: Text('new_collection_btn'.tr),
             ),
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Xong'),
+              child: Text('granted'.tr),
             ),
           ],
         ),
@@ -335,7 +336,7 @@ class _Sidebar extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
                 child: Text(
-                  'THƯ VIỆN',
+                  'library'.tr,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -345,31 +346,31 @@ class _Sidebar extends ConsumerWidget {
               ),
               _NavTile(
                 icon: CupertinoIcons.tray_full,
-                label: 'Tất cả',
+                label: 'all'.tr,
                 selected: state.section == HistorySection.all,
                 onTap: () => _navigate(ref, HistorySection.all),
               ),
               _NavTile(
                 icon: CupertinoIcons.pin,
-                label: 'Đã ghim',
+                label: 'pinned'.tr,
                 selected: state.section == HistorySection.pinned,
                 onTap: () => _navigate(ref, HistorySection.pinned),
               ),
               _NavTile(
                 icon: CupertinoIcons.photo,
-                label: 'Hình ảnh',
+                label: 'images'.tr,
                 selected: state.section == HistorySection.images,
                 onTap: () => _navigate(ref, HistorySection.images),
               ),
               _NavTile(
                 icon: CupertinoIcons.link,
-                label: 'Liên kết',
+                label: 'links'.tr,
                 selected: state.section == HistorySection.links,
                 onTap: () => _navigate(ref, HistorySection.links),
               ),
               _NavTile(
                 icon: CupertinoIcons.chevron_left_slash_chevron_right,
-                label: 'Code',
+                label: 'code'.tr,
                 selected: state.section == HistorySection.code,
                 onTap: () => _navigate(ref, HistorySection.code),
               ),
@@ -380,7 +381,7 @@ class _Sidebar extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(left: 10),
                       child: Text(
-                        'COLLECTIONS',
+                        'collections'.tr,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -429,7 +430,7 @@ class _Sidebar extends ConsumerWidget {
               const SizedBox(height: 8),
               _NavTile(
                 icon: CupertinoIcons.settings,
-                label: 'Cài đặt',
+                label: 'settings'.tr,
                 selected: false,
                 onTap: () {
                   onNavigate?.call();
@@ -448,7 +449,7 @@ class _Sidebar extends ConsumerWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Dữ liệu chỉ lưu trên thiết bị',
+                        'local_data_only'.tr,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 11,
@@ -478,7 +479,7 @@ class _Sidebar extends ConsumerWidget {
   }
 
   Future<void> _createCollection(BuildContext context, WidgetRef ref) async {
-    final name = await _textDialog(context, title: 'Collection mới');
+    final name = await _textDialog(context, title: 'new_collection'.tr);
     if (name != null) {
       await ref.read(collectionsControllerProvider.notifier).create(name);
     }
@@ -496,17 +497,17 @@ class _Sidebar extends ConsumerWidget {
         actions: [
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'rename'),
-            child: const Text('Đổi tên'),
+            child: Text('rename'.tr),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, 'delete'),
-            child: const Text('Xóa collection'),
+            child: Text('delete_collection'.tr),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
       ),
     );
@@ -514,7 +515,7 @@ class _Sidebar extends ConsumerWidget {
     if (action == 'rename') {
       final name = await _textDialog(
         context,
-        title: 'Đổi tên collection',
+        title: 'rename_collection'.tr,
         initialValue: collection.name,
       );
       if (name != null) {
@@ -646,7 +647,7 @@ class _HistoryPane extends ConsumerWidget {
                   key: const Key('history-search'),
                   controller: searchController,
                   focusNode: focusNode,
-                  placeholder: 'Tìm trong clipboard',
+                  placeholder: 'search_in_clipboard'.tr,
                   onChanged: ref
                       .read(historyControllerProvider.notifier)
                       .search,
@@ -686,18 +687,18 @@ class _HistoryPane extends ConsumerWidget {
               padding: EdgeInsets.symmetric(horizontal: compact ? 12 : 22),
               children: [
                 _FilterPill(
-                  label: 'Tất cả',
+                  label: 'all'.tr,
                   selected: state.typeFilter == null,
                   onPressed: () => ref
                       .read(historyControllerProvider.notifier)
                       .filterByType(null),
                 ),
-                for (final entry in const {
-                  ClipboardContentType.text: 'Văn bản',
-                  ClipboardContentType.url: 'Liên kết',
-                  ClipboardContentType.code: 'Code',
-                  ClipboardContentType.image: 'Hình ảnh',
-                  ClipboardContentType.file: 'Tệp',
+                for (final entry in {
+                  ClipboardContentType.text: 'text'.tr,
+                  ClipboardContentType.url: 'links'.tr,
+                  ClipboardContentType.code: 'code'.tr,
+                  ClipboardContentType.image: 'images'.tr,
+                  ClipboardContentType.file: 'files'.tr,
                 }.entries)
                   _FilterPill(
                     label: entry.value,
@@ -1015,9 +1016,9 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
           .performOcr(item);
       if (!mounted) return;
       if (result != null) {
-        showCupertinoNotice(context, 'Đã trích xuất văn bản & tạo bản sao');
+        showCupertinoNotice(context, 'ocr_success'.tr);
       } else {
-        showCupertinoNotice(context, 'Không tìm thấy văn bản trong hình ảnh');
+        showCupertinoNotice(context, 'ocr_empty'.tr);
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -1033,9 +1034,9 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
           .translateItem(item, settings.targetTranslationLanguage);
       if (!mounted) return;
       if (result != null) {
-        showCupertinoNotice(context, 'Đã dịch & tạo bản sao mới');
+        showCupertinoNotice(context, 'translate_success'.tr);
       } else {
-        showCupertinoNotice(context, 'Không thể dịch văn bản này');
+        showCupertinoNotice(context, 'translate_failed'.tr);
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -1050,9 +1051,9 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
           .uploadImageToCloud(item);
       if (!mounted) return;
       if (url != null) {
-        showCupertinoNotice(context, 'Đã tải ảnh lên cloud & sao chép link');
+        showCupertinoNotice(context, 'upload_cloud_success'.tr);
       } else {
-        showCupertinoNotice(context, 'Không thể tải ảnh lên cloud');
+        showCupertinoNotice(context, 'upload_cloud_failed'.tr);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -1067,7 +1068,7 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
       if (entry.id == state.selectedItemId) item = entry;
     }
     if (item == null) {
-      return const Center(child: Text('Chọn một mục để xem chi tiết'));
+      return Center(child: Text('select_item_to_view'.tr));
     }
     final isImage = item.contentType == ClipboardContentType.image;
     final isOnlineImage = isImageUrl(item.content);
@@ -1154,14 +1155,14 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
             const CupertinoDivider(),
             const SizedBox(height: 12),
             _MetadataRow(
-              label: 'Đã sao chép',
+              label: 'copied_time'.tr,
               value: DateFormat('dd/MM/yyyy HH:mm').format(item.lastCopiedAt),
             ),
             _MetadataRow(
-              label: 'Nguồn',
-              value: item.sourceAppName ?? 'Không xác định',
+              label: 'source_app'.tr,
+              value: item.sourceAppName ?? 'unknown'.tr,
             ),
-            _MetadataRow(label: 'Số lần dùng', value: '${item.copyCount}'),
+            _MetadataRow(label: 'usage_count'.tr, value: '${item.copyCount}'),
             const SizedBox(height: 14),
             if (isImage) ...[
               SizedBox(
@@ -1181,11 +1182,11 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
                       else
                         const Icon(CupertinoIcons.doc_text_search, size: 16),
                       const SizedBox(width: 6),
-                      const Flexible(
+                      Flexible(
                         child: Text(
-                          'Trích xuất văn bản (OCR)',
+                          'extract_ocr'.tr,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: CupertinoColors.activeBlue,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -1218,11 +1219,11 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
                           color: CupertinoColors.activeGreen,
                         ),
                       const SizedBox(width: 6),
-                      const Flexible(
+                      Flexible(
                         child: Text(
-                          'Tải lên Cloud',
+                          'upload_cloud'.tr,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: CupertinoColors.activeGreen,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -1252,11 +1253,11 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
                       else
                         const Icon(CupertinoIcons.globe, size: 16),
                       const SizedBox(width: 6),
-                      const Flexible(
+                      Flexible(
                         child: Text(
-                          'Dịch văn bản',
+                          'translate_text'.tr,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: CupertinoColors.activeBlue,
                             fontWeight: FontWeight.w600,
                             fontSize: 13,
@@ -1274,7 +1275,7 @@ class _DetailPaneState extends ConsumerState<_DetailPane> {
               child: CupertinoButton.filled(
                 onPressed: () =>
                     ref.read(historyControllerProvider.notifier).copy(item!),
-                child: const Text('Sao chép lại'),
+                child: Text('copy_again'.tr),
               ),
             ),
           ],
@@ -1383,15 +1384,15 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 18),
             Text(
               hasQuery
-                  ? 'Không tìm thấy kết quả'
-                  : 'Clipboard của bạn đang trống',
+                  ? 'no_results_found'.tr
+                  : 'clipboard_empty_title'.tr,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
             Text(
               hasQuery
-                  ? 'Thử từ khóa hoặc bộ lọc khác.'
-                  : 'Hãy sao chép một nội dung. ClipFlow sẽ giữ nó an toàn trên thiết bị này.',
+                  ? 'try_different_keyword'.tr
+                  : 'clipboard_empty_subtitle'.tr,
               textAlign: TextAlign.center,
               style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
             ),
@@ -1419,7 +1420,7 @@ class _ErrorState extends ConsumerWidget {
           const SizedBox(height: 12),
           CupertinoButton(
             onPressed: ref.read(historyControllerProvider.notifier).reload,
-            child: const Text('Thử lại'),
+            child: Text('try_again'.tr),
           ),
         ],
       ),
@@ -1442,31 +1443,31 @@ Future<void> _showItemActions(
         if (isImage) ...[
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ocr'),
-            child: const Text('Trích xuất văn bản (OCR)'),
+            child: Text('extract_ocr'.tr),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'cloud_upload'),
-            child: const Text('Tải lên Cloud'),
+            child: Text('upload_cloud'.tr),
           ),
         ]
         else
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'translate'),
-            child: const Text('Dịch văn bản (Translate)'),
+            child: Text('translate_text'.tr),
           ),
         CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context, 'collection'),
-          child: const Text('Thêm vào collection'),
+          child: Text('add_to_collection_title'.tr),
         ),
         CupertinoActionSheetAction(
           isDestructiveAction: true,
           onPressed: () => Navigator.pop(context, 'delete'),
-          child: const Text('Xóa'),
+          child: Text('delete'.tr),
         ),
       ],
       cancelButton: CupertinoActionSheetAction(
         onPressed: () => Navigator.pop(context),
-        child: const Text('Hủy'),
+        child: Text('cancel'.tr),
       ),
     ),
   );
@@ -1479,8 +1480,8 @@ Future<void> _showItemActions(
       showCupertinoNotice(
         context,
         text != null
-            ? 'Đã trích xuất văn bản & tạo bản sao'
-            : 'Không tìm thấy văn bản trong hình ảnh',
+            ? 'ocr_success'.tr
+            : 'ocr_empty'.tr,
       );
     }
   } else if (action == 'cloud_upload') {
@@ -1491,8 +1492,8 @@ Future<void> _showItemActions(
       showCupertinoNotice(
         context,
         url != null
-            ? 'Đã tải ảnh lên cloud & sao chép link'
-            : 'Không thể tải ảnh lên cloud',
+            ? 'upload_cloud_success'.tr
+            : 'upload_cloud_failed'.tr,
       );
     }
   } else if (action == 'translate') {
@@ -1503,7 +1504,7 @@ Future<void> _showItemActions(
     if (context.mounted) {
       showCupertinoNotice(
         context,
-        text != null ? 'Đã dịch & tạo bản sao mới' : 'Không thể dịch văn bản',
+        text != null ? 'translate_success'.tr : 'translate_failed'.tr,
       );
     }
   } else if (action == 'collection') {
@@ -1528,18 +1529,18 @@ Future<String?> _textDialog(
         child: CupertinoTextField(
           controller: controller,
           autofocus: true,
-          placeholder: 'Tên collection',
+          placeholder: 'collection_name_placeholder'.tr,
           onSubmitted: (value) => Navigator.pop(context, value),
         ),
       ),
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context, controller.text),
-          child: const Text('Lưu'),
+          child: Text('granted'.tr),
         ),
       ],
     ),
@@ -1561,15 +1562,15 @@ IconData _typeIcon(ClipboardContentType type) => switch (type) {
 };
 
 String _typeLabel(ClipboardContentType type) => switch (type) {
-  ClipboardContentType.text => 'VĂN BẢN',
-  ClipboardContentType.url => 'LIÊN KẾT',
+  ClipboardContentType.text => 'text'.tr.toUpperCase(),
+  ClipboardContentType.url => 'links'.tr.toUpperCase(),
   ClipboardContentType.email => 'EMAIL',
-  ClipboardContentType.phone => 'ĐIỆN THOẠI',
-  ClipboardContentType.code => 'CODE',
-  ClipboardContentType.color => 'MÀU SẮC',
+  ClipboardContentType.phone => 'phone'.tr.toUpperCase(),
+  ClipboardContentType.code => 'code'.tr.toUpperCase(),
+  ClipboardContentType.color => 'color'.tr.toUpperCase(),
   ClipboardContentType.json => 'JSON',
-  ClipboardContentType.file => 'TỆP',
-  ClipboardContentType.image => 'HÌNH ẢNH',
+  ClipboardContentType.file => 'files'.tr.toUpperCase(),
+  ClipboardContentType.image => 'images'.tr.toUpperCase(),
 };
 
 Color _typeColor(ClipboardContentType type) => switch (type) {
@@ -1594,9 +1595,15 @@ Color? _parseHex(String value) {
 
 String _relativeTime(DateTime value) {
   final difference = DateTime.now().difference(value);
-  if (difference.inSeconds < 60) return 'vừa xong';
-  if (difference.inMinutes < 60) return '${difference.inMinutes} phút trước';
-  if (difference.inHours < 24) return '${difference.inHours} giờ trước';
-  if (difference.inDays < 7) return '${difference.inDays} ngày trước';
+  if (difference.inSeconds < 60) return 'just_now'.tr;
+  if (difference.inMinutes < 60) {
+    return 'mins_ago'.tr.replaceAll('@m', '${difference.inMinutes}');
+  }
+  if (difference.inHours < 24) {
+    return 'hours_ago'.tr.replaceAll('@h', '${difference.inHours}');
+  }
+  if (difference.inDays < 7) {
+    return 'days_ago'.tr.replaceAll('@d', '${difference.inDays}');
+  }
   return DateFormat('dd/MM/yyyy').format(value);
 }

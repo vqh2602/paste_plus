@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -17,31 +18,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   var _page = 0;
   var _retentionDays = 30;
 
-  static const _pages = [
+  List<(IconData, String, String)> get _pages => [
     (
       CupertinoIcons.doc_on_clipboard,
-      'Mọi thứ bạn sao chép, luôn ở đúng nơi',
-      'ClipFlow lưu lịch sử clipboard để bạn tìm lại văn bản, liên kết, code và nhiều nội dung khác trong vài giây.',
+      'onboarding_title_1'.tr,
+      'onboarding_desc_1'.tr,
     ),
     (
       CupertinoIcons.shield,
-      'Riêng tư ngay từ thiết kế',
-      'Dữ liệu chỉ được lưu trên thiết bị này. ClipFlow không tải nội dung clipboard lên máy chủ.',
+      'onboarding_title_2'.tr,
+      'onboarding_desc_2'.tr,
     ),
     (
       CupertinoIcons.slider_horizontal_3,
-      'Bạn luôn nắm quyền kiểm soát',
-      'Tạm dừng theo dõi bất cứ lúc nào, bỏ qua ứng dụng nhạy cảm và xóa sạch dữ liệu chỉ với một thao tác.',
+      'onboarding_title_3'.tr,
+      'onboarding_desc_3'.tr,
     ),
     (
       CupertinoIcons.clock,
-      'Bạn muốn giữ lịch sử bao lâu?',
-      'Có thể thay đổi lựa chọn này bất kỳ lúc nào trong phần Cài đặt.',
+      'onboarding_title_4'.tr,
+      'onboarding_desc_4'.tr,
     ),
     (
       CupertinoIcons.keyboard,
-      'Sẵn sàng để làm việc nhanh hơn',
-      'Nhấn Control + V trên macOS hoặc Control + Shift + V trên Windows/Linux để mở ClipFlow.',
+      'onboarding_title_5'.tr,
+      'onboarding_desc_5'.tr,
     ),
   ];
 
@@ -139,8 +140,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         children: [7, 30, 90, -1].map((days) {
                                           return CupertinoChoicePill(
                                             label: days == -1
-                                                ? 'Không giới hạn'
-                                                : '$days ngày',
+                                                ? 'unlimited'.tr
+                                                : 'days_ago'.tr.replaceAll('@d', '$days'),
                                             selected: _retentionDays == days,
                                             onPressed: () => setState(
                                               () => _retentionDays = days,
@@ -189,8 +190,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 children: [
                                   Text(
                                     _page == _pages.length - 1
-                                        ? 'Bắt đầu'
-                                        : 'Tiếp tục',
+                                        ? 'start_btn'.tr
+                                        : 'continue_btn'.tr,
                                   ),
                                   const SizedBox(width: 7),
                                   Icon(

@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../core/localization/app_translations.dart';
 import 'providers.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -93,6 +94,7 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
+    AppTranslations.currentLanguage = settings.language;
     final theme = AppTheme.theme(
       settings.themeMode,
       accentKey: settings.accentColor,

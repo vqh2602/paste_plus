@@ -9,6 +9,7 @@ import 'package:window_manager/window_manager.dart';
 import 'app/app.dart';
 import 'app/providers.dart';
 import 'core/database/app_database.dart';
+import 'core/localization/app_translations.dart';
 import 'features/settings/data/settings_repository.dart';
 
 Future<void> main() async {
@@ -33,6 +34,8 @@ Future<void> main() async {
   final database = await AppDatabase.open();
   final preferences = await SharedPreferences.getInstance();
   final settingsRepository = SettingsRepository(preferences);
+  final initialSettings = settingsRepository.load();
+  AppTranslations.currentLanguage = initialSettings.language;
 
   runApp(
     ProviderScope(

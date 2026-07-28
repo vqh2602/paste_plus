@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cached_network_image_widget.dart';
 import '../../../core/ui/cupertino_components.dart';
@@ -266,12 +267,12 @@ class _QuickToolbar extends ConsumerWidget {
 
     final systemTabs = [
       (
-        label: 'Tất cả',
+        label: 'all'.tr,
         icon: CupertinoIcons.doc_on_clipboard,
         section: HistorySection.all,
       ),
       (
-        label: 'Đã ghim',
+        label: 'pinned'.tr,
         icon: CupertinoIcons.pin,
         section: HistorySection.pinned,
       ),
@@ -279,17 +280,17 @@ class _QuickToolbar extends ConsumerWidget {
 
     final typeTabs = [
       (
-        label: 'Hình ảnh',
+        label: 'images'.tr,
         icon: CupertinoIcons.photo,
         section: HistorySection.images,
       ),
       (
-        label: 'Liên kết',
+        label: 'links'.tr,
         icon: CupertinoIcons.link,
         section: HistorySection.links,
       ),
       (
-        label: 'Code',
+        label: 'code'.tr,
         icon: CupertinoIcons.chevron_left_slash_chevron_right,
         section: HistorySection.code,
       ),
@@ -373,7 +374,7 @@ class _QuickToolbar extends ConsumerWidget {
               key: const Key('quick-panel-search'),
               controller: controller,
               focusNode: focusNode,
-              placeholder: 'Tìm trong clipboard',
+              placeholder: 'search_in_clipboard'.tr,
               onChanged: historyNotifier.search,
             ),
           ),
@@ -404,11 +405,11 @@ class _QuickToolbar extends ConsumerWidget {
     final selected = await showCupertinoModalPopup<ClipboardContentType?>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('Lọc loại nội dung'),
+        title: Text('all'.tr),
         actions: [
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Tất cả loại'),
+            child: Text('all'.tr),
           ),
           for (final type in ClipboardContentType.values)
             CupertinoActionSheetAction(
@@ -418,7 +419,7 @@ class _QuickToolbar extends ConsumerWidget {
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context, state.typeFilter),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
       ),
     );
@@ -604,7 +605,7 @@ class _QuickClipboardCard extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        item.sourceAppName ?? 'Thiết bị này',
+                        item.sourceAppName ?? 'this_device'.tr,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 11,
@@ -636,31 +637,31 @@ class _QuickClipboardCard extends ConsumerWidget {
           if (isImage) ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'ocr'),
-              child: const Text('Trích xuất văn bản (OCR)'),
+              child: Text('extract_ocr'.tr),
             ),
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'cloud_upload'),
-              child: const Text('Tải lên Cloud'),
+              child: Text('upload_cloud'.tr),
             ),
           ]
           else
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'translate'),
-              child: const Text('Dịch văn bản'),
+              child: Text('translate_text'.tr),
             ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'pin'),
-            child: Text(item.isPinned ? 'Bỏ ghim' : 'Ghim'),
+            child: Text(item.isPinned ? 'unpin_item'.tr : 'pin_item'.tr),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, 'delete'),
-            child: const Text('Xóa'),
+            child: Text('delete'.tr),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
       ),
     );
@@ -673,8 +674,8 @@ class _QuickClipboardCard extends ConsumerWidget {
         showCupertinoNotice(
           context,
           text != null
-              ? 'Đã trích xuất văn bản & tạo bản sao'
-              : 'Không tìm thấy văn bản trong hình ảnh',
+              ? 'ocr_success'.tr
+              : 'ocr_empty'.tr,
         );
       }
     } else if (action == 'cloud_upload') {
@@ -685,8 +686,8 @@ class _QuickClipboardCard extends ConsumerWidget {
         showCupertinoNotice(
           context,
           url != null
-              ? 'Đã tải ảnh lên cloud & sao chép link'
-              : 'Không thể tải ảnh lên cloud',
+              ? 'upload_cloud_success'.tr
+              : 'upload_cloud_failed'.tr,
         );
       }
     } else if (action == 'translate') {
@@ -697,7 +698,7 @@ class _QuickClipboardCard extends ConsumerWidget {
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          text != null ? 'Đã dịch & tạo bản sao' : 'Không thể dịch văn bản',
+          text != null ? 'translate_success'.tr : 'translate_failed'.tr,
         );
       }
     } else if (action == 'pin') {
@@ -726,7 +727,7 @@ class _QuickEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            hasQuery ? 'Không tìm thấy kết quả' : 'Clipboard đang trống',
+            hasQuery ? 'no_results_found'.tr : 'clipboard_empty_title'.tr,
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
         ],
@@ -736,15 +737,15 @@ class _QuickEmptyState extends StatelessWidget {
 }
 
 String _typeName(ClipboardContentType type) => switch (type) {
-  ClipboardContentType.text => 'Văn bản',
-  ClipboardContentType.url => 'Liên kết',
-  ClipboardContentType.email => 'Email',
-  ClipboardContentType.phone => 'Điện thoại',
-  ClipboardContentType.code => 'Code',
-  ClipboardContentType.color => 'Màu sắc',
+  ClipboardContentType.text => 'text'.tr,
+  ClipboardContentType.url => 'links'.tr,
+  ClipboardContentType.email => 'email'.tr,
+  ClipboardContentType.phone => 'phone'.tr,
+  ClipboardContentType.code => 'code'.tr,
+  ClipboardContentType.color => 'color'.tr,
   ClipboardContentType.json => 'JSON',
-  ClipboardContentType.file => 'Tệp',
-  ClipboardContentType.image => 'Hình ảnh',
+  ClipboardContentType.file => 'files'.tr,
+  ClipboardContentType.image => 'images'.tr,
 };
 
 IconData _typeIcon(ClipboardContentType type) => switch (type) {

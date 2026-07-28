@@ -8,6 +8,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/services/update_service.dart';
 import '../../../core/ui/cupertino_components.dart';
@@ -51,9 +52,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               child: Row(
                 children: [
                   const SizedBox(width: 16),
-                  const Text(
-                    'Cài đặt ClipFlow',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  Text(
+                    'settings_title'.tr,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                   const Spacer(),
                   CupertinoIconControl(
@@ -118,7 +119,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                       const SizedBox(width: 7),
                                       Text(
-                                        'Dữ liệu lưu cục bộ',
+                                        'local_data_saved'.tr,
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: resolveColor(context, ClipFlowColors.secondaryText),
@@ -266,8 +267,8 @@ class _GeneralSettings extends ConsumerWidget {
         _SettingsGroup(
           children: [
             _SwitchRow(
-              title: 'Mở khi đăng nhập',
-              subtitle: 'Khởi động ClipFlow cùng hệ điều hành.',
+              title: 'launch_at_login'.tr,
+              subtitle: 'launch_at_login_sub'.tr,
               value: settings.openAtLogin,
               onChanged: (value) async {
                 final result = await ref
@@ -292,21 +293,21 @@ class _GeneralSettings extends ConsumerWidget {
                     result.enabled != value) {
                   showCupertinoNotice(
                     context,
-                    'Không thể thay đổi “Mở khi đăng nhập”.',
+                    'open_at_login_failed'.tr,
                   );
-                } else {
-                  showCupertinoNotice(
-                    context,
-                    value
-                        ? 'ClipFlow sẽ mở khi đăng nhập.'
-                        : 'Đã tắt mở cùng hệ thống.',
-                  );
+                  return;
                 }
+                showCupertinoNotice(
+                  context,
+                  value
+                      ? 'open_at_login_on'.tr
+                      : 'open_at_login_off'.tr,
+                );
               },
             ),
             _SwitchRow(
-              title: 'Chạy trong menu bar',
-              subtitle: 'Truy cập ClipFlow khi cửa sổ chính đã đóng.',
+              title: 'run_in_tray'.tr,
+              subtitle: 'run_in_tray_sub'.tr,
               value: settings.runInTray,
               onChanged: (value) async {
                 final success = await ref
@@ -323,15 +324,16 @@ class _GeneralSettings extends ConsumerWidget {
                     context,
                     success
                         ? (value
-                              ? 'Icon ClipFlow đang ở menu bar.'
-                              : 'Đã ẩn icon menu bar.')
-                        : 'Không thể cập nhật menu bar.',
+                              ? 'tray_on'.tr
+                              : 'tray_off'.tr)
+                        : 'tray_failed'.tr,
                   );
                 }
               },
             ),
             _SwitchRow(
-              title: 'Hiển thị trong Dock',
+              title: 'show_in_dock'.tr,
+              subtitle: 'show_in_dock_sub'.tr,
               value: settings.showInDock,
               onChanged: (value) async {
                 await ref
@@ -346,11 +348,12 @@ class _GeneralSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Khi sử dụng item'),
+        CupertinoSectionLabel('sound_enabled'.tr),
         _SettingsGroup(
           children: [
             _SwitchRow(
-              title: 'Âm thanh khi sao chép',
+              title: 'sound_enabled'.tr,
+              subtitle: 'sound_enabled_sub'.tr,
               value: settings.soundEnabled,
               onChanged: (value) => _update(
                 ref,
@@ -361,7 +364,7 @@ class _GeneralSettings extends ConsumerWidget {
         ),
         if (Platform.isMacOS) ...[
           const SizedBox(height: 22),
-          const CupertinoSectionLabel('Quyền hệ thống'),
+          CupertinoSectionLabel('system_permissions'.tr),
           _SettingsGroup(
             children: [
               FutureBuilder<bool>(
@@ -371,10 +374,10 @@ class _GeneralSettings extends ConsumerWidget {
                 builder: (context, snapshot) {
                   final hasPermission = snapshot.data ?? false;
                   return _SettingsTile(
-                    title: 'Quyền Trợ năng (Accessibility)',
+                    title: 'accessibility_permission'.tr,
                     subtitle: hasPermission
-                        ? 'Đã cấp quyền. ClipFlow tự động dán (paste) khi bạn chọn item.'
-                        : 'Cần cấp quyền để ClipFlow tự động điền giá trị vào ô soạn thảo.',
+                        ? 'accessibility_granted'.tr
+                        : 'accessibility_required'.tr,
                     leading: Icon(
                       hasPermission
                           ? CupertinoIcons.checkmark_shield
@@ -385,7 +388,7 @@ class _GeneralSettings extends ConsumerWidget {
                     ),
                     trailing: hasPermission
                         ? Text(
-                            'Đã cấp',
+                            'granted'.tr,
                             style: TextStyle(
                               fontSize: 13,
                               color: resolveColor(context, ClipFlowColors.secondaryText),
@@ -398,14 +401,14 @@ class _GeneralSettings extends ConsumerWidget {
                                   .read(desktopIntegrationProvider)
                                   .requestAccessibilityPermission();
                             },
-                            child: const Text('Cấp quyền'),
+                            child: Text('grant_permission'.tr),
                           ),
                   );
                 },
               ),
               _SettingsTile(
-                title: 'Khởi động lại ứng dụng',
-                subtitle: 'Khởi động lại ClipFlow để nhận diện quyền mới sau khi cấp trong Cài đặt hệ thống.',
+                title: 'restart_app'.tr,
+                subtitle: 'restart_app_sub'.tr,
                 leading: const Icon(
                   CupertinoIcons.arrow_counterclockwise,
                   color: CupertinoColors.activeBlue,
@@ -417,12 +420,12 @@ class _GeneralSettings extends ConsumerWidget {
                         .read(desktopIntegrationProvider)
                         .restartApp();
                   },
-                  child: const Text('Khởi động lại'),
+                  child: Text('restart'.tr),
                 ),
               ),
               _SettingsTile(
-                title: 'Reset & Cấp lại quyền',
-                subtitle: 'Dùng khi cài đè hoặc cập nhật ứng dụng khiến quyền Trợ năng bị vô hiệu hóa ngầm.',
+                title: 'reset_permission'.tr,
+                subtitle: 'reset_permission_sub'.tr,
                 leading: const Icon(
                   CupertinoIcons.refresh_bold,
                   color: CupertinoColors.systemOrange,
@@ -434,37 +437,37 @@ class _GeneralSettings extends ConsumerWidget {
                         .read(desktopIntegrationProvider)
                         .resetAccessibilityPermission();
                   },
-                  child: const Text('Reset quyền'),
+                  child: Text('reset'.tr),
                 ),
               ),
             ],
           ),
         ],
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Giao diện & Bảng màu'),
+        CupertinoSectionLabel('appearance_and_theme'.tr),
         _SettingsGroup(
           children: [
             _PickerRow<String>(
-              title: 'Chế độ hiển thị',
+              title: 'theme_mode'.tr,
               value: settings.themeMode,
-              items: const {
-                'system': 'Theo hệ thống',
-                'light': 'Sáng',
-                'dark': 'Tối',
+              items: {
+                'system': 'theme_system'.tr,
+                'light': 'theme_light'.tr,
+                'dark': 'theme_dark'.tr,
               },
               onChanged: (value) =>
                   _update(ref, (current) => current.copyWith(themeMode: value)),
             ),
             _PickerRow<String>(
-              title: 'Ngôn ngữ ứng dụng',
+              title: 'app_language'.tr,
               value: settings.language,
               items: const {'vi': 'Tiếng Việt', 'en': 'English'},
               onChanged: (value) =>
                   _update(ref, (current) => current.copyWith(language: value)),
             ),
             _PickerRow<String>(
-              title: 'Ngôn ngữ dịch thuật',
-              subtitle: 'Ngôn ngữ đích khi sử dụng chức năng Dịch',
+              title: 'translation_language'.tr,
+              subtitle: 'translation_language_sub'.tr,
               value: settings.targetTranslationLanguage,
               items: const {
                 'vi': 'Tiếng Việt',
@@ -487,16 +490,16 @@ class _GeneralSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Lưu trữ ảnh Cloud (Image Hosting)'),
+        CupertinoSectionLabel('cloud_hosting_section'.tr),
         _SettingsGroup(
           children: [
             _PickerRow<String>(
-              title: 'Nhà cung cấp Cloud',
-              subtitle: 'Chỉ bật 1 tùy chọn host duy nhất để tải ảnh lên',
+              title: 'cloud_provider'.tr,
+              subtitle: 'cloud_provider_sub'.tr,
               value: settings.cloudImageHost,
-              items: const {
-                'freeimage': 'FreeImage.host (Đang sử dụng)',
-                'gdrive': 'Google Drive (Sắp có)',
+              items: {
+                'freeimage': 'cloud_in_use'.tr,
+                'gdrive': 'cloud_coming_soon'.tr,
               },
               onChanged: (value) {
                 if (value == 'gdrive') return;
@@ -506,7 +509,7 @@ class _GeneralSettings extends ConsumerWidget {
             _TextRow(
               title: 'FreeImage API Key',
               value: settings.freeImageApiKey,
-              placeholder: 'Nhập API key...',
+              placeholder: 'api_key_placeholder'.tr,
               onChanged: (value) => _update(
                 ref,
                 (current) => current.copyWith(freeImageApiKey: value),
@@ -520,9 +523,9 @@ class _GeneralSettings extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Tông màu chủ đề (Accent Color)',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+              Text(
+                'accent_color'.tr,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -633,10 +636,10 @@ class _ClipboardSettings extends ConsumerWidget {
         _SettingsGroup(
           children: [
             _SwitchRow(
-              title: 'Theo dõi clipboard',
+              title: 'clipboard_monitoring'.tr,
               subtitle: settings.monitoringEnabled
-                  ? 'ClipFlow đang ghi nhận nội dung mới.'
-                  : 'Lịch sử mới đang tạm dừng.',
+                  ? 'monitoring_active'.tr
+                  : 'monitoring_paused'.tr,
               value: settings.monitoringEnabled,
               onChanged: (value) async {
                 await _update(
@@ -649,7 +652,7 @@ class _ClipboardSettings extends ConsumerWidget {
               },
             ),
             _SwitchRow(
-              title: 'Không lưu nội dung trùng',
+              title: 'ignore_duplicates'.tr,
               value: settings.ignoreDuplicates,
               onChanged: (value) => _update(
                 ref,
@@ -657,12 +660,12 @@ class _ClipboardSettings extends ConsumerWidget {
               ),
             ),
             _PickerRow<DuplicateBehavior>(
-              title: 'Khi nội dung đã tồn tại',
+              title: 'duplicate_behavior'.tr,
               value: settings.duplicateBehavior,
-              items: const {
-                DuplicateBehavior.bringToTop: 'Đưa lên đầu',
-                DuplicateBehavior.createNew: 'Tạo item mới',
-                DuplicateBehavior.keepPosition: 'Giữ nguyên vị trí',
+              items: {
+                DuplicateBehavior.bringToTop: 'bring_to_top'.tr,
+                DuplicateBehavior.createNew: 'create_new'.tr,
+                DuplicateBehavior.keepPosition: 'keep_position'.tr,
               },
               onChanged: (value) => _update(
                 ref,
@@ -672,7 +675,7 @@ class _ClipboardSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Loại nội dung được lưu'),
+        CupertinoSectionLabel('allowed_content_types'.tr),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -690,13 +693,13 @@ class _ClipboardSettings extends ConsumerWidget {
           }).toList(),
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Giới hạn nội dung'),
+        CupertinoSectionLabel('content_limits'.tr),
         _SettingsGroup(
           children: [
             _NumberRow(
-              title: 'Độ dài tối thiểu',
+              title: 'min_length'.tr,
               value: settings.minTextLength,
-              suffix: 'ký tự',
+              suffix: 'chars_unit'.tr,
               min: 1,
               max: 1000,
               onChanged: (value) => _update(
@@ -705,9 +708,9 @@ class _ClipboardSettings extends ConsumerWidget {
               ),
             ),
             _NumberRow(
-              title: 'Độ dài tối đa',
+              title: 'max_length'.tr,
               value: settings.maxTextLength,
-              suffix: 'ký tự',
+              suffix: 'chars_unit'.tr,
               min: 1000,
               max: 1000000,
               onChanged: (value) => _update(
@@ -716,7 +719,7 @@ class _ClipboardSettings extends ConsumerWidget {
               ),
             ),
             _NumberRow(
-              title: 'Kích thước ảnh tối đa',
+              title: 'max_image_size'.tr,
               value: settings.maxImageMb,
               suffix: 'MB',
               min: 1,
@@ -750,13 +753,13 @@ class _PrivacySettings extends ConsumerWidget {
             ).primaryColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(13),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(CupertinoIcons.lock_shield),
-              SizedBox(width: 12),
+              const Icon(CupertinoIcons.lock_shield),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Nội dung clipboard chỉ được lưu trong cơ sở dữ liệu trên thiết bị này.',
+                  'privacy_db_notice'.tr,
                 ),
               ),
             ],
@@ -766,7 +769,7 @@ class _PrivacySettings extends ConsumerWidget {
         _SettingsGroup(
           children: [
             _SwitchRow(
-              title: 'Bỏ qua nội dung nhạy cảm',
+              title: 'ignore_sensitive'.tr,
               value: settings.ignoreSensitive,
               onChanged: (value) => _update(
                 ref,
@@ -774,8 +777,8 @@ class _PrivacySettings extends ConsumerWidget {
               ),
             ),
             _SwitchRow(
-              title: 'Bỏ qua mã OTP',
-              subtitle: 'Chuỗi chỉ gồm 4–8 chữ số.',
+              title: 'ignore_otp'.tr,
+              subtitle: 'ignore_otp_sub'.tr,
               value: settings.ignoreOtp,
               onChanged: settings.ignoreSensitive
                   ? (value) => _update(
@@ -785,7 +788,7 @@ class _PrivacySettings extends ConsumerWidget {
                   : null,
             ),
             _SwitchRow(
-              title: 'Bỏ qua token dài',
+              title: 'ignore_long_tokens'.tr,
               value: settings.ignoreLongToken,
               onChanged: settings.ignoreSensitive
                   ? (value) => _update(
@@ -799,16 +802,16 @@ class _PrivacySettings extends ConsumerWidget {
         const SizedBox(height: 22),
         Row(
           children: [
-            const CupertinoSectionLabel('Ứng dụng bị loại trừ'),
+            CupertinoSectionLabel('excluded_apps'.tr),
             const Spacer(),
             CupertinoButton(
               padding: const EdgeInsets.symmetric(horizontal: 6),
               onPressed: () => _addExcludedApp(context, ref),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(CupertinoIcons.add, size: 16),
-                  SizedBox(width: 4),
-                  Text('Thêm'),
+                  const Icon(CupertinoIcons.add, size: 16),
+                  const SizedBox(width: 4),
+                  Text('add_app'.tr),
                 ],
               ),
             ),
@@ -817,9 +820,9 @@ class _PrivacySettings extends ConsumerWidget {
         _SettingsGroup(
           children: settings.excludedApplications.isEmpty
               ? [
-                  const Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Text('Chưa có ứng dụng nào bị loại trừ.'),
+                  Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text('no_excluded_apps'.tr),
                   ),
                 ]
               : settings.excludedApplications.map((app) {
@@ -851,29 +854,27 @@ class _PrivacySettings extends ConsumerWidget {
     final action = await showCupertinoModalPopup<String>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('Thêm ứng dụng loại trừ'),
-        message: const Text(
-          'Nội dung sao chép từ ứng dụng bị loại trừ sẽ không được lưu vào lịch sử.',
-        ),
+        title: Text('add_excluded_app_title'.tr),
+        message: Text('add_excluded_app_msg'.tr),
         actions: [
           if (Platform.isMacOS) ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'running'),
-              child: const Text('Chọn từ ứng dụng đang chạy'),
+              child: Text('select_running_app'.tr),
             ),
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'finder'),
-              child: const Text('Chọn tệp ứng dụng (.app) từ Finder'),
+              child: Text('select_app_finder'.tr),
             ),
           ],
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'manual'),
-            child: const Text('Nhập tên ứng dụng thủ công'),
+            child: Text('enter_app_manual'.tr),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
       ),
     );
@@ -892,13 +893,13 @@ class _PrivacySettings extends ConsumerWidget {
       final apps = await desktop.getRunningApplications();
       if (!context.mounted) return;
       if (apps.isEmpty) {
-        showCupertinoNotice(context, 'Không tìm thấy ứng dụng đang chạy nào.');
+        showCupertinoNotice(context, 'running_apps_empty'.tr);
         return;
       }
       selectedAppName = await showCupertinoDialog<String>(
         context: context,
         builder: (context) => CupertinoAlertDialog(
-          title: const Text('Chọn ứng dụng đang chạy'),
+          title: Text('select_running_app_title'.tr),
           content: SizedBox(
             height: 240,
             width: 300,
@@ -945,8 +946,8 @@ class _PrivacySettings extends ConsumerWidget {
     } else if (action == 'manual') {
       selectedAppName = await _inputDialog(
         context,
-        title: 'Loại trừ ứng dụng',
-        placeholder: 'Ví dụ: Bitwarden',
+        title: 'exclude_app_title'.tr,
+        placeholder: 'exclude_app_placeholder'.tr,
       );
     }
 
@@ -972,13 +973,15 @@ class _StorageSettings extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const CupertinoSectionLabel('Giữ lịch sử'),
+        CupertinoSectionLabel('history_retention'.tr),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: [1, 7, 30, 90, 365, -1].map((days) {
             return CupertinoChoicePill(
-              label: days == -1 ? 'Không giới hạn' : '$days ngày',
+              label: days == -1
+                  ? 'unlimited'.tr
+                  : 'days_ago'.tr.replaceAll('@d', '$days'),
               selected: settings.retentionDays == days,
               onPressed: () async {
                 await _update(
@@ -997,16 +1000,16 @@ class _StorageSettings extends ConsumerWidget {
         _SettingsGroup(
           children: [
             _NumberRow(
-              title: 'Số item tối đa',
+              title: 'max_items'.tr,
               value: settings.maxItems,
-              suffix: 'item',
+              suffix: 'items_unit'.tr,
               min: 100,
               max: 100000,
               onChanged: (value) =>
                   _update(ref, (current) => current.copyWith(maxItems: value)),
             ),
             _NumberRow(
-              title: 'Dung lượng tối đa',
+              title: 'max_storage'.tr,
               value: settings.maxDatabaseMb,
               suffix: 'MB',
               min: 50,
@@ -1017,7 +1020,7 @@ class _StorageSettings extends ConsumerWidget {
               ),
             ),
             _SwitchRow(
-              title: 'Ưu tiên xóa hình ảnh',
+              title: 'delete_images_first'.tr,
               value: settings.deleteImagesFirst,
               onChanged: (value) => _update(
                 ref,
@@ -1027,11 +1030,11 @@ class _StorageSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Bảo vệ dữ liệu'),
+        CupertinoSectionLabel('data_protection'.tr),
         _SettingsGroup(
           children: [
             _SwitchRow(
-              title: 'Không tự xóa item đã ghim',
+              title: 'protect_pinned'.tr,
               value: settings.protectPinned,
               onChanged: (value) => _update(
                 ref,
@@ -1039,7 +1042,7 @@ class _StorageSettings extends ConsumerWidget {
               ),
             ),
             _SwitchRow(
-              title: 'Không tự xóa item trong collection',
+              title: 'protect_collections'.tr,
               value: settings.protectCollections,
               onChanged: (value) => _update(
                 ref,
@@ -1049,12 +1052,12 @@ class _StorageSettings extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        const CupertinoSectionLabel('Sao lưu & Khôi phục cấu hình'),
+        CupertinoSectionLabel('backup_restore_section'.tr),
         _SettingsGroup(
           children: [
             _SettingsTile(
-              title: 'Xuất cấu hình cá nhân (.clipflow)',
-              subtitle: 'Đóng gói toàn bộ cấu hình, theme & cài đặt có mật khẩu bảo vệ.',
+              title: 'export_config'.tr,
+              subtitle: 'export_config_sub'.tr,
               leading: const Icon(
                 CupertinoIcons.square_arrow_up,
                 color: CupertinoColors.activeBlue,
@@ -1062,12 +1065,12 @@ class _StorageSettings extends ConsumerWidget {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => _exportConfig(context, ref),
-                child: const Text('Xuất file'),
+                child: Text('export_button'.tr),
               ),
             ),
             _SettingsTile(
-              title: 'Nhập cấu hình (.clipflow)',
-              subtitle: 'Khôi phục cài đặt từ tệp cấu hình mã hóa .clipflow.',
+              title: 'import_config'.tr,
+              subtitle: 'import_config_sub'.tr,
               leading: const Icon(
                 CupertinoIcons.square_arrow_down,
                 color: CupertinoColors.activeGreen,
@@ -1075,7 +1078,7 @@ class _StorageSettings extends ConsumerWidget {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => _importConfig(context, ref),
-                child: const Text('Nhập file'),
+                child: Text('import_button'.tr),
               ),
             ),
           ],
@@ -1093,7 +1096,7 @@ class _StorageSettings extends ConsumerWidget {
                 children: [
                   const Icon(CupertinoIcons.archivebox),
                   const SizedBox(width: 12),
-                  const Expanded(child: Text('Dung lượng hiện tại')),
+                  Expanded(child: Text('current_storage_usage'.tr)),
                   Text('${megabytes.toStringAsFixed(1)} MB'),
                 ],
               ),
@@ -1106,9 +1109,9 @@ class _StorageSettings extends ConsumerWidget {
           child: CupertinoButton(
             color: CupertinoColors.systemRed.withValues(alpha: 0.12),
             onPressed: () => _clearHistory(context, ref),
-            child: const Text(
-              'Xóa lịch sử…',
-              style: TextStyle(color: CupertinoColors.systemRed),
+            child: Text(
+              'clear_history'.tr,
+              style: const TextStyle(color: CupertinoColors.systemRed),
             ),
           ),
         ),
@@ -1124,23 +1127,23 @@ class _StorageSettings extends ConsumerWidget {
       context: context,
       builder: (dialogContext) {
         return CupertinoAlertDialog(
-          title: const Text('Xuất cấu hình cá nhân'),
+          title: Text('export_dialog_title'.tr),
           content: Column(
             children: [
               const SizedBox(height: 10),
-              const Text('Nhập mật khẩu để bảo vệ tệp sao lưu .clipflow:'),
+              Text('export_dialog_msg'.tr),
               const SizedBox(height: 12),
               CupertinoTextField(
                 controller: passwordController,
                 obscureText: true,
-                placeholder: 'Mật khẩu',
+                placeholder: 'password'.tr,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
               const SizedBox(height: 8),
               CupertinoTextField(
                 controller: confirmController,
                 obscureText: true,
-                placeholder: 'Xác nhận mật khẩu',
+                placeholder: 'confirm_password'.tr,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ],
@@ -1148,7 +1151,7 @@ class _StorageSettings extends ConsumerWidget {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext, null),
-              child: const Text('Hủy'),
+              child: Text('cancel'.tr),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
@@ -1156,16 +1159,16 @@ class _StorageSettings extends ConsumerWidget {
                 final p1 = passwordController.text.trim();
                 final p2 = confirmController.text.trim();
                 if (p1.isEmpty) {
-                  showCupertinoNotice(dialogContext, 'Mật khẩu không được để trống.');
+                  showCupertinoNotice(dialogContext, 'password_empty'.tr);
                   return;
                 }
                 if (p1 != p2) {
-                  showCupertinoNotice(dialogContext, 'Mật khẩu xác nhận không khớp.');
+                  showCupertinoNotice(dialogContext, 'password_mismatch'.tr);
                   return;
                 }
                 Navigator.pop(dialogContext, p1);
               },
-              child: const Text('Xuất file'),
+              child: Text('export_button'.tr),
             ),
           ],
         );
@@ -1191,9 +1194,9 @@ class _StorageSettings extends ConsumerWidget {
 
     if (context.mounted) {
       if (result.isSuccess) {
-        showCupertinoNotice(context, 'Đã xuất cấu hình thành công!');
+        showCupertinoNotice(context, 'export_success'.tr);
       } else {
-        showCupertinoNotice(context, result.errorMessage ?? 'Xuất cấu hình thất bại.');
+        showCupertinoNotice(context, result.errorMessage ?? 'export_failed'.tr);
       }
     }
   }
@@ -1211,16 +1214,16 @@ class _StorageSettings extends ConsumerWidget {
       context: context,
       builder: (dialogContext) {
         return CupertinoAlertDialog(
-          title: const Text('Nhập cấu hình cá nhân'),
+          title: Text('import_dialog_title'.tr),
           content: Column(
             children: [
               const SizedBox(height: 10),
-              const Text('Nhập mật khẩu của tệp .clipflow để giải mã:'),
+              Text('import_dialog_msg'.tr),
               const SizedBox(height: 12),
               CupertinoTextField(
                 controller: passwordController,
                 obscureText: true,
-                placeholder: 'Mật khẩu giải mã',
+                placeholder: 'decrypt_password'.tr,
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               ),
             ],
@@ -1228,19 +1231,19 @@ class _StorageSettings extends ConsumerWidget {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(dialogContext, null),
-              child: const Text('Hủy'),
+              child: Text('cancel'.tr),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () {
                 final p = passwordController.text.trim();
                 if (p.isEmpty) {
-                  showCupertinoNotice(dialogContext, 'Mật khẩu không được để trống.');
+                  showCupertinoNotice(dialogContext, 'password_empty'.tr);
                   return;
                 }
                 Navigator.pop(dialogContext, p);
               },
-              child: const Text('Nhập cấu hình'),
+              child: Text('import_button'.tr),
             ),
           ],
         );
@@ -1262,12 +1265,12 @@ class _StorageSettings extends ConsumerWidget {
           .read(settingsControllerProvider.notifier)
           .update((_) => result.settings!);
       if (context.mounted) {
-        showCupertinoNotice(context, 'Đã nhập và áp dụng cấu hình thành công!');
+        showCupertinoNotice(context, 'import_success'.tr);
       }
     } else {
       showCupertinoNotice(
         context,
-        result.errorMessage ?? 'Nhập cấu hình thất bại.',
+        result.errorMessage ?? 'import_failed'.tr,
       );
     }
   }
@@ -1276,17 +1279,17 @@ class _StorageSettings extends ConsumerWidget {
     final confirmed = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: const Text('Xóa lịch sử clipboard?'),
-        content: const Text('Các item đã ghim sẽ được giữ lại.'),
+        title: Text('clear_history_title'.tr),
+        content: Text('clear_history_msg'.tr),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+            child: Text('cancel'.tr),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Xóa'),
+            child: Text('delete'.tr),
           ),
         ],
       ),
@@ -1309,8 +1312,8 @@ class _ShortcutSettings extends ConsumerWidget {
         _SettingsGroup(
           children: [
             _ShortcutTile(
-              title: 'Mở ClipFlow',
-              subtitle: 'Phím tắt toàn hệ thống',
+              title: 'open_quick_panel'.tr,
+              subtitle: 'shortcuts_title'.tr,
               hotKey: decodeShortcut(
                 settings.openPanelShortcut,
                 ShortcutAction.openPanel,
@@ -1319,7 +1322,7 @@ class _ShortcutSettings extends ConsumerWidget {
                   _editShortcut(context, ref, ShortcutAction.openPanel),
             ),
             _ShortcutTile(
-              title: 'Focus tìm kiếm',
+              title: 'focus_search'.tr,
               hotKey: decodeShortcut(
                 settings.focusSearchShortcut,
                 ShortcutAction.focusSearch,
@@ -1328,7 +1331,7 @@ class _ShortcutSettings extends ConsumerWidget {
                   _editShortcut(context, ref, ShortcutAction.focusSearch),
             ),
             _ShortcutTile(
-              title: 'Ghim / bỏ ghim',
+              title: 'toggle_pin'.tr,
               hotKey: decodeShortcut(
                 settings.togglePinShortcut,
                 ShortcutAction.togglePin,
@@ -1336,12 +1339,12 @@ class _ShortcutSettings extends ConsumerWidget {
               onTap: () =>
                   _editShortcut(context, ref, ShortcutAction.togglePin),
             ),
-            const _SettingsTile(
-              title: 'Chọn và sao chép',
-              trailing: _KeyCaps(label: '↑  ↓  Enter'),
+            _SettingsTile(
+              title: 'select_and_copy'.tr,
+              trailing: const _KeyCaps(label: '↑  ↓  Enter'),
             ),
             _ShortcutTile(
-              title: 'Xóa item',
+              title: 'delete_item'.tr,
               hotKey: decodeShortcut(
                 settings.deleteItemShortcut,
                 ShortcutAction.deleteItem,
@@ -1356,12 +1359,12 @@ class _ShortcutSettings extends ConsumerWidget {
           alignment: Alignment.centerRight,
           child: CupertinoButton(
             onPressed: () => _resetShortcuts(context, ref),
-            child: const Text('Khôi phục mặc định'),
+            child: Text('restore_defaults'.tr),
           ),
         ),
         const SizedBox(height: 12),
         Text(
-          'Nhấn vào một hàng để ghi tổ hợp mới. Phím mở ClipFlow được đăng ký toàn hệ thống ngay sau khi lưu.',
+          'shortcut_hint'.tr,
           style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText), height: 1.5),
         ),
       ],
@@ -1392,7 +1395,7 @@ class _ShortcutSettings extends ConsumerWidget {
         ),
     }..remove(action);
     if (signatures.containsValue(shortcutSignature(recorded))) {
-      showCupertinoNotice(context, 'Tổ hợp đang được dùng cho thao tác khác.');
+      showCupertinoNotice(context, 'shortcut_conflict'.tr);
       return;
     }
     if (action == ShortcutAction.openPanel) {
@@ -1401,14 +1404,14 @@ class _ShortcutSettings extends ConsumerWidget {
           .registerGlobalHotKey(recorded);
       if (!registered) {
         if (context.mounted) {
-          showCupertinoNotice(context, 'Tổ hợp đang bị ứng dụng khác sử dụng.');
+          showCupertinoNotice(context, 'shortcut_used_by_other_app'.tr);
         }
         return;
       }
     }
     await _update(ref, (current) => _withShortcut(current, action, recorded));
     if (context.mounted) {
-      showCupertinoNotice(context, 'Đã lưu ${shortcutLabel(recorded)}.');
+      showCupertinoNotice(context, 'saved_shortcut'.tr.replaceAll('@s', shortcutLabel(recorded)));
     }
   }
 
@@ -1419,7 +1422,7 @@ class _ShortcutSettings extends ConsumerWidget {
         .registerGlobalHotKey(open);
     if (!registered) {
       if (context.mounted) {
-        showCupertinoNotice(context, 'Không thể đăng ký phím mặc định.');
+        showCupertinoNotice(context, 'shortcut_used_by_other_app'.tr);
       }
       return;
     }
@@ -1440,7 +1443,7 @@ class _ShortcutSettings extends ConsumerWidget {
       ),
     );
     if (context.mounted) {
-      showCupertinoNotice(context, 'Đã khôi phục phím tắt mặc định.');
+      showCupertinoNotice(context, 'reset_shortcuts_success'.tr);
     }
   }
 }
@@ -1531,12 +1534,12 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
   Widget build(BuildContext context) {
     final value = _recorded ?? widget.initialHotKey;
     return CupertinoAlertDialog(
-      title: const Text('Ghi phím tắt mới'),
+      title: Text('record_shortcut_title'.tr),
       content: Padding(
         padding: const EdgeInsets.only(top: 14),
         child: Column(
           children: [
-            const Text('Nhấn tổ hợp bạn muốn sử dụng.'),
+            Text('record_shortcut_msg'.tr),
             const SizedBox(height: 14),
             CupertinoSurface(
               padding: const EdgeInsets.all(14),
@@ -1556,15 +1559,15 @@ class _ShortcutRecorderDialogState extends State<_ShortcutRecorderDialog> {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
-          child: const Text('Hủy'),
+          child: Text('cancel'.tr),
         ),
         CupertinoDialogAction(
           onPressed: () {
             if (!isValidShortcut(value, widget.action)) {
               setState(() {
                 _error = widget.action == ShortcutAction.openPanel
-                    ? 'Phím toàn hệ thống cần một phím bổ trợ.'
-                    : 'Hãy chọn một phím không phải phím bổ trợ.';
+                    ? 'system_hotkey_needs_modifier'.tr
+                    : 'choose_non_modifier'.tr;
               });
               return;
             }
@@ -1605,7 +1608,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
     if (info == null) {
       setState(() {
         _checkingUpdate = false;
-        _updateStatus = 'Không thể kiểm tra cập nhật. Vui lòng thử lại sau.';
+        _updateStatus = 'update_check_failed'.tr;
       });
       return;
     }
@@ -1614,8 +1617,8 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
       _checkingUpdate = false;
       _updateInfo = info;
       _updateStatus = info.hasUpdate
-          ? 'Có phiên bản mới (${info.latestVersion})!'
-          : 'Bạn đang ở phiên bản mới nhất (v${info.currentVersion}).';
+          ? 'update_available_version'.tr.replaceAll('@v', info.latestVersion)
+          : 'latest_version_msg'.tr.replaceAll('@v', info.currentVersion);
     });
   }
 
@@ -1634,7 +1637,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
     setState(() {
       _isDownloading = true;
       _downloadProgress = 0.0;
-      _updateStatus = 'Đang tải bản cập nhật... (0%)';
+      _updateStatus = 'downloading_update'.tr.replaceAll('@p', '0');
     });
 
     const service = UpdateService();
@@ -1645,7 +1648,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
           setState(() {
             _downloadProgress = progress;
             final percent = (progress * 100).toInt();
-            _updateStatus = 'Đang tải bản cập nhật... ($percent%)';
+            _updateStatus = 'downloading_update'.tr.replaceAll('@p', '$percent');
           });
         }
       },
@@ -1655,7 +1658,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
     if (!success) {
       setState(() {
         _isDownloading = false;
-        _updateStatus = 'Không thể tự động cài đặt. Đang mở trang phát hành...';
+        _updateStatus = 'cannot_auto_install'.tr;
       });
       await desktop.openUrl(
         info.releasePageUrl ?? 'https://github.com/vqh2602/paste_plus/releases',
@@ -1687,7 +1690,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
           ),
           const SizedBox(height: 5),
           Text(
-            'Phiên bản ${UpdateService.currentVersion}',
+            'version_label'.tr.replaceAll('@v', UpdateService.currentVersion),
             style: TextStyle(
               color: resolveColor(context, ClipFlowColors.secondaryText),
             ),
@@ -1695,10 +1698,10 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
           const SizedBox(height: 18),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 440),
-            child: const Text(
-              'Trình quản lý clipboard riêng tư, local-first và được thiết kế cho trải nghiệm macOS.',
+            child: Text(
+              'app_description'.tr,
               textAlign: TextAlign.center,
-              style: TextStyle(height: 1.5),
+              style: const TextStyle(height: 1.5),
             ),
           ),
           const SizedBox(height: 28),
@@ -1707,7 +1710,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
             child: _SettingsGroup(
               children: [
                 _SettingsTile(
-                  title: 'Mã nguồn trên GitHub',
+                  title: 'github_source'.tr,
                   subtitle: 'github.com/vqh2602/paste_plus',
                   leading: const Icon(
                     CupertinoIcons.square_arrow_up_on_square,
@@ -1717,14 +1720,14 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     onPressed: () =>
                         desktop.openUrl('https://github.com/vqh2602/paste_plus'),
-                    child: const Text('Truy cập'),
+                    child: Text('visit'.tr),
                   ),
                 ),
                 _SettingsTile(
-                  title: 'Kiểm tra cập nhật',
+                  title: 'check_updates'.tr,
                   subtitle:
                       _updateStatus ??
-                      'Kiểm tra phiên bản mới từ GitHub Release',
+                      'check_updates'.tr,
                   leading: Icon(
                     hasUpdate
                         ? CupertinoIcons.arrow_down_circle_fill
@@ -1759,7 +1762,7 @@ class _AboutSettingsState extends ConsumerState<_AboutSettings> {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           onPressed:
                               hasUpdate ? _downloadAndInstall : _checkUpdate,
-                          child: Text(hasUpdate ? 'Cập nhật ngay' : 'Kiểm tra'),
+                          child: Text(hasUpdate ? 'update_available'.tr : 'check'.tr),
                         ),
                 ),
               ],
@@ -2153,12 +2156,12 @@ String _typeName(ClipboardContentType type) => switch (type) {
 };
 
 String _label(_SettingsPage page) => switch (page) {
-  _SettingsPage.general => 'Chung',
-  _SettingsPage.clipboard => 'Clipboard',
-  _SettingsPage.privacy => 'Quyền riêng tư',
-  _SettingsPage.storage => 'Lưu trữ',
-  _SettingsPage.shortcuts => 'Phím tắt',
-  _SettingsPage.about => 'Giới thiệu',
+  _SettingsPage.general => 'tab_general'.tr,
+  _SettingsPage.clipboard => 'tab_clipboard'.tr,
+  _SettingsPage.privacy => 'tab_privacy'.tr,
+  _SettingsPage.storage => 'tab_storage'.tr,
+  _SettingsPage.shortcuts => 'tab_shortcuts'.tr,
+  _SettingsPage.about => 'tab_about'.tr,
 };
 
 IconData _icon(_SettingsPage page) => switch (page) {
