@@ -405,9 +405,10 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<void> hideQuickPanel() async {
-    if (!isDesktop || _windowMode != DesktopWindowMode.quickPanel) return;
     _windowMode = DesktopWindowMode.hidden;
-    await windowManager.hide();
+    if (isDesktop) {
+      await windowManager.hide();
+    }
     _onQuickPanelDismissed?.call();
   }
 

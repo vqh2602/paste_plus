@@ -73,3 +73,41 @@ class AppTheme {
     );
   }
 }
+
+class ClipFlowColors {
+  const ClipFlowColors._();
+
+  static const surface = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFFFFFFFF),
+    darkColor: Color(0xFF1E1F26),
+  );
+
+  static const elevatedSurface = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFFF9F9FB),
+    darkColor: Color(0xFF24252C),
+  );
+
+  static const sidebar = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFFF6F6F9),
+    darkColor: Color(0xFF16171D),
+  );
+
+  static const border = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFFE5E5EA),
+    darkColor: Color(0xFF2C2D35),
+  );
+
+  static const text = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFF000000),
+    darkColor: Color(0xFFFFFFFF),
+  );
+
+  static const secondaryText = CupertinoDynamicColor.withBrightness(
+    color: Color(0xFF8E8E93),
+    darkColor: Color(0xFF98989D),
+  );
+}
+
+Color resolveColor(BuildContext context, CupertinoDynamicColor color) {
+  return color.resolveFrom(context);
+}

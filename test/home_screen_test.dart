@@ -210,6 +210,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Xóa mục này?'), findsOneWidget);
     await tester.tap(find.widgetWithText(CupertinoDialogAction, 'Xóa'));
+    await tester.pump(const Duration(seconds: 2));
     await tester.pumpAndSettle();
     expect(await repository.getItems(), isEmpty);
     expect(find.text('Clipboard của bạn đang trống'), findsOneWidget);
