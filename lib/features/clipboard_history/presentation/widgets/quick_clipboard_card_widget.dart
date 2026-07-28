@@ -52,9 +52,9 @@ class QuickClipboardCardWidget extends ConsumerWidget {
             boxShadow: selected
                 ? [
                     BoxShadow(
-                      color: CupertinoTheme.of(context)
-                          .primaryColor
-                          .withValues(alpha: 0.35),
+                      color: CupertinoTheme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.35),
                       blurRadius: 14,
                       offset: const Offset(0, 4),
                     ),
@@ -123,7 +123,8 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                             Expanded(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(9),
-                                child: (item.imagePath != null &&
+                                child:
+                                    (item.imagePath != null &&
                                         File(item.imagePath!).existsSync())
                                     ? Image.file(
                                         File(item.imagePath!),
@@ -153,56 +154,61 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           ],
                         )
                       : isImageUrl(item.content)
-                          ? Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(9),
-                                    child: CachedNetworkImage(
-                                      url: item.content,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(9),
+                                child: CachedNetworkImage(
+                                  url: item.content,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
                                 ),
-                                const SizedBox(height: 4),
-                                HighlightedText(
-                                  text: item.content,
-                                  query: query,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: ClipFlowColors.secondaryText,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : HighlightedText(
-                              text: item.content,
-                              query: query,
-                              maxLines: 6,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 13,
-                                height: 1.45,
-                                color: item.contentType == ClipboardContentType.url
-                                    ? CupertinoColors.activeBlue
-                                    : null,
-                                decoration: item.contentType == ClipboardContentType.url
-                                    ? TextDecoration.underline
-                                    : TextDecoration.none,
-                                decorationColor: item.contentType == ClipboardContentType.url
-                                    ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
-                                    : null,
-                                fontFamily:
-                                    item.contentType == ClipboardContentType.code ||
-                                            item.contentType == ClipboardContentType.json
-                                        ? 'monospace'
-                                        : null,
                               ),
                             ),
+                            const SizedBox(height: 4),
+                            HighlightedText(
+                              text: item.content,
+                              query: query,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ],
+                        )
+                      : HighlightedText(
+                          text: item.content,
+                          query: query,
+                          maxLines: 6,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.45,
+                            color: item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue
+                                : null,
+                            decoration:
+                                item.contentType == ClipboardContentType.url
+                                ? TextDecoration.underline
+                                : TextDecoration.none,
+                            decorationColor:
+                                item.contentType == ClipboardContentType.url
+                                ? CupertinoColors.activeBlue.withValues(
+                                    alpha: 0.4,
+                                  )
+                                : null,
+                            fontFamily:
+                                item.contentType == ClipboardContentType.code ||
+                                    item.contentType ==
+                                        ClipboardContentType.json
+                                ? 'monospace'
+                                : null,
+                          ),
+                        ),
                 ),
               ),
               Padding(
@@ -251,9 +257,11 @@ class QuickClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.url => CupertinoIcons.link,
     ClipboardContentType.email => CupertinoIcons.mail,
     ClipboardContentType.phone => CupertinoIcons.phone,
-    ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.code =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.color => CupertinoIcons.color_filter,
-    ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.json =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };

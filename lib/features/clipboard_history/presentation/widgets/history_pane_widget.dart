@@ -34,13 +34,15 @@ class HistoryPaneWidget extends ConsumerWidget {
     ClipboardItem item,
     ValueChanged<ClipboardItem> onDelete,
     ValueChanged<ClipboardItem> onAddToCollection,
-  ) onShowItemActions;
+  )
+  onShowItemActions;
   final VoidCallback? onOpenSidebar;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(historyControllerProvider);
     final historyNotifier = ref.read(historyControllerProvider.notifier);
+    final settings = ref.watch(settingsControllerProvider);
     final items = state.visibleItems;
 
     return Column(
@@ -71,6 +73,28 @@ class HistoryPaneWidget extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (settings.aiEnabled) ...[
+                CupertinoIconControl(
+                  key: const Key('history-ai-button'),
+                  icon: CupertinoIcons.sparkles,
+                  color: CupertinoColors.activeBlue,
+                  onPressed: () async {
+                    final selectedItem =
+                        state.hasExplicitSelection &&
+                            state.visibleItems.isNotEmpty
+                        ? state.visibleItems.firstWhere(
+                            (item) => item.id == state.selectedItemId,
+                            orElse: () => state.visibleItems.first,
+                          )
+                        : null;
+                    ref
+                        .read(aiControllerProvider.notifier)
+                        .setClipboardContext(selectedItem);
+                    await ref.read(desktopIntegrationProvider).showAiWindow();
+                  },
+                ),
+                const SizedBox(width: 2),
+              ],
               CupertinoIconControl(
                 icon: CupertinoIcons.slider_horizontal_3,
                 color: state.typeFilter != null
@@ -123,17 +147,17 @@ class HistoryPaneWidget extends ConsumerWidget {
     );
   }
 
-  void _chooseType(
-    BuildContext context,
-    ClipboardHistoryController notifier,
-  ) {
+  void _chooseType(BuildContext context, ClipboardHistoryController notifier) {
     showCupertinoModalPopup<ClipboardContentType>(
       context: context,
       builder: (context) => CupertinoActionSheet(
         title: Text('filter_by_type'.tr),
         actions: [
           CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              notifier.filterByType(null);
+              Navigator.pop(context);
+            },
             child: Text('all_types'.tr),
           ),
           ...ClipboardContentType.values.map((type) {
@@ -183,7 +207,9 @@ class EmptyStateWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            hasQuery ? 'try_different_search'.tr : 'clipboard_empty_subtitle'.tr,
+            hasQuery
+                ? 'try_different_search'.tr
+                : 'clipboard_empty_subtitle'.tr,
             style: TextStyle(
               fontSize: 13,
               color: resolveColor(context, ClipFlowColors.secondaryText),

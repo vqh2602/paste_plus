@@ -33,7 +33,8 @@ class AiModelInfo {
     AiModelInfo(
       id: 'deepseek-r1-1.5b',
       name: 'DeepSeek-R1-Distill-Qwen-1.5B (Thinking)',
-      description: 'Model suy luận (thinking) nhẹ nhất, tốc độ phản hồi cực nhanh, phù hợp cho máy cấu hình vừa.',
+      description:
+          'Model suy luận (thinking) nhẹ nhất, tốc độ phản hồi cực nhanh, phù hợp cho máy cấu hình vừa.',
       parameterSize: '1.5B',
       fileSizeMb: 1120,
       downloadUrl:
@@ -43,17 +44,20 @@ class AiModelInfo {
     AiModelInfo(
       id: 'deepseek-r1-7b',
       name: 'DeepSeek-R1-Distill-Qwen-7B (Thinking)',
-      description: 'Model suy luận chuyên sâu thế hệ mới, phân tích logic cao, giải thích code và lỗi kỹ thuật vượt trội.',
+      description:
+          'Model suy luận chuyên sâu thế hệ mới, phân tích logic cao, giải thích code và lỗi kỹ thuật vượt trội.',
       parameterSize: '7B',
       fileSizeMb: 4480,
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf',
-      recommendedFor: 'Phân tích code, giải thích bug, trích xuất dữ liệu phức tạp',
+      recommendedFor:
+          'Phân tích code, giải thích bug, trích xuất dữ liệu phức tạp',
     ),
     AiModelInfo(
       id: 'deepseek-r1-8b',
       name: 'DeepSeek-R1-Distill-Llama-8B (Thinking)',
-      description: 'Model suy luận dựa trên Llama-3 architecture, độ chính xác cao khi xử lý văn bản dài và lập luận phức tạp.',
+      description:
+          'Model suy luận dựa trên Llama-3 architecture, độ chính xác cao khi xử lý văn bản dài và lập luận phức tạp.',
       parameterSize: '8B',
       fileSizeMb: 4920,
       downloadUrl:
@@ -63,7 +67,8 @@ class AiModelInfo {
     AiModelInfo(
       id: 'qwen2.5-coder-7b',
       name: 'Qwen2.5-Coder-7B-Instruct (Thinking / Code)',
-      description: 'Model chuyên biệt về Code & Logic suy luận, cực kỳ mạnh mẽ trong việc đơn giản hóa code và refactor.',
+      description:
+          'Model chuyên biệt về Code & Logic suy luận, cực kỳ mạnh mẽ trong việc đơn giản hóa code và refactor.',
       parameterSize: '7B',
       fileSizeMb: 4680,
       downloadUrl:
@@ -73,7 +78,8 @@ class AiModelInfo {
     AiModelInfo(
       id: 'qwen2.5-1.5b',
       name: 'Qwen2.5-1.5B-Instruct (Thinking)',
-      description: 'Model siêu nhẹ chạy trực tiếp trên RAM thấp, đa ngôn ngữ mượt mà từ Việt sang Anh và ngược lại.',
+      description:
+          'Model siêu nhẹ chạy trực tiếp trên RAM thấp, đa ngôn ngữ mượt mà từ Việt sang Anh và ngược lại.',
       parameterSize: '1.5B',
       fileSizeMb: 980,
       downloadUrl:

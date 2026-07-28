@@ -34,7 +34,8 @@ class ClipboardCardWidget extends ConsumerWidget {
     ClipboardItem item,
     ValueChanged<ClipboardItem> onDelete,
     ValueChanged<ClipboardItem> onAddToCollection,
-  ) onShowItemActions;
+  )
+  onShowItemActions;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -135,7 +136,8 @@ class ClipboardCardWidget extends ConsumerWidget {
             if (isImage) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: (item.imagePath != null &&
+                child:
+                    (item.imagePath != null &&
                         File(item.imagePath!).existsSync())
                     ? Image.file(
                         File(item.imagePath!),
@@ -199,7 +201,8 @@ class ClipboardCardWidget extends ConsumerWidget {
                   decoration: item.contentType == ClipboardContentType.url
                       ? TextDecoration.underline
                       : TextDecoration.none,
-                  fontFamily: item.contentType == ClipboardContentType.code ||
+                  fontFamily:
+                      item.contentType == ClipboardContentType.code ||
                           item.contentType == ClipboardContentType.json
                       ? 'monospace'
                       : null,
@@ -229,9 +232,11 @@ class ClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.url => CupertinoIcons.link,
     ClipboardContentType.email => CupertinoIcons.mail,
     ClipboardContentType.phone => CupertinoIcons.phone,
-    ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.code =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.color => CupertinoIcons.color_filter,
-    ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.json =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };

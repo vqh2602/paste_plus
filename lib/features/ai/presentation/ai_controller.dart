@@ -56,16 +56,14 @@ class AiState {
 }
 
 class AiController extends StateNotifier<AiState> {
-  AiController(
-    this._downloaderService,
-    this._localEngine,
-    this._ref,
-  ) : super(
-          AiState(
-            selectedModelId:
-                _ref.read(settingsControllerProvider).selectedAiModel,
-          ),
-        ) {
+  AiController(this._downloaderService, this._localEngine, this._ref)
+    : super(
+        AiState(
+          selectedModelId: _ref
+              .read(settingsControllerProvider)
+              .selectedAiModel,
+        ),
+      ) {
     _checkDownloadedModels();
   }
 
@@ -82,9 +80,12 @@ class AiController extends StateNotifier<AiState> {
         newStates[model.id] = DownloadState.downloaded;
       } else {
         // Check if a partial download (.part file) exists
-        final hasPartial = await _downloaderService.hasPartialDownload(model.id);
-        newStates[model.id] =
-            hasPartial ? DownloadState.paused : DownloadState.notDownloaded;
+        final hasPartial = await _downloaderService.hasPartialDownload(
+          model.id,
+        );
+        newStates[model.id] = hasPartial
+            ? DownloadState.paused
+            : DownloadState.notDownloaded;
       }
     }
     state = state.copyWith(downloadStates: newStates);
@@ -92,9 +93,9 @@ class AiController extends StateNotifier<AiState> {
 
   void selectModel(String modelId) {
     state = state.copyWith(selectedModelId: modelId);
-    _ref.read(settingsControllerProvider.notifier).update(
-          (current) => current.copyWith(selectedAiModel: modelId),
-        );
+    _ref
+        .read(settingsControllerProvider.notifier)
+        .update((current) => current.copyWith(selectedAiModel: modelId));
   }
 
   void startDownload(AiModelInfo model) {
@@ -175,6 +176,13 @@ class AiController extends StateNotifier<AiState> {
     if (state.isGenerating) return;
 
     final activeContext = contextItem ?? state.activeClipboardContext;
+    final clipboardHistory = activeContext == null
+        ? _ref
+              .read(historyControllerProvider)
+              .items
+              .where((item) => !item.isSensitive)
+              .toList(growable: false)
+        : const <ClipboardItem>[];
     final userMsg = AiChatMessage(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       role: AiMessageRole.user,
@@ -196,15 +204,13 @@ class AiController extends StateNotifier<AiState> {
     );
 
     final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
-    state = state.copyWith(
-      chatMessages: updatedMessages,
-      isGenerating: true,
-    );
+    state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
     final stream = _localEngine.processStream(
       model: state.selectedModel,
       prompt: userText,
       clipboardContext: activeContext,
+      clipboardHistory: clipboardHistory,
       featureGroup: featureGroup,
       selectedOption: selectedOption,
     );
@@ -230,10 +236,7 @@ class AiController extends StateNotifier<AiState> {
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
       if (index != -1) {
         currentMsgs[index].isThinking = false;
-        state = state.copyWith(
-          chatMessages: currentMsgs,
-          isGenerating: false,
-        );
+        state = state.copyWith(chatMessages: currentMsgs, isGenerating: false);
       }
     }
   }

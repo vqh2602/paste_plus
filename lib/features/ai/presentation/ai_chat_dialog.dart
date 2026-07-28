@@ -13,14 +13,14 @@ import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
 class AiChatDialog extends ConsumerStatefulWidget {
-  const AiChatDialog({
-    super.key,
-    this.initialContextItem,
-  });
+  const AiChatDialog({super.key, this.initialContextItem});
 
   final ClipboardItem? initialContextItem;
 
-  static Future<void> show(BuildContext context, {ClipboardItem? contextItem}) async {
+  static Future<void> show(
+    BuildContext context, {
+    ClipboardItem? contextItem,
+  }) async {
     await showCupertinoModalPopup<void>(
       context: context,
       barrierDismissible: true,
@@ -42,12 +42,9 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.initialContextItem != null) {
-        ref.read(aiControllerProvider.notifier).setClipboardContext(widget.initialContextItem);
-      } else {
-        final historyState = ref.read(historyControllerProvider);
-        if (historyState.visibleItems.isNotEmpty) {
-          ref.read(aiControllerProvider.notifier).setClipboardContext(historyState.visibleItems.first);
-        }
+        ref
+            .read(aiControllerProvider.notifier)
+            .setClipboardContext(widget.initialContextItem);
       }
     });
   }
@@ -85,7 +82,9 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
     final aiState = ref.read(aiControllerProvider);
     final promptText = 'Thực hiện "${group.title}" với tùy chọn "$option".';
 
-    await ref.read(aiControllerProvider.notifier).sendUserMessage(
+    await ref
+        .read(aiControllerProvider.notifier)
+        .sendUserMessage(
           promptText,
           featureGroup: group,
           selectedOption: option,
@@ -123,6 +122,9 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
   @override
   Widget build(BuildContext context) {
     final aiState = ref.watch(aiControllerProvider);
+    final historyItemCount = ref.watch(
+      historyControllerProvider.select((state) => state.items.length),
+    );
     final size = MediaQuery.sizeOf(context);
     final compact = size.width < 760;
 
@@ -157,12 +159,19 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                       ),
                       const SizedBox(width: 10),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
-                          color: CupertinoColors.activeGreen.withValues(alpha: 0.15),
+                          color: CupertinoColors.activeGreen.withValues(
+                            alpha: 0.15,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: CupertinoColors.activeGreen.withValues(alpha: 0.3),
+                            color: CupertinoColors.activeGreen.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                         ),
                         child: Row(
@@ -210,93 +219,116 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                 if (!aiState.hasAnyDownloadedModel)
                   const Expanded(child: AiNoModelOverlay())
                 else ...[
+                  // Active Clipboard Context Banner
+                  if (aiState.activeClipboardContext != null)
+                    AiContextBannerWidget(
+                      item: aiState.activeClipboardContext!,
+                      onClear: () {
+                        ref
+                            .read(aiControllerProvider.notifier)
+                            .setClipboardContext(null);
+                      },
+                    ),
 
-                // Active Clipboard Context Banner
-                if (aiState.activeClipboardContext != null)
-                  AiContextBannerWidget(
-                    item: aiState.activeClipboardContext!,
-                    onClear: () {
-                      ref
-                          .read(aiControllerProvider.notifier)
-                          .setClipboardContext(null);
-                    },
+                  if (aiState.activeClipboardContext == null)
+                    AiHistoryContextBannerWidget(itemCount: historyItemCount),
+
+                  const CupertinoDivider(),
+
+                  // Horizontal Preset Action Pills Bar
+                  AiPresetPillsWidget(
+                    onSelectGroup: (group) => _showFeatureOptionsPicker(group),
                   ),
+                  const CupertinoDivider(),
 
-                if (aiState.activeClipboardContext != null) const CupertinoDivider(),
-
-                // Horizontal Preset Action Pills Bar
-                AiPresetPillsWidget(
-                  onSelectGroup: (group) => _showFeatureOptionsPicker(group),
-                ),
-                const CupertinoDivider(),
-
-                // Chat History Messages List
-                Expanded(
-                  child: aiState.chatMessages.isEmpty
-                      ? _AiWelcomeState(
-                          model: aiState.selectedModel,
-                          onActionSelected: (group) => _showFeatureOptionsPicker(group),
-                        )
-                      : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: aiState.chatMessages.length,
-                          itemBuilder: (context, index) {
-                            final msg = aiState.chatMessages[index];
-                            return AiMessageTileWidget(
-                              message: msg,
-                              onCopy: (content) {
-                                Clipboard.setData(ClipboardData(text: content));
-                                showCupertinoNotice(context, 'copied'.tr);
-                              },
-                              onPaste: (content) async {
-                                final desktop = ref.read(desktopIntegrationProvider);
-                                await Clipboard.setData(ClipboardData(text: content));
-                                if (!context.mounted) return;
-                                Navigator.pop(context);
-                                await desktop.hideQuickPanel();
-                                await desktop.pasteToPreviousApplication();
-                              },
-                            );
-                          },
-                        ),
-                ),
-
-                const CupertinoDivider(),
-
-                // Input Bar
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: CupertinoTextField(
-                          controller: _inputController,
-                          focusNode: _focusNode,
-                          placeholder: 'ai_send_prompt'.tr,
-                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: resolveColor(context, ClipFlowColors.surface),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: resolveColor(context, ClipFlowColors.border),
-                            ),
+                  // Chat History Messages List
+                  Expanded(
+                    child: aiState.chatMessages.isEmpty
+                        ? _AiWelcomeState(
+                            model: aiState.selectedModel,
+                            onActionSelected: (group) =>
+                                _showFeatureOptionsPicker(group),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: aiState.chatMessages.length,
+                            itemBuilder: (context, index) {
+                              final msg = aiState.chatMessages[index];
+                              return AiMessageTileWidget(
+                                message: msg,
+                                onCopy: (content) {
+                                  Clipboard.setData(
+                                    ClipboardData(text: content),
+                                  );
+                                  showCupertinoNotice(context, 'copied'.tr);
+                                },
+                                onPaste: (content) async {
+                                  final desktop = ref.read(
+                                    desktopIntegrationProvider,
+                                  );
+                                  await Clipboard.setData(
+                                    ClipboardData(text: content),
+                                  );
+                                  if (!context.mounted) return;
+                                  Navigator.pop(context);
+                                  await desktop.hideQuickPanel();
+                                  await desktop.pasteToPreviousApplication();
+                                },
+                              );
+                            },
                           ),
-                          onSubmitted: (_) => _submitPrompt(),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      CupertinoButton.filled(
-                        padding: const EdgeInsets.all(10),
-                        borderRadius: BorderRadius.circular(14),
-                        onPressed: aiState.isGenerating ? null : () => _submitPrompt(),
-                        child: aiState.isGenerating
-                            ? const CupertinoActivityIndicator(radius: 8, color: CupertinoColors.white)
-                            : const Icon(CupertinoIcons.arrow_up, size: 18),
-                      ),
-                    ],
                   ),
-                ),
+
+                  const CupertinoDivider(),
+
+                  // Input Bar
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: CupertinoTextField(
+                            controller: _inputController,
+                            focusNode: _focusNode,
+                            placeholder: 'ai_send_prompt'.tr,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.surface,
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.border,
+                                ),
+                              ),
+                            ),
+                            onSubmitted: (_) => _submitPrompt(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        CupertinoButton.filled(
+                          padding: const EdgeInsets.all(10),
+                          borderRadius: BorderRadius.circular(14),
+                          onPressed: aiState.isGenerating
+                              ? null
+                              : () => _submitPrompt(),
+                          child: aiState.isGenerating
+                              ? const CupertinoActivityIndicator(
+                                  radius: 8,
+                                  color: CupertinoColors.white,
+                                )
+                              : const Icon(CupertinoIcons.arrow_up, size: 18),
+                        ),
+                      ],
+                    ),
+                  ),
                 ], // end else hasAnyDownloadedModel
               ],
             ),
@@ -308,10 +340,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
 }
 
 class _AiWelcomeState extends StatelessWidget {
-  const _AiWelcomeState({
-    required this.model,
-    required this.onActionSelected,
-  });
+  const _AiWelcomeState({required this.model, required this.onActionSelected});
 
   final dynamic model;
   final ValueChanged<AiFeatureGroup> onActionSelected;
@@ -326,7 +355,9 @@ class _AiWelcomeState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: CupertinoTheme.of(context).primaryColor.withValues(alpha: 0.12),
+              color: CupertinoTheme.of(
+                context,
+              ).primaryColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -369,7 +400,11 @@ class _AiWelcomeState extends StatelessWidget {
                   ),
                   child: Row(
                     children: [
-                      Icon(group.icon, size: 16, color: CupertinoTheme.of(context).primaryColor),
+                      Icon(
+                        group.icon,
+                        size: 16,
+                        color: CupertinoTheme.of(context).primaryColor,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(
@@ -377,7 +412,10 @@ class _AiWelcomeState extends StatelessWidget {
                           children: [
                             Text(
                               group.title,
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             Text(
                               group.subtitle,
@@ -385,7 +423,10 @@ class _AiWelcomeState extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: resolveColor(context, ClipFlowColors.secondaryText),
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.secondaryText,
+                                ),
                               ),
                             ),
                           ],

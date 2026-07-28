@@ -41,7 +41,10 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
             ),
             child: Text(
               widget.message.content,
-              style: const TextStyle(fontSize: 14, color: CupertinoColors.white),
+              style: const TextStyle(
+                fontSize: 14,
+                color: CupertinoColors.white,
+              ),
             ),
           ),
         ),
@@ -93,8 +96,9 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                 child: Column(
                   children: [
                     CupertinoPressable(
-                      onPressed: () =>
-                          setState(() => _thinkingExpanded = !_thinkingExpanded),
+                      onPressed: () => setState(
+                        () => _thinkingExpanded = !_thinkingExpanded,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -168,8 +172,11 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(CupertinoIcons.doc_on_doc,
-                            size: 12, color: primary),
+                        Icon(
+                          CupertinoIcons.doc_on_doc,
+                          size: 12,
+                          color: primary,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'copy'.tr,

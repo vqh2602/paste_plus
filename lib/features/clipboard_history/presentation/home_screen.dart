@@ -42,10 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Future<void> _handleCopy(ClipboardItem item) async {
     await ref.read(historyControllerProvider.notifier).copy(item);
     if (!mounted) return;
-    showCupertinoNotice(
-      context,
-      'copied'.tr,
-    );
+    showCupertinoNotice(context, 'copied'.tr);
   }
 
   Future<void> _handleDelete(ClipboardItem item) async {
@@ -70,10 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (confirmed == true && mounted) {
       await ref.read(historyControllerProvider.notifier).delete(item);
       if (!mounted) return;
-      showCupertinoNotice(
-        context,
-        'item_deleted'.tr,
-      );
+      showCupertinoNotice(context, 'item_deleted'.tr);
     }
   }
 
@@ -138,7 +132,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _handleAddToCollection(ClipboardItem item) async {
-    final collections = ref.read(collectionsControllerProvider).value ?? const [];
+    final collections =
+        ref.read(collectionsControllerProvider).value ?? const [];
     if (collections.isEmpty) {
       await _showCreateCollectionDialog();
       return;
@@ -225,7 +220,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final state = ref.read(historyControllerProvider);
     final items = state.visibleItems;
     if (items.isEmpty) return;
-    final currentIndex = items.indexWhere((it) => it.id == state.selectedItemId);
+    final currentIndex = items.indexWhere(
+      (it) => it.id == state.selectedItemId,
+    );
     final nextIndex = (currentIndex + delta).clamp(0, items.length - 1);
     ref.read(historyControllerProvider.notifier).select(items[nextIndex].id);
   }
@@ -240,11 +237,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
     final settings = ref.watch(settingsControllerProvider);
     final state = ref.watch(historyControllerProvider);
-    final collections = ref.watch(collectionsControllerProvider).value ?? const [];
+    final collections =
+        ref.watch(collectionsControllerProvider).value ?? const [];
 
     final shortcutBindings = <ShortcutActivator, VoidCallback>{
-      const SingleActivator(LogicalKeyboardKey.arrowDown): () => _moveSelection(1),
-      const SingleActivator(LogicalKeyboardKey.arrowUp): () => _moveSelection(-1),
+      const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+          _moveSelection(1),
+      const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+          _moveSelection(-1),
       const SingleActivator(LogicalKeyboardKey.enter): () {
         final selected = state.selectedItemId;
         if (selected != null) {
@@ -257,12 +257,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           settings.focusSearchShortcut,
           ShortcutAction.focusSearch,
         ),
-      ): () => _searchFocusNode.requestFocus(),
+      ): () =>
+          _searchFocusNode.requestFocus(),
       shortcutActivator(
-        decodeShortcut(
-          settings.togglePinShortcut,
-          ShortcutAction.togglePin,
-        ),
+        decodeShortcut(settings.togglePinShortcut, ShortcutAction.togglePin),
       ): () {
         final selected = state.selectedItemId;
         if (selected != null) {
@@ -271,10 +269,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }
       },
       shortcutActivator(
-        decodeShortcut(
-          settings.deleteItemShortcut,
-          ShortcutAction.deleteItem,
-        ),
+        decodeShortcut(settings.deleteItemShortcut, ShortcutAction.deleteItem),
       ): () {
         final selected = state.selectedItemId;
         if (selected != null) {
@@ -285,10 +280,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     };
 
     for (var i = 1; i <= 9; i++) {
-      final key = LogicalKeyboardKey(
-        LogicalKeyboardKey.digit1.keyId + (i - 1),
-      );
-      shortcutBindings[SingleActivator(key, meta: Platform.isMacOS, control: !Platform.isMacOS)] = () {
+      final key = LogicalKeyboardKey(LogicalKeyboardKey.digit1.keyId + (i - 1));
+      shortcutBindings[SingleActivator(
+        key,
+        meta: Platform.isMacOS,
+        control: !Platform.isMacOS,
+      )] = () {
         final items = state.visibleItems;
         if (i <= items.length) {
           _handleCopy(items[i - 1]);
@@ -361,12 +358,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     if (!isMedium) ...[
                       ColoredBox(
                         color: resolveColor(context, ClipFlowColors.border),
-                        child: const SizedBox(width: 1, height: double.infinity),
+                        child: const SizedBox(
+                          width: 1,
+                          height: double.infinity,
+                        ),
                       ),
-                      const Expanded(
-                        flex: 2,
-                        child: DetailPaneWidget(),
-                      ),
+                      const Expanded(flex: 2, child: DetailPaneWidget()),
                     ],
                   ],
                 ),

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:clipflow/app/providers.dart';
 import 'package:clipflow/core/services/clipboard_watcher.dart';
+import 'package:clipflow/core/ui/cupertino_components.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_content_type.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_item.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dart';
@@ -199,6 +200,24 @@ void main() {
     expect(pinned, hasLength(1));
   });
 
+  testWidgets('main history header shows AI button when AI is enabled', (
+    tester,
+  ) async {
+    await settingsRepository.save(
+      const AppSettings(
+        hasCompletedOnboarding: true,
+        monitoringEnabled: false,
+        ignoreSensitive: false,
+        aiEnabled: true,
+      ),
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('history-ai-button')), findsOneWidget);
+  });
+
   testWidgets('delete action requires confirmation and removes item', (
     tester,
   ) async {
@@ -228,6 +247,15 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('quick-panel-search')), findsOneWidget);
+    expect(
+      tester
+          .widget<CupertinoChoicePill>(
+            find.byKey(const Key('quick-section-all')),
+          )
+          .selected,
+      isTrue,
+    );
+    expect(find.byKey(const Key('quick-type-text')), findsNothing);
     expect(find.text('Riêng tư & cục bộ'), findsNothing);
     expect(find.text('Liên kết'), findsAtLeast(1));
     tester.view.physicalSize = const Size(1400, 900);
@@ -264,6 +292,9 @@ void main() {
     await controller.reload();
 
     expect(controller.state.items.map((item) => item.id), ['item-1', 'item-2']);
+    expect(controller.state.hasExplicitSelection, isFalse);
+    controller.select(controller.state.items.first.id);
+    expect(controller.state.hasExplicitSelection, isTrue);
     await controller.copy(controller.state.items[1]);
 
     expect(controller.state.items.map((item) => item.id), ['item-1', 'item-2']);

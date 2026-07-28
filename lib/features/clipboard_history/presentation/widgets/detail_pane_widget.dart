@@ -121,50 +121,63 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                               style: TextStyle(
                                 fontSize: 13,
                                 height: 1.5,
-                                color: resolveColor(context, ClipFlowColors.secondaryText),
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.secondaryText,
+                                ),
                               ),
                             ),
                           ],
                         ],
                       )
                     : isOnlineImage
-                        ? Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipboardImagePreviewWidget(path: item.content, height: 260),
-                              const SizedBox(height: 12),
-                              Text(
-                                item.content,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.5,
-                                  color: resolveColor(context, ClipFlowColors.secondaryText),
-                                ),
-                              ),
-                            ],
-                          )
-                        : HighlightedText(
-                            text: item.content,
-                            query: state.query,
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipboardImagePreviewWidget(
+                            path: item.content,
+                            height: 260,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            item.content,
                             style: TextStyle(
-                              fontSize: 14,
-                              height: 1.55,
-                              color: item.contentType == ClipboardContentType.url
-                                  ? CupertinoColors.activeBlue
-                                  : null,
-                              decoration: item.contentType == ClipboardContentType.url
-                                  ? TextDecoration.underline
-                                  : TextDecoration.none,
-                              decorationColor: item.contentType == ClipboardContentType.url
-                                  ? CupertinoColors.activeBlue.withValues(alpha: 0.4)
-                                  : null,
-                              fontFamily:
-                                  item.contentType == ClipboardContentType.code ||
-                                          item.contentType == ClipboardContentType.json
-                                      ? 'monospace'
-                                      : null,
+                              fontSize: 13,
+                              height: 1.5,
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.secondaryText,
+                              ),
                             ),
                           ),
+                        ],
+                      )
+                    : HighlightedText(
+                        text: item.content,
+                        query: state.query,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.55,
+                          color: item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue
+                              : null,
+                          decoration:
+                              item.contentType == ClipboardContentType.url
+                              ? TextDecoration.underline
+                              : TextDecoration.none,
+                          decorationColor:
+                              item.contentType == ClipboardContentType.url
+                              ? CupertinoColors.activeBlue.withValues(
+                                  alpha: 0.4,
+                                )
+                              : null,
+                          fontFamily:
+                              item.contentType == ClipboardContentType.code ||
+                                  item.contentType == ClipboardContentType.json
+                              ? 'monospace'
+                              : null,
+                        ),
+                      ),
               ),
             ),
             const CupertinoDivider(),
@@ -177,7 +190,10 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
               label: 'source_app'.tr,
               value: item.sourceAppName ?? 'unknown'.tr,
             ),
-            MetadataRowWidget(label: 'usage_count'.tr, value: '${item.copyCount}'),
+            MetadataRowWidget(
+              label: 'usage_count'.tr,
+              value: '${item.copyCount}',
+            ),
             const SizedBox(height: 14),
             if (isImage) ...[
               SizedBox(
@@ -218,7 +234,9 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                 child: CupertinoButton(
                   color: CupertinoColors.activeGreen.withValues(alpha: 0.15),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  onPressed: _isUploading ? null : () => _handleCloudUpload(item!),
+                  onPressed: _isUploading
+                      ? null
+                      : () => _handleCloudUpload(item!),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -256,7 +274,9 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                 child: CupertinoButton(
                   color: CupertinoColors.activeBlue.withValues(alpha: 0.15),
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  onPressed: _isProcessing ? null : () => _handleTranslate(item!),
+                  onPressed: _isProcessing
+                      ? null
+                      : () => _handleTranslate(item!),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -304,9 +324,11 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     ClipboardContentType.url => CupertinoIcons.link,
     ClipboardContentType.email => CupertinoIcons.mail,
     ClipboardContentType.phone => CupertinoIcons.phone,
-    ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.code =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.color => CupertinoIcons.color_filter,
-    ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.json =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };
@@ -347,19 +369,23 @@ class ClipboardImagePreviewWidget extends StatelessWidget {
               fit: BoxFit.cover,
             )
           : (File(path).existsSync()
-              ? Image.file(
-                  File(path),
-                  height: height,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                )
-              : Center(child: Text('image_not_found'.tr))),
+                ? Image.file(
+                    File(path),
+                    height: height,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Center(child: Text('image_not_found'.tr))),
     );
   }
 }
 
 class MetadataRowWidget extends StatelessWidget {
-  const MetadataRowWidget({super.key, required this.label, required this.value});
+  const MetadataRowWidget({
+    super.key,
+    required this.label,
+    required this.value,
+  });
 
   final String label;
   final String value;
@@ -373,7 +399,9 @@ class MetadataRowWidget extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: TextStyle(color: resolveColor(context, ClipFlowColors.secondaryText)),
+              style: TextStyle(
+                color: resolveColor(context, ClipFlowColors.secondaryText),
+              ),
             ),
           ),
           Text(value),

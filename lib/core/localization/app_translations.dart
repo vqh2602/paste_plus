@@ -96,6 +96,9 @@ class AppTranslations {
       'ai_partial_downloaded': 'Đã tải một phần',
       'ai_download_paused': 'Tạm dừng',
       'ai_delete_partial': 'Xóa file tạm',
+      'ai_all_clipboard_context':
+          'Đang sử dụng toàn bộ lịch sử Clipboard (@count mục)',
+      'ai_select_clip_hint': 'Chọn một clip để giới hạn ngữ cảnh',
 
       // Settings - General
       'appearance_and_theme': 'Giao diện & Bảng màu',
@@ -810,6 +813,8 @@ class AppTranslations {
       'ai_partial_downloaded': 'Partially downloaded',
       'ai_download_paused': 'Paused',
       'ai_delete_partial': 'Delete temp file',
+      'ai_all_clipboard_context': 'Using all Clipboard history (@count items)',
+      'ai_select_clip_hint': 'Select a clip to limit context',
     },
   };
 

@@ -27,6 +27,7 @@ class ClipboardHistoryState {
     this.collectionId,
     this.typeFilter,
     this.selectedItemId,
+    this.hasExplicitSelection = false,
   });
 
   final List<ClipboardItem> items;
@@ -37,6 +38,7 @@ class ClipboardHistoryState {
   final String? collectionId;
   final ClipboardContentType? typeFilter;
   final String? selectedItemId;
+  final bool hasExplicitSelection;
 
   List<ClipboardItem> get visibleItems {
     final parsed = ClipboardSearchQuery.parse(query);
@@ -61,6 +63,7 @@ class ClipboardHistoryState {
     bool clearTypeFilter = false,
     String? selectedItemId,
     bool clearSelection = false,
+    bool? hasExplicitSelection,
   }) {
     return ClipboardHistoryState(
       items: items ?? this.items,
@@ -73,6 +76,9 @@ class ClipboardHistoryState {
       selectedItemId: clearSelection
           ? null
           : selectedItemId ?? this.selectedItemId,
+      hasExplicitSelection: clearSelection
+          ? false
+          : hasExplicitSelection ?? this.hasExplicitSelection,
     );
   }
 }
@@ -144,6 +150,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
         selectedItemId: items.any((item) => item.id == state.selectedItemId)
             ? state.selectedItemId
             : items.firstOrNull?.id,
+        hasExplicitSelection:
+            items.any((item) => item.id == state.selectedItemId) &&
+            state.hasExplicitSelection,
         clearSelection: items.isEmpty,
       );
     } on Object {
@@ -200,7 +209,8 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     }
   }
 
-  void select(String id) => state = state.copyWith(selectedItemId: id);
+  void select(String id) =>
+      state = state.copyWith(selectedItemId: id, hasExplicitSelection: true);
 
   Future<void> copy(ClipboardItem item) async {
     final imageFile = item.imagePath == null ? null : File(item.imagePath!);
@@ -271,7 +281,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   Future<String?> performOcr(ClipboardItem item) async {
     if (item.imagePath == null) return null;
     const ocrService = OcrService();
-    final extractedText = await ocrService.extractTextFromImage(item.imagePath!);
+    final extractedText = await ocrService.extractTextFromImage(
+      item.imagePath!,
+    );
     if (extractedText == null || extractedText.trim().isEmpty) return null;
     await addTextItem(extractedText);
     return extractedText;

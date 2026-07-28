@@ -85,7 +85,10 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
         title: Text('filter_by_type'.tr),
         actions: [
           CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              historyNotifier.filterByType(null);
+              Navigator.pop(context);
+            },
             child: Text('all_types'.tr),
           ),
           ...ClipboardContentType.values.map((type) {
@@ -148,7 +151,8 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(historyControllerProvider);
-    final collections = ref.watch(collectionsControllerProvider).value ?? const [];
+    final collections =
+        ref.watch(collectionsControllerProvider).value ?? const [];
     final settings = ref.watch(settingsControllerProvider);
     final visibleItems = state.visibleItems;
     final totalItems = visibleItems.length;
@@ -175,10 +179,12 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen> {
     };
 
     for (var i = 1; i <= 9; i++) {
-      final key = LogicalKeyboardKey(
-        LogicalKeyboardKey.digit1.keyId + (i - 1),
-      );
-      shortcutBindings[SingleActivator(key, meta: Platform.isMacOS, control: !Platform.isMacOS)] = () {
+      final key = LogicalKeyboardKey(LogicalKeyboardKey.digit1.keyId + (i - 1));
+      shortcutBindings[SingleActivator(
+        key,
+        meta: Platform.isMacOS,
+        control: !Platform.isMacOS,
+      )] = () {
         if (i <= totalItems) {
           _pasteItem(visibleItems[i - 1]);
         }

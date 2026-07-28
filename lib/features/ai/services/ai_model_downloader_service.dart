@@ -47,7 +47,7 @@ class AiModelDownloaderService {
 
   final Map<String, HttpClient> _activeClients = {};
   final Map<String, StreamController<ModelDownloadProgress>>
-      _progressControllers = {};
+  _progressControllers = {};
 
   Future<Directory> get _modelsDir async {
     final appSupport = await getApplicationSupportDirectory();

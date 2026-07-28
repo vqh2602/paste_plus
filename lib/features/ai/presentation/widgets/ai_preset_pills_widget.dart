@@ -4,10 +4,7 @@ import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/ai_feature_action.dart';
 
 class AiPresetPillsWidget extends StatelessWidget {
-  const AiPresetPillsWidget({
-    super.key,
-    required this.onSelectGroup,
-  });
+  const AiPresetPillsWidget({super.key, required this.onSelectGroup});
 
   final ValueChanged<AiFeatureGroup> onSelectGroup;
 
@@ -24,7 +21,10 @@ class AiPresetPillsWidget extends StatelessWidget {
             child: CupertinoPressable(
               onPressed: () => onSelectGroup(group),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: resolveColor(context, ClipFlowColors.surface),
                   borderRadius: BorderRadius.circular(14),
@@ -51,7 +51,10 @@ class AiPresetPillsWidget extends StatelessWidget {
                     Icon(
                       CupertinoIcons.chevron_down,
                       size: 10,
-                      color: resolveColor(context, ClipFlowColors.secondaryText),
+                      color: resolveColor(
+                        context,
+                        ClipFlowColors.secondaryText,
+                      ),
                     ),
                   ],
                 ),

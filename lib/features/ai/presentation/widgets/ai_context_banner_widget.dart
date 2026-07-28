@@ -41,10 +41,7 @@ class AiContextBannerWidget extends StatelessWidget {
               item.content,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
           ),
           const SizedBox(width: 6),
@@ -56,6 +53,43 @@ class AiContextBannerWidget extends StatelessWidget {
                 fontSize: 11,
                 color: CupertinoColors.systemRed,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class AiHistoryContextBannerWidget extends StatelessWidget {
+  const AiHistoryContextBannerWidget({super.key, required this.itemCount});
+
+  final int itemCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      color: CupertinoColors.activeBlue.withValues(alpha: 0.08),
+      child: Row(
+        children: [
+          const Icon(
+            CupertinoIcons.tray_full,
+            size: 15,
+            color: CupertinoColors.activeBlue,
+          ),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              'ai_all_clipboard_context'.tr.replaceAll('@count', '$itemCount'),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+            ),
+          ),
+          Text(
+            'ai_select_clip_hint'.tr,
+            style: TextStyle(
+              fontSize: 11,
+              color: resolveColor(context, ClipFlowColors.secondaryText),
             ),
           ),
         ],

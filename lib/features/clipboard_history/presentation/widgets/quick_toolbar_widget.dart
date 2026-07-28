@@ -47,11 +47,6 @@ class QuickToolbarWidget extends ConsumerWidget {
 
     final typeTabs = [
       (
-        label: 'text'.tr,
-        icon: CupertinoIcons.doc_text,
-        section: HistorySection.all,
-      ),
-      (
         label: 'link'.tr,
         icon: CupertinoIcons.link,
         section: HistorySection.links,
@@ -78,11 +73,9 @@ class QuickToolbarWidget extends ConsumerWidget {
               icon: CupertinoIcons.sparkles,
               color: CupertinoColors.activeBlue,
               onPressed: () async {
-                final visible = state.visibleItems;
-                final selectedItem = visible.isNotEmpty ? visible.first : null;
                 ref
                     .read(aiControllerProvider.notifier)
-                    .setClipboardContext(selectedItem);
+                    .setClipboardContext(null);
                 await ref.read(desktopIntegrationProvider).showAiWindow();
               },
             ),
@@ -110,6 +103,7 @@ class QuickToolbarWidget extends ConsumerWidget {
                 children: [
                   for (final tab in systemTabs) ...[
                     CupertinoChoicePill(
+                      key: ValueKey('quick-section-${tab.section.name}'),
                       label: tab.label,
                       icon: tab.icon,
                       selected: state.section == tab.section,
@@ -122,7 +116,8 @@ class QuickToolbarWidget extends ConsumerWidget {
                     CupertinoChoicePill(
                       label: collection.name,
                       icon: CupertinoIcons.folder,
-                      selected: state.section == HistorySection.collection &&
+                      selected:
+                          state.section == HistorySection.collection &&
                           state.collectionId == collection.id,
                       onPressed: () => historyNotifier.selectSection(
                         HistorySection.collection,
@@ -133,6 +128,7 @@ class QuickToolbarWidget extends ConsumerWidget {
                   ],
                   for (final tab in typeTabs) ...[
                     CupertinoChoicePill(
+                      key: ValueKey('quick-section-${tab.section.name}'),
                       label: tab.label,
                       icon: tab.icon,
                       selected: state.section == tab.section,
@@ -205,9 +201,11 @@ class QuickToolbarWidget extends ConsumerWidget {
     ClipboardContentType.url => CupertinoIcons.link,
     ClipboardContentType.email => CupertinoIcons.mail,
     ClipboardContentType.phone => CupertinoIcons.phone,
-    ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.code =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.color => CupertinoIcons.color_filter,
-    ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.json =>
+      CupertinoIcons.chevron_left_slash_chevron_right,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };

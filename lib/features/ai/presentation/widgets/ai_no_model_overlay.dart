@@ -45,10 +45,7 @@ class AiNoModelOverlay extends ConsumerWidget {
           // Title
           Text(
             'ai_no_model_title'.tr,
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -87,8 +84,8 @@ class AiNoModelOverlay extends ConsumerWidget {
 
           // Model Cards
           ...recommendedModels.map((model) {
-            final downloadState = aiState.downloadStates[model.id] ??
-                DownloadState.notDownloaded;
+            final downloadState =
+                aiState.downloadStates[model.id] ?? DownloadState.notDownloaded;
             final progress = aiState.downloadProgresses[model.id];
             final isFirst = model == recommendedModels.first;
 
@@ -100,8 +97,7 @@ class AiNoModelOverlay extends ConsumerWidget {
               onDownload: () => aiNotifier.startDownload(model),
               onResume: () => aiNotifier.resumeDownload(model),
               onCancel: () => aiNotifier.cancelDownload(model.id),
-              onDeletePartial: () =>
-                  aiNotifier.deleteModel(model.id),
+              onDeletePartial: () => aiNotifier.deleteModel(model.id),
             );
           }),
         ],
@@ -165,8 +161,9 @@ class _ModelCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: CupertinoColors.activeOrange
-                                    .withValues(alpha: 0.15),
+                                color: CupertinoColors.activeOrange.withValues(
+                                  alpha: 0.15,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
@@ -205,10 +202,7 @@ class _ModelCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
-                    color: resolveColor(
-                      context,
-                      ClipFlowColors.secondaryText,
-                    ),
+                    color: resolveColor(context, ClipFlowColors.secondaryText),
                   ),
                 ),
                 const Spacer(),
@@ -224,8 +218,7 @@ class _ModelCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: progress!.progress,
-                  backgroundColor:
-                      resolveColor(context, ClipFlowColors.border),
+                  backgroundColor: resolveColor(context, ClipFlowColors.border),
                   valueColor: AlwaysStoppedAnimation(
                     CupertinoTheme.of(context).primaryColor,
                   ),
@@ -299,10 +292,7 @@ class _ModelCard extends StatelessWidget {
           onPressed: onCancel,
           child: const Text(
             'Hủy tải',
-            style: TextStyle(
-              fontSize: 12,
-              color: CupertinoColors.systemOrange,
-            ),
+            style: TextStyle(fontSize: 12, color: CupertinoColors.systemOrange),
           ),
         );
 
@@ -322,10 +312,7 @@ class _ModelCard extends StatelessWidget {
               ),
             ),
             CupertinoButton.filled(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               borderRadius: BorderRadius.circular(8),
               onPressed: onResume,
               child: Row(
@@ -346,10 +333,7 @@ class _ModelCard extends StatelessWidget {
       case DownloadState.error:
       case DownloadState.notDownloaded:
         return CupertinoButton.filled(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 6,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           borderRadius: BorderRadius.circular(8),
           onPressed: onDownload,
           child: Text(
