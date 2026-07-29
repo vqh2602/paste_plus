@@ -1,8 +1,14 @@
+import 'package:clipflow/core/localization/app_translations.dart';
+import 'package:clipflow/features/ai/domain/ai_feature_action.dart';
 import 'package:clipflow/features/ai/domain/ai_request_plan.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const planner = AiRequestPlanner();
+
+  tearDown(() {
+    AppTranslations.currentLanguage = 'vi';
+  });
 
   test('casual conversation does not attach clipboard history', () {
     final plan = planner.plan(
@@ -52,4 +58,35 @@ void main() {
     expect(plan.intent, AiRequestIntent.followUp);
     expect(plan.useClipboardHistory, isFalse);
   });
+
+  test('English mode defaults to English response for English prompts or prompts with typo accents', () {
+    AppTranslations.currentLanguage = 'en';
+
+    final planNormal = planner.plan(
+      prompt: 'create word 120',
+      hasSelectedClipboard: false,
+      hasConversation: false,
+    );
+    expect(planNormal.responseLanguage, 'English');
+
+    final planTypo = planner.plan(
+      prompt: 'create wòd 120',
+      hasSelectedClipboard: false,
+      hasConversation: false,
+    );
+    expect(planTypo.responseLanguage, 'English');
+  });
+
+  test('English mode localized AiFeatureGroup titles and options', () {
+    AppTranslations.currentLanguage = 'en';
+
+    expect(AiFeatureGroup.rewrite.title, 'Rewrite Content');
+    expect(AiFeatureGroup.rewrite.options.first, 'More natural');
+
+    AppTranslations.currentLanguage = 'vi';
+
+    expect(AiFeatureGroup.rewrite.title, 'Viết lại nội dung');
+    expect(AiFeatureGroup.rewrite.options.first, 'Tự nhiên hơn');
+  });
 }
+

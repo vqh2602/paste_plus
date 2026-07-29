@@ -60,4 +60,42 @@ void main() {
     expect(ranker.hasExactFileConstraint('find image webp links'), isTrue);
     expect(ranker.hasExactFileConstraint('find an image link'), isFalse);
   });
+
+  test('ranks direct image URL items above code snippets and debug logs', () {
+    final results = ranker.rank(
+      prompt: 'tìm cho tôi các bản ghi về link ảnh',
+      items: [
+        _item(
+          'log_code',
+          'Đã tìm trong 102 mục clipboard... CODE - Antigravity IDE Image 08_33_17...png',
+          ClipboardContentType.code,
+        ),
+        _item(
+          'curl_code',
+          'curl --request POST https://freeimage.host/api/1/upload {"url":"https://iili.io/CkGHxdQ.png"}',
+          ClipboardContentType.code,
+        ),
+        _item(
+          'non_image_url',
+          'https://hoanghamobile.com/dong-ho-thong-minh/dong-ho-tre-em',
+          ClipboardContentType.url,
+        ),
+        _item(
+          'img_url_1',
+          'https://iili.io/CvFsdVS.png',
+          ClipboardContentType.url,
+        ),
+        _item(
+          'img_url_2',
+          'https://iili.io/CvJhHla.png',
+          ClipboardContentType.url,
+        ),
+      ],
+    );
+
+    expect(results.first.id, anyOf('img_url_1', 'img_url_2'));
+    expect(results[1].id, anyOf('img_url_1', 'img_url_2'));
+    expect(results.indexWhere((item) => item.id == 'img_url_1'), lessThan(results.indexWhere((item) => item.id == 'curl_code')));
+    expect(results.indexWhere((item) => item.id == 'img_url_1'), lessThan(results.indexWhere((item) => item.id == 'log_code')));
+  });
 }

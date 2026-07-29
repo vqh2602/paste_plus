@@ -28,17 +28,28 @@ class AiClipboardRelevanceRanker {
       'url',
       'đường dẫn',
       'duong dan',
+      'liên kết',
+      'lien ket',
+      'hyperlink',
+      'http',
+      'https',
     });
     final asksForImage = _containsAny(normalizedPrompt, const {
       'ảnh',
       'anh',
       'image',
       'photo',
+      'picture',
+      'hình',
+      'hinh',
       'png',
       'jpg',
       'jpeg',
       'gif',
       'webp',
+      'svg',
+      'heic',
+      'avif',
     });
     final requestedExtensions = _imageExtensions
         .where((extension) => normalizedPrompt.contains(extension.substring(1)))
@@ -56,21 +67,48 @@ class AiClipboardRelevanceRanker {
       for (final term in uniqueTerms) {
         if (normalizedContent.contains(term)) lexicalScore += 2.5;
       }
-      final looksLikeUrl =
-          item.contentType == ClipboardContentType.url ||
-          RegExp(r'https?://', caseSensitive: false).hasMatch(content);
-      final lowerContent = content.toLowerCase();
-      final isImageUrl =
-          looksLikeUrl &&
-          _imageExtensions.any((extension) => lowerContent.contains(extension));
 
-      if (asksForLink && looksLikeUrl) lexicalScore += 7;
-      if (asksForImage && item.contentType == ClipboardContentType.image) {
-        lexicalScore += 3;
+      final isUrlType = item.contentType == ClipboardContentType.url;
+      final containsHttpUrl =
+          RegExp(r'https?://', caseSensitive: false).hasMatch(content);
+      final looksLikeUrl = isUrlType || containsHttpUrl;
+      final imageLink = isImageUrl(content);
+
+      if (asksForLink) {
+        if (isUrlType) {
+          lexicalScore += 15.0;
+        } else if (containsHttpUrl) {
+          lexicalScore += 3.0;
+        }
       }
-      if (asksForImage && isImageUrl) lexicalScore += 9;
+
+      if (asksForImage) {
+        if (item.contentType == ClipboardContentType.image) {
+          lexicalScore += 12.0;
+        }
+      }
+
+      if (asksForLink && asksForImage) {
+        if (isUrlType && imageLink) {
+          lexicalScore += 20.0;
+        } else if (imageLink) {
+          lexicalScore += 8.0;
+        }
+      } else if (asksForImage && imageLink) {
+        lexicalScore += 12.0;
+      }
+
       for (final extension in requestedExtensions) {
-        if (lowerContent.contains(extension)) lexicalScore += 8;
+        if (normalizedContent.contains(extension.substring(1))) {
+          lexicalScore += 10.0;
+        }
+      }
+
+      final isLogMetadata = normalizedContent.contains('mục clipboard') ||
+          normalizedContent.contains('clipbroad') ||
+          normalizedContent.contains('phân tích nội dung clipboard');
+      if (isLogMetadata) {
+        lexicalScore -= 15.0;
       }
 
       final semanticScore = semanticScores[item.id] ?? 0;
@@ -93,6 +131,19 @@ class AiClipboardRelevanceRanker {
     return ranked.map((entry) => entry.item).toList(growable: false);
   }
 
+  bool isImageUrl(String content) {
+    final lower = content.toLowerCase().trim();
+    final looksLikeUrl =
+        RegExp(r'https?://', caseSensitive: false).hasMatch(lower);
+    if (!looksLikeUrl) return false;
+
+    final hasImageExt =
+        _imageExtensions.any((ext) => lower.contains(ext));
+    final hasImageDomain =
+        _imageHostDomains.any((domain) => lower.contains(domain));
+    return hasImageExt || hasImageDomain;
+  }
+
   String _normalize(String value) =>
       value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
@@ -109,8 +160,19 @@ class AiClipboardRelevanceRanker {
     '.jpeg',
     '.gif',
     '.webp',
+    '.svg',
     '.heic',
     '.avif',
+  };
+
+  static const _imageHostDomains = {
+    'iili.io',
+    'freeimage.host',
+    'imgur.com',
+    'gyazo.com',
+    'cloudinary.com',
+    'unsplash.com',
+    'postimg.cc',
   };
 
   static const _stopWords = {

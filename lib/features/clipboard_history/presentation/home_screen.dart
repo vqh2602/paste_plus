@@ -232,15 +232,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final aiWindowMode = ref.watch(aiWindowModeProvider);
     final quickPanelMode = ref.watch(quickPanelModeProvider);
     if (aiWindowMode && quickPanelMode) {
-      return Row(
-        children: [
-          const Expanded(child: AiChatScreen()),
-          ColoredBox(
-            color: resolveColor(context, ClipFlowColors.border),
-            child: const SizedBox(width: 1, height: double.infinity),
-          ),
-          const SizedBox(width: 460, child: QuickPanelScreen()),
-        ],
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          final panelWidth = (constraints.maxWidth * 0.38)
+              .clamp(460.0, 620.0)
+              .toDouble();
+          final panelHeight = constraints.maxHeight.clamp(300.0, 390.0);
+          return Row(
+            children: [
+              const Expanded(child: AiChatScreen()),
+              ColoredBox(
+                color: resolveColor(context, ClipFlowColors.border),
+                child: const SizedBox(width: 1, height: double.infinity),
+              ),
+              SizedBox(
+                width: panelWidth,
+                child: ColoredBox(
+                  color: resolveColor(context, ClipFlowColors.sidebar),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: SizedBox(
+                      height: panelHeight,
+                      child: const QuickPanelScreen(),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
     if (aiWindowMode) {

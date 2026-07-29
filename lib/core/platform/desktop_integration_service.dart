@@ -464,7 +464,7 @@ class DesktopIntegrationService with TrayListener {
     }, orElse: () => primary);
     final visibleSize = display.visibleSize ?? display.size;
     final visiblePosition = display.visiblePosition ?? Offset.zero;
-    const panelWidth = 460.0;
+    const panelWidth = 620.0;
     final combinedWidth = math.min(
       currentBounds.width + panelWidth,
       math.max(0.0, visibleSize.width - 32),

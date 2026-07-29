@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math';
 
+import '../../../core/localization/app_translations.dart';
 import '../../../core/services/ai_debug_service.dart';
+import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
@@ -57,7 +59,8 @@ class LocalAiEngine {
       selectedOption,
       conversationContext,
       requestPlan?.intent ?? AiRequestIntent.conversation,
-      requestPlan?.responseLanguage ?? 'the same language as the user',
+      requestPlan?.responseLanguage ??
+          (AppTranslations.currentLanguage == 'en' ? 'English' : 'Vietnamese'),
     );
     _debug?.log(
       level: AiDebugLevel.info,
@@ -1001,78 +1004,159 @@ class LocalAiEngine {
     String? systemPrompt,
     bool hasConversationContext = false,
   }) {
+    final isEn = AppTranslations.currentLanguage == 'en';
     if (featureGroup == null) {
-      return [
-        'Phân tích yêu cầu của người dùng...\n',
-        if (hasConversationContext)
-          'Đang đối chiếu với các lượt hỏi đáp gần nhất...\n',
-        historyItemCount > 0
-            ? 'Đang tìm kiếm trong $historyItemCount mục clipboard...\n'
-            : 'Đang kiểm tra ngữ cảnh clipboard hiện tại...\n',
-        'Trích xuất thực thể và yêu cầu câu hỏi chính...\n',
-        'Xác định cấu trúc phản hồi phù hợp và chính xác nhất.',
-      ];
+      return isEn
+          ? [
+              'Analyzing user request...\n',
+              if (hasConversationContext)
+                'Cross-referencing recent conversation history...\n',
+              historyItemCount > 0
+                  ? 'Searching through $historyItemCount clipboard items...\n'
+                  : 'Checking current clipboard context...\n',
+              'Extracting entities and primary question requirements...\n',
+              'Determining optimal response structure.',
+            ]
+          : [
+              'Phân tích yêu cầu của người dùng...\n',
+              if (hasConversationContext)
+                'Đang đối chiếu với các lượt hỏi đáp gần nhất...\n',
+              historyItemCount > 0
+                  ? 'Đang tìm kiếm trong $historyItemCount mục clipboard...\n'
+                  : 'Đang kiểm tra ngữ cảnh clipboard hiện tại...\n',
+              'Trích xuất thực thể và yêu cầu câu hỏi chính...\n',
+              'Xác định cấu trúc phản hồi phù hợp và chính xác nhất.',
+            ];
     }
 
     return switch (featureGroup) {
-      AiFeatureGroup.rewrite => [
-        'Đang đọc nội dung gốc (${contextText.length} ký tự)...\n',
-        'Phân tích phong cách mong muốn: "$selectedOption"...\n',
-        'Cân bằng lại từ vựng, tông giọng và nhịp điệu câu văn...\n',
-        'Đảm bảo giữ nguyên 100% ý nghĩa cốt lõi ban đầu.',
-      ],
-      AiFeatureGroup.grammar => [
-        'Kiểm tra chính tả tiếng Việt / tiếng Anh trong ngữ cảnh...\n',
-        'Phát hiện cấu trúc ngữ pháp và dấu câu chưa chuẩn...\n',
-        'Tối ưu hóa các cụm từ bị lặp hoặc thiếu tự nhiên...',
-      ],
-      AiFeatureGroup.summary => [
-        'Phân tích các đoạn văn chính và dữ liệu quan trọng...\n',
-        'Lọc bỏ các thông tin phụ, trích xuất thực thể chính (Tên, Ngày, Link)...\n',
-        'Cấu trúc lại thành dàn ý tóm tắt ngắn gọn và dễ theo dõi...',
-      ],
-      AiFeatureGroup.translate => [
-        'Nhận diện ngôn ngữ đầu vào tự động...\n',
-        'Giữ nguyên định dạng mã nguồn, đường dẫn URL và tên riêng...\n',
-        'Dịch thuật chuẩn xác theo văn phong tự nhiên...',
-      ],
-      AiFeatureGroup.smartReply => [
-        'Phân tích nội dung tin nhắn / email vừa nhận được...\n',
-        'Xác định hướng phản hồi: "$selectedOption"...\n',
-        'Tạo câu trả lời đúng chuẩn lịch sự và sẵn sàng để gửi...',
-      ],
-      AiFeatureGroup.generate => [
-        'Thu thập các yêu cầu và từ khóa trong văn bản...\n',
-        'Xây dựng bố cục nội dung mới phù hợp ($selectedOption)...\n',
-        'Hoàn thiện đoạn văn phong phú, chuyên nghiệp...',
-      ],
-      AiFeatureGroup.qa => [
-        'Đang đọc tài liệu / clipboard được đính kèm...\n',
-        'Tìm kiếm thông tin khớp nhất với câu hỏi: "$prompt"...\n',
-        'Tổng hợp câu trả lời ngắn gọn, trực tiếp và dễ hiểu...',
-      ],
-      AiFeatureGroup.codeExplain => [
-        'Phân tích cấu trúc cú pháp mã nguồn & log lỗi...\n',
-        'Xác định nguyên nhân rễ cây (root cause) của lỗi...\n',
-        'Chuẩn bị giải pháp sửa lỗi kèm ví dụ code cụ thể...',
-      ],
-      AiFeatureGroup.extractInfo => [
-        'Quét dữ liệu không cấu trúc để tìm Email, SĐT, Ngày, Giá trị...\n',
-        'Định dạng dữ liệu thành cấu trúc chuẩn ($selectedOption)...',
-      ],
-      AiFeatureGroup.titlesTags => [
-        'Phân tích chủ đề chính của clipboard...\n',
-        'Tạo tiêu đề ngắn gọn súc tích và bộ thẻ từ khóa liên quan...',
-      ],
-      AiFeatureGroup.classify => [
-        'Đánh giá danh mục phù hợp (Work, Personal, Code, Error...)...',
-      ],
-      AiFeatureGroup.ocrRefine => [
-        'Soát lỗi OCR từ nhận dạng hình ảnh...\n',
-        'Làm sạch ký tự lạ và định dạng lại văn bản chuẩn...',
-      ],
+      AiFeatureGroup.rewrite => isEn
+          ? [
+              'Reading original text (${contextText.length} chars)...\n',
+              'Analyzing target style: "$selectedOption"...\n',
+              'Balancing vocabulary, tone, and rhythm...\n',
+              'Preserving 100% of original core meaning.',
+            ]
+          : [
+              'Đang đọc nội dung gốc (${contextText.length} ký tự)...\n',
+              'Phân tích phong cách mong muốn: "$selectedOption"...\n',
+              'Cân bằng lại từ vựng, tông giọng và nhịp điệu câu văn...\n',
+              'Đảm bảo giữ nguyên 100% ý nghĩa cốt lõi ban đầu.',
+            ],
+      AiFeatureGroup.grammar => isEn
+          ? [
+              'Checking spelling & grammar in context...\n',
+              'Detecting awkward phrasing and punctuation...\n',
+              'Optimizing redundant or unclear phrasing...',
+            ]
+          : [
+              'Kiểm tra chính tả tiếng Việt / tiếng Anh trong ngữ cảnh...\n',
+              'Phát hiện cấu trúc ngữ pháp và dấu câu chưa chuẩn...\n',
+              'Tối ưu hóa các cụm từ bị lặp hoặc thiếu tự nhiên...',
+            ],
+      AiFeatureGroup.summary => isEn
+          ? [
+              'Analyzing key paragraphs and important data...\n',
+              'Filtering secondary details, extracting key entities (Names, Dates, Links)...\n',
+              'Structuring into a concise summary...',
+            ]
+          : [
+              'Phân tích các đoạn văn chính và dữ liệu quan trọng...\n',
+              'Lọc bỏ các thông tin phụ, trích xuất thực thể chính (Tên, Ngày, Link)...\n',
+              'Cấu trúc lại thành dàn ý tóm tắt ngắn gọn và dễ theo dõi...',
+            ],
+      AiFeatureGroup.translate => isEn
+          ? [
+              'Auto-detecting input language...\n',
+              'Preserving formatting, URLs, and proper names...\n',
+              'Translating accurately in natural phrasing...',
+            ]
+          : [
+              'Nhận diện ngôn ngữ đầu vào tự động...\n',
+              'Giữ nguyên định dạng mã nguồn, đường dẫn URL và tên riêng...\n',
+              'Dịch thuật chuẩn xác theo văn phong tự nhiên...',
+            ],
+      AiFeatureGroup.smartReply => isEn
+          ? [
+              'Analyzing incoming message / email content...\n',
+              'Determining response goal: "$selectedOption"...\n',
+              'Drafting polite, ready-to-send reply...',
+            ]
+          : [
+              'Phân tích nội dung tin nhắn / email vừa nhận được...\n',
+              'Xác định hướng phản hồi: "$selectedOption"...\n',
+              'Tạo câu trả lời đúng chuẩn lịch sự và sẵn sàng để gửi...',
+            ],
+      AiFeatureGroup.generate => isEn
+          ? [
+              'Gathering requirements and keywords...\n',
+              'Structuring new content layout ($selectedOption)...\n',
+              'Completing professional draft...',
+            ]
+          : [
+              'Thu thập các yêu cầu và từ khóa trong văn bản...\n',
+              'Xây dựng bố cục nội dung mới phù hợp ($selectedOption)...\n',
+              'Hoàn thiện đoạn văn phong phú, chuyên nghiệp...',
+            ],
+      AiFeatureGroup.qa => isEn
+          ? [
+              'Reading attached clipboard content...\n',
+              'Searching for best match to question: "$prompt"...\n',
+              'Synthesizing direct, clear answer...',
+            ]
+          : [
+              'Đang đọc tài liệu / clipboard được đính kèm...\n',
+              'Tìm kiếm thông tin khớp nhất với câu hỏi: "$prompt"...\n',
+              'Tổng hợp câu trả lời ngắn gọn, trực tiếp và dễ hiểu...',
+            ],
+      AiFeatureGroup.codeExplain => isEn
+          ? [
+              'Analyzing source code syntax & error logs...\n',
+              'Identifying root cause of error...\n',
+              'Preparing fix recommendations with code example...',
+            ]
+          : [
+              'Phân tích cấu trúc cú pháp mã nguồn & log lỗi...\n',
+              'Xác định nguyên nhân rễ cây (root cause) của lỗi...\n',
+              'Chuẩn bị giải pháp sửa lỗi kèm ví dụ code cụ thể...',
+            ],
+      AiFeatureGroup.extractInfo => isEn
+          ? [
+              'Scanning text for Email, Phone, Dates, Values...\n',
+              'Formatting data into target structure ($selectedOption)...',
+            ]
+          : [
+              'Quét dữ liệu không cấu trúc để tìm Email, SĐT, Ngày, Giá trị...\n',
+              'Định dạng dữ liệu thành cấu trúc chuẩn ($selectedOption)...',
+            ],
+      AiFeatureGroup.titlesTags => isEn
+          ? [
+              'Analyzing primary clipboard topic...\n',
+              'Generating concise titles and relevant search tags...',
+            ]
+          : [
+              'Phân tích chủ đề chính của clipboard...\n',
+              'Tạo tiêu đề ngắn gọn súc tích và bộ thẻ từ khóa liên quan...',
+            ],
+      AiFeatureGroup.classify => isEn
+          ? [
+              'Evaluating category (Work, Personal, Code, Error...)...',
+            ]
+          : [
+              'Đánh giá danh mục phù hợp (Work, Personal, Code, Error...)...',
+            ],
+      AiFeatureGroup.ocrRefine => isEn
+          ? [
+              'Reviewing OCR image recognition errors...\n',
+              'Cleaning up artifact characters and reformatting text...',
+            ]
+          : [
+              'Soát lỗi OCR từ nhận dạng hình ảnh...\n',
+              'Làm sạch ký tự lạ và định dạng lại văn bản chuẩn...',
+            ],
     };
   }
+
 
   List<String> _generateOutputResult({
     required AiFeatureGroup? featureGroup,
@@ -1241,76 +1325,55 @@ class LocalAiEngine {
     required List<ClipboardItem> items,
     required AiModelInfo model,
   }) {
-    final normalizedPrompt = prompt.toLowerCase();
-    final asksForLinks =
-        normalizedPrompt.contains('url') ||
-        normalizedPrompt.contains('link') ||
-        normalizedPrompt.contains('liên kết');
-    final queryTerms = normalizedPrompt
-        .replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ')
-        .split(' ')
-        .where((term) => term.length > 2 && !_searchStopWords.contains(term))
-        .toSet();
+    final rankedItems = _clipboardRanker.rank(
+      prompt: prompt,
+      items: items,
+    );
+    final matches = rankedItems.take(12).toList(growable: false);
 
-    final ranked = <({ClipboardItem item, int score})>[];
-    final now = DateTime.now();
-    for (final item in items) {
-      final content = item.content.trim();
-      if (content.isEmpty) continue;
-      final searchable = '${item.sourceAppName ?? ''} $content'.toLowerCase();
-      var score = queryTerms.where(searchable.contains).length * 3;
-      for (final term in queryTerms) {
-        if (term.length >= 4 &&
-            _characterSimilarity(term, searchable) >= 0.55) {
-          score += 2;
-        }
-      }
-      final isLink =
-          item.contentType.name == 'url' ||
-          RegExp(r'https?://', caseSensitive: false).hasMatch(content);
-      if (asksForLinks && isLink) score += 10;
-      if (item.isPinned) score += 3;
-      final age = now.difference(item.lastCopiedAt);
-      if (age.inHours <= 24) {
-        score += 3;
-      } else if (age.inDays <= 7) {
-        score += 2;
-      } else if (age.inDays <= 30) {
-        score += 1;
-      }
-      if (queryTerms.isEmpty && !asksForLinks) score = 1;
-      if (score > 0) ranked.add((item: item, score: score));
-    }
-    ranked.sort((a, b) => b.score.compareTo(a.score));
-    final matches = ranked.take(12).toList(growable: false);
-
+    final isEn = AppTranslations.currentLanguage == 'en';
     if (matches.isEmpty) {
       return [
-        'Không tìm thấy nội dung phù hợp trong **${items.length} mục clipboard**. '
-            'Hãy thử từ khóa khác hoặc chọn trực tiếp một clip để phân tích.',
+        isEn
+            ? 'No matching content found in **${items.length} clipboard items**. '
+                'Try different keywords or select a clip directly for analysis.'
+            : 'Không tìm thấy nội dung phù hợp trong **${items.length} mục clipboard**. '
+                'Hãy thử từ khóa khác hoặc chọn trực tiếp một clip để phân tích.',
       ];
     }
 
     final output = StringBuffer(
-      'Đã tìm trong **${items.length} mục clipboard** bằng model local '
-      '**${model.name}** và thấy **${ranked.length} kết quả phù hợp**:\n\n',
+      isEn
+          ? 'Searched **${items.length} clipboard items** using local model '
+              '**${model.name}** and found **${rankedItems.length} matching results**:\n\n'
+          : 'Đã tìm trong **${items.length} mục clipboard** bằng model local '
+              '**${model.name}** và thấy **${rankedItems.length} kết quả phù hợp**:\n\n',
     );
     for (var index = 0; index < matches.length; index++) {
-      final item = matches[index].item;
+      final item = matches[index];
       var preview = item.content.trim().replaceAll(RegExp(r'\s+'), ' ');
       if (preview.length > 240) preview = '${preview.substring(0, 240)}…';
+
+      final isImgUrl = item.contentType == ClipboardContentType.url &&
+          _clipboardRanker.isImageUrl(item.content);
+      final badgeLabel = isImgUrl
+          ? (isEn ? 'IMAGE LINK' : 'LINK ÁNH')
+          : item.contentType.name.toUpperCase();
+
+      final unknownSource = isEn ? 'Unknown source' : 'Không rõ nguồn';
       output.writeln(
-        '${index + 1}. **${item.contentType.name.toUpperCase()}** '
-        '— ${item.sourceAppName ?? 'Không rõ nguồn'} '
-        '· `clip:${item.id}`\n   $preview',
+        '${index + 1}. **$badgeLabel** — ${item.sourceAppName ?? unknownSource}\n   $preview',
       );
     }
-    if (ranked.length > matches.length) {
+    if (rankedItems.length > matches.length) {
       output.write(
-        '\n_Đang hiển thị ${matches.length}/${ranked.length} kết quả tốt nhất._',
+        isEn
+            ? '\n_Showing top ${matches.length}/${rankedItems.length} results._'
+            : '\n_Đang hiển thị ${matches.length}/${rankedItems.length} kết quả tốt nhất._',
       );
     }
     return [output.toString()];
+
   }
 
   double _characterSimilarity(String query, String text) {

@@ -85,7 +85,11 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
 
   Future<void> _runFeatureAction(AiFeatureGroup group, String option) async {
     final aiState = ref.read(aiControllerProvider);
-    final promptText = 'Thực hiện "${group.title}" với tùy chọn "$option".';
+    final isEn = AppTranslations.currentLanguage == 'en';
+    final promptText = isEn
+        ? 'Perform "${group.title}" with option "$option".'
+        : 'Thực hiện "${group.title}" với tùy chọn "$option".';
+
     var contextItem = aiState.activeClipboardContext;
 
     if (group == AiFeatureGroup.ocrRefine &&
@@ -155,21 +159,21 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
               if (selected != null) {
                 return CupertinoActionSheet(
                   title: Text(selected.title),
-                  message: const Text('Tùy chọn hội thoại'),
+                  message: Text('ai_conversation_options'.tr),
                   actions: [
                     CupertinoActionSheetAction(
                       onPressed: () => Navigator.pop(context, (
                         conversation: selected,
                         action: _ConversationAction.rename,
                       )),
-                      child: const Text('Đổi tên'),
+                      child: Text('rename'.tr),
                     ),
                     CupertinoActionSheetAction(
                       onPressed: () => Navigator.pop(context, (
                         conversation: selected,
                         action: _ConversationAction.togglePin,
                       )),
-                      child: Text(selected.isPinned ? 'Bỏ ghim' : 'Ghim'),
+                      child: Text(selected.isPinned ? 'unpin'.tr : 'pin'.tr),
                     ),
                     CupertinoActionSheetAction(
                       isDestructiveAction: true,
@@ -177,19 +181,20 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                         conversation: selected,
                         action: _ConversationAction.delete,
                       )),
-                      child: const Text('Xóa'),
+                      child: Text('delete'.tr),
                     ),
                   ],
                   cancelButton: CupertinoActionSheetAction(
                     onPressed: () =>
                         setModalState(() => actionConversation = null),
-                    child: const Text('Quay lại'),
+                    child: Text('back'.tr),
                   ),
                 );
               }
 
               return CupertinoActionSheet(
-                title: const Text('Lịch sử hội thoại'),
+                title: Text('ai_conversation_history'.tr),
+                message: Text('ai_history_subtitle'.tr),
                 actions: [
                   CupertinoActionSheetAction(
                     isDefaultAction: true,
@@ -199,7 +204,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                           .read(aiControllerProvider.notifier)
                           .startNewConversation();
                     },
-                    child: const Text('＋ Hội thoại mới'),
+                    child: Text('ai_new_conversation'.tr),
                   ),
                   for (final conversation in conversations)
                     AiConversationHistoryAction(
@@ -238,7 +243,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
         final title = await showCupertinoDialog<String>(
           context: context,
           builder: (context) => CupertinoAlertDialog(
-            title: const Text('Đổi tên hội thoại'),
+            title: Text('ai_rename_dialog_title'.tr),
             content: CupertinoTextField(controller: controller),
             actions: [
               CupertinoDialogAction(
@@ -247,7 +252,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
               ),
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context, controller.text),
-                child: const Text('Lưu'),
+                child: Text('save'.tr),
               ),
             ],
           ),
@@ -273,12 +278,13 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
     showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: const Text('Cấu hình sinh nội dung'),
+        title: Text('ai_gen_settings_title'.tr),
+        message: Text('ai_gen_settings_sub'.tr),
         actions: [
-          for (final profile in const [
-            ('Chính xác · 2K', 0.2, 2048),
-            ('Cân bằng · 4K', 0.55, 4096),
-            ('Sáng tạo · 8K', 0.85, 8192),
+          for (final profile in [
+            ('ai_profile_precise'.tr, 0.2, 2048),
+            ('ai_profile_balanced'.tr, 0.55, 4096),
+            ('ai_profile_creative'.tr, 0.85, 8192),
           ])
             CupertinoActionSheetAction(
               onPressed: () {
@@ -383,13 +389,13 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                       CupertinoIconControl(
                         icon: CupertinoIcons.clock,
                         size: 16,
-                        tooltip: 'Lịch sử hội thoại',
+                        tooltip: 'ai_conversation_history'.tr,
                         onPressed: _showConversations,
                       ),
                       CupertinoIconControl(
                         icon: CupertinoIcons.slider_horizontal_3,
                         size: 16,
-                        tooltip: 'Cấu hình AI',
+                        tooltip: 'ai_config'.tr,
                         onPressed: _showGenerationSettings,
                       ),
                       CupertinoIconControl(

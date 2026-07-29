@@ -1,3 +1,4 @@
+import '../../../core/localization/app_translations.dart';
 import 'ai_feature_action.dart';
 
 enum AiRequestIntent {
@@ -100,14 +101,31 @@ class AiRequestPlanner {
   }
 
   String _detectLanguage(String prompt, Set<String> words) {
-    if (RegExp(
-          r'[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]',
-        ).hasMatch(prompt) ||
-        words.any(_vietnameseWords.contains)) {
+    final isEnMode = AppTranslations.currentLanguage == 'en';
+
+    final hasVietnameseAccents = RegExp(
+      r'[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]',
+    ).hasMatch(prompt);
+    final vietnameseWordCount = words.where(_vietnameseWords.contains).length;
+
+    if (hasVietnameseAccents || vietnameseWordCount >= 1) {
+      final hasEnglishWords = words.any((w) => [
+            'create', 'word', 'make', 'write', 'please', 'help', 'search', 'find',
+            'the', 'is', 'for', 'with', 'hello', 'hi', 'translate', 'summarize',
+            'perform', 'option', 'rewrite', 'explain'
+          ].contains(w));
+      if (hasEnglishWords && vietnameseWordCount == 0) {
+        return isEnMode ? 'English' : 'Vietnamese';
+      }
       return 'Vietnamese';
     }
+
+    if (isEnMode) {
+      return 'English';
+    }
+
     if (RegExp(r'^[\x00-\x7F]+$').hasMatch(prompt)) return 'English';
-    return 'the same language as the user';
+    return 'Vietnamese';
   }
 
   static const _clipboardTerms = {

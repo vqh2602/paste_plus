@@ -134,9 +134,9 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                         child: Row(
                           children: [
                             const Text('🧠 ', style: TextStyle(fontSize: 13)),
-                            const Text(
-                              'Đang xử lý',
-                              style: TextStyle(
+                            Text(
+                              'ai_processing'.tr,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
                                 color: CupertinoColors.systemIndigo,
@@ -178,7 +178,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
 
             const SizedBox(height: 10),
             if (widget.message.content.isEmpty)
-              Text(widget.message.isThinking ? 'Đang xử lý...' : '')
+              Text(widget.message.isThinking ? 'ai_processing'.tr : '')
             else
               AiMarkdownContentWidget(
                 content: widget.message.content,
@@ -246,7 +246,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     CupertinoIconControl(
                       icon: CupertinoIcons.refresh,
                       size: 13,
-                      tooltip: 'Tạo lại',
+                      tooltip: 'ai_regenerate'.tr,
                       onPressed: widget.onRegenerate!,
                     ),
                   ],
@@ -255,7 +255,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     CupertinoIconControl(
                       icon: CupertinoIcons.ellipsis_circle,
                       size: 13,
-                      tooltip: 'Tiếp tục',
+                      tooltip: 'ai_continue'.tr,
                       onPressed: widget.onContinue!,
                     ),
                   ],
