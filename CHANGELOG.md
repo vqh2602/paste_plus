@@ -2,6 +2,14 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.8] - 2026-07-29
+
+### 🐛 Sửa lỗi & Cải tiến
+- **Tự động tắt cửa sổ AI**: Thêm xử lý cho phép tắt cửa sổ AI bằng nút X hoặc phím Escape để giảm tải cho người dùng không có nhu cầu sử dụng.
+- **Auto-Updater v2**:
+  - Tự động kiểm tra và tải bản cập nhật mới ngay sau khi cài đặt.
+  - Thông báo lỗi rõ ràng và thân thiện khi có sự cố xảy ra trong quá trình tải hoặc cài đặt.
+
 ## [1.0.7] - 2026-07-29
 
 ### 🚀 Nâng cấp Menu Thao tác & Sửa lỗi
