@@ -7,6 +7,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
@@ -32,6 +33,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _typeColor(item.contentType);
     final query = ref.watch(historyControllerProvider).query;
+    final parsedColor = item.contentType == ClipboardContentType.color ? ColorParser.parse(item.content) : null;
 
     return SizedBox(
       width: 292,
@@ -176,6 +178,38 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ],
+                        )
+                      : parsedColor != null
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: parsedColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: resolveColor(context, ClipFlowColors.border),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: HighlightedText(
+                                text: item.content,
+                                query: query,
+                                maxLines: 6,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  height: 1.45,
+                                  fontFamily: 'monospace',
+                                ),
                               ),
                             ),
                           ],

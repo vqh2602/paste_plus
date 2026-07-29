@@ -8,6 +8,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/utils/color_parser.dart';
 import '../../../ai/domain/ai_feature_action.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
@@ -88,6 +89,8 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     for (final entry in state.visibleItems) {
       if (entry.id == state.selectedItemId) item = entry;
     }
+    final parsedColor = item?.contentType == ClipboardContentType.color ? ColorParser.parse(item!.content) : null;
+    
     if (item == null) {
       return Center(child: Text('select_item_to_view'.tr));
     }
@@ -154,6 +157,36 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                               color: resolveColor(
                                 context,
                                 ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    : parsedColor != null
+                    ? Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: 64,
+                            height: 64,
+                            margin: const EdgeInsets.only(right: 16),
+                            decoration: BoxDecoration(
+                              color: parsedColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: resolveColor(context, ClipFlowColors.border),
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: HighlightedText(
+                              text: item.content,
+                              query: state.query,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                height: 1.55,
+                                fontFamily: 'monospace',
                               ),
                             ),
                           ),

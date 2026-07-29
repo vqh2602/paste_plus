@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import '../../../../core/utils/color_parser.dart';
 import 'clipboard_content_type.dart';
 
 class ContentNormalizer {
@@ -18,9 +19,6 @@ class ContentClassifier {
     caseSensitive: false,
   );
   static final RegExp _phone = RegExp(r'^\+?[0-9][0-9 ()-]{6,18}$');
-  static final RegExp _hex = RegExp(
-    r'^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$',
-  );
   static final RegExp _filePath = RegExp(
     r'^(?:/[^\n]+|[A-Za-z]:\\[^\n]+|file://[^\n]+)$',
   );
@@ -35,7 +33,7 @@ class ContentClassifier {
       return ClipboardContentType.url;
     }
     if (_email.hasMatch(value)) return ClipboardContentType.email;
-    if (_hex.hasMatch(value)) return ClipboardContentType.color;
+    if (ColorParser.parse(value) != null) return ClipboardContentType.color;
     if (_phone.hasMatch(value)) return ClipboardContentType.phone;
     if (_filePath.hasMatch(value)) return ClipboardContentType.file;
     if (_looksLikeCode(value)) return ClipboardContentType.code;

@@ -7,6 +7,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
@@ -44,6 +45,7 @@ class ClipboardCardWidget extends ConsumerWidget {
     final isOnlineImage = isImageUrl(item.content);
     final historyNotifier = ref.read(historyControllerProvider.notifier);
     final state = ref.watch(historyControllerProvider);
+    final parsedColor = item.contentType == ClipboardContentType.color ? ColorParser.parse(item.content) : null;
 
     return CupertinoPressable(
       onPressed: onTap,
@@ -185,6 +187,38 @@ class ClipboardCardWidget extends ConsumerWidget {
                   fontSize: 12,
                   color: resolveColor(context, ClipFlowColors.secondaryText),
                 ),
+              ),
+            ] else if (parsedColor != null) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: parsedColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: resolveColor(context, ClipFlowColors.border),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: HighlightedText(
+                      text: item.content,
+                      query: state.query,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ] else ...[
               HighlightedText(
