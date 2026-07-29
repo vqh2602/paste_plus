@@ -8,7 +8,6 @@
 #include <memory>
 #include <string>
 
-#include <flutter/plugin.h>
 
 class WindowPlugin : public flutter::Plugin {
  public:

@@ -7,7 +7,6 @@
 
 #include <memory>
 
-#include <flutter/plugin.h>
 
 class ClipboardPlugin : public flutter::Plugin {
  public:
