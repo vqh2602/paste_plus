@@ -28,15 +28,11 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   
-  WindowPlugin::RegisterWithRegistrar(
-      flutter::PluginRegistrarManager::GetInstance()
-          ->GetRegistrar<flutter::PluginRegistrarWindows>(
-              flutter_controller_->engine()->GetRegistrarForPlugin("WindowPlugin")));
+  WindowPlugin::RegisterWithMessenger(
+      flutter_controller_->engine()->messenger());
   
-  ClipboardPlugin::RegisterWithRegistrar(
-      flutter::PluginRegistrarManager::GetInstance()
-          ->GetRegistrar<flutter::PluginRegistrarWindows>(
-              flutter_controller_->engine()->GetRegistrarForPlugin("ClipboardPlugin")));
+  ClipboardPlugin::RegisterWithMessenger(
+      flutter_controller_->engine()->messenger());
   
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 

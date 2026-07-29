@@ -4,7 +4,6 @@
 #include <shobjidl.h> // for IFileDialog
 #include <psapi.h> // for GetModuleFileNameEx
 #include <flutter/method_channel.h>
-#include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 
 #include <memory>
@@ -33,21 +32,23 @@ std::wstring utf8_decode(const std::string &str) {
     return wstrTo;
 }
 
-void WindowPlugin::RegisterWithRegistrar(
-    flutter::PluginRegistrarWindows* registrar) {
+void WindowPlugin::RegisterWithMessenger(
+    flutter::BinaryMessenger* messenger) {
+  auto plugin = std::make_shared<WindowPlugin>();
+
   auto channel =
-      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "clipflow/window",
+      std::make_shared<flutter::MethodChannel<flutter::EncodableValue>>(
+          messenger, "clipflow/window",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<WindowPlugin>();
-
   channel->SetMethodCallHandler(
-      [plugin_pointer = plugin.get()](const auto& call, auto result) {
-        plugin_pointer->HandleMethodCall(call, std::move(result));
+      [plugin](const auto& call, auto result) {
+        plugin->HandleMethodCall(call, std::move(result));
       });
 
-  registrar->AddPlugin(std::move(plugin));
+  // Keep channel alive for the lifetime of the app
+  static std::vector<std::shared_ptr<flutter::MethodChannel<flutter::EncodableValue>>> s_channels;
+  s_channels.push_back(channel);
 }
 
 WindowPlugin::WindowPlugin() {}

@@ -4,7 +4,6 @@
 #include <gdiplus.h>
 #include <psapi.h>
 #include <flutter/method_channel.h>
-#include <flutter/plugin_registrar_windows.h>
 #include <flutter/standard_method_codec.h>
 #include <shlwapi.h>
 
@@ -139,21 +138,23 @@ int GetEncoderClsid(const WCHAR* format, CLSID* pClsid)
 
 ULONG_PTR gdiplusToken;
 
-void ClipboardPlugin::RegisterWithRegistrar(
-    flutter::PluginRegistrarWindows* registrar) {
+void ClipboardPlugin::RegisterWithMessenger(
+    flutter::BinaryMessenger* messenger) {
+  auto plugin = std::make_shared<ClipboardPlugin>();
+
   auto channel =
-      std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
-          registrar->messenger(), "clipflow/clipboard",
+      std::make_shared<flutter::MethodChannel<flutter::EncodableValue>>(
+          messenger, "clipflow/clipboard",
           &flutter::StandardMethodCodec::GetInstance());
 
-  auto plugin = std::make_unique<ClipboardPlugin>();
-
   channel->SetMethodCallHandler(
-      [plugin_pointer = plugin.get()](const auto& call, auto result) {
-        plugin_pointer->HandleMethodCall(call, std::move(result));
+      [plugin](const auto& call, auto result) {
+        plugin->HandleMethodCall(call, std::move(result));
       });
 
-  registrar->AddPlugin(std::move(plugin));
+  // Keep channel alive for the lifetime of the app
+  static std::vector<std::shared_ptr<flutter::MethodChannel<flutter::EncodableValue>>> s_channels;
+  s_channels.push_back(channel);
   
   GdiplusStartupInput gdiplusStartupInput;
   GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
