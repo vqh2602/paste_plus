@@ -62,6 +62,7 @@ class DesktopIntegrationService with TrayListener {
 
   bool get isDesktop =>
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+  bool get hasWindowPlugin => Platform.isMacOS || Platform.isWindows;
   bool get isTrayActive => _trayActive;
 
   Future<void> initialize({
@@ -321,8 +322,10 @@ class DesktopIntegrationService with TrayListener {
     await windowManager.setResizable(false);
     await windowManager.setAlwaysOnTop(true);
     await windowManager.setSkipTaskbar(true);
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       await _windowChannel.invokeMethod<void>('setQuickPanelMode', true);
+    }
+    if (Platform.isMacOS) {
       await windowManager.setVisibleOnAllWorkspaces(
         true,
         visibleOnFullScreen: true,
@@ -353,8 +356,10 @@ class DesktopIntegrationService with TrayListener {
         _windowMode == DesktopWindowMode.hidden;
     _windowMode = DesktopWindowMode.main;
     _onMainWindowRequested?.call();
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
+    }
+    if (Platform.isMacOS) {
       await windowManager.setVisibleOnAllWorkspaces(false);
     }
     await windowManager.setAlwaysOnTop(false);
@@ -427,8 +432,10 @@ class DesktopIntegrationService with TrayListener {
 
     _windowMode = DesktopWindowMode.aiWindow;
     _onAiWindowRequested?.call();
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
+    }
+    if (Platform.isMacOS) {
       await windowManager.setVisibleOnAllWorkspaces(false);
     }
     await windowManager.setAlwaysOnTop(false);
@@ -485,8 +492,10 @@ class DesktopIntegrationService with TrayListener {
     _windowMode = DesktopWindowMode.aiWithQuickPanel;
     _ignoreBlurUntil = DateTime.now().add(const Duration(milliseconds: 450));
     _onQuickPanelRequested?.call();
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
+    }
+    if (Platform.isMacOS) {
       await windowManager.setVisibleOnAllWorkspaces(false);
     }
     await windowManager.setAlwaysOnTop(false);
@@ -523,7 +532,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<bool> checkAccessibilityPermission() async {
-    if (!Platform.isMacOS) return true;
+    if (!hasWindowPlugin) return true;
     try {
       return await _windowChannel.invokeMethod<bool>(
             'checkAccessibilityPermission',
@@ -535,7 +544,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<bool> setShowInDock(bool showInDock) async {
-    if (!Platform.isMacOS) return true;
+    if (!hasWindowPlugin) return true;
     try {
       await _windowChannel.invokeMethod<void>('setShowInDock', showInDock);
       return true;
@@ -550,7 +559,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<bool> requestAccessibilityPermission() async {
-    if (!Platform.isMacOS) return true;
+    if (!hasWindowPlugin) return true;
     try {
       return await _windowChannel.invokeMethod<bool>(
             'requestAccessibilityPermission',
@@ -562,7 +571,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<bool> resetAccessibilityPermission() async {
-    if (!Platform.isMacOS) return true;
+    if (!hasWindowPlugin) return true;
     try {
       return await _windowChannel.invokeMethod<bool>(
             'resetAccessibilityPermission',
@@ -574,7 +583,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<List<Map<String, String>>> getRunningApplications() async {
-    if (!Platform.isMacOS) return [];
+    if (!hasWindowPlugin) return [];
     try {
       final list = await _windowChannel.invokeListMethod<Map>(
         'getRunningApplications',
@@ -589,7 +598,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<Map<String, String>?> pickApplicationFile() async {
-    if (!Platform.isMacOS) return null;
+    if (!hasWindowPlugin) return null;
     try {
       final result = await _windowChannel.invokeMapMethod<String, String>(
         'pickApplicationFile',
@@ -604,7 +613,7 @@ class DesktopIntegrationService with TrayListener {
   Future<String?> saveConfigFile({
     String defaultName = 'clipflow_config.clipflow',
   }) async {
-    if (!Platform.isMacOS) return null;
+    if (!hasWindowPlugin) return null;
     try {
       return await _windowChannel.invokeMethod<String>('saveConfigFile', {
         'defaultName': defaultName,
@@ -615,7 +624,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<String?> pickConfigFile() async {
-    if (!Platform.isMacOS) return null;
+    if (!hasWindowPlugin) return null;
     try {
       return await _windowChannel.invokeMethod<String>('pickConfigFile');
     } on Object catch (_) {
@@ -624,7 +633,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<bool> pasteToPreviousApplication() async {
-    if (!Platform.isMacOS) return false;
+    if (!hasWindowPlugin) return false;
     try {
       return await _windowChannel.invokeMethod<bool>(
             'pasteToPreviousApplication',
@@ -642,7 +651,7 @@ class DesktopIntegrationService with TrayListener {
 
   Future<void> openUrl(String url) async {
     if (url.trim().isEmpty) return;
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       try {
         await _windowChannel.invokeMethod<void>('openUrl', {'url': url});
         return;
@@ -660,7 +669,7 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<void> restartApp() async {
-    if (Platform.isMacOS) {
+    if (hasWindowPlugin) {
       try {
         await _windowChannel.invokeMethod<void>('restartApp');
         return;
