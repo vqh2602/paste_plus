@@ -4,7 +4,12 @@ Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ đư�
 
 ## [1.0.7] - 2026-07-29
 
-### 🚀 Sửa lỗi & Bản hóa Đa ngôn ngữ (Localization)
+### 🚀 Nâng cấp Menu Thao tác & Sửa lỗi
+- **Khôi phục Menu Thao tác theo Type**:
+  - Tự động hiển thị các tác vụ tương ứng với loại dữ liệu: Trích xuất văn bản (OCR) và Tải lên Cloud cho hình ảnh; Dịch văn bản cho nội dung chữ.
+  - Thêm tùy chọn "Hỏi AI Assistant" (`ask_ai`) vào menu thao tác để dễ dàng chọn clipboard làm ngữ cảnh AI và mở cửa sổ AI.
+  - Tối ưu hóa UI: Loại bỏ tiêu đề xem trước văn bản trùng lặp và loại bỏ tùy chọn ghim khỏi menu.
+  - Khôi phục dịch vụ dịch nhanh tức thì qua `TranslationService`.
 - **Bản hóa Đa ngôn ngữ nâng cao**:
   - Bản hóa hoàn toàn loại nội dung Clipboard (`Allowed Content Types`) trong mục Cài đặt (Văn bản -> Text, Liên kết -> Link, Đường dẫn file -> File Path, Màu HEX -> HEX Color...).
   - Bản hóa các nhãn hiển thị loại nội dung trên thẻ xem nhanh Clipboard (`QuickClipboardCardWidget`) và huy hiệu Markdown (`AiMarkdownContentWidget`).
