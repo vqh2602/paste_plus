@@ -2,6 +2,18 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.6] - 2026-07-29
+
+### 🚀 Tính năng mới & Sửa lỗi
+- **Bản hóa Đa ngôn ngữ cho Local AI Assistant**:
+  - Hỗ trợ ngôn ngữ Tiếng Anh (English) toàn diện cho danh sách preset chips, quá trình suy luận (Thinking process), dialog cài đặt và nội dung hội thoại AI.
+  - Tách rời và tổ chức lại toàn bộ System Prompts vào module quản lý tập trung `AiPrompts` (`ai_prompts.dart`).
+- **Tự động cuộn thông minh (Auto-scroll)**:
+  - Tự động cuộn xuống cuối danh sách tin nhắn khi có câu phản hồi mới hoặc đang stream tokens.
+  - Thông minh giữ nguyên vị trí scroll nếu người dùng chủ động cuộn lên đọc lịch sử.
+
+---
+
 ## [1.0.5] - 2026-07-28
 
 ### 🚀 Tính năng mới & Cải tiến
