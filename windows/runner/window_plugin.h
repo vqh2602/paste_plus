@@ -13,7 +13,6 @@ class WindowPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 
- private:
   WindowPlugin();
   virtual ~WindowPlugin();
 

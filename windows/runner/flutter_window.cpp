@@ -28,17 +28,16 @@ bool FlutterWindow::OnCreate() {
   }
   RegisterPlugins(flutter_controller_->engine());
   
-  flutter::PluginRegistrarWindows *window_registrar =
+  WindowPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(
-              flutter_controller_->GetRegistrarForPlugin("WindowPlugin"));
-  WindowPlugin::RegisterWithRegistrar(window_registrar);
+              flutter_controller_->engine()->GetRegistrarForPlugin("WindowPlugin")));
   
-  flutter::PluginRegistrarWindows *clipboard_registrar =
+  ClipboardPlugin::RegisterWithRegistrar(
       flutter::PluginRegistrarManager::GetInstance()
           ->GetRegistrar<flutter::PluginRegistrarWindows>(
-              flutter_controller_->GetRegistrarForPlugin("ClipboardPlugin"));
-  ClipboardPlugin::RegisterWithRegistrar(clipboard_registrar);
+              flutter_controller_->engine()->GetRegistrarForPlugin("ClipboardPlugin")));
+  
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {

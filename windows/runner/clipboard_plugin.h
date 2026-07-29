@@ -12,7 +12,6 @@ class ClipboardPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 
- private:
   ClipboardPlugin();
   virtual ~ClipboardPlugin();
 
