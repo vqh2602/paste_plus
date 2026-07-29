@@ -1376,40 +1376,40 @@ class LocalAiEngine {
 
   }
 
-  double _characterSimilarity(String query, String text) {
-    Set<String> grams(String value) {
-      final normalized = value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
-      if (normalized.length < 3) return {normalized};
-      return {
-        for (var i = 0; i <= normalized.length - 3; i++)
-          normalized.substring(i, i + 3),
-      };
-    }
+  // double _characterSimilarity(String query, String text) {
+  //   Set<String> grams(String value) {
+  //     final normalized = value.toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  //     if (normalized.length < 3) return {normalized};
+  //     return {
+  //       for (var i = 0; i <= normalized.length - 3; i++)
+  //         normalized.substring(i, i + 3),
+  //     };
+  //   }
 
-    final left = grams(query);
-    final right = grams(text.length > 500 ? text.substring(0, 500) : text);
-    if (left.isEmpty || right.isEmpty) return 0;
-    return left.intersection(right).length / left.length;
-  }
+  //   final left = grams(query);
+  //   final right = grams(text.length > 500 ? text.substring(0, 500) : text);
+  //   if (left.isEmpty || right.isEmpty) return 0;
+  //   return left.intersection(right).length / left.length;
+  // }
 
-  static const _searchStopWords = {
-    'tìm',
-    'kiem',
-    'kiếm',
-    'trong',
-    'clipboard',
-    'clipbroad',
-    'clip',
-    'cho',
-    'của',
-    'mình',
-    'hãy',
-    'find',
-    'search',
-    'the',
-    'for',
-    'from',
-  };
+  // static const _searchStopWords = {
+  //   'tìm',
+  //   'kiem',
+  //   'kiếm',
+  //   'trong',
+  //   'clipboard',
+  //   'clipbroad',
+  //   'clip',
+  //   'cho',
+  //   'của',
+  //   'mình',
+  //   'hãy',
+  //   'find',
+  //   'search',
+  //   'the',
+  //   'for',
+  //   'from',
+  // };
 
   String _firstLine(String text) {
     final lines = text.split('\n').where((l) => l.trim().isNotEmpty).toList();

@@ -71,7 +71,7 @@ class AiClipboardRelevanceRanker {
       final isUrlType = item.contentType == ClipboardContentType.url;
       final containsHttpUrl =
           RegExp(r'https?://', caseSensitive: false).hasMatch(content);
-      final looksLikeUrl = isUrlType || containsHttpUrl;
+      // final looksLikeUrl = isUrlType || containsHttpUrl;
       final imageLink = isImageUrl(content);
 
       if (asksForLink) {

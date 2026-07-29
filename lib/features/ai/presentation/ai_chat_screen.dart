@@ -11,6 +11,7 @@ import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
 import '../data/ai_conversation_repository.dart';
+import 'ai_controller.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
@@ -39,12 +40,17 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     super.dispose();
   }
 
-  void _scrollToBottom() {
+  void _scrollToBottom({bool force = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
+      if (!_scrollController.hasClients) return;
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      final currentScroll = _scrollController.position.pixels;
+      final isNearBottom = (maxScroll - currentScroll) <= 160;
+
+      if (force || isNearBottom) {
         _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
+          maxScroll,
+          duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
         );
       }
@@ -57,7 +63,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     _inputController.clear();
 
     await ref.read(aiControllerProvider.notifier).sendUserMessage(text);
-    _scrollToBottom();
+    _scrollToBottom(force: true);
   }
 
   Future<void> _runFeatureAction(AiFeatureGroup group, String option) async {
@@ -93,7 +99,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           selectedOption: option,
           contextItem: contextItem,
         );
-    _scrollToBottom();
+    _scrollToBottom(force: true);
   }
 
   void _showFeatureOptionsPicker(AiFeatureGroup group) {
@@ -293,6 +299,25 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AiState>(aiControllerProvider, (previous, next) {
+      final prevLen = previous?.chatMessages.length ?? 0;
+      final nextLen = next.chatMessages.length;
+      final prevLastContent = previous?.chatMessages.lastOrNull?.content;
+      final nextLastContent = next.chatMessages.lastOrNull?.content;
+      final prevThinking = previous?.chatMessages.lastOrNull?.thinkingContent;
+      final nextThinking = next.chatMessages.lastOrNull?.thinkingContent;
+
+      final isNewMessage = nextLen > prevLen;
+      final isStreaming =
+          prevLastContent != nextLastContent || prevThinking != nextThinking;
+
+      if (isNewMessage) {
+        _scrollToBottom(force: true);
+      } else if (isStreaming || next.isGenerating) {
+        _scrollToBottom(force: false);
+      }
+    });
+
     final aiState = ref.watch(aiControllerProvider);
     final historyItemCount = ref.watch(
       historyControllerProvider.select((state) => state.items.length),

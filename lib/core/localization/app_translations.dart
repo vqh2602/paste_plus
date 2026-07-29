@@ -96,6 +96,10 @@ class AppTranslations {
       'ai_partial_downloaded': 'Đã tải một phần',
       'ai_download_paused': 'Tạm dừng',
       'ai_delete_partial': 'Xóa file tạm',
+      'ai_privacy_title': '100% Riêng tư & Ngoại tuyến (Offline)',
+      'ai_cancel_download': 'Hủy tải',
+      'ai_size_label': 'Kích thước',
+
       'ai_all_clipboard_context':
           'Sẵn sàng tìm trong Clipboard khi được yêu cầu (@count mục)',
       'ai_select_clip_hint': 'Chat thông thường không đọc Clipboard',
@@ -124,7 +128,6 @@ class AppTranslations {
       'ai_regenerate': 'Tạo lại',
       'ai_continue': 'Tiếp tục',
       'ai_recent_conversation': 'Hội thoại gần nhất',
-
 
       // Settings - General
       'appearance_and_theme': 'Giao diện & Bảng màu',
@@ -219,7 +222,6 @@ class AppTranslations {
       'no_collections': 'Chưa có collection nào.',
       'new_collection': 'Collection mới',
       'new_collection_btn': '+ Collection mới',
-      'rename': 'Đổi tên',
       'rename_collection': 'Đổi tên collection',
       'delete_collection': 'Xóa collection',
       'collection_name_placeholder': 'Tên collection',
@@ -424,7 +426,6 @@ class AppTranslations {
       'no_matching_clips': 'Không có bản sao phù hợp',
       'open_source_licenses': 'Giấy phép mã nguồn mở',
       'password_placeholder': 'Nhập mật khẩu',
-      'pin': 'Ghim',
       'press_shortcut': 'Nhấn tổ hợp phím',
       'privacy_policy_text':
           'Dữ liệu clipboard được xử lý và lưu cục bộ trên thiết bị. ClipFlow không theo dõi hoặc gửi lịch sử clipboard lên máy chủ.',
@@ -436,7 +437,6 @@ class AppTranslations {
       'toggle_pin_shortcut': 'Bật/tắt ghim',
       'toggle_pin_sub': 'Ghim hoặc bỏ ghim mục đang chọn',
       'try_different_search': 'Hãy thử từ khóa hoặc bộ lọc khác.',
-      'unpin': 'Bỏ ghim',
       'unpinned_cleared': 'Đã xóa các mục chưa ghim',
       'view_licenses': 'Xem giấy phép',
     },
@@ -510,7 +510,9 @@ class AppTranslations {
       'ai_regenerate': 'Regenerate',
       'ai_continue': 'Continue',
       'ai_recent_conversation': 'Recent Conversation',
-
+      'ai_privacy_title': '100% Private & Offline',
+      'ai_cancel_download': 'Cancel download',
+      'ai_size_label': 'Size',
 
       // Settings Navigation & Headers
       'settings_title': 'ClipFlow Settings',
@@ -612,7 +614,6 @@ class AppTranslations {
       'no_collections': 'No collections available.',
       'new_collection': 'New collection',
       'new_collection_btn': '+ New Collection',
-      'rename': 'Rename',
       'rename_collection': 'Rename collection',
       'delete_collection': 'Delete collection',
       'collection_name_placeholder': 'Collection name',
@@ -817,7 +818,6 @@ class AppTranslations {
       'no_matching_clips': 'No matching clips',
       'open_source_licenses': 'Open-Source Licenses',
       'password_placeholder': 'Enter password',
-      'pin': 'Pin',
       'press_shortcut': 'Press shortcut',
       'privacy_policy_text':
           'Clipboard data is processed and stored locally on your device. ClipFlow does not track or send clipboard history to a server.',
@@ -830,7 +830,6 @@ class AppTranslations {
       'toggle_pin_shortcut': 'Toggle Pin',
       'toggle_pin_sub': 'Pin or unpin the selected item',
       'try_different_search': 'Try another keyword or filter.',
-      'unpin': 'Unpin',
       'unpinned_cleared': 'Unpinned items cleared',
       'view_licenses': 'View Licenses',
 

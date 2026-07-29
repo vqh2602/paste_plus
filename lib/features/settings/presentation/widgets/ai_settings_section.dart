@@ -44,9 +44,9 @@ class AiSettingsSection extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '100% Riêng tư & Ngoại tuyến (Offline)',
-                      style: TextStyle(
+                    Text(
+                      'ai_privacy_title'.tr,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -183,7 +183,7 @@ class AiSettingsSection extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        'Kích thước: ${model.fileSizeFormatted} • ${model.parameterSize}',
+                        '${'ai_size_label'.tr}: ${model.fileSizeFormatted} • ${model.parameterSize}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -242,9 +242,9 @@ class AiSettingsSection extends ConsumerWidget {
                         CupertinoButton(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           onPressed: () => aiNotifier.cancelDownload(model.id),
-                          child: const Text(
-                            'Hủy tải',
-                            style: TextStyle(
+                          child: Text(
+                            'ai_cancel_download'.tr,
+                            style: const TextStyle(
                               fontSize: 12,
                               color: CupertinoColors.systemOrange,
                             ),
