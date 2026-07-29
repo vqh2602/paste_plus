@@ -7,7 +7,9 @@
 
 #include <memory>
 
-class ClipboardPlugin {
+#include <flutter/plugin.h>
+
+class ClipboardPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 

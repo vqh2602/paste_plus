@@ -8,7 +8,9 @@
 #include <memory>
 #include <string>
 
-class WindowPlugin {
+#include <flutter/plugin.h>
+
+class WindowPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar);
 
