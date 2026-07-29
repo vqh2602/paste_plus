@@ -177,7 +177,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final action = await showCupertinoModalPopup<String>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: Text(item.content),
         actions: [
           if (isImage) ...[
             CupertinoActionSheetAction(
@@ -201,10 +200,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'copy'),
             child: Text('copy'.tr),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'pin'),
-            child: Text(item.isPinned ? 'unpin_item'.tr : 'pin_item'.tr),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'collection'),
