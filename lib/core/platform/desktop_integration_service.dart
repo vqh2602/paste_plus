@@ -51,6 +51,7 @@ class DesktopIntegrationService with TrayListener {
   VoidCallback? _onQuickPanelDismissed;
   VoidCallback? _onAiWindowRequested;
   DesktopWindowMode _windowMode = DesktopWindowMode.main;
+  DesktopWindowMode get windowMode => _windowMode;
   _MainWindowSnapshot? _mainWindowSnapshot;
   Rect? _aiWindowBounds;
   DateTime _ignoreBlurUntil = DateTime.fromMillisecondsSinceEpoch(0);
@@ -257,24 +258,25 @@ class DesktopIntegrationService with TrayListener {
 
   Future<void> toggleQuickPanel() async {
     if (!isDesktop) return;
-    if (_windowMode == DesktopWindowMode.aiWithQuickPanel &&
-        await windowManager.isVisible()) {
+
+    final isVisible = await windowManager.isVisible();
+    final isMinimized = await windowManager.isMinimized();
+    final isActive = isVisible && !isMinimized;
+
+    if (_windowMode == DesktopWindowMode.aiWithQuickPanel && isActive) {
       await _restoreAiWindowAfterQuickPanel();
       return;
     }
-    if (_windowMode == DesktopWindowMode.aiWindow &&
-        await windowManager.isVisible()) {
+    if (_windowMode == DesktopWindowMode.aiWindow && isActive) {
       await _showQuickPanelBesideAi();
       return;
     }
-    if (_windowMode == DesktopWindowMode.quickPanel &&
-        await windowManager.isVisible()) {
+    if (_windowMode == DesktopWindowMode.quickPanel && isActive) {
       await hideQuickPanel();
       return;
     }
 
-    if (_windowMode == DesktopWindowMode.main &&
-        await windowManager.isVisible()) {
+    if (_windowMode == DesktopWindowMode.main && isActive) {
       _mainWindowSnapshot = _MainWindowSnapshot(
         position: await windowManager.getPosition(),
         size: await windowManager.getSize(),

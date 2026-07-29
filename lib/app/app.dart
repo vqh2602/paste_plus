@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../core/platform/desktop_integration_service.dart';
+
 import '../core/localization/app_translations.dart';
 import '../core/ui/ai_debug_overlay.dart';
 import 'providers.dart';
@@ -44,6 +46,10 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
               router.go('/');
               // Preserve AI mode when the clipboard panel is opened beside it.
               ref.read(quickPanelModeProvider.notifier).state = true;
+              if (ref.read(desktopIntegrationProvider).windowMode ==
+                  DesktopWindowMode.quickPanel) {
+                ref.read(aiWindowModeProvider.notifier).state = false;
+              }
             },
             onMainWindowRequested: () {
               router.go('/');
