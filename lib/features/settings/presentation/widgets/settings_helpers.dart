@@ -509,10 +509,10 @@ Future<void> showLicensesDialog(BuildContext context) async {
         ),
       ),
       actions: [
-        CupertinoDialogAction(
-          onPressed: () => Navigator.of(context).pop(true),
-          child: const Text('Flutter Licenses'),
-        ),
+        // CupertinoDialogAction(
+        //   onPressed: () => Navigator.of(context).pop(true),
+        //   child: const Text('Flutter Licenses'),
+        // ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.of(context).pop(),

@@ -16,26 +16,39 @@ GoRouter createRouter({required bool hasCompletedOnboarding}) {
       ),
       GoRoute(
         path: '/settings',
-        pageBuilder: (context, state) => CustomTransitionPage<void>(
-          key: state.pageKey,
-          opaque: false,
-          barrierDismissible: true,
-          barrierColor: const Color(0x8A000000),
-          transitionsBuilder: (context, animation, secondary, child) {
-            return FadeTransition(
-              opacity: CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeOutCubic,
-              ),
-              child: ScaleTransition(
-                scale: Tween(begin: 0.97, end: 1.0).animate(animation),
-                child: child,
-              ),
-            );
-          },
-          child: const SettingsScreen(),
-        ),
+        pageBuilder: (context, state) {
+          final pageParam = state.uri.queryParameters['page'];
+          final initialPage = switch (pageParam) {
+            'about' => SettingsPage.about,
+            'clipboard' => SettingsPage.clipboard,
+            'privacy' => SettingsPage.privacy,
+            'storage' => SettingsPage.storage,
+            'shortcuts' => SettingsPage.shortcuts,
+            'ai' => SettingsPage.ai,
+            _ => null,
+          };
+          return CustomTransitionPage<void>(
+            key: state.pageKey,
+            opaque: false,
+            barrierDismissible: true,
+            barrierColor: const Color(0x8A000000),
+            transitionsBuilder: (context, animation, secondary, child) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: animation,
+                  curve: Curves.easeOutCubic,
+                ),
+                child: ScaleTransition(
+                  scale: Tween(begin: 0.97, end: 1.0).animate(animation),
+                  child: child,
+                ),
+              );
+            },
+            child: SettingsScreen(initialPage: initialPage),
+          );
+        },
       ),
     ],
   );
 }
+

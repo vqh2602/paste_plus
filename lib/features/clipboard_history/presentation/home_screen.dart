@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
+import '../../../core/services/update_service.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_content_type.dart';
@@ -28,6 +29,16 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _searchController = TextEditingController();
   final _searchFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateService.checkAutoUpdate(context, ref);
+      }
+    });
+  }
 
   @override
   void dispose() {

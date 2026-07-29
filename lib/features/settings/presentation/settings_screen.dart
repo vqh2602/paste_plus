@@ -14,17 +14,19 @@ import 'widgets/privacy_settings_section.dart';
 import 'widgets/shortcut_settings_section.dart';
 import 'widgets/storage_settings_section.dart';
 
-enum _SettingsPage { general, clipboard, privacy, storage, shortcuts, ai, about }
+enum SettingsPage { general, clipboard, privacy, storage, shortcuts, ai, about }
 
 class SettingsScreen extends ConsumerStatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.initialPage});
+
+  final SettingsPage? initialPage;
 
   @override
   ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  var _page = _SettingsPage.general;
+  late var _page = widget.initialPage ?? SettingsPage.general;
 
   void _close(BuildContext context) {
     if (context.canPop()) {
@@ -73,7 +75,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.all(8),
-                            children: _SettingsPage.values.map((page) {
+                            children: SettingsPage.values.map((page) {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: CupertinoChoicePill(
@@ -100,7 +102,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               padding: const EdgeInsets.all(12),
                               child: Column(
                                 children: [
-                                  for (final page in _SettingsPage.values)
+                                  for (final page in SettingsPage.values)
                                     _SettingsNavTile(
                                       icon: _icon(page),
                                       label: _label(page),
@@ -216,18 +218,18 @@ class _SettingsNavTile extends StatelessWidget {
 class _SettingsContent extends StatelessWidget {
   const _SettingsContent({required this.page});
 
-  final _SettingsPage page;
+  final SettingsPage page;
 
   @override
   Widget build(BuildContext context) {
     final content = switch (page) {
-      _SettingsPage.general => const GeneralSettingsSection(),
-      _SettingsPage.clipboard => const ClipboardSettingsSection(),
-      _SettingsPage.privacy => const PrivacySettingsSection(),
-      _SettingsPage.storage => const StorageSettingsSection(),
-      _SettingsPage.shortcuts => const ShortcutSettingsSection(),
-      _SettingsPage.ai => const AiSettingsSection(),
-      _SettingsPage.about => const AboutSettingsSection(),
+      SettingsPage.general => const GeneralSettingsSection(),
+      SettingsPage.clipboard => const ClipboardSettingsSection(),
+      SettingsPage.privacy => const PrivacySettingsSection(),
+      SettingsPage.storage => const StorageSettingsSection(),
+      SettingsPage.shortcuts => const ShortcutSettingsSection(),
+      SettingsPage.ai => const AiSettingsSection(),
+      SettingsPage.about => const AboutSettingsSection(),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -254,22 +256,22 @@ class _SettingsContent extends StatelessWidget {
   }
 }
 
-String _label(_SettingsPage page) => switch (page) {
-  _SettingsPage.general => 'tab_general'.tr,
-  _SettingsPage.clipboard => 'tab_clipboard'.tr,
-  _SettingsPage.privacy => 'tab_privacy'.tr,
-  _SettingsPage.storage => 'tab_storage'.tr,
-  _SettingsPage.shortcuts => 'tab_shortcuts'.tr,
-  _SettingsPage.ai => 'tab_ai'.tr,
-  _SettingsPage.about => 'tab_about'.tr,
+String _label(SettingsPage page) => switch (page) {
+  SettingsPage.general => 'tab_general'.tr,
+  SettingsPage.clipboard => 'tab_clipboard'.tr,
+  SettingsPage.privacy => 'tab_privacy'.tr,
+  SettingsPage.storage => 'tab_storage'.tr,
+  SettingsPage.shortcuts => 'tab_shortcuts'.tr,
+  SettingsPage.ai => 'tab_ai'.tr,
+  SettingsPage.about => 'tab_about'.tr,
 };
 
-IconData _icon(_SettingsPage page) => switch (page) {
-  _SettingsPage.general => CupertinoIcons.settings,
-  _SettingsPage.clipboard => CupertinoIcons.doc_on_clipboard,
-  _SettingsPage.privacy => CupertinoIcons.hand_raised,
-  _SettingsPage.storage => CupertinoIcons.archivebox,
-  _SettingsPage.shortcuts => CupertinoIcons.keyboard,
-  _SettingsPage.ai => CupertinoIcons.sparkles,
-  _SettingsPage.about => CupertinoIcons.info,
+IconData _icon(SettingsPage page) => switch (page) {
+  SettingsPage.general => CupertinoIcons.settings,
+  SettingsPage.clipboard => CupertinoIcons.doc_on_clipboard,
+  SettingsPage.privacy => CupertinoIcons.hand_raised,
+  SettingsPage.storage => CupertinoIcons.archivebox,
+  SettingsPage.shortcuts => CupertinoIcons.keyboard,
+  SettingsPage.ai => CupertinoIcons.sparkles,
+  SettingsPage.about => CupertinoIcons.info,
 };

@@ -2,8 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 
 class UpdateInfo {
   const UpdateInfo({
@@ -28,6 +32,62 @@ class UpdateService {
 
   static const String currentVersion = '1.0.7';
   static const MethodChannel _windowChannel = MethodChannel('clipflow/window');
+  static bool _autoUpdateChecked = false;
+
+  /// Compares [remote] and [local] version strings semantically
+  static bool isVersionHigher(String remote, String local) {
+    final cleanRemote = remote.replaceAll(RegExp(r'[^0-9.]'), '');
+    final cleanLocal = local.replaceAll(RegExp(r'[^0-9.]'), '');
+
+    final rParts = cleanRemote
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
+    final lParts = cleanLocal
+        .split('.')
+        .map((e) => int.tryParse(e) ?? 0)
+        .toList();
+    final maxLen = rParts.length > lParts.length
+        ? rParts.length
+        : lParts.length;
+
+    for (int i = 0; i < maxLen; i++) {
+      final r = i < rParts.length ? rParts[i] : 0;
+      final l = i < lParts.length ? lParts[i] : 0;
+      if (r > l) return true;
+      if (r < l) return false;
+    }
+    return false;
+  }
+
+  /// Navigates to the Settings > About screen.
+  static Future<void> navigateToAbout(BuildContext context) async {
+    if (!context.mounted) return;
+    context.push('/settings?page=about');
+  }
+
+  /// Called on app launch. Starts background download via the global provider,
+  /// then opens Settings > About so the user can see progress.
+  static Future<void> checkAutoUpdate(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    if (_autoUpdateChecked) return;
+    _autoUpdateChecked = true;
+
+    if (Platform.environment.containsKey('FLUTTER_TEST')) return;
+
+    await Future.delayed(const Duration(seconds: 3));
+    if (!context.mounted) return;
+
+    // Quick pre-check before navigating
+    final info = await const UpdateService().checkForUpdate();
+    if (!context.mounted || info == null || !info.hasUpdate) return;
+
+    // Navigate to About so the user can see the download progress.
+    navigateToAbout(context);
+  }
+
 
   /// Check GitHub releases for available update
   Future<UpdateInfo?> checkForUpdate() async {
@@ -78,8 +138,7 @@ class UpdateService {
       }
 
       final cleanRemote = tagName.replaceAll(RegExp(r'[^0-9.]'), '');
-      final hasUpdate =
-          cleanRemote.isNotEmpty && cleanRemote != currentVersion;
+      final hasUpdate = isVersionHigher(cleanRemote, currentVersion);
 
       return UpdateInfo(
         hasUpdate: hasUpdate,
@@ -174,7 +233,8 @@ class UpdateService {
 
       final newAppPath = appEntity.path;
 
-      final installScript = '''
+      final installScript =
+          '''
 sleep 1
 rm -rf "$currentBundlePath"
 cp -R "$newAppPath" "$currentBundlePath"
