@@ -11,6 +11,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
+import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/detail_pane_widget.dart';
@@ -39,35 +40,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     context.push('/settings');
   }
 
-  Future<void> _handleCopy(ClipboardItem item) async {
-    await ref.read(historyControllerProvider.notifier).copy(item);
-    if (!mounted) return;
-    showCupertinoNotice(context, 'copied'.tr);
+  void _handleCopy(ClipboardItem item) {
+    ref.read(historyControllerProvider.notifier).copy(item);
   }
 
   Future<void> _handleDelete(ClipboardItem item) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirm = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
         title: Text('delete_item_title'.tr),
         content: Text('delete_item_confirm'.tr),
         actions: [
           CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.pop(context, false),
             child: Text('cancel'.tr),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.pop(context, true),
             child: Text('delete'.tr),
           ),
         ],
       ),
     );
-    if (confirmed == true && mounted) {
+
+    if (confirm == true) {
       await ref.read(historyControllerProvider.notifier).delete(item);
-      if (!mounted) return;
-      showCupertinoNotice(context, 'item_deleted'.tr);
     }
   }
 
@@ -106,25 +104,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _handleDeleteCollection(ClipboardCollection collection) async {
-    final confirmed = await showCupertinoDialog<bool>(
+    final confirm = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('delete_collection_title'.tr),
-        content: Text('delete_collection_msg'.tr),
+        title: Text('delete_collection'.tr),
+        content: Text('delete_collection_confirm'.tr),
         actions: [
           CupertinoDialogAction(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.pop(context, false),
             child: Text('cancel'.tr),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.pop(context, true),
             child: Text('delete'.tr),
           ),
         ],
       ),
     );
-    if (confirmed == true) {
+
+    if (confirm == true) {
       await ref
           .read(collectionsControllerProvider.notifier)
           .delete(collection.id);
@@ -165,46 +164,55 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
-  void _showItemActions(
+  Future<void> _showItemActions(
     BuildContext context,
     WidgetRef ref,
     ClipboardItem item,
     ValueChanged<ClipboardItem> onDelete,
     ValueChanged<ClipboardItem> onAddToCollection,
-  ) {
+  ) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
-    showCupertinoModalPopup<void>(
+    final isImage = item.contentType == ClipboardContentType.image;
+
+    final action = await showCupertinoModalPopup<String>(
       context: context,
       builder: (context) => CupertinoActionSheet(
         title: Text(item.content),
         actions: [
+          if (isImage) ...[
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'ocr'),
+              child: Text('extract_ocr'.tr),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'cloud_upload'),
+              child: Text('upload_cloud'.tr),
+            ),
+          ] else ...[
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'translate'),
+              child: Text('translate_text'.tr),
+            ),
+          ],
           CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              historyNotifier.copy(item);
-            },
+            onPressed: () => Navigator.pop(context, 'ask_ai'),
+            child: Text('ask_ai'.tr),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'copy'),
             child: Text('copy'.tr),
           ),
           CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              historyNotifier.togglePinned(item);
-            },
-            child: Text(item.isPinned ? 'unpin'.tr : 'pin'.tr),
+            onPressed: () => Navigator.pop(context, 'pin'),
+            child: Text(item.isPinned ? 'unpin_item'.tr : 'pin_item'.tr),
           ),
           CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              onAddToCollection(item);
-            },
+            onPressed: () => Navigator.pop(context, 'collection'),
             child: Text('add_to_collection'.tr),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              onDelete(item);
-            },
+            onPressed: () => Navigator.pop(context, 'delete'),
             child: Text('delete'.tr),
           ),
         ],
@@ -214,6 +222,49 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
     );
+
+    if (!context.mounted || action == null) return;
+
+    if (action == 'ask_ai') {
+      ref.read(aiControllerProvider.notifier).setClipboardContext(item);
+      await ref.read(desktopIntegrationProvider).showAiWindow();
+    } else if (action == 'ocr') {
+      final text = await historyNotifier.performOcr(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null ? 'ocr_success'.tr : 'ocr_empty'.tr,
+        );
+      }
+    } else if (action == 'cloud_upload') {
+      final url = await historyNotifier.uploadImageToCloud(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          url != null ? 'upload_cloud_success'.tr : 'upload_cloud_failed'.tr,
+        );
+      }
+    } else if (action == 'translate') {
+      final settings = ref.read(settingsControllerProvider);
+      final text = await historyNotifier.translateItem(
+        item,
+        settings.targetTranslationLanguage,
+      );
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null ? 'translate_success'.tr : 'translate_failed'.tr,
+        );
+      }
+    } else if (action == 'copy') {
+      historyNotifier.copy(item);
+    } else if (action == 'pin') {
+      historyNotifier.togglePinned(item);
+    } else if (action == 'collection') {
+      onAddToCollection(item);
+    } else if (action == 'delete') {
+      onDelete(item);
+    }
   }
 
   void _moveSelection(int delta) {

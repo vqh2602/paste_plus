@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
+import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
 import 'widgets/quick_empty_state_widget.dart';
@@ -123,33 +124,83 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     if (selected != null) await historyNotifier.setTypeFilters(selected);
   }
 
-  void _showItemActions(BuildContext context, ClipboardItem item) {
+  Future<void> _handleAddToCollection(ClipboardItem item) async {
+    final collections =
+        ref.read(collectionsControllerProvider).value ?? const [];
+    if (collections.isEmpty) {
+      showCupertinoNotice(context, 'no_collections'.tr);
+      return;
+    }
+
+    final collection = await showCupertinoModalPopup<ClipboardCollection>(
+      context: context,
+      builder: (context) => CupertinoActionSheet(
+        title: Text('add_to_collection'.tr),
+        actions: collections.map((col) {
+          return CupertinoActionSheetAction(
+            onPressed: () => Navigator.of(context).pop(col),
+            child: Text(col.name),
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text('cancel'.tr),
+        ),
+      ),
+    );
+
+    if (collection != null) {
+      await ref
+          .read(historyControllerProvider.notifier)
+          .addToCollection(item.id, collection.id);
+      if (!mounted) return;
+      showCupertinoNotice(context, 'added_to_collection'.tr);
+    }
+  }
+
+  void _showItemActions(BuildContext context, ClipboardItem item) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
-    showCupertinoModalPopup<void>(
+    final isImage = item.contentType == ClipboardContentType.image;
+
+    final action = await showCupertinoModalPopup<String>(
       context: context,
       builder: (context) => CupertinoActionSheet(
         title: Text(item.content),
         actions: [
+          if (isImage) ...[
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'ocr'),
+              child: Text('extract_ocr'.tr),
+            ),
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'cloud_upload'),
+              child: Text('upload_cloud'.tr),
+            ),
+          ] else ...[
+            CupertinoActionSheetAction(
+              onPressed: () => Navigator.pop(context, 'translate'),
+              child: Text('translate_text'.tr),
+            ),
+          ],
           CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              _pasteItem(item);
-            },
+            onPressed: () => Navigator.pop(context, 'ask_ai'),
+            child: Text('ask_ai'.tr),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'copy_paste'),
             child: Text('copy_and_paste'.tr),
           ),
           CupertinoActionSheetAction(
-            onPressed: () {
-              Navigator.pop(context);
-              historyNotifier.togglePinned(item);
-            },
-            child: Text(item.isPinned ? 'unpin'.tr : 'pin'.tr),
+            onPressed: () => Navigator.pop(context, 'pin'),
+            child: Text(item.isPinned ? 'unpin_item'.tr : 'pin_item'.tr),
+          ),
+          CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'collection'),
+            child: Text('add_to_collection'.tr),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
-            onPressed: () {
-              Navigator.pop(context);
-              historyNotifier.delete(item);
-            },
+            onPressed: () => Navigator.pop(context, 'delete'),
             child: Text('delete'.tr),
           ),
         ],
@@ -159,6 +210,49 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
         ),
       ),
     );
+
+    if (!context.mounted || action == null) return;
+
+    if (action == 'ask_ai') {
+      ref.read(aiControllerProvider.notifier).setClipboardContext(item);
+      await ref.read(desktopIntegrationProvider).showAiWindow();
+    } else if (action == 'ocr') {
+      final text = await historyNotifier.performOcr(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null ? 'ocr_success'.tr : 'ocr_empty'.tr,
+        );
+      }
+    } else if (action == 'cloud_upload') {
+      final url = await historyNotifier.uploadImageToCloud(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          url != null ? 'upload_cloud_success'.tr : 'upload_cloud_failed'.tr,
+        );
+      }
+    } else if (action == 'translate') {
+      final settings = ref.read(settingsControllerProvider);
+      final text = await historyNotifier.translateItem(
+        item,
+        settings.targetTranslationLanguage,
+      );
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          text != null ? 'translate_success'.tr : 'translate_failed'.tr,
+        );
+      }
+    } else if (action == 'copy_paste') {
+      _pasteItem(item);
+    } else if (action == 'pin') {
+      historyNotifier.togglePinned(item);
+    } else if (action == 'collection') {
+      _handleAddToCollection(item);
+    } else if (action == 'delete') {
+      historyNotifier.delete(item);
+    }
   }
 
   @override

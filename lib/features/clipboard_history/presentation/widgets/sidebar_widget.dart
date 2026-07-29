@@ -199,6 +199,15 @@ class SidebarWidget extends ConsumerWidget {
     );
   }
 
+  String _displayCollectionName(ClipboardCollection collection) {
+    return switch (collection.id) {
+      'personal' => 'collection_personal'.tr,
+      'link' => 'collection_link'.tr,
+      'reply' => 'collection_reply'.tr,
+      _ => collection.name,
+    };
+  }
+
   Future<void> _showCollectionActions(
     BuildContext context,
     WidgetRef ref,

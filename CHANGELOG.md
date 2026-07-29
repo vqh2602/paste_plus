@@ -2,6 +2,16 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.7] - 2026-07-29
+
+### 🚀 Sửa lỗi & Bản hóa Đa ngôn ngữ (Localization)
+- **Bản hóa Đa ngôn ngữ nâng cao**:
+  - Bản hóa hoàn toàn loại nội dung Clipboard (`Allowed Content Types`) trong mục Cài đặt (Văn bản -> Text, Liên kết -> Link, Đường dẫn file -> File Path, Màu HEX -> HEX Color...).
+  - Bản hóa các nhãn hiển thị loại nội dung trên thẻ xem nhanh Clipboard (`QuickClipboardCardWidget`) và huy hiệu Markdown (`AiMarkdownContentWidget`).
+  - Đa ngôn ngữ hóa các danh mục mặc định ở thanh bên Sidebar (`Cá nhân` -> `Personal`, `Link` -> `Links`, `Mẫu trả lời` -> `Reply Templates`).
+
+---
+
 ## [1.0.6] - 2026-07-29
 
 ### 🚀 Tính năng mới & Sửa lỗi

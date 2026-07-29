@@ -50,6 +50,7 @@ class AppTranslations {
       'extract_ocr': 'Trích xuất văn bản (OCR)',
       'translate_text': 'Dịch văn bản',
       'upload_cloud': 'Tải lên Cloud',
+      'ask_ai': 'Hỏi AI Assistant',
       'delete': 'Xóa',
       'delete_item_title': 'Xóa mục này?',
       'delete_item_confirm':
@@ -419,7 +420,6 @@ class AppTranslations {
       'ignore_long_token': 'Bỏ qua token dài',
       'ignore_long_token_sub': 'Không lưu chuỗi bí mật hoặc token dài',
       'ignore_sensitive_sub': 'Không lưu nội dung có vẻ nhạy cảm',
-      'image': 'Hình ảnh',
       'image_not_found': 'Không tìm thấy hình ảnh',
       'import': 'Nhập',
       'import_backup': 'Nhập bản sao lưu',
@@ -491,6 +491,7 @@ class AppTranslations {
       'extract_ocr': 'Extract Text (OCR)',
       'translate_text': 'Translate Text',
       'upload_cloud': 'Upload to Cloud',
+      'ask_ai': 'Ask AI Assistant',
       'delete': 'Delete',
       'delete_item_title': 'Delete item?',
       'delete_item_confirm':
@@ -819,7 +820,6 @@ class AppTranslations {
       'ignore_long_token': 'Ignore Long Tokens',
       'ignore_long_token_sub': 'Do not save long secrets or token-like text',
       'ignore_sensitive_sub': 'Do not save content that appears sensitive',
-      'image': 'Image',
       'image_not_found': 'Image not found',
       'import': 'Import',
       'import_backup': 'Import Backup',
