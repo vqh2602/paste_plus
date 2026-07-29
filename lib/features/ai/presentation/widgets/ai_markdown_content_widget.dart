@@ -386,7 +386,7 @@ String? _extractAppName(String text) {
 String _extractBodyText(String text, String? url, String? appName) {
   var body = text;
   if (appName != null) {
-    body = body.replaceAll(RegExp('^' + RegExp.escape(appName) + r':?\s*'), '');
+    body = body.replaceAll(RegExp('^${RegExp.escape(appName)}:?\\s*'), '');
     body = body.replaceAll(RegExp(r'—\s*' + RegExp.escape(appName)), '');
   }
   body = body
