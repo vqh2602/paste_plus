@@ -183,33 +183,32 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           ],
                         )
                       : parsedColor != null
-                      ? Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                color: parsedColor,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: resolveColor(context, ClipFlowColors.border),
-                                  width: 1.5,
+                            Expanded(
+                              child: Container(
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: parsedColor,
+                                  borderRadius: BorderRadius.circular(9),
+                                  border: Border.all(
+                                    color: resolveColor(context, ClipFlowColors.border),
+                                    width: 1.0,
+                                  ),
                                 ),
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: HighlightedText(
-                                text: item.content,
-                                query: query,
-                                maxLines: 6,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  height: 1.45,
-                                  fontFamily: 'monospace',
-                                ),
+                            const SizedBox(height: 4),
+                            HighlightedText(
+                              text: item.content,
+                              query: query,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ClipFlowColors.secondaryText,
+                                fontFamily: 'monospace',
                               ),
                             ),
                           ],

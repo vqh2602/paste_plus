@@ -163,31 +163,30 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                         ],
                       )
                     : parsedColor != null
-                    ? Row(
+                    ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Container(
-                            width: 64,
-                            height: 64,
-                            margin: const EdgeInsets.only(right: 16),
+                            width: double.infinity,
+                            height: 200,
+                            margin: const EdgeInsets.only(bottom: 16),
                             decoration: BoxDecoration(
                               color: parsedColor,
-                              shape: BoxShape.circle,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: resolveColor(context, ClipFlowColors.border),
-                                width: 2,
+                                width: 1.0,
                               ),
                             ),
                           ),
-                          Expanded(
-                            child: HighlightedText(
-                              text: item.content,
-                              query: state.query,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                height: 1.55,
-                                fontFamily: 'monospace',
-                              ),
+                          HighlightedText(
+                            text: item.content,
+                            query: state.query,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.55,
+                              color: resolveColor(context, ClipFlowColors.secondaryText),
+                              fontFamily: 'monospace',
                             ),
                           ),
                         ],

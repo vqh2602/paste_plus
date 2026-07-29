@@ -189,36 +189,29 @@ class ClipboardCardWidget extends ConsumerWidget {
                 ),
               ),
             ] else if (parsedColor != null) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: parsedColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: resolveColor(context, ClipFlowColors.border),
-                        width: 1.5,
-                      ),
-                    ),
+              Container(
+                height: 120,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: parsedColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: resolveColor(context, ClipFlowColors.border),
+                    width: 1.0,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: HighlightedText(
-                      text: item.content,
-                      query: state.query,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 1.4,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(height: 6),
+              HighlightedText(
+                text: item.content,
+                query: state.query,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: resolveColor(context, ClipFlowColors.secondaryText),
+                  fontFamily: 'monospace',
+                ),
               ),
             ] else ...[
               HighlightedText(
