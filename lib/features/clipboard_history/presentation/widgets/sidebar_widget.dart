@@ -138,7 +138,7 @@ class SidebarWidget extends ConsumerWidget {
                       for (final collection in collections)
                         SidebarTileWidget(
                           icon: CupertinoIcons.folder,
-                          label: collection.name,
+                          label: _displayCollectionName(collection),
                           selected:
                               state.section == HistorySection.collection &&
                               state.collectionId == collection.id,

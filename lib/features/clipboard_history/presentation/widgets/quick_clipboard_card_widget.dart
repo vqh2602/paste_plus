@@ -267,14 +267,14 @@ class QuickClipboardCardWidget extends ConsumerWidget {
   };
 
   String _typeName(ClipboardContentType type) => switch (type) {
-    ClipboardContentType.text => 'Văn bản',
-    ClipboardContentType.url => 'Liên kết',
-    ClipboardContentType.email => 'Email',
-    ClipboardContentType.phone => 'Điện thoại',
-    ClipboardContentType.code => 'Code',
-    ClipboardContentType.color => 'Màu HEX',
-    ClipboardContentType.json => 'JSON',
-    ClipboardContentType.file => 'Đường dẫn file',
-    ClipboardContentType.image => 'Hình ảnh',
+    ClipboardContentType.text => 'text'.tr,
+    ClipboardContentType.url => 'url'.tr,
+    ClipboardContentType.email => 'email'.tr,
+    ClipboardContentType.phone => 'phone'.tr,
+    ClipboardContentType.code => 'code'.tr,
+    ClipboardContentType.color => 'color'.tr,
+    ClipboardContentType.json => 'json'.tr,
+    ClipboardContentType.file => 'file'.tr,
+    ClipboardContentType.image => 'image'.tr,
   };
 }

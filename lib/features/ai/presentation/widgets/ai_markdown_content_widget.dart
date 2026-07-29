@@ -158,16 +158,16 @@ class _ResultCardWidget extends StatelessWidget {
     final borderColor = resolveColor(context, ClipFlowColors.border);
 
     final (badgeIcon, badgeLabel, badgeColor) = isImgUrl
-        ? (CupertinoIcons.photo, 'Link Ảnh', CupertinoColors.systemIndigo)
+        ? (CupertinoIcons.photo, 'image_link'.tr, CupertinoColors.systemIndigo)
         : url != null
-            ? (CupertinoIcons.link, 'Link', CupertinoColors.activeBlue)
+            ? (CupertinoIcons.link, 'url'.tr, CupertinoColors.activeBlue)
             : isCode
                 ? (
                     CupertinoIcons.chevron_left_slash_chevron_right,
-                    'Code',
+                    'code'.tr,
                     CupertinoColors.systemOrange,
                   )
-                : (CupertinoIcons.doc_text, 'Văn bản', CupertinoColors.systemGrey);
+                : (CupertinoIcons.doc_text, 'text'.tr, CupertinoColors.systemGrey);
 
     final bodyText = _extractBodyText(cleanDisplay, url, appName);
     final cleanCopy = _stripInlineMarkdown(copyText);

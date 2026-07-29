@@ -23,10 +23,18 @@ class AppTranslations {
       // Search & Filters
       'search_in_clipboard': 'Tìm trong clipboard',
       'text': 'Văn bản',
+      'url': 'Liên kết',
       'files': 'Tệp',
+      'file': 'Đường dẫn file',
       'email': 'Email',
       'phone': 'Điện thoại',
-      'color': 'Màu sắc',
+      'color': 'Màu HEX',
+      'json': 'JSON',
+      'image': 'Hình ảnh',
+      'image_link': 'Link Ảnh',
+      'collection_personal': 'Cá nhân',
+      'collection_link': 'Link',
+      'collection_reply': 'Mẫu trả lời',
 
       // Actions & Notices
       'just_now': 'vừa xong',
@@ -456,10 +464,18 @@ class AppTranslations {
       // Search & Filters
       'search_in_clipboard': 'Search in clipboard',
       'text': 'Text',
+      'url': 'Link',
       'files': 'Files',
+      'file': 'File Path',
       'email': 'Email',
       'phone': 'Phone',
-      'color': 'Color',
+      'color': 'HEX Color',
+      'json': 'JSON',
+      'image': 'Image',
+      'image_link': 'Image Link',
+      'collection_personal': 'Personal',
+      'collection_link': 'Links',
+      'collection_reply': 'Reply Templates',
 
       // Actions & Notices
       'just_now': 'just now',
