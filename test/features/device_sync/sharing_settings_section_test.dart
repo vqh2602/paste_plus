@@ -7,6 +7,7 @@ import 'package:clipflow/features/device_sync/domain/peer_connection_info.dart';
 import 'package:clipflow/features/device_sync/domain/shared_collection_payload.dart';
 import 'package:clipflow/features/device_sync/domain/shared_clipboard_payload.dart';
 import 'package:clipflow/features/device_sync/services/local_sharing_service.dart';
+import 'package:clipflow/features/device_sync/presentation/widgets/device_sections.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
 import 'package:clipflow/features/settings/presentation/widgets/sharing_settings_section.dart';
@@ -17,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeSharingService implements LocalSharingService {
   final controller = StreamController<LocalSharingState>.broadcast();
+  LocalSharingState current = const LocalSharingState();
   final peer = const PeerConnectionInfo(
     deviceId: 'macbook',
     deviceName: 'MacBook Pro',
@@ -45,12 +47,12 @@ class _FakeSharingService implements LocalSharingService {
 
   @override
   Future<void> start(AppSettings settings) async {
-    controller.add(LocalSharingState(peers: [peer], isDiscovering: true));
+    _emit(LocalSharingState(peers: [peer], isDiscovering: true));
   }
 
   @override
   Future<void> requestPairing(String deviceId) async {
-    controller.add(
+    _emit(
       LocalSharingState(
         peers: [peer],
         isDiscovering: true,
@@ -82,7 +84,21 @@ class _FakeSharingService implements LocalSharingService {
   Future<void> cancelPairing(String deviceId) async {}
 
   @override
-  Future<void> confirmPairing(String deviceId) async {}
+  Future<void> confirmPairing(String deviceId) async {
+    final session = current.pairingSession;
+    if (session == null) return;
+    _emit(
+      current.copyWith(
+        pairingSession: PairingSession(
+          peer: session.peer,
+          confirmationCode: session.confirmationCode,
+          expiresAt: session.expiresAt,
+          isIncoming: session.isIncoming,
+          isLocalConfirmed: true,
+        ),
+      ),
+    );
+  }
 
   @override
   Future<void> disconnect(String deviceId) async {}
@@ -101,6 +117,11 @@ class _FakeSharingService implements LocalSharingService {
 
   @override
   Future<void> dispose() => controller.close();
+
+  void _emit(LocalSharingState state) {
+    current = state;
+    controller.add(state);
+  }
 }
 
 void main() {
@@ -140,5 +161,47 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('pairing-confirmation-code')), findsOneWidget);
     expect(find.text('482 719'), findsOneWidget);
+    await tester.tap(find.text('Mã trùng khớp'));
+    await tester.pump();
+    expect(find.byType(CupertinoActivityIndicator), findsOneWidget);
+    expect(find.text('Đang chờ thiết bị kia…'), findsOneWidget);
+  });
+
+  testWidgets('shows manual reconnect after five failed attempts', (
+    tester,
+  ) async {
+    AppTranslations.currentLanguage = 'vi';
+    var reconnectedId = '';
+    final service = _FakeSharingService();
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: CupertinoPageScaffold(
+          child: PairedDevicesSection(
+            devices: [
+              service.peer.copyWith(
+                status: PeerConnectionStatus.disconnected,
+                quality: ConnectionQuality.offline,
+                isTrusted: true,
+                reconnectAttempts: 5,
+                requiresManualReconnect: true,
+              ),
+            ],
+            enabled: true,
+            onDisconnect: (_) {},
+            onReconnect: (id) => reconnectedId = id,
+            onForget: (_) {},
+            onBlock: (_) {},
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Kết nối lại'), findsOneWidget);
+    expect(
+      find.text('Không thể tự kết nối sau 5 lần. Hãy kết nối thủ công.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Kết nối lại'));
+    expect(reconnectedId, 'macbook');
   });
 }

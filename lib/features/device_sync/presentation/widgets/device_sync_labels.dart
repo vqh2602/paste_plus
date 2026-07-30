@@ -7,6 +7,7 @@ String connectionStatusLabel(PeerConnectionStatus status) => switch (status) {
   PeerConnectionStatus.connecting => 'peer_status_connecting'.tr,
   PeerConnectionStatus.authenticating => 'peer_status_authenticating'.tr,
   PeerConnectionStatus.syncing => 'peer_status_syncing'.tr,
+  PeerConnectionStatus.reconnecting => 'peer_status_reconnecting'.tr,
   PeerConnectionStatus.connected => 'peer_status_connected'.tr,
   PeerConnectionStatus.disconnected => 'peer_status_disconnected'.tr,
   PeerConnectionStatus.rejected => 'peer_status_rejected'.tr,

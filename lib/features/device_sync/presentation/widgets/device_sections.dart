@@ -52,6 +52,7 @@ class PairedDevicesSection extends StatelessWidget {
     required this.devices,
     required this.enabled,
     required this.onDisconnect,
+    required this.onReconnect,
     required this.onForget,
     required this.onBlock,
   });
@@ -59,6 +60,7 @@ class PairedDevicesSection extends StatelessWidget {
   final List<PeerConnectionInfo> devices;
   final bool enabled;
   final ValueChanged<String> onDisconnect;
+  final ValueChanged<String> onReconnect;
   final ValueChanged<String> onForget;
   final ValueChanged<String> onBlock;
 
@@ -72,9 +74,17 @@ class PairedDevicesSection extends StatelessWidget {
       emptySubtitle: 'no_paired_devices_sub'.tr,
       itemBuilder: (peer) => DeviceCard(
         peer: peer,
-        primaryLabel: peer.isConnected ? 'disconnect'.tr : null,
-        onPrimary: peer.isConnected && enabled
+        primaryLabel: peer.isConnected
+            ? 'disconnect'.tr
+            : peer.requiresManualReconnect
+            ? 'reconnect_manually'.tr
+            : null,
+        onPrimary: !enabled
+            ? null
+            : peer.isConnected
             ? () => onDisconnect(peer.deviceId)
+            : peer.requiresManualReconnect
+            ? () => onReconnect(peer.deviceId)
             : null,
         secondaryLabel: 'forget_device'.tr,
         onSecondary: enabled ? () => onForget(peer.deviceId) : null,

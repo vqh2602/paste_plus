@@ -4,6 +4,7 @@ enum PeerConnectionStatus {
   connecting,
   authenticating,
   syncing,
+  reconnecting,
   connected,
   disconnected,
   rejected,
@@ -32,6 +33,8 @@ class PeerConnectionInfo {
     this.lastSyncedAt,
     this.appVersion = '',
     this.protocolVersion = '',
+    this.reconnectAttempts = 0,
+    this.requiresManualReconnect = false,
   });
 
   final String deviceId;
@@ -51,6 +54,8 @@ class PeerConnectionInfo {
   final bool isBlocked;
   final String appVersion;
   final String protocolVersion;
+  final int reconnectAttempts;
+  final bool requiresManualReconnect;
 
   bool get isConnected => switch (status) {
     PeerConnectionStatus.connecting ||
@@ -77,6 +82,8 @@ class PeerConnectionInfo {
     bool? isBlocked,
     String? appVersion,
     String? protocolVersion,
+    int? reconnectAttempts,
+    bool? requiresManualReconnect,
   }) {
     return PeerConnectionInfo(
       deviceId: deviceId,
@@ -96,6 +103,9 @@ class PeerConnectionInfo {
       isBlocked: isBlocked ?? this.isBlocked,
       appVersion: appVersion ?? this.appVersion,
       protocolVersion: protocolVersion ?? this.protocolVersion,
+      reconnectAttempts: reconnectAttempts ?? this.reconnectAttempts,
+      requiresManualReconnect:
+          requiresManualReconnect ?? this.requiresManualReconnect,
     );
   }
 }

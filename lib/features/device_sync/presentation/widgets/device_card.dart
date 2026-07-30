@@ -85,6 +85,22 @@ class DeviceCard extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (peer.reconnectAttempts > 0 && !peer.isConnected) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    (peer.requiresManualReconnect
+                            ? 'reconnect_manual_required'
+                            : 'reconnect_attempt_value')
+                        .tr
+                        .replaceFirst('@count', '${peer.reconnectAttempts}'),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: peer.requiresManualReconnect
+                          ? CupertinoColors.systemOrange.resolveFrom(context)
+                          : resolveColor(context, ClipFlowColors.secondaryText),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -142,12 +158,14 @@ class DeviceActionButton extends StatelessWidget {
     required this.onPressed,
     this.filled = false,
     this.destructive = false,
+    this.loading = false,
   });
 
   final String label;
   final VoidCallback onPressed;
   final bool filled;
   final bool destructive;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +173,7 @@ class DeviceActionButton extends StatelessWidget {
         ? CupertinoColors.systemRed.resolveFrom(context)
         : CupertinoTheme.of(context).primaryColor;
     return CupertinoPressable(
-      onPressed: onPressed,
+      onPressed: loading ? () {} : onPressed,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
         decoration: BoxDecoration(
@@ -163,13 +181,25 @@ class DeviceActionButton extends StatelessWidget {
           border: Border.all(color: primary.withValues(alpha: 0.55)),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: filled ? CupertinoColors.white : primary,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (loading) ...[
+              CupertinoActivityIndicator(
+                radius: 7,
+                color: filled ? CupertinoColors.white : primary,
+              ),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: TextStyle(
+                color: filled ? CupertinoColors.white : primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -219,6 +249,7 @@ class _StatusDot extends StatelessWidget {
     final color = switch (status) {
       PeerConnectionStatus.connected => CupertinoColors.systemGreen,
       PeerConnectionStatus.syncing ||
+      PeerConnectionStatus.reconnecting ||
       PeerConnectionStatus.connecting ||
       PeerConnectionStatus.authenticating ||
       PeerConnectionStatus.pairing => CupertinoColors.systemOrange,

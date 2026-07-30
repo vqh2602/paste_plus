@@ -26,11 +26,13 @@ void main() {
         identityStore: DeviceIdentityStore(_MemorySecretStore()),
         enableMdns: false,
         platformOverride: 'test',
+        reconnectDelayOverride: const Duration(milliseconds: 10),
       );
       final bob = MdnsTlsLocalSharingService(
         identityStore: DeviceIdentityStore(_MemorySecretStore()),
         enableMdns: false,
         platformOverride: 'test',
+        reconnectDelayOverride: const Duration(milliseconds: 10),
       );
       addTearDown(alice.dispose);
       addTearDown(bob.dispose);
@@ -82,10 +84,17 @@ void main() {
       final bobConnected = bob.states.firstWhere(
         (state) => state.connectedCount == 1,
       );
-      await Future.wait([
-        alice.confirmPairing(bob.deviceId!),
-        bob.confirmPairing(alice.deviceId!),
-      ]);
+      final aliceWaiting = alice.states.firstWhere(
+        (state) => state.pairingSession?.isLocalConfirmed == true,
+      );
+      await alice.confirmPairing(bob.deviceId!);
+      expect(
+        (await aliceWaiting.timeout(
+          const Duration(seconds: 5),
+        )).pairingSession!.isLocalConfirmed,
+        isTrue,
+      );
+      await bob.confirmPairing(alice.deviceId!);
       await connecting.timeout(const Duration(seconds: 20));
       await Future.wait([
         aliceConnected.timeout(const Duration(seconds: 10)),
@@ -147,6 +156,25 @@ void main() {
         deviceName: 'Bob',
       );
       await reconnected.timeout(const Duration(seconds: 10));
+
+      final aliceIsInitiator = alice.deviceId!.compareTo(bob.deviceId!) < 0;
+      final survivor = aliceIsInitiator ? bob : alice;
+      final dropped = aliceIsInitiator ? alice : bob;
+      final droppedId = dropped.deviceId!;
+      final manualReconnectRequired = survivor.states.firstWhere(
+        (state) => state.peers.any(
+          (peer) => peer.deviceId == droppedId && peer.requiresManualReconnect,
+        ),
+      );
+      await dropped.dispose();
+      final retryState = await manualReconnectRequired.timeout(
+        const Duration(seconds: 10),
+      );
+      final retryPeer = retryState.peers.firstWhere(
+        (peer) => peer.deviceId == droppedId,
+      );
+      expect(retryPeer.reconnectAttempts, 5);
+      expect(retryPeer.requiresManualReconnect, isTrue);
     },
     timeout: const Timeout(Duration(minutes: 2)),
   );

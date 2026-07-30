@@ -64,6 +64,7 @@ class SharingSettingsSection extends ConsumerWidget {
           devices: state.pairedDevices,
           enabled: connectionsEnabled,
           onDisconnect: (id) => controller.disconnect(id),
+          onReconnect: (id) => controller.requestPairing(id),
           onForget: (id) => _confirmForget(context, controller.forget, id),
           onBlock: (id) => _confirmBlock(context, controller.block, id),
         ),

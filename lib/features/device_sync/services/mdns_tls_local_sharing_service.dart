@@ -24,6 +24,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
     this.enableMdns = true,
     this.appVersion = '1.0.9',
     this.platformOverride,
+    this.reconnectDelayOverride,
   }) : _identityStore =
            identityStore ?? DeviceIdentityStore(const PlatformSecretStore());
 
@@ -31,6 +32,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   final bool enableMdns;
   final String appVersion;
   final String? platformOverride;
+  final Duration? reconnectDelayOverride;
   final _states = StreamController<LocalSharingState>.broadcast();
   final _receivedPayloads =
       StreamController<SharedClipboardPayload>.broadcast();
@@ -39,6 +41,9 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   final _discovered = <String, PeerConnectionInfo>{};
   final _connections = <String, _PeerConnection>{};
   final _pairings = <String, _PendingPairing>{};
+  final _reconnectAttempts = <String, int>{};
+  final _reconnectTimers = <String, Timer>{};
+  final _manualReconnectRequired = <String>{};
   final _seenMessageIds = <String, DateTime>{};
   Map<String, TrustedDeviceRecord> _trusted = {};
   AppSettings _settings = const AppSettings();
@@ -196,6 +201,10 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
           ? PeerConnectionStatus.blocked
           : current != null
           ? PeerConnectionStatus.connected
+          : _reconnectTimers.containsKey(id)
+          ? PeerConnectionStatus.reconnecting
+          : _manualReconnectRequired.contains(id)
+          ? PeerConnectionStatus.disconnected
           : PeerConnectionStatus.discovered,
       quality: current?.quality ?? ConnectionQuality.good,
       latencyMs: current?.latencyMs,
@@ -206,6 +215,8 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
       isBlocked: trusted?.blocked ?? false,
       appVersion: service.attributes['version'] ?? '',
       protocolVersion: service.attributes['proto'] ?? '',
+      reconnectAttempts: _reconnectAttempts[id] ?? 0,
+      requiresManualReconnect: _manualReconnectRequired.contains(id),
     );
     _emit();
     if (trusted != null &&
@@ -214,7 +225,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
         _identity!.deviceId.compareTo(id) < 0 &&
         !_connections.containsKey(id) &&
         !_pairings.containsKey(id)) {
-      unawaited(_connect(_discovered[id]!));
+      _scheduleReconnect(id, immediate: true);
     }
   }
 
@@ -264,10 +275,14 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   Future<void> requestPairing(String deviceId) async {
     final peer = _discovered[deviceId];
     if (peer == null || peer.isBlocked) return;
-    await _connect(peer);
+    _cancelReconnect(deviceId, resetAttempts: true);
+    await _connect(peer, retryOnFailure: peer.isTrusted);
   }
 
-  Future<void> _connect(PeerConnectionInfo peer) async {
+  Future<void> _connect(
+    PeerConnectionInfo peer, {
+    bool retryOnFailure = false,
+  }) async {
     if (_connections.containsKey(peer.deviceId) ||
         _pairings.containsKey(peer.deviceId)) {
       return;
@@ -294,8 +309,12 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
         outgoing: true,
         expectedDeviceId: peer.deviceId,
       );
+      if (!_connections.containsKey(peer.deviceId)) {
+        throw StateError('Connection handshake did not complete');
+      }
     } on Object {
       _setPeerStatus(peer.deviceId, PeerConnectionStatus.disconnected);
+      if (retryOnFailure) _scheduleReconnect(peer.deviceId);
     }
   }
 
@@ -404,6 +423,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
       _connections[remoteId] = connection;
       _discovered[remoteId] = peer;
       _pairings.remove(remoteId);
+      _cancelReconnect(remoteId, resetAttempts: true);
       _emit();
       connection.start();
     } on Object {
@@ -768,6 +788,8 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   Future<void> confirmPairing(String deviceId) async {
     final pending = _pairings[deviceId];
     if (pending != null && !pending.decision.isCompleted) {
+      pending.localConfirmed = true;
+      _emit();
       pending.decision.complete(true);
     }
   }
@@ -782,6 +804,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
 
   @override
   Future<void> disconnect(String deviceId) async {
+    _cancelReconnect(deviceId, resetAttempts: true);
     final connection = _connections.remove(deviceId);
     connection?.send({'type': 'disconnect'});
     await connection?.close();
@@ -790,6 +813,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
 
   @override
   Future<void> forget(String deviceId) async {
+    _cancelReconnect(deviceId, resetAttempts: true);
     await disconnect(deviceId);
     _trusted.remove(deviceId);
     await _identityStore.saveTrustedDevices(_trusted);
@@ -805,6 +829,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
 
   @override
   Future<void> block(String deviceId) async {
+    _cancelReconnect(deviceId, resetAttempts: true);
     await disconnect(deviceId);
     final current = _trusted[deviceId];
     final peer = _discovered[deviceId];
@@ -872,6 +897,9 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
     final nameChanged =
         _settings.deviceDisplayName != settings.deviceDisplayName ||
         _settings.deviceDiscoverable != settings.deviceDiscoverable;
+    final autoConnectChanged =
+        _settings.autoConnectTrustedDevices !=
+        settings.autoConnectTrustedDevices;
     _settings = settings;
     final enabled =
         settings.localSharingEnabled && !settings.allConnectionsPaused;
@@ -899,6 +927,24 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
         await _broadcast!.start();
       }
     }
+    if (enabled && autoConnectChanged) {
+      if (settings.autoConnectTrustedDevices) {
+        for (final peer in _discovered.values.where(
+          (peer) => peer.isTrusted && !peer.isConnected,
+        )) {
+          _scheduleReconnect(peer.deviceId, immediate: true);
+        }
+      } else {
+        final reconnectingIds = <String>{
+          ..._reconnectTimers.keys,
+          ..._reconnectAttempts.keys,
+          ..._manualReconnectRequired,
+        };
+        for (final deviceId in reconnectingIds) {
+          _cancelReconnect(deviceId, resetAttempts: true);
+        }
+      }
+    }
     _emit();
   }
 
@@ -906,6 +952,80 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
     final removed = _connections.remove(id);
     if (removed == null) return;
     _setPeerStatus(id, PeerConnectionStatus.disconnected);
+    _scheduleReconnect(id);
+  }
+
+  void _scheduleReconnect(String deviceId, {bool immediate = false}) {
+    if (_disposed ||
+        !_settings.localSharingEnabled ||
+        _settings.allConnectionsPaused ||
+        !_settings.autoConnectTrustedDevices ||
+        _connections.containsKey(deviceId) ||
+        _pairings.containsKey(deviceId) ||
+        _reconnectTimers.containsKey(deviceId) ||
+        _manualReconnectRequired.contains(deviceId)) {
+      return;
+    }
+    final identity = _identity;
+    final trusted = _trusted[deviceId];
+    final peer = _discovered[deviceId];
+    if (identity == null ||
+        trusted == null ||
+        trusted.blocked ||
+        peer == null ||
+        peer.ipAddress.isEmpty ||
+        peer.port <= 0) {
+      return;
+    }
+    final completedAttempts = _reconnectAttempts[deviceId] ?? 0;
+    if (completedAttempts >= 5) {
+      _manualReconnectRequired.add(deviceId);
+      _discovered[deviceId] = peer.copyWith(
+        status: PeerConnectionStatus.disconnected,
+        quality: ConnectionQuality.offline,
+        reconnectAttempts: completedAttempts,
+        requiresManualReconnect: true,
+      );
+      _emit();
+      return;
+    }
+    final attempt = completedAttempts + 1;
+    _reconnectAttempts[deviceId] = attempt;
+    _discovered[deviceId] = peer.copyWith(
+      status: PeerConnectionStatus.reconnecting,
+      quality: ConnectionQuality.offline,
+      reconnectAttempts: attempt,
+      requiresManualReconnect: false,
+    );
+    _emit();
+    final preferredInitiator = identity.deviceId.compareTo(deviceId) < 0;
+    final baseDelay = immediate
+        ? Duration.zero
+        : reconnectDelayOverride ??
+              Duration(seconds: min(1 << (attempt - 1), 16));
+    final delay = preferredInitiator || immediate
+        ? baseDelay
+        : baseDelay + const Duration(milliseconds: 600);
+    _reconnectTimers[deviceId] = Timer(delay, () async {
+      _reconnectTimers.remove(deviceId);
+      final latest = _discovered[deviceId];
+      if (latest == null || _connections.containsKey(deviceId)) return;
+      await _connect(latest, retryOnFailure: true);
+    });
+  }
+
+  void _cancelReconnect(String deviceId, {required bool resetAttempts}) {
+    _reconnectTimers.remove(deviceId)?.cancel();
+    if (!resetAttempts) return;
+    _reconnectAttempts.remove(deviceId);
+    _manualReconnectRequired.remove(deviceId);
+    final peer = _discovered[deviceId];
+    if (peer != null) {
+      _discovered[deviceId] = peer.copyWith(
+        reconnectAttempts: 0,
+        requiresManualReconnect: false,
+      );
+    }
   }
 
   void _setPeerStatus(String id, PeerConnectionStatus status) {
@@ -940,6 +1060,10 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
           pendingItems: 0,
           isTrusted: !record.blocked,
           isBlocked: record.blocked,
+          reconnectAttempts: _reconnectAttempts[record.deviceId] ?? 0,
+          requiresManualReconnect: _manualReconnectRequired.contains(
+            record.deviceId,
+          ),
         ),
       );
     }
@@ -955,6 +1079,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
                 confirmationCode: pairing.code,
                 expiresAt: pairing.expiresAt,
                 isIncoming: true,
+                isLocalConfirmed: pairing.localConfirmed,
               ),
         errorKey: errorKey,
       ),
@@ -962,6 +1087,12 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   }
 
   Future<void> _stopNetwork() async {
+    for (final timer in _reconnectTimers.values) {
+      timer.cancel();
+    }
+    _reconnectTimers.clear();
+    _reconnectAttempts.clear();
+    _manualReconnectRequired.clear();
     for (final pairing in _pairings.values) {
       if (!pairing.decision.isCompleted) pairing.decision.complete(false);
     }
@@ -1058,6 +1189,7 @@ class _PendingPairing {
   final String code;
   final DateTime expiresAt;
   final decision = Completer<bool>();
+  bool localConfirmed = false;
 }
 
 class _PeerConnection {

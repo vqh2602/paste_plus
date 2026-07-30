@@ -6,12 +6,14 @@ class PairingSession {
     required this.confirmationCode,
     required this.expiresAt,
     this.isIncoming = false,
+    this.isLocalConfirmed = false,
   });
 
   final PeerConnectionInfo peer;
   final String confirmationCode;
   final DateTime expiresAt;
   final bool isIncoming;
+  final bool isLocalConfirmed;
 
   bool get isExpired => !expiresAt.isAfter(DateTime.now());
 }

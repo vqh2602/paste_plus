@@ -75,10 +75,15 @@ class PairingSessionCard extends StatelessWidget {
               DeviceActionButton(label: 'cancel'.tr, onPressed: onCancel),
               const SizedBox(width: 8),
               DeviceActionButton(
-                label: 'codes_match'.tr,
-                onPressed: session.isExpired ? onCancel : onConfirm,
+                label: session.isLocalConfirmed
+                    ? 'waiting_other_device'.tr
+                    : 'codes_match'.tr,
+                onPressed: session.isExpired || session.isLocalConfirmed
+                    ? onCancel
+                    : onConfirm,
                 filled: !session.isExpired,
                 destructive: session.isExpired,
+                loading: session.isLocalConfirmed && !session.isExpired,
               ),
             ],
           ),

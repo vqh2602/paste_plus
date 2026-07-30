@@ -112,6 +112,9 @@ class AppTranslations {
       'ai_all_clipboard_context':
           'Sẵn sàng tìm trong Clipboard khi được yêu cầu (@count mục)',
       'ai_select_clip_hint': 'Chat thông thường không đọc Clipboard',
+      'ai_choose_context': 'Chọn clipboard làm ngữ cảnh',
+      'ai_choose_context_title': 'Chọn clipboard làm ngữ cảnh',
+      'ai_no_context_items': 'Chưa có clipboard để chọn',
       'copy_part': 'Sao chép phần này',
       'copy_all': 'Sao chép tất cả',
       'paste_all': 'Dán tất cả',
@@ -472,6 +475,7 @@ class AppTranslations {
       'no_paired_devices_sub':
           'Thiết bị đã xác nhận mã bảo mật sẽ xuất hiện tại đây.',
       'connect': 'Kết nối',
+      'reconnect_manually': 'Kết nối lại',
       'disconnect': 'Ngắt kết nối',
       'forget_device': 'Quên thiết bị',
       'block_device': 'Chặn thiết bị',
@@ -494,6 +498,7 @@ class AppTranslations {
       'peer_status_connecting': 'Đang kết nối',
       'peer_status_authenticating': 'Đang xác thực',
       'peer_status_syncing': 'Đang đồng bộ',
+      'peer_status_reconnecting': 'Đang kết nối lại',
       'peer_status_connected': 'Đã kết nối',
       'peer_status_disconnected': 'Đã ngắt kết nối',
       'peer_status_rejected': 'Bị từ chối',
@@ -508,6 +513,10 @@ class AppTranslations {
       'pairing_code_help':
           'Kiểm tra mã này giống nhau trên cả hai thiết bị. Mã hết hạn sau 60 giây.',
       'codes_match': 'Mã trùng khớp',
+      'waiting_other_device': 'Đang chờ thiết bị kia…',
+      'reconnect_attempt_value': 'Đang thử kết nối lại (@count/5)',
+      'reconnect_manual_required':
+          'Không thể tự kết nối sau 5 lần. Hãy kết nối thủ công.',
       'device_display_name': 'Tên hiển thị của thiết bị',
       'device_display_name_sub':
           'Tên được hiển thị cho thiết bị khác trong mạng',
@@ -604,6 +613,9 @@ class AppTranslations {
       'unpin': 'Unpin',
       'back': 'Back',
       'ai_conversation_history': 'Conversation History',
+      'ai_choose_context': 'Choose clipboard context',
+      'ai_choose_context_title': 'Choose clipboard context',
+      'ai_no_context_items': 'No clipboard items available',
       'ai_history_subtitle': 'Up to 20 recent sessions, stored locally',
       'ai_new_conversation': '＋ New Conversation',
       'ai_rename_dialog_title': 'Rename Conversation',
@@ -1002,6 +1014,7 @@ class AppTranslations {
       'no_paired_devices_sub':
           'Devices that verify the security code will appear here.',
       'connect': 'Connect',
+      'reconnect_manually': 'Reconnect',
       'disconnect': 'Disconnect',
       'forget_device': 'Forget device',
       'block_device': 'Block device',
@@ -1024,6 +1037,7 @@ class AppTranslations {
       'peer_status_connecting': 'Connecting',
       'peer_status_authenticating': 'Authenticating',
       'peer_status_syncing': 'Syncing',
+      'peer_status_reconnecting': 'Reconnecting',
       'peer_status_connected': 'Connected',
       'peer_status_disconnected': 'Disconnected',
       'peer_status_rejected': 'Rejected',
@@ -1038,6 +1052,10 @@ class AppTranslations {
       'pairing_code_help':
           'Verify that this code matches on both devices. It expires after 60 seconds.',
       'codes_match': 'Codes match',
+      'waiting_other_device': 'Waiting for the other device…',
+      'reconnect_attempt_value': 'Reconnecting (@count/5)',
+      'reconnect_manual_required':
+          'Automatic reconnection failed 5 times. Reconnect manually.',
       'device_display_name': 'Device display name',
       'device_display_name_sub':
           'The name shown to other devices on the network',
