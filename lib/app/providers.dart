@@ -140,6 +140,8 @@ final historyControllerProvider =
                   text: payload.text,
                   imageBytes: payload.imageBytes,
                 ),
+                isPinned: payload.isPinned,
+                collectionNames: payload.collectionNames,
               ),
             );
           });

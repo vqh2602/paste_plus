@@ -77,12 +77,13 @@ class DesktopIntegrationService with TrayListener {
     ValueChanged<bool>? onTrayStatusChanged,
     ValueChanged<bool>? onOpenAtLoginStatusChanged,
   }) async {
-    if (!isDesktop || _initialized) return;
-    _initialized = true;
     _onQuickPanelRequested = onQuickPanelRequested;
     _onMainWindowRequested = onMainWindowRequested;
     _onQuickPanelDismissed = onQuickPanelDismissed;
     _onAiWindowRequested = onAiWindowRequested;
+
+    if (!isDesktop || _initialized) return;
+    _initialized = true;
     await setShowInDock(showInDock);
     launchAtStartup.setup(
       appName: 'ClipFlow',
@@ -388,7 +389,11 @@ class DesktopIntegrationService with TrayListener {
   }
 
   Future<void> showAiWindow() async {
+    _windowMode = DesktopWindowMode.aiWindow;
+    _onAiWindowRequested?.call();
+
     if (!isDesktop) return;
+
     final currentPosition = await windowManager.getPosition();
     final currentSize = await windowManager.getSize();
     final wasFullScreen = await windowManager.isFullScreen();
@@ -430,8 +435,6 @@ class DesktopIntegrationService with TrayListener {
     );
     _aiWindowBounds = aiBounds;
 
-    _windowMode = DesktopWindowMode.aiWindow;
-    _onAiWindowRequested?.call();
     if (hasWindowPlugin) {
       await _windowChannel.invokeMethod<void>('setQuickPanelMode', false);
     }

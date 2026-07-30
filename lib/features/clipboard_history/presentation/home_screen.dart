@@ -394,78 +394,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Focus(
         autofocus: true,
         child: CupertinoPageScaffold(
-          child: Column(
-            children: [
-              const AppWindowHeader(),
-              Expanded(
-                child: isCompact
-                    ? HistoryPaneWidget(
-                        compact: true,
-                        searchController: _searchController,
-                        focusNode: _searchFocusNode,
-                        onCopy: _handleCopy,
-                        onDelete: _handleDelete,
-                        onAddToCollection: _handleAddToCollection,
-                        onShowItemActions: _showItemActions,
-                        onOpenSidebar: () {
-                          showCupertinoModalPopup<void>(
-                            context: context,
-                            builder: (context) => SizedBox(
-                              width: 280,
+          child: SafeArea(
+            child: Column(
+              children: [
+                const AppWindowHeader(),
+                Expanded(
+                  child: isCompact
+                      ? HistoryPaneWidget(
+                          compact: true,
+                          searchController: _searchController,
+                          focusNode: _searchFocusNode,
+                          onCopy: _handleCopy,
+                          onDelete: _handleDelete,
+                          onAddToCollection: _handleAddToCollection,
+                          onShowItemActions: _showItemActions,
+                          onOpenSidebar: () {
+                            showCupertinoModalPopup<void>(
+                              context: context,
+                              builder: (context) => SizedBox(
+                                width: 280,
+                                child: SidebarWidget(
+                                  state: state,
+                                  collections: collections,
+                                  onOpenSettings: _openSettings,
+                                  onCreateCollection: _showCreateCollectionDialog,
+                                  onDeleteCollection: _handleDeleteCollection,
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Row(
+                          children: [
+                            SizedBox(
+                              width: isMedium ? 200 : 230,
                               child: SidebarWidget(
                                 state: state,
                                 collections: collections,
+                                reserveWindowControls: Platform.isMacOS,
                                 onOpenSettings: _openSettings,
                                 onCreateCollection: _showCreateCollectionDialog,
                                 onDeleteCollection: _handleDeleteCollection,
                               ),
                             ),
-                          );
-                        },
-                      )
-                    : Row(
-                        children: [
-                          SizedBox(
-                            width: isMedium ? 200 : 230,
-                            child: SidebarWidget(
-                              state: state,
-                              collections: collections,
-                              reserveWindowControls: Platform.isMacOS,
-                              onOpenSettings: _openSettings,
-                              onCreateCollection: _showCreateCollectionDialog,
-                              onDeleteCollection: _handleDeleteCollection,
-                            ),
-                          ),
-                          ColoredBox(
-                            color: resolveColor(context, ClipFlowColors.border),
-                            child: const SizedBox(width: 1, height: double.infinity),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: HistoryPaneWidget(
-                              compact: false,
-                              searchController: _searchController,
-                              focusNode: _searchFocusNode,
-                              onCopy: _handleCopy,
-                              onDelete: _handleDelete,
-                              onAddToCollection: _handleAddToCollection,
-                              onShowItemActions: _showItemActions,
-                            ),
-                          ),
-                          if (!isMedium) ...[
                             ColoredBox(
                               color: resolveColor(context, ClipFlowColors.border),
-                              child: const SizedBox(
-                                width: 1,
-                                height: double.infinity,
+                              child: const SizedBox(width: 1, height: double.infinity),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: HistoryPaneWidget(
+                                compact: false,
+                                searchController: _searchController,
+                                focusNode: _searchFocusNode,
+                                onCopy: _handleCopy,
+                                onDelete: _handleDelete,
+                                onAddToCollection: _handleAddToCollection,
+                                onShowItemActions: _showItemActions,
                               ),
                             ),
-                            const Expanded(flex: 2, child: DetailPaneWidget()),
+                            if (!isMedium) ...[
+                              ColoredBox(
+                                color: resolveColor(context, ClipFlowColors.border),
+                                child: const SizedBox(
+                                  width: 1,
+                                  height: double.infinity,
+                                ),
+                              ),
+                              const Expanded(flex: 2, child: DetailPaneWidget()),
+                            ],
                           ],
-                        ],
-                      ),
-              ),
-            ],
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

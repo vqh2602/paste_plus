@@ -354,9 +354,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     );
 
     return CupertinoPageScaffold(
-      child: Column(
-        children: [
-          // Drag-to-move Header Title Bar for standalone macOS window
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drag-to-move Header Title Bar for standalone macOS window
           if (Platform.isMacOS || Platform.isWindows || Platform.isLinux)
             DragToMoveArea(
               child: SizedBox(
@@ -590,6 +591,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           ], // end else hasAnyDownloadedModel
         ],
       ),
+    ),
     );
   }
 }

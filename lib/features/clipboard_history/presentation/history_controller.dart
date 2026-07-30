@@ -186,11 +186,30 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     await reload();
   }
 
-  Future<void> receiveRemote(ClipboardPayload payload) async {
+  Future<void> receiveRemote(
+    ClipboardPayload payload, {
+    bool isPinned = false,
+    List<String> collectionNames = const [],
+  }) async {
     _suppressedRemotePayload = payload;
     _suppressRemoteUntil = DateTime.now().add(const Duration(seconds: 2));
     await _watcher.write(payload);
-    await _repository.store(payload, _readSettings());
+    final item = await _repository.store(payload, _readSettings());
+    if (item != null) {
+      if (isPinned) {
+        await _repository.setPinned(item.id, true);
+      }
+      if (collectionNames.isNotEmpty) {
+        final existingCollections = await _repository.getCollections();
+        for (final name in collectionNames) {
+          ClipboardCollection? targetCol = existingCollections
+              .where((c) => c.name.toLowerCase() == name.toLowerCase())
+              .firstOrNull;
+          targetCol ??= await _repository.createCollection(name);
+          await _repository.addToCollection(item.id, targetCol.id);
+        }
+      }
+    }
     await _repository.cleanup(_readSettings());
     await reload();
   }

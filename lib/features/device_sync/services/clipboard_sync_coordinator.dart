@@ -86,6 +86,15 @@ class ClipboardSyncCoordinator {
           }
         }
       }
+      final collectionIds = await _clipboardRepository.collectionIdsForItem(item.id);
+      List<String> collectionNames = [];
+      if (collectionIds.isNotEmpty) {
+        final collections = await _clipboardRepository.getCollections();
+        collectionNames = collections
+            .where((c) => collectionIds.contains(c.id))
+            .map((c) => c.name)
+            .toList();
+      }
       await _transport.sendClipboard(
         peerId,
         SharedClipboardPayload(
@@ -95,6 +104,8 @@ class ClipboardSyncCoordinator {
           createdAt: item.updatedAt,
           text: item.content.isEmpty ? null : item.content,
           imageBytes: imageBytes,
+          isPinned: item.isPinned,
+          collectionNames: collectionNames,
         ),
       );
       await _syncStates.markCompleted(item.id, peerId);

@@ -593,6 +593,11 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
           });
           return;
         }
+        final isPinned = message['isPinned'] as bool? ?? false;
+        final collectionNames = (message['collectionNames'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            const <String>[];
         _receivedPayloads.add(
           SharedClipboardPayload(
             messageId: messageId,
@@ -600,6 +605,8 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
             createdAt: timestamp,
             text: text,
             imageBytes: image == null ? null : Uint8List.fromList(image),
+            isPinned: isPinned,
+            collectionNames: collectionNames,
           ),
         );
         _connections[remoteId]?.send({
@@ -663,6 +670,9 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
       'timestamp': payload.createdAt.millisecondsSinceEpoch,
       if (payload.text != null) 'text': payload.text,
       if (image != null) 'image': base64Encode(image),
+      'isPinned': payload.isPinned,
+      if (payload.collectionNames.isNotEmpty)
+        'collectionNames': payload.collectionNames,
     });
     final peer = _discovered[deviceId];
     if (peer != null) {
