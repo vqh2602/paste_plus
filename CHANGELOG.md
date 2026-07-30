@@ -2,6 +2,18 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.0.9] - 2026-07-30
+
+### 🚀 Tính năng mới & Cải tiến AI
+- **Tự động phân tích hình ảnh với AI**:
+  - Tự động kích hoạt nhận dạng chữ Apple Vision OCR trên tệp hình ảnh được chọn làm context trước khi gửi cho AI.
+  - Đóng gói thông tin tên file, ứng dụng nguồn, đường dẫn và dữ liệu OCR vào prompt ngữ cảnh chuẩn hóa cho LLM.
+  - Cập nhật `AiRequestPlanner` đảm bảo luôn đính kèm tệp hình ảnh được chọn làm context cho bất kỳ câu hỏi nào của người dùng.
+- **Nâng cấp giao diện hiển thị tùy chọn (CupertinoActionSheet)**:
+  - Thêm icon checkmark (`✓`), font chữ đậm (Bold) và màu highlight active (`activeBlue`) cho tùy chọn đang được chọn trong dialog **Cấu hình sinh nội dung** và **Settings Selector**.
+- **Hỗ trợ Windows (Beta) & Cập nhật tài liệu**:
+  - Cập nhật tài liệu `README.md` và `ARCHITECTURE.md` hỗ trợ nền tảng Windows (Beta).
+
 ## [1.0.8] - 2026-07-29
 
 ### 🐛 Sửa lỗi & Cải tiến
