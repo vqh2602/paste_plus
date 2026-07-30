@@ -7,7 +7,7 @@
 <p align="center">
   <strong>The Ultimate Cross-Platform Clipboard Companion 📋✨</strong><br>
   Never lose a copied text, link, image, or snippet again. Blazing fast, local-first, and beautiful.<br>
-  <em>Native support for macOS & Windows (Beta).</em>
+  <em>Native support for macOS, Windows (Beta), iOS, & Android.</em>
 </p>
 
 <p align="center">
@@ -16,6 +16,8 @@
   </a>
   <img src="https://img.shields.io/badge/Platform-macOS-000000?style=for-the-badge&logo=apple" alt="macOS" />
   <img src="https://img.shields.io/badge/Platform-Windows_(Beta)-0078D4?style=for-the-badge&logo=windows" alt="Windows (Beta)" />
+  <img src="https://img.shields.io/badge/Platform-iOS-000000?style=for-the-badge&logo=apple" alt="iOS" />
+  <img src="https://img.shields.io/badge/Platform-Android-3DDC84?style=for-the-badge&logo=android" alt="Android" />
   <img src="https://img.shields.io/badge/Built_With-Flutter-02569B?style=for-the-badge&logo=flutter" alt="Flutter" />
   <a href="PRIVACY_POLICY.md">
     <img src="https://img.shields.io/badge/Privacy-100%25_Local--First-34C759?style=for-the-badge&logo=shields" alt="Local First" />
@@ -33,9 +35,14 @@
 
 ### ⚡ Key Selling Points
 - 🚀 **Auto-Paste Magic**: Select any history item and ClipFlow automatically pastes (`⌘V` on macOS / `Ctrl+V` on Windows) it straight into your active application.
+- 🌐 **Real-time Local Device Sync**: Seamlessly sync clipboard records across your devices over local Wi-Fi / LAN with TLS-encrypted security.
+  - **Auto-Sync Pins & Collections**: Automatically synchronizes pinned status and custom category folders (Collections) between devices.
+  - **Complete Drain Sync**: Syncs your entire existing clipboard history (including categorized and pinned items) immediately upon device pairing.
+  - **Auto-Reconnect (Exponential Backoff)**: Smart background auto-reconnection for trusted devices.
 - 🤖 **On-Device Local AI**: Smart AI assistant running 100% locally on your machine (via GGUF models). Analyze images, summarize text, rewrite code, and chat with your clipboard context offline.
 - 🔒 **100% Offline & Private**: Your clipboard history stays strictly on your device. No cloud sync, no tracking, zero server calls.
 - 🎨 **15+ Aesthetic Themes & Pastel Accents**: Express your desktop setup with curated palettes, Emerald Mint, Cyber Violet, Sunset Orange, and Soft Pastel colors.
+- 📱 **Mobile Ready**: Optimized UI with full `SafeArea` compatibility for modern iOS and Android notches/status bars.
 - 🌐 **Full English & Vietnamese Localization**: Seamlessly switch languages instantly.
 - 📦 **Password-Protected Encrypted Backups**: Export and import your entire setup with `.clipflow` encrypted files.
 - 🚫 **Smart Exclusion Protection**: Automatically bypass password managers (Bitwarden, 1Password) or exclude specific applications from history recording.

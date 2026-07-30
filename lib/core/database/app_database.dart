@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 1;
+  static const version = 2;
   final Database database;
   final String databasePath;
 
@@ -194,7 +194,28 @@ class AppDatabase {
     await db.execute(
       'CREATE INDEX idx_item_collections_collection ON clipboard_item_collections(collection_id)',
     );
+    await _createSyncStateTable(db);
     await _seedCollections(db);
+  }
+
+  static Future<void> _createSyncStateTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS item_sync_states (
+        item_id TEXT NOT NULL,
+        peer_device_id TEXT NOT NULL,
+        sync_status TEXT NOT NULL,
+        last_attempt_at INTEGER,
+        synced_at INTEGER,
+        retry_count INTEGER NOT NULL DEFAULT 0,
+        error_message TEXT,
+        PRIMARY KEY (item_id, peer_device_id),
+        FOREIGN KEY (item_id) REFERENCES clipboard_items(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_sync_states_peer_status
+      ON item_sync_states(peer_device_id, sync_status)
+    ''');
   }
 
   static Future<void> _seedCollections(Database db) async {
@@ -224,7 +245,9 @@ class AppDatabase {
     int oldVersion,
     int newVersion,
   ) async {
-    // Future schema versions are migrated incrementally here.
+    if (oldVersion < 2) {
+      await _createSyncStateTable(db);
+    }
   }
 
   Future<void> close() => database.close();

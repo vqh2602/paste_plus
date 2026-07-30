@@ -306,61 +306,63 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
               alignment: Alignment.bottomCenter,
               child: CupertinoPageScaffold(
                 backgroundColor: resolveColor(context, ClipFlowColors.sidebar),
-                child: Column(
-                  children: [
-                    QuickToolbarWidget(
-                      state: state,
-                      collections: collections,
-                      monitoringEnabled: settings.monitoringEnabled,
-                      searchController: _searchController,
-                      searchFocusNode: _searchFocusNode,
-                      onOpenMainWindow: _openMainWindow,
-                      onChooseType: _chooseType,
-                    ),
-                    const CupertinoDivider(),
-                    Expanded(
-                      child: totalItems == 0
-                          ? QuickEmptyStateWidget(
-                              hasQuery: state.query.isNotEmpty,
-                            )
-                          : ListView.builder(
-                              controller: _itemScrollController,
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 12,
-                              ),
-                              itemCount: totalItems,
-                              itemBuilder: (context, index) {
-                                final item = visibleItems[index];
-                                final isSelected = index == _selectedIndex;
-                                return _AnimatedQuickPanelItem(
-                                  key: ValueKey('quick-animated-${item.id}'),
-                                  index: index,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(right: 12),
-                                    child: QuickClipboardCardWidget(
-                                      item: item,
-                                      number: index + 1,
-                                      selected: isSelected,
-                                      onTap: () {
-                                        setState(() => _selectedIndex = index);
-                                        _pasteItem(item);
-                                      },
-                                      onPin: () => ref
-                                          .read(
-                                            historyControllerProvider.notifier,
-                                          )
-                                          .togglePinned(item),
-                                      onActions: (ctx) =>
-                                          _showItemActions(ctx, item),
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      QuickToolbarWidget(
+                        state: state,
+                        collections: collections,
+                        monitoringEnabled: settings.monitoringEnabled,
+                        searchController: _searchController,
+                        searchFocusNode: _searchFocusNode,
+                        onOpenMainWindow: _openMainWindow,
+                        onChooseType: _chooseType,
+                      ),
+                      const CupertinoDivider(),
+                      Expanded(
+                        child: totalItems == 0
+                            ? QuickEmptyStateWidget(
+                                hasQuery: state.query.isNotEmpty,
+                              )
+                            : ListView.builder(
+                                controller: _itemScrollController,
+                                scrollDirection: Axis.horizontal,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 12,
+                                ),
+                                itemCount: totalItems,
+                                itemBuilder: (context, index) {
+                                  final item = visibleItems[index];
+                                  final isSelected = index == _selectedIndex;
+                                  return _AnimatedQuickPanelItem(
+                                    key: ValueKey('quick-animated-${item.id}'),
+                                    index: index,
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 12),
+                                      child: QuickClipboardCardWidget(
+                                        item: item,
+                                        number: index + 1,
+                                        selected: isSelected,
+                                        onTap: () {
+                                          setState(() => _selectedIndex = index);
+                                          _pasteItem(item);
+                                        },
+                                        onPin: () => ref
+                                            .read(
+                                              historyControllerProvider.notifier,
+                                            )
+                                            .togglePinned(item),
+                                        onActions: (ctx) =>
+                                            _showItemActions(ctx, item),
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

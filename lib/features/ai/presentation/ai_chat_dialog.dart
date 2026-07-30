@@ -11,8 +11,10 @@ import '../domain/ai_feature_action.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
 import 'widgets/ai_context_banner_widget.dart';
+import 'widgets/ai_context_picker_sheet.dart';
 import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
+import 'widgets/ai_mobile_toolbar.dart';
 import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
@@ -87,6 +89,17 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
 
     await ref.read(aiControllerProvider.notifier).sendUserMessage(text);
     _scrollToBottom(force: true);
+  }
+
+  Future<void> _showContextPicker() async {
+    final aiState = ref.read(aiControllerProvider);
+    final selected = await AiContextPickerSheet.show(
+      context,
+      items: ref.read(historyControllerProvider).items,
+      selectedItemId: aiState.activeClipboardContext?.id,
+    );
+    if (selected == null || !mounted) return;
+    ref.read(aiControllerProvider.notifier).setClipboardContext(selected);
   }
 
   Future<void> _runFeatureAction(AiFeatureGroup group, String option) async {
@@ -323,8 +336,9 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                     Text(
                       profile.$1,
                       style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: isSelected ? CupertinoColors.activeBlue : null,
                       ),
                     ),
@@ -381,92 +395,103 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
             child: Column(
               children: [
                 // Top Header Bar
-                Container(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        CupertinoIcons.sparkles,
-                        color: CupertinoColors.activeBlue,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'ai_chat_assistant'.tr,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
+                if (compact)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: AiMobileToolbar(
+                      onClose: () => Navigator.pop(context),
+                      onChooseContext: _showContextPicker,
+                      onShowHistory: _showConversations,
+                      hasContext: aiState.activeClipboardContext != null,
+                    ),
+                  )
+                else
+                  Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          CupertinoIcons.sparkles,
+                          color: CupertinoColors.activeBlue,
+                          size: 20,
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: CupertinoColors.activeGreen.withValues(
-                            alpha: 0.15,
+                        const SizedBox(width: 8),
+                        Text(
+                          'ai_chat_assistant'.tr,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
                             color: CupertinoColors.activeGreen.withValues(
-                              alpha: 0.3,
+                              alpha: 0.15,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: CupertinoColors.activeGreen.withValues(
+                                alpha: 0.3,
+                              ),
                             ),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: const BoxDecoration(
-                                color: CupertinoColors.activeGreen,
-                                shape: BoxShape.circle,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: const BoxDecoration(
+                                  color: CupertinoColors.activeGreen,
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 5),
-                            const Text(
-                              'Offline • Local AI',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: CupertinoColors.activeGreen,
+                              const SizedBox(width: 5),
+                              const Text(
+                                'Offline • Local AI',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: CupertinoColors.activeGreen,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const Spacer(),
-                      CupertinoIconControl(
-                        icon: CupertinoIcons.clock,
-                        size: 16,
-                        tooltip: 'ai_conversation_history'.tr,
-                        onPressed: _showConversations,
-                      ),
-                      CupertinoIconControl(
-                        icon: CupertinoIcons.slider_horizontal_3,
-                        size: 16,
-                        tooltip: 'ai_config'.tr,
-                        onPressed: _showGenerationSettings,
-                      ),
-                      CupertinoIconControl(
-                        icon: CupertinoIcons.trash,
-                        size: 16,
-                        onPressed: () {
-                          ref.read(aiControllerProvider.notifier).clearChat();
-                        },
-                      ),
-                      const SizedBox(width: 4),
-                      CupertinoIconControl(
-                        icon: CupertinoIcons.xmark,
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ],
+                        const Spacer(),
+                        CupertinoIconControl(
+                          icon: CupertinoIcons.clock,
+                          size: 16,
+                          tooltip: 'ai_conversation_history'.tr,
+                          onPressed: _showConversations,
+                        ),
+                        CupertinoIconControl(
+                          icon: CupertinoIcons.slider_horizontal_3,
+                          size: 16,
+                          tooltip: 'ai_config'.tr,
+                          onPressed: _showGenerationSettings,
+                        ),
+                        CupertinoIconControl(
+                          icon: CupertinoIcons.trash,
+                          size: 16,
+                          onPressed: () {
+                            ref.read(aiControllerProvider.notifier).clearChat();
+                          },
+                        ),
+                        const SizedBox(width: 4),
+                        CupertinoIconControl(
+                          icon: CupertinoIcons.xmark,
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 const CupertinoDivider(),
 
                 // Show mandatory model download overlay if no model downloaded

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,8 +15,15 @@ import '../features/ai/services/ai_model_downloader_service.dart';
 import '../features/ai/services/local_ai_engine.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import '../features/clipboard_history/domain/clipboard_item.dart';
+import '../features/clipboard_history/domain/clipboard_payload.dart';
 import '../features/clipboard_history/domain/clipboard_repository.dart';
 import '../features/clipboard_history/presentation/history_controller.dart';
+import '../features/device_sync/domain/local_sharing_state.dart';
+import '../features/device_sync/data/item_sync_state_repository.dart';
+import '../features/device_sync/presentation/local_sharing_controller.dart';
+import '../features/device_sync/services/local_sharing_service.dart';
+import '../features/device_sync/services/clipboard_sync_coordinator.dart';
+import '../features/device_sync/services/mdns_tls_local_sharing_service.dart';
 import '../features/settings/data/settings_repository.dart';
 import '../features/settings/domain/app_settings.dart';
 import '../features/settings/presentation/settings_controller.dart';
@@ -48,8 +56,8 @@ final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
   final watcher = Platform.isMacOS
       ? MacOSClipboardWatcher()
       : Platform.isWindows
-          ? WindowsClipboardWatcher()
-          : FlutterClipboardWatcher();
+      ? WindowsClipboardWatcher()
+      : FlutterClipboardWatcher();
   ref.onDispose(watcher.dispose);
   return watcher;
 });
@@ -65,15 +73,146 @@ final settingsControllerProvider =
       return SettingsController(ref.watch(settingsRepositoryProvider));
     });
 
+final localSharingServiceProvider = Provider<LocalSharingService>((ref) {
+  final service = MdnsTlsLocalSharingService();
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+final itemSyncStateRepositoryProvider = Provider<ItemSyncStateRepository>((
+  ref,
+) {
+  return ItemSyncStateRepository(ref.watch(appDatabaseProvider));
+});
+
+final clipboardSyncCoordinatorProvider = Provider<ClipboardSyncCoordinator>((
+  ref,
+) {
+  return ClipboardSyncCoordinator(
+    transport: ref.watch(localSharingServiceProvider),
+    syncStates: ref.watch(itemSyncStateRepositoryProvider),
+    clipboardRepository: ref.watch(clipboardRepositoryProvider),
+    readSettings: () => ref.read(settingsControllerProvider),
+  );
+});
+
+final localSharingControllerProvider =
+    StateNotifierProvider<LocalSharingController, LocalSharingState>((ref) {
+      final controller = LocalSharingController(
+        ref.watch(localSharingServiceProvider),
+        ref.read(settingsControllerProvider),
+      );
+      ref.listen<AppSettings>(settingsControllerProvider, (_, next) {
+        controller.updateConfiguration(next);
+      });
+      return controller;
+    });
+
 final historyControllerProvider =
     StateNotifierProvider<ClipboardHistoryController, ClipboardHistoryState>((
       ref,
     ) {
-      return ClipboardHistoryController(
+      late final ClipboardHistoryController controller;
+      controller = ClipboardHistoryController(
         ref.watch(clipboardRepositoryProvider),
         ref.watch(clipboardWatcherProvider),
         () => ref.read(settingsControllerProvider),
+        onItemStored: (item) async {
+          final settings = ref.read(settingsControllerProvider);
+          if (!settings.localSharingEnabled ||
+              settings.allConnectionsPaused ||
+              !settings.autoSyncClipboard ||
+              (settings.syncPinnedItemsOnly && !item.isPinned)) {
+            return;
+          }
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .itemStored(item, ref.read(localSharingControllerProvider));
+        },
+        onItemMetadataChanged: (item) async {
+          final settings = ref.read(settingsControllerProvider);
+          if (!settings.localSharingEnabled ||
+              settings.allConnectionsPaused ||
+              !settings.autoSyncClipboard) {
+            return;
+          }
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .itemMetadataChanged(
+                item,
+                ref.read(localSharingControllerProvider),
+              );
+        },
+        onCollectionsChanged: () =>
+            ref.read(collectionsControllerProvider.notifier).reload(),
       );
+      final incomingSubscription = ref
+          .watch(localSharingServiceProvider)
+          .receivedPayloads
+          .listen((payload) {
+            unawaited(
+              controller.receiveRemote(
+                ClipboardPayload(
+                  text: payload.text,
+                  imageBytes: payload.imageBytes,
+                ),
+                isPinned: payload.isPinned,
+                collections: payload.collections
+                    .map(
+                      (collection) => ClipboardCollection(
+                        id: collection.collectionId,
+                        name: collection.name,
+                        icon: collection.icon,
+                        createdAt: collection.createdAt,
+                        updatedAt: collection.updatedAt,
+                        sortOrder: collection.sortOrder,
+                      ),
+                    )
+                    .toList(growable: false),
+                writeToSystemClipboard: payload.writeToSystemClipboard,
+                metadataAuthoritative: payload.metadataAuthoritative,
+              ),
+            );
+          });
+      final incomingCollectionsSubscription = ref
+          .watch(localSharingServiceProvider)
+          .receivedCollections
+          .listen((payload) {
+            unawaited(() async {
+              final repository = ref.read(clipboardRepositoryProvider);
+              if (payload.deleted) {
+                await repository.deleteCollection(payload.collectionId);
+              } else {
+                await repository.upsertCollection(
+                  ClipboardCollection(
+                    id: payload.collectionId,
+                    name: payload.name,
+                    icon: payload.icon,
+                    createdAt: payload.createdAt,
+                    updatedAt: payload.updatedAt,
+                    sortOrder: payload.sortOrder,
+                  ),
+                );
+              }
+              await ref.read(collectionsControllerProvider.notifier).reload();
+              await controller.reload();
+            }());
+          });
+      ref.listen<LocalSharingState>(localSharingControllerProvider, (_, next) {
+        final settings = ref.read(settingsControllerProvider);
+        if (settings.localSharingEnabled && !settings.allConnectionsPaused) {
+          unawaited(
+            ref
+                .read(clipboardSyncCoordinatorProvider)
+                .drainConnectedPeers(next),
+          );
+        }
+      });
+      ref.onDispose(() {
+        unawaited(incomingSubscription.cancel());
+        unawaited(incomingCollectionsSubscription.cancel());
+      });
+      return controller;
     });
 
 final collectionsControllerProvider =
@@ -81,7 +220,27 @@ final collectionsControllerProvider =
       CollectionsController,
       AsyncValue<List<ClipboardCollection>>
     >((ref) {
-      return CollectionsController(ref.watch(clipboardRepositoryProvider));
+      final repository = ref.watch(clipboardRepositoryProvider);
+      late final CollectionsController controller;
+      controller = CollectionsController(
+        repository,
+        onChanged: (collection, {deleted = false}) async {
+          final settings = ref.read(settingsControllerProvider);
+          if (!settings.localSharingEnabled ||
+              settings.allConnectionsPaused ||
+              !settings.autoSyncClipboard) {
+            return;
+          }
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .collectionChanged(
+                collection,
+                ref.read(localSharingControllerProvider),
+                deleted: deleted,
+              );
+        },
+      );
+      return controller;
     });
 
 final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {

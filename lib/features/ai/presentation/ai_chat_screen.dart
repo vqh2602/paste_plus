@@ -14,8 +14,10 @@ import '../domain/ai_feature_action.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
 import 'widgets/ai_context_banner_widget.dart';
+import 'widgets/ai_context_picker_sheet.dart';
 import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
+import 'widgets/ai_mobile_toolbar.dart';
 import 'widgets/ai_no_model_overlay.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
@@ -131,7 +133,19 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Future<void> _openMainWindow() async {
     ref.read(aiWindowModeProvider.notifier).state = false;
+    if (Platform.isIOS || Platform.isAndroid) return;
     await ref.read(desktopIntegrationProvider).showMainWindow();
+  }
+
+  Future<void> _showContextPicker() async {
+    final aiState = ref.read(aiControllerProvider);
+    final selected = await AiContextPickerSheet.show(
+      context,
+      items: ref.read(historyControllerProvider).items,
+      selectedItemId: aiState.activeClipboardContext?.id,
+    );
+    if (selected == null || !mounted) return;
+    ref.read(aiControllerProvider.notifier).setClipboardContext(selected);
   }
 
   Future<void> _showConversations() async {
@@ -307,8 +321,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                     Text(
                       profile.$1,
                       style: TextStyle(
-                        fontWeight:
-                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                         color: isSelected ? CupertinoColors.activeBlue : null,
                       ),
                     ),
@@ -352,243 +367,263 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     final historyItemCount = ref.watch(
       historyControllerProvider.select((state) => state.items.length),
     );
+    final isDesktop =
+        Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
     return CupertinoPageScaffold(
-      child: Column(
-        children: [
-          // Drag-to-move Header Title Bar for standalone macOS window
-          if (Platform.isMacOS || Platform.isWindows || Platform.isLinux)
-            DragToMoveArea(
-              child: SizedBox(
-                height: 44,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drag-to-move Header Title Bar for standalone macOS window
+            if (isDesktop)
+              DragToMoveArea(
+                child: SizedBox(
+                  height: 44,
+                  child: Row(
+                    children: [
+                      if (Platform.isMacOS)
+                        const SizedBox(width: 80)
+                      else
+                        const SizedBox(width: 14),
+                      const Icon(
+                        CupertinoIcons.sparkles,
+                        color: CupertinoColors.activeBlue,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'ClipFlow Local AI Assistant',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: CupertinoColors.activeGreen.withValues(
+                            alpha: 0.15,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: CupertinoColors.activeGreen.withValues(
+                              alpha: 0.3,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: CupertinoColors.activeGreen,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'Offline • ${aiState.selectedModel.parameterSize}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: CupertinoColors.activeGreen,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      CupertinoIconControl(
+                        icon: CupertinoIcons.clock,
+                        size: 16,
+                        tooltip: 'ai_conversation_history'.tr,
+                        onPressed: _showConversations,
+                      ),
+                      CupertinoIconControl(
+                        icon: CupertinoIcons.slider_horizontal_3,
+                        size: 16,
+                        tooltip: 'ai_config'.tr,
+                        onPressed: _showGenerationSettings,
+                      ),
+                      CupertinoButton(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        onPressed: _openMainWindow,
+                        child: Row(
+                          children: [
+                            const Icon(CupertinoIcons.sidebar_left, size: 14),
+                            const SizedBox(width: 4),
+                            Text(
+                              'main_window'.tr,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      CupertinoIconControl(
+                        icon: CupertinoIcons.trash,
+                        size: 16,
+                        onPressed: () {
+                          ref.read(aiControllerProvider.notifier).clearChat();
+                        },
+                      ),
+                      if (Platform.isWindows || Platform.isLinux)
+                        const AppWindowControls()
+                      else
+                        const SizedBox(width: 12),
+                    ],
+                  ),
+                ),
+              ),
+            if (!isDesktop)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: AiMobileToolbar(
+                  onClose: _openMainWindow,
+                  onChooseContext: _showContextPicker,
+                  onShowHistory: _showConversations,
+                  hasContext: aiState.activeClipboardContext != null,
+                ),
+              ),
+            const CupertinoDivider(),
+
+            // Show mandatory model download overlay if no model downloaded
+            if (!aiState.hasAnyDownloadedModel)
+              const Expanded(child: AiNoModelOverlay())
+            else ...[
+              // Active Clipboard Context Banner
+              if (aiState.activeClipboardContext != null)
+                AiContextBannerWidget(
+                  item: aiState.activeClipboardContext!,
+                  onCopy: () async {
+                    await ref
+                        .read(historyControllerProvider.notifier)
+                        .copy(aiState.activeClipboardContext!);
+                    if (!context.mounted) return;
+                    showCupertinoNotice(context, 'copied'.tr);
+                  },
+                  onClear: () {
+                    ref
+                        .read(aiControllerProvider.notifier)
+                        .setClipboardContext(null);
+                  },
+                ),
+
+              if (aiState.activeClipboardContext == null)
+                AiHistoryContextBannerWidget(itemCount: historyItemCount),
+
+              const CupertinoDivider(),
+
+              // Horizontal Preset Action Pills Bar
+              AiPresetPillsWidget(
+                onSelectGroup: (group) => _showFeatureOptionsPicker(group),
+              ),
+              const CupertinoDivider(),
+
+              // Main Chat Message History List View
+              Expanded(
+                child: aiState.chatMessages.isEmpty
+                    ? _AiScreenWelcomeState(
+                        model: aiState.selectedModel,
+                        onActionSelected: (group) =>
+                            _showFeatureOptionsPicker(group),
+                      )
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(20),
+                        itemCount: aiState.chatMessages.length,
+                        itemBuilder: (context, index) {
+                          final msg = aiState.chatMessages[index];
+                          return AiMessageTileWidget(
+                            message: msg,
+                            onEdit: (content) {
+                              _inputController.text = content;
+                              _inputController.selection =
+                                  TextSelection.collapsed(
+                                    offset: content.length,
+                                  );
+                              _focusNode.requestFocus();
+                            },
+                            onRegenerate:
+                                index == aiState.chatMessages.length - 1
+                                ? () => ref
+                                      .read(aiControllerProvider.notifier)
+                                      .regenerateLastResponse()
+                                : null,
+                            onContinue: index == aiState.chatMessages.length - 1
+                                ? () => ref
+                                      .read(aiControllerProvider.notifier)
+                                      .continueLastResponse()
+                                : null,
+                            onCopy: (content) {
+                              Clipboard.setData(ClipboardData(text: content));
+                              showCupertinoNotice(context, 'copied'.tr);
+                            },
+                            onPaste: (content) async {
+                              final desktop = ref.read(
+                                desktopIntegrationProvider,
+                              );
+                              await Clipboard.setData(
+                                ClipboardData(text: content),
+                              );
+                              await desktop.pasteToPreviousApplication();
+                            },
+                          );
+                        },
+                      ),
+              ),
+
+              const CupertinoDivider(),
+
+              // Prompt Input Field Bar
+              Padding(
+                padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    if (Platform.isMacOS)
-                      const SizedBox(width: 80)
-                    else
-                      const SizedBox(width: 14),
-                    const Icon(
-                      CupertinoIcons.sparkles,
-                      color: CupertinoColors.activeBlue,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'ClipFlow Local AI Assistant',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: CupertinoTextField(
+                        controller: _inputController,
+                        focusNode: _focusNode,
+                        placeholder: 'ai_send_prompt'.tr,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: resolveColor(context, ClipFlowColors.surface),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: resolveColor(context, ClipFlowColors.border),
+                          ),
+                        ),
+                        onSubmitted: (_) => _submitPrompt(),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: CupertinoColors.activeGreen.withValues(
-                          alpha: 0.15,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: CupertinoColors.activeGreen.withValues(
-                            alpha: 0.3,
-                          ),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 6,
-                            height: 6,
-                            decoration: const BoxDecoration(
-                              color: CupertinoColors.activeGreen,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            'Offline • ${aiState.selectedModel.parameterSize}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: CupertinoColors.activeGreen,
-                            ),
-                          ),
-                        ],
-                      ),
+                    CupertinoButton.filled(
+                      padding: const EdgeInsets.all(12),
+                      borderRadius: BorderRadius.circular(16),
+                      onPressed: aiState.isGenerating
+                          ? () => ref
+                                .read(aiControllerProvider.notifier)
+                                .stopGeneration()
+                          : () => _submitPrompt(),
+                      child: aiState.isGenerating
+                          ? const Icon(CupertinoIcons.stop_fill, size: 18)
+                          : const Icon(CupertinoIcons.arrow_up, size: 20),
                     ),
-                    const Spacer(),
-                    CupertinoIconControl(
-                      icon: CupertinoIcons.clock,
-                      size: 16,
-                      tooltip: 'ai_conversation_history'.tr,
-                      onPressed: _showConversations,
-                    ),
-                    CupertinoIconControl(
-                      icon: CupertinoIcons.slider_horizontal_3,
-                      size: 16,
-                      tooltip: 'ai_config'.tr,
-                      onPressed: _showGenerationSettings,
-                    ),
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      onPressed: _openMainWindow,
-                      child: Row(
-                        children: [
-                          const Icon(CupertinoIcons.sidebar_left, size: 14),
-                          const SizedBox(width: 4),
-                          Text('main_window'.tr, style: const TextStyle(fontSize: 12)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    CupertinoIconControl(
-                      icon: CupertinoIcons.trash,
-                      size: 16,
-                      onPressed: () {
-                        ref.read(aiControllerProvider.notifier).clearChat();
-                      },
-                    ),
-                    if (Platform.isWindows || Platform.isLinux)
-                      const AppWindowControls()
-                    else
-                      const SizedBox(width: 12),
                   ],
                 ),
-              ),
-            ),
-          const CupertinoDivider(),
-
-          // Show mandatory model download overlay if no model downloaded
-          if (!aiState.hasAnyDownloadedModel)
-            const Expanded(child: AiNoModelOverlay())
-          else ...[
-            // Active Clipboard Context Banner
-            if (aiState.activeClipboardContext != null)
-              AiContextBannerWidget(
-                item: aiState.activeClipboardContext!,
-                onCopy: () async {
-                  await ref
-                      .read(historyControllerProvider.notifier)
-                      .copy(aiState.activeClipboardContext!);
-                  if (!context.mounted) return;
-                  showCupertinoNotice(context, 'copied'.tr);
-                },
-                onClear: () {
-                  ref
-                      .read(aiControllerProvider.notifier)
-                      .setClipboardContext(null);
-                },
-              ),
-
-            if (aiState.activeClipboardContext == null)
-              AiHistoryContextBannerWidget(itemCount: historyItemCount),
-
-            const CupertinoDivider(),
-
-            // Horizontal Preset Action Pills Bar
-            AiPresetPillsWidget(
-              onSelectGroup: (group) => _showFeatureOptionsPicker(group),
-            ),
-            const CupertinoDivider(),
-
-            // Main Chat Message History List View
-            Expanded(
-              child: aiState.chatMessages.isEmpty
-                  ? _AiScreenWelcomeState(
-                      model: aiState.selectedModel,
-                      onActionSelected: (group) =>
-                          _showFeatureOptionsPicker(group),
-                    )
-                  : ListView.builder(
-                      controller: _scrollController,
-                      padding: const EdgeInsets.all(20),
-                      itemCount: aiState.chatMessages.length,
-                      itemBuilder: (context, index) {
-                        final msg = aiState.chatMessages[index];
-                        return AiMessageTileWidget(
-                          message: msg,
-                          onEdit: (content) {
-                            _inputController.text = content;
-                            _inputController.selection =
-                                TextSelection.collapsed(offset: content.length);
-                            _focusNode.requestFocus();
-                          },
-                          onRegenerate: index == aiState.chatMessages.length - 1
-                              ? () => ref
-                                    .read(aiControllerProvider.notifier)
-                                    .regenerateLastResponse()
-                              : null,
-                          onContinue: index == aiState.chatMessages.length - 1
-                              ? () => ref
-                                    .read(aiControllerProvider.notifier)
-                                    .continueLastResponse()
-                              : null,
-                          onCopy: (content) {
-                            Clipboard.setData(ClipboardData(text: content));
-                            showCupertinoNotice(context, 'copied'.tr);
-                          },
-                          onPaste: (content) async {
-                            final desktop = ref.read(
-                              desktopIntegrationProvider,
-                            );
-                            await Clipboard.setData(
-                              ClipboardData(text: content),
-                            );
-                            await desktop.pasteToPreviousApplication();
-                          },
-                        );
-                      },
-                    ),
-            ),
-
-            const CupertinoDivider(),
-
-            // Prompt Input Field Bar
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: CupertinoTextField(
-                      controller: _inputController,
-                      focusNode: _focusNode,
-                      placeholder: 'ai_send_prompt'.tr,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 12,
-                      ),
-                      decoration: BoxDecoration(
-                        color: resolveColor(context, ClipFlowColors.surface),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: resolveColor(context, ClipFlowColors.border),
-                        ),
-                      ),
-                      onSubmitted: (_) => _submitPrompt(),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  CupertinoButton.filled(
-                    padding: const EdgeInsets.all(12),
-                    borderRadius: BorderRadius.circular(16),
-                    onPressed: aiState.isGenerating
-                        ? () => ref
-                              .read(aiControllerProvider.notifier)
-                              .stopGeneration()
-                        : () => _submitPrompt(),
-                    child: aiState.isGenerating
-                        ? const Icon(CupertinoIcons.stop_fill, size: 18)
-                        : const Icon(CupertinoIcons.arrow_up, size: 20),
-                  ),
-                ],
-              ),
-            ), // end Padding for input bar
-          ], // end else hasAnyDownloadedModel
-        ],
+              ), // end Padding for input bar
+            ], // end else hasAnyDownloadedModel
+          ],
+        ),
       ),
     );
   }

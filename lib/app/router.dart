@@ -21,6 +21,7 @@ GoRouter createRouter({required bool hasCompletedOnboarding}) {
           final initialPage = switch (pageParam) {
             'about' => SettingsPage.about,
             'clipboard' => SettingsPage.clipboard,
+            'sharing' => SettingsPage.sharing,
             'privacy' => SettingsPage.privacy,
             'storage' => SettingsPage.storage,
             'shortcuts' => SettingsPage.shortcuts,
@@ -51,4 +52,3 @@ GoRouter createRouter({required bool hasCompletedOnboarding}) {
     ],
   );
 }
-

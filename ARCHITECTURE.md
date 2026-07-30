@@ -9,10 +9,16 @@ Welcome to the technical architecture documentation for **ClipFlow** (Paste Plus
 ClipFlow is built using **Flutter** and follows a **Feature-First Architecture** combined with **Riverpod** state management. The core guiding principles are:
 - **Local-First & Offline**: Zero network dependency for core features. All clipboard records, images, metadata, and user configurations are stored locally on the device.
 - **On-Device Local AI Engine**: Integrated with `llamadart` / `llama.cpp` to run local GGUF Large Language Models directly on the user's CPU/GPU without cloud APIs.
+- **Local-First LAN Synchronization**: Deep, secure, real-time synchronization of clipboard items, pinned statuses, and collection folders across devices in the same local network:
+  - **TLS-secured Connection**: Native FFI socket encryption.
+  - **Event-Driven Collection & Sync Protocols**: Immediate updates for create, rename, order change, or deletion of Collections.
+  - **Smart Reconnection Flow**: Background reconnection mechanism utilizing an Exponential Backoff retry schedule (up to 5 attempts, with staggered timing based on device preference hierarchy).
+  - **Complete Drain Synchronization**: Enqueues and synchronizes the entire historical clipboard dataset including categorized collections and pinned flags right when a pairing connection completes.
 - **Unidirectional Data Flow**: State is managed via Riverpod controllers (`StateNotifier` / `Notifier`), ensuring predictable reactivity across UI components.
-- **Cross-Platform Desktop Interoperability**: Deep native integration on both **macOS** and **Windows (Beta)**:
+- **Cross-Platform Interoperability**: Deep native integration on **macOS**, **Windows (Beta)**, **iOS**, and **Android**:
   - **macOS**: MethodChannels for global hotkeys, Accessibility permissions (`AXIsProcessTrusted`), AppleScript system events auto-paste, Apple Vision OCR, and System Menu Bar tray.
   - **Windows (Beta)**: Win32 API (`win32` & `win32_registry`), `window_manager`, `tray_manager`, `hotkey_manager`, simulated `keybd_event` / `SendInput` `Ctrl+V` auto-pasting, and SQLite FFI backend.
+  - **Mobile (iOS & Android)**: Specialized `SafeArea` layouts, platform clipboard sync, and mobile-friendly local AI interfaces.
 
 ---
 

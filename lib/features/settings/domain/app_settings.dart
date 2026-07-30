@@ -40,6 +40,17 @@ class AppSettings {
     this.duplicateBehavior = DuplicateBehavior.bringToTop,
     this.aiEnabled = true,
     this.selectedAiModel = defaultAiModel,
+    this.localSharingEnabled = false,
+    this.deviceDiscoverable = true,
+    this.autoConnectTrustedDevices = true,
+    this.autoSyncClipboard = true,
+    this.syncPinnedItemsOnly = false,
+    this.allowReceivingImages = true,
+    this.sharingMaxImageMb = 20,
+    this.notifyDeviceConnected = true,
+    this.notifyClipboardReceived = false,
+    this.allConnectionsPaused = false,
+    this.deviceDisplayName = '',
     this.allowedTypes = const {
       'text',
       'url',
@@ -63,6 +74,17 @@ class AppSettings {
   final bool soundEnabled;
   final bool aiEnabled;
   final String selectedAiModel;
+  final bool localSharingEnabled;
+  final bool deviceDiscoverable;
+  final bool autoConnectTrustedDevices;
+  final bool autoSyncClipboard;
+  final bool syncPinnedItemsOnly;
+  final bool allowReceivingImages;
+  final int sharingMaxImageMb;
+  final bool notifyDeviceConnected;
+  final bool notifyClipboardReceived;
+  final bool allConnectionsPaused;
+  final String deviceDisplayName;
   final String themeMode;
   final String accentColor;
   final String language;
@@ -101,6 +123,17 @@ class AppSettings {
     bool? soundEnabled,
     bool? aiEnabled,
     String? selectedAiModel,
+    bool? localSharingEnabled,
+    bool? deviceDiscoverable,
+    bool? autoConnectTrustedDevices,
+    bool? autoSyncClipboard,
+    bool? syncPinnedItemsOnly,
+    bool? allowReceivingImages,
+    int? sharingMaxImageMb,
+    bool? notifyDeviceConnected,
+    bool? notifyClipboardReceived,
+    bool? allConnectionsPaused,
+    String? deviceDisplayName,
     String? themeMode,
     String? accentColor,
     String? language,
@@ -140,6 +173,20 @@ class AppSettings {
       soundEnabled: soundEnabled ?? this.soundEnabled,
       aiEnabled: aiEnabled ?? this.aiEnabled,
       selectedAiModel: selectedAiModel ?? this.selectedAiModel,
+      localSharingEnabled: localSharingEnabled ?? this.localSharingEnabled,
+      deviceDiscoverable: deviceDiscoverable ?? this.deviceDiscoverable,
+      autoConnectTrustedDevices:
+          autoConnectTrustedDevices ?? this.autoConnectTrustedDevices,
+      autoSyncClipboard: autoSyncClipboard ?? this.autoSyncClipboard,
+      syncPinnedItemsOnly: syncPinnedItemsOnly ?? this.syncPinnedItemsOnly,
+      allowReceivingImages: allowReceivingImages ?? this.allowReceivingImages,
+      sharingMaxImageMb: sharingMaxImageMb ?? this.sharingMaxImageMb,
+      notifyDeviceConnected:
+          notifyDeviceConnected ?? this.notifyDeviceConnected,
+      notifyClipboardReceived:
+          notifyClipboardReceived ?? this.notifyClipboardReceived,
+      allConnectionsPaused: allConnectionsPaused ?? this.allConnectionsPaused,
+      deviceDisplayName: deviceDisplayName ?? this.deviceDisplayName,
       themeMode: themeMode ?? this.themeMode,
       accentColor: accentColor ?? this.accentColor,
       language: language ?? this.language,
@@ -181,6 +228,17 @@ class AppSettings {
     'soundEnabled': soundEnabled,
     'aiEnabled': aiEnabled,
     'selectedAiModel': selectedAiModel,
+    'localSharingEnabled': localSharingEnabled,
+    'deviceDiscoverable': deviceDiscoverable,
+    'autoConnectTrustedDevices': autoConnectTrustedDevices,
+    'autoSyncClipboard': autoSyncClipboard,
+    'syncPinnedItemsOnly': syncPinnedItemsOnly,
+    'allowReceivingImages': allowReceivingImages,
+    'sharingMaxImageMb': sharingMaxImageMb,
+    'notifyDeviceConnected': notifyDeviceConnected,
+    'notifyClipboardReceived': notifyClipboardReceived,
+    'allConnectionsPaused': allConnectionsPaused,
+    'deviceDisplayName': deviceDisplayName,
     'themeMode': themeMode,
     'accentColor': accentColor,
     'language': language,
@@ -235,6 +293,17 @@ class AppSettings {
       soundEnabled: value('soundEnabled', true),
       aiEnabled: value('aiEnabled', true),
       selectedAiModel: selectedAiModel,
+      localSharingEnabled: value('localSharingEnabled', false),
+      deviceDiscoverable: value('deviceDiscoverable', true),
+      autoConnectTrustedDevices: value('autoConnectTrustedDevices', true),
+      autoSyncClipboard: value('autoSyncClipboard', true),
+      syncPinnedItemsOnly: value('syncPinnedItemsOnly', false),
+      allowReceivingImages: value('allowReceivingImages', true),
+      sharingMaxImageMb: value('sharingMaxImageMb', 20),
+      notifyDeviceConnected: value('notifyDeviceConnected', true),
+      notifyClipboardReceived: value('notifyClipboardReceived', false),
+      allConnectionsPaused: value('allConnectionsPaused', false),
+      deviceDisplayName: value('deviceDisplayName', ''),
       themeMode: value('themeMode', 'system'),
       accentColor: value('accentColor', 'indigo'),
       language: value('language', 'vi'),

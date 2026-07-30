@@ -2,6 +2,22 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.1.0] - 2026-07-30
+
+### 🚀 Tính năng nổi bật & Cải tiến
+- **Đồng bộ hóa Thời gian thực (Real-time Sync) & Đồng bộ Trạng thái**:
+  - **Tự động đồng bộ Ghim (Pin)**: Trạng thái ghim của các mục clipboard được truyền tải và áp dụng tự động giữa các thiết bị được ghép nối.
+  - **Tự động đồng bộ Bộ sưu tập (Collections)**: Các tệp/nội dung clipboard nằm trong Collection sẽ tự động gửi và tạo/đưa vào đúng Collection tương ứng tại thiết bị nhận.
+  - **Đồng bộ Collection độc lập**: Hỗ trợ đồng bộ hóa các sự kiện tạo, đổi tên, thay đổi thứ tự sắp xếp hoặc xóa Collection giữa các thiết bị mà không cần chờ thay đổi từ clipboard.
+  - **Drain Sync hoàn chỉnh**: Tự động xếp hàng và đồng bộ toàn bộ dữ liệu lịch sử cũ (bao gồm trạng thái Pinned & Collections) ngay khi thiết bị kết nối thành công.
+- **Cơ chế Tự động Kết nối lại (Auto-Reconnect)**:
+  - Tích hợp hệ thống tự động kết nối lại thông minh cho các thiết bị tin cậy bằng giải thuật lùi thời gian lũy thừa (Exponential Backoff) lên đến 5 lần trước khi chuyển sang chế độ kết nối thủ công.
+
+### 📱 Hỗ trợ Thiết bị di động (Android & iOS)
+- **Tương thích SafeArea**: Bọc các màn hình chính (`HomeScreen`, `QuickPanelScreen`, `AiChatScreen`) trong `SafeArea` giúp giao diện không bị đè bởi Status bar, tai thỏ (Notch) hay Dynamic Island trên iOS/Android.
+- **Sửa lỗi kích hoạt AI Chat**: Sửa lỗi logic ngăn mở màn hình AI Chat Assistant (`showAiWindow`) khi chạy trên môi trường di động.
+- **Tùy chỉnh Bảo mật & Khóa tên thiết bị**: Khóa ô chỉnh sửa tên thiết bị (`device_display_name`) khi có thiết bị khác đang kết nối để bảo vệ phiên xác thực TLS đang chạy.
+
 ## [1.0.9] - 2026-07-30
 
 ### 🚀 Tính năng mới & Cải tiến AI

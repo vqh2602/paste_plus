@@ -91,8 +91,11 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   ClipboardHistoryController(
     this._repository,
     this._watcher,
-    this._readSettings,
-  ) : super(const ClipboardHistoryState()) {
+    this._readSettings, {
+    this.onItemStored,
+    this.onItemMetadataChanged,
+    this.onCollectionsChanged,
+  }) : super(const ClipboardHistoryState()) {
     _subscription = _watcher.watch().listen(
       _capture,
       onError: (Object _) {
@@ -107,6 +110,11 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   final ClipboardRepository _repository;
   final ClipboardWatcher _watcher;
   final AppSettings Function() _readSettings;
+  final Future<void> Function(ClipboardItem item)? onItemStored;
+  final Future<void> Function(ClipboardItem item)? onItemMetadataChanged;
+  final Future<void> Function()? onCollectionsChanged;
+  ClipboardPayload? _suppressedRemotePayload;
+  DateTime? _suppressRemoteUntil;
   late final StreamSubscription<ClipboardPayload> _subscription;
 
   Future<void> initialize() async {
@@ -168,9 +176,64 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   }
 
   Future<void> _capture(ClipboardPayload payload) async {
-    await _repository.store(payload, _readSettings());
+    final suppressionActive =
+        _suppressRemoteUntil?.isAfter(DateTime.now()) ?? false;
+    if (suppressionActive && _samePayload(payload, _suppressedRemotePayload)) {
+      _suppressedRemotePayload = null;
+      _suppressRemoteUntil = null;
+      return;
+    }
+    _suppressedRemotePayload = null;
+    _suppressRemoteUntil = null;
+    await _storeAndQueue(payload);
     await _repository.cleanup(_readSettings());
     await reload();
+  }
+
+  Future<void> receiveRemote(
+    ClipboardPayload payload, {
+    bool isPinned = false,
+    List<ClipboardCollection> collections = const [],
+    bool writeToSystemClipboard = true,
+    bool metadataAuthoritative = false,
+  }) async {
+    if (writeToSystemClipboard) {
+      _suppressedRemotePayload = payload;
+      _suppressRemoteUntil = DateTime.now().add(const Duration(seconds: 2));
+      await _watcher.write(payload);
+    }
+    final item = await _repository.store(payload, _readSettings());
+    if (item != null) {
+      if (isPinned || metadataAuthoritative) {
+        await _repository.setPinned(item.id, isPinned);
+      }
+      if (collections.isNotEmpty) {
+        for (final collection in collections) {
+          await _repository.upsertCollection(collection);
+          await _repository.addToCollection(item.id, collection.id);
+        }
+        await onCollectionsChanged?.call();
+      }
+    }
+    await _repository.cleanup(_readSettings());
+    await reload();
+  }
+
+  bool _samePayload(ClipboardPayload current, ClipboardPayload? expected) {
+    if (expected == null || current.text != expected.text) return false;
+    final a = current.imageBytes;
+    final b = expected.imageBytes;
+    if (a == null || b == null) return a == null && b == null;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  Future<void> _storeAndQueue(ClipboardPayload payload) async {
+    final item = await _repository.store(payload, _readSettings());
+    if (item != null) await onItemStored?.call(item);
   }
 
   Future<bool> captureCurrent() async {
@@ -274,7 +337,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   }
 
   Future<void> togglePinned(ClipboardItem item) async {
-    await _repository.setPinned(item.id, !item.isPinned);
+    final changed = item.copyWith(isPinned: !item.isPinned);
+    await _repository.setPinned(item.id, changed.isPinned);
+    await onItemMetadataChanged?.call(changed);
     await reload();
   }
 
@@ -298,6 +363,10 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> addToCollection(String itemId, String collectionId) async {
     await _repository.addToCollection(itemId, collectionId);
+    final item = state.items
+        .where((current) => current.id == itemId)
+        .firstOrNull;
+    if (item != null) await onItemMetadataChanged?.call(item);
   }
 
   Future<Set<String>> collectionIdsForItem(String itemId) {
@@ -307,7 +376,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   Future<String?> addTextItem(String text) async {
     final payload = ClipboardPayload(text: text);
     await _watcher.write(payload);
-    await _repository.store(payload, _readSettings());
+    await _storeAndQueue(payload);
     await _repository.cleanup(_readSettings());
     await reload();
     return text;
@@ -383,11 +452,14 @@ extension _FirstOrNull<T> on List<T> {
 
 class CollectionsController
     extends StateNotifier<AsyncValue<List<ClipboardCollection>>> {
-  CollectionsController(this._repository) : super(const AsyncValue.loading()) {
+  CollectionsController(this._repository, {this.onChanged})
+    : super(const AsyncValue.loading()) {
     unawaited(reload());
   }
 
   final ClipboardRepository _repository;
+  final Future<void> Function(ClipboardCollection collection, {bool deleted})?
+  onChanged;
 
   Future<void> reload() async {
     state = await AsyncValue.guard(_repository.getCollections);
@@ -395,18 +467,24 @@ class CollectionsController
 
   Future<void> create(String name) async {
     if (name.trim().isEmpty) return;
-    await _repository.createCollection(name);
+    final collection = await _repository.createCollection(name);
+    await onChanged?.call(collection);
     await reload();
   }
 
   Future<void> rename(String id, String name) async {
     if (name.trim().isEmpty) return;
     await _repository.renameCollection(id, name);
+    final collections = await _repository.getCollections();
+    final collection = collections.where((item) => item.id == id).firstOrNull;
+    if (collection != null) await onChanged?.call(collection);
     await reload();
   }
 
   Future<void> delete(String id) async {
+    final collection = state.value?.where((item) => item.id == id).firstOrNull;
     await _repository.deleteCollection(id);
+    if (collection != null) await onChanged?.call(collection, deleted: true);
     await reload();
   }
 }

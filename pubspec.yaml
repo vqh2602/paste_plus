@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.9+11
+version: 1.1.0+12
 
 environment:
   sdk: ^3.11.5
@@ -51,6 +51,11 @@ dependencies:
   launch_at_startup: ^0.5.1
   llamadart: ^0.8.17
   url_launcher: ^6.3.2
+  bonsoir: ^7.1.4
+  flutter_secure_storage: ^10.3.1
+  cryptography: ^2.9.0
+  cryptography_flutter: ^2.3.4
+  basic_utils: ^5.8.2
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +67,19 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  windows:
+    generate: true
+    image_path: "assets/branding/clipflow_app_icon.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "assets/branding/clipflow_app_icon.png"
+  image_path: "assets/branding/clipflow_app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
