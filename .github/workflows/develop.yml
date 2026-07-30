@@ -1,0 +1,153 @@
+name: Build Develop (macOS, Android, Windows)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-macos:
+    name: Build macOS (Develop)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run unit tests
+        run: flutter test
+
+      - name: Build macOS App (Develop 1.0.0)
+        run: flutter build macos --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+
+      - name: Create ZIP archive of macOS App
+        run: |
+          cd build/macos/Build/Products/Release
+          zip -r ClipFlow-macOS-develop.zip ClipFlow.app
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipFlow-macOS-develop
+          path: build/macos/Build/Products/Release/ClipFlow-macOS-develop.zip
+
+  build-android:
+    name: Build Android (Develop)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android APK (Develop 1.0.0)
+        run: flutter build apk --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+
+      - name: Rename APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk ClipFlow-Android-develop.apk
+
+      - name: Upload Android Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipFlow-Android-develop
+          path: ClipFlow-Android-develop.apk
+
+  build-windows:
+    name: Build Windows (Develop)
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows App (Develop 1.0.0)
+        run: flutter build windows --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+
+      - name: Create ZIP archive of Windows App
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ClipFlow-Windows-develop.zip
+        shell: powershell
+
+      - name: Upload Windows Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipFlow-Windows-develop
+          path: ClipFlow-Windows-develop.zip
+
+  publish-develop-release:
+    name: Publish Develop Pre-Release
+    needs: [build-macos, build-android, build-windows]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download macOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ClipFlow-macOS-develop
+
+      - name: Download Android Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ClipFlow-Android-develop
+
+      - name: Download Windows Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ClipFlow-Windows-develop
+
+      - name: Create or Update GitHub Release (v1.0.0-develop)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0-develop
+          name: "ClipFlow v1.0.0-develop"
+          body: |
+            Build Develop mới nhất tự động từ nhánh `develop`.
+            - Phiên bản: `1.0.0-develop` (Build #${{ github.run_number }})
+            - Commit: `${{ github.sha }}`
+          prerelease: true
+          make_latest: false
+          files: |
+            ClipFlow-macOS-develop.zip
+            ClipFlow-Android-develop.apk
+            ClipFlow-Windows-develop.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
