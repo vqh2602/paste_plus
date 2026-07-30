@@ -7,6 +7,7 @@ import 'package:window_manager/window_manager.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
+import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
@@ -333,7 +334,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 height: 44,
                 child: Row(
                   children: [
-                    const SizedBox(width: 80),
+                    if (Platform.isMacOS)
+                      const SizedBox(width: 80)
+                    else
+                      const SizedBox(width: 14),
                     const Icon(
                       CupertinoIcons.sparkles,
                       color: CupertinoColors.activeBlue,
@@ -411,6 +415,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         ],
                       ),
                     ),
+                    const SizedBox(width: 4),
                     CupertinoIconControl(
                       icon: CupertinoIcons.trash,
                       size: 16,
@@ -418,7 +423,10 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         ref.read(aiControllerProvider.notifier).clearChat();
                       },
                     ),
-                    const SizedBox(width: 12),
+                    if (Platform.isWindows || Platform.isLinux)
+                      const AppWindowControls()
+                    else
+                      const SizedBox(width: 12),
                   ],
                 ),
               ),

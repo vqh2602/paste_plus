@@ -10,6 +10,7 @@ import '../../../app/providers.dart';
 import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/services/update_service.dart';
+import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_content_type.dart';
@@ -393,72 +394,79 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: Focus(
         autofocus: true,
         child: CupertinoPageScaffold(
-          child: isCompact
-              ? HistoryPaneWidget(
-                  compact: true,
-                  searchController: _searchController,
-                  focusNode: _searchFocusNode,
-                  onCopy: _handleCopy,
-                  onDelete: _handleDelete,
-                  onAddToCollection: _handleAddToCollection,
-                  onShowItemActions: _showItemActions,
-                  onOpenSidebar: () {
-                    showCupertinoModalPopup<void>(
-                      context: context,
-                      builder: (context) => SizedBox(
-                        width: 280,
-                        child: SidebarWidget(
-                          state: state,
-                          collections: collections,
-                          onOpenSettings: _openSettings,
-                          onCreateCollection: _showCreateCollectionDialog,
-                          onDeleteCollection: _handleDeleteCollection,
-                        ),
-                      ),
-                    );
-                  },
-                )
-              : Row(
-                  children: [
-                    SizedBox(
-                      width: isMedium ? 200 : 230,
-                      child: SidebarWidget(
-                        state: state,
-                        collections: collections,
-                        reserveWindowControls: Platform.isMacOS,
-                        onOpenSettings: _openSettings,
-                        onCreateCollection: _showCreateCollectionDialog,
-                        onDeleteCollection: _handleDeleteCollection,
-                      ),
-                    ),
-                    ColoredBox(
-                      color: resolveColor(context, ClipFlowColors.border),
-                      child: const SizedBox(width: 1, height: double.infinity),
-                    ),
-                    Expanded(
-                      flex: 3,
-                      child: HistoryPaneWidget(
-                        compact: false,
+          child: Column(
+            children: [
+              const AppWindowHeader(),
+              Expanded(
+                child: isCompact
+                    ? HistoryPaneWidget(
+                        compact: true,
                         searchController: _searchController,
                         focusNode: _searchFocusNode,
                         onCopy: _handleCopy,
                         onDelete: _handleDelete,
                         onAddToCollection: _handleAddToCollection,
                         onShowItemActions: _showItemActions,
+                        onOpenSidebar: () {
+                          showCupertinoModalPopup<void>(
+                            context: context,
+                            builder: (context) => SizedBox(
+                              width: 280,
+                              child: SidebarWidget(
+                                state: state,
+                                collections: collections,
+                                onOpenSettings: _openSettings,
+                                onCreateCollection: _showCreateCollectionDialog,
+                                onDeleteCollection: _handleDeleteCollection,
+                              ),
+                            ),
+                          );
+                        },
+                      )
+                    : Row(
+                        children: [
+                          SizedBox(
+                            width: isMedium ? 200 : 230,
+                            child: SidebarWidget(
+                              state: state,
+                              collections: collections,
+                              reserveWindowControls: Platform.isMacOS,
+                              onOpenSettings: _openSettings,
+                              onCreateCollection: _showCreateCollectionDialog,
+                              onDeleteCollection: _handleDeleteCollection,
+                            ),
+                          ),
+                          ColoredBox(
+                            color: resolveColor(context, ClipFlowColors.border),
+                            child: const SizedBox(width: 1, height: double.infinity),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: HistoryPaneWidget(
+                              compact: false,
+                              searchController: _searchController,
+                              focusNode: _searchFocusNode,
+                              onCopy: _handleCopy,
+                              onDelete: _handleDelete,
+                              onAddToCollection: _handleAddToCollection,
+                              onShowItemActions: _showItemActions,
+                            ),
+                          ),
+                          if (!isMedium) ...[
+                            ColoredBox(
+                              color: resolveColor(context, ClipFlowColors.border),
+                              child: const SizedBox(
+                                width: 1,
+                                height: double.infinity,
+                              ),
+                            ),
+                            const Expanded(flex: 2, child: DetailPaneWidget()),
+                          ],
+                        ],
                       ),
-                    ),
-                    if (!isMedium) ...[
-                      ColoredBox(
-                        color: resolveColor(context, ClipFlowColors.border),
-                        child: const SizedBox(
-                          width: 1,
-                          height: double.infinity,
-                        ),
-                      ),
-                      const Expanded(flex: 2, child: DetailPaneWidget()),
-                    ],
-                  ],
-                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

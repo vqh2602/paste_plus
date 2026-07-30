@@ -4,7 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 
+import 'dart:io';
+import 'package:window_manager/window_manager.dart';
+
 import '../../../core/localization/app_translations.dart';
+import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import 'widgets/about_settings_section.dart';
 import 'widgets/ai_settings_section.dart';
@@ -47,22 +51,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         height: compact ? size.height : size.height.clamp(600, 720),
         child: Column(
           children: [
-            SizedBox(
-              height: 48,
-              child: Row(
-                children: [
-                  const SizedBox(width: 16),
-                  Text(
-                    'settings_title'.tr,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const Spacer(),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.xmark,
-                    onPressed: () => _close(context),
-                  ),
-                  const SizedBox(width: 8),
-                ],
+            DragToMoveArea(
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    Text(
+                      'settings_title'.tr,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                    const Spacer(),
+                    CupertinoIconControl(
+                      icon: CupertinoIcons.xmark,
+                      onPressed: () => _close(context),
+                    ),
+                    if (Platform.isWindows || Platform.isLinux)
+                      const AppWindowControls()
+                    else
+                      const SizedBox(width: 8),
+                  ],
+                ),
               ),
             ),
             const CupertinoDivider(),
