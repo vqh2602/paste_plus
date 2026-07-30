@@ -1,4 +1,4 @@
-name: Build Develop (macOS, Android, Windows)
+name: Build Develop (macOS, Android, Windows, iOS)
 
 on:
   push:
@@ -43,6 +43,39 @@ jobs:
         with:
           name: ClipFlow-macOS-develop
           path: build/macos/Build/Products/Release/ClipFlow-macOS-develop.zip
+
+  build-ios:
+    name: Build iOS (Develop)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS App (Develop 1.0.0 - Unsigned IPA/Payload)
+        run: flutter build ios --release --no-codesign --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+
+      - name: Package iOS payload as ZIP
+        run: |
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r ClipFlow-iOS-develop.ipa Payload
+
+      - name: Upload iOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClipFlow-iOS-develop
+          path: build/ios/iphoneos/ClipFlow-iOS-develop.ipa
 
   build-android:
     name: Build Android (Develop)
@@ -115,7 +148,7 @@ jobs:
 
   publish-develop-release:
     name: Publish Develop Pre-Release
-    needs: [build-macos, build-android, build-windows]
+    needs: [build-macos, build-ios, build-android, build-windows]
     runs-on: ubuntu-latest
 
     steps:
@@ -123,6 +156,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ClipFlow-macOS-develop
+
+      - name: Download iOS Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ClipFlow-iOS-develop
 
       - name: Download Android Artifact
         uses: actions/download-artifact@v4
@@ -147,6 +185,7 @@ jobs:
           make_latest: false
           files: |
             ClipFlow-macOS-develop.zip
+            ClipFlow-iOS-develop.ipa
             ClipFlow-Android-develop.apk
             ClipFlow-Windows-develop.zip
         env:
