@@ -21,6 +21,22 @@ class ItemSyncStateRepository {
     await batch.commit(noResult: true);
   }
 
+  Future<void> enqueueForPeer(
+    String peerDeviceId,
+    Iterable<String> itemIds,
+  ) async {
+    final batch = _database.database.batch();
+    for (final itemId in itemIds) {
+      batch.insert('item_sync_states', {
+        'item_id': itemId,
+        'peer_device_id': peerDeviceId,
+        'sync_status': ItemSyncStatus.pending.name,
+        'retry_count': 0,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    }
+    await batch.commit(noResult: true);
+  }
+
   Future<List<ItemSyncState>> pendingForPeer(String peerDeviceId) async {
     final rows = await _database.database.query(
       'item_sync_states',

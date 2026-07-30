@@ -85,6 +85,17 @@ final itemSyncStateRepositoryProvider = Provider<ItemSyncStateRepository>((
   return ItemSyncStateRepository(ref.watch(appDatabaseProvider));
 });
 
+final clipboardSyncCoordinatorProvider = Provider<ClipboardSyncCoordinator>((
+  ref,
+) {
+  return ClipboardSyncCoordinator(
+    transport: ref.watch(localSharingServiceProvider),
+    syncStates: ref.watch(itemSyncStateRepositoryProvider),
+    clipboardRepository: ref.watch(clipboardRepositoryProvider),
+    readSettings: () => ref.read(settingsControllerProvider),
+  );
+});
+
 final localSharingControllerProvider =
     StateNotifierProvider<LocalSharingController, LocalSharingState>((ref) {
       final controller = LocalSharingController(
@@ -101,16 +112,6 @@ final historyControllerProvider =
     StateNotifierProvider<ClipboardHistoryController, ClipboardHistoryState>((
       ref,
     ) {
-      ClipboardSyncCoordinator? syncCoordinator;
-      ClipboardSyncCoordinator coordinator() {
-        return syncCoordinator ??= ClipboardSyncCoordinator(
-          transport: ref.read(localSharingServiceProvider),
-          syncStates: ref.read(itemSyncStateRepositoryProvider),
-          clipboardRepository: ref.read(clipboardRepositoryProvider),
-          readSettings: () => ref.read(settingsControllerProvider),
-        );
-      }
-
       late final ClipboardHistoryController controller;
       controller = ClipboardHistoryController(
         ref.watch(clipboardRepositoryProvider),
@@ -124,11 +125,26 @@ final historyControllerProvider =
               (settings.syncPinnedItemsOnly && !item.isPinned)) {
             return;
           }
-          await coordinator().itemStored(
-            item,
-            ref.read(localSharingControllerProvider),
-          );
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .itemStored(item, ref.read(localSharingControllerProvider));
         },
+        onItemMetadataChanged: (item) async {
+          final settings = ref.read(settingsControllerProvider);
+          if (!settings.localSharingEnabled ||
+              settings.allConnectionsPaused ||
+              !settings.autoSyncClipboard) {
+            return;
+          }
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .itemMetadataChanged(
+                item,
+                ref.read(localSharingControllerProvider),
+              );
+        },
+        onCollectionsChanged: () =>
+            ref.read(collectionsControllerProvider.notifier).reload(),
       );
       final incomingSubscription = ref
           .watch(localSharingServiceProvider)
@@ -141,17 +157,61 @@ final historyControllerProvider =
                   imageBytes: payload.imageBytes,
                 ),
                 isPinned: payload.isPinned,
-                collectionNames: payload.collectionNames,
+                collections: payload.collections
+                    .map(
+                      (collection) => ClipboardCollection(
+                        id: collection.collectionId,
+                        name: collection.name,
+                        icon: collection.icon,
+                        createdAt: collection.createdAt,
+                        updatedAt: collection.updatedAt,
+                        sortOrder: collection.sortOrder,
+                      ),
+                    )
+                    .toList(growable: false),
+                writeToSystemClipboard: payload.writeToSystemClipboard,
+                metadataAuthoritative: payload.metadataAuthoritative,
               ),
             );
+          });
+      final incomingCollectionsSubscription = ref
+          .watch(localSharingServiceProvider)
+          .receivedCollections
+          .listen((payload) {
+            unawaited(() async {
+              final repository = ref.read(clipboardRepositoryProvider);
+              if (payload.deleted) {
+                await repository.deleteCollection(payload.collectionId);
+              } else {
+                await repository.upsertCollection(
+                  ClipboardCollection(
+                    id: payload.collectionId,
+                    name: payload.name,
+                    icon: payload.icon,
+                    createdAt: payload.createdAt,
+                    updatedAt: payload.updatedAt,
+                    sortOrder: payload.sortOrder,
+                  ),
+                );
+              }
+              await ref.read(collectionsControllerProvider.notifier).reload();
+              await controller.reload();
+            }());
           });
       ref.listen<LocalSharingState>(localSharingControllerProvider, (_, next) {
         final settings = ref.read(settingsControllerProvider);
         if (settings.localSharingEnabled && !settings.allConnectionsPaused) {
-          unawaited(coordinator().drainConnectedPeers(next));
+          unawaited(
+            ref
+                .read(clipboardSyncCoordinatorProvider)
+                .drainConnectedPeers(next),
+          );
         }
       });
-      ref.onDispose(() => unawaited(incomingSubscription.cancel()));
+      ref.onDispose(() {
+        unawaited(incomingSubscription.cancel());
+        unawaited(incomingCollectionsSubscription.cancel());
+      });
       return controller;
     });
 
@@ -160,7 +220,27 @@ final collectionsControllerProvider =
       CollectionsController,
       AsyncValue<List<ClipboardCollection>>
     >((ref) {
-      return CollectionsController(ref.watch(clipboardRepositoryProvider));
+      final repository = ref.watch(clipboardRepositoryProvider);
+      late final CollectionsController controller;
+      controller = CollectionsController(
+        repository,
+        onChanged: (collection, {deleted = false}) async {
+          final settings = ref.read(settingsControllerProvider);
+          if (!settings.localSharingEnabled ||
+              settings.allConnectionsPaused ||
+              !settings.autoSyncClipboard) {
+            return;
+          }
+          await ref
+              .read(clipboardSyncCoordinatorProvider)
+              .collectionChanged(
+                collection,
+                ref.read(localSharingControllerProvider),
+                deleted: deleted,
+              );
+        },
+      );
+      return controller;
     });
 
 final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {

@@ -77,6 +77,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   }
 
   @override
+  Future<void> upsertCollection(ClipboardCollection collection) async {}
+
+  @override
   Future<void> deleteCollection(String id) async {}
 
   @override

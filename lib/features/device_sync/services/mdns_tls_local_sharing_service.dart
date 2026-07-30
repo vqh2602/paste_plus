@@ -12,6 +12,7 @@ import '../../settings/domain/app_settings.dart';
 import '../domain/local_sharing_protocol.dart';
 import '../domain/local_sharing_state.dart';
 import '../domain/peer_connection_info.dart';
+import '../domain/shared_collection_payload.dart';
 import '../domain/shared_clipboard_payload.dart';
 import 'device_identity_store.dart';
 import 'framed_secure_socket.dart';
@@ -33,6 +34,8 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   final _states = StreamController<LocalSharingState>.broadcast();
   final _receivedPayloads =
       StreamController<SharedClipboardPayload>.broadcast();
+  final _receivedCollections =
+      StreamController<SharedCollectionPayload>.broadcast();
   final _discovered = <String, PeerConnectionInfo>{};
   final _connections = <String, _PeerConnection>{};
   final _pairings = <String, _PendingPairing>{};
@@ -54,6 +57,10 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   @override
   Stream<SharedClipboardPayload> get receivedPayloads =>
       _receivedPayloads.stream;
+
+  @override
+  Stream<SharedCollectionPayload> get receivedCollections =>
+      _receivedCollections.stream;
 
   int? get listeningPort => _server?.port;
   String? get deviceId => _identity?.deviceId;
@@ -594,10 +601,17 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
           return;
         }
         final isPinned = message['isPinned'] as bool? ?? false;
-        final collectionNames = (message['collectionNames'] as List<dynamic>?)
-                ?.map((e) => e.toString())
-                .toList() ??
-            const <String>[];
+        final collections =
+            (message['collections'] as List<dynamic>?)
+                ?.whereType<Map>()
+                .map(
+                  (value) => SharedCollectionPayload.fromMetadataJson(
+                    value.cast<String, Object?>(),
+                    sourceDeviceId: remoteId,
+                  ),
+                )
+                .toList(growable: false) ??
+            const <SharedCollectionPayload>[];
         _receivedPayloads.add(
           SharedClipboardPayload(
             messageId: messageId,
@@ -606,7 +620,11 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
             text: text,
             imageBytes: image == null ? null : Uint8List.fromList(image),
             isPinned: isPinned,
-            collectionNames: collectionNames,
+            collections: collections,
+            writeToSystemClipboard:
+                message['writeToSystemClipboard'] as bool? ?? true,
+            metadataAuthoritative:
+                message['metadataAuthoritative'] as bool? ?? false,
           ),
         );
         _connections[remoteId]?.send({
@@ -619,6 +637,46 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
           _discovered[remoteId] = peer.copyWith(lastSyncedAt: DateTime.now());
           _emit();
         }
+      case 'collection':
+        final messageId = message['messageId'] as String;
+        final sentAt = DateTime.fromMillisecondsSinceEpoch(
+          message['timestamp'] as int,
+        );
+        if ((DateTime.now().difference(sentAt).inMinutes).abs() > 5 ||
+            _seenMessageIds.containsKey(messageId)) {
+          return;
+        }
+        _seenMessageIds[messageId] = DateTime.now();
+        _pruneSeenMessages();
+        final payload = SharedCollectionPayload(
+          messageId: messageId,
+          sourceDeviceId: remoteId,
+          collectionId: message['collectionId'] as String,
+          name: message['name'] as String,
+          icon: message['icon'] as String? ?? 'folder',
+          createdAt: DateTime.fromMillisecondsSinceEpoch(
+            message['createdAt'] as int,
+          ),
+          updatedAt: DateTime.fromMillisecondsSinceEpoch(
+            message['updatedAt'] as int,
+          ),
+          sortOrder: message['sortOrder'] as int? ?? 0,
+          deleted: message['deleted'] as bool? ?? false,
+        );
+        if (payload.collectionId.length > 200 || payload.name.length > 200) {
+          _connections[remoteId]?.send({
+            'type': 'ack',
+            'messageId': messageId,
+            'ok': false,
+          });
+          return;
+        }
+        _receivedCollections.add(payload);
+        _connections[remoteId]?.send({
+          'type': 'ack',
+          'messageId': messageId,
+          'ok': true,
+        });
       case 'ack':
         _connections[remoteId]?.completeAck(
           message['messageId'] as String,
@@ -671,14 +729,39 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
       if (payload.text != null) 'text': payload.text,
       if (image != null) 'image': base64Encode(image),
       'isPinned': payload.isPinned,
-      if (payload.collectionNames.isNotEmpty)
-        'collectionNames': payload.collectionNames,
+      if (payload.collections.isNotEmpty)
+        'collections': payload.collections
+            .map((collection) => collection.toMetadataJson())
+            .toList(growable: false),
+      'writeToSystemClipboard': payload.writeToSystemClipboard,
+      'metadataAuthoritative': payload.metadataAuthoritative,
     });
     final peer = _discovered[deviceId];
     if (peer != null) {
       _discovered[deviceId] = peer.copyWith(lastSyncedAt: DateTime.now());
       _emit();
     }
+  }
+
+  @override
+  Future<void> sendCollection(
+    String deviceId,
+    SharedCollectionPayload payload,
+  ) async {
+    final connection = _connections[deviceId];
+    if (connection == null) throw StateError('Peer is not connected');
+    await connection.sendWithAck({
+      'type': 'collection',
+      'messageId': payload.messageId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+      'collectionId': payload.collectionId,
+      'name': payload.name,
+      'icon': payload.icon,
+      'createdAt': payload.createdAt.millisecondsSinceEpoch,
+      'updatedAt': payload.updatedAt.millisecondsSinceEpoch,
+      'sortOrder': payload.sortOrder,
+      'deleted': payload.deleted,
+    });
   }
 
   @override
@@ -906,6 +989,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
     await _stopNetwork();
     await _states.close();
     await _receivedPayloads.close();
+    await _receivedCollections.close();
   }
 
   String get _displayName => _settings.deviceDisplayName.trim().isEmpty

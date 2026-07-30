@@ -2,12 +2,15 @@ import 'dart:async';
 
 import '../../settings/domain/app_settings.dart';
 import '../domain/local_sharing_state.dart';
+import '../domain/shared_collection_payload.dart';
 import '../domain/shared_clipboard_payload.dart';
 
 abstract interface class LocalSharingService {
   Stream<LocalSharingState> get states;
 
   Stream<SharedClipboardPayload> get receivedPayloads;
+
+  Stream<SharedCollectionPayload> get receivedCollections;
 
   Future<void> start(AppSettings settings);
 
@@ -31,6 +34,8 @@ abstract interface class LocalSharingService {
 
   Future<void> sendClipboard(String deviceId, SharedClipboardPayload payload);
 
+  Future<void> sendCollection(String deviceId, SharedCollectionPayload payload);
+
   Future<void> dispose();
 }
 
@@ -43,6 +48,8 @@ class PassiveLocalSharingService implements LocalSharingService {
   final _states = StreamController<LocalSharingState>.broadcast();
   final _receivedPayloads =
       StreamController<SharedClipboardPayload>.broadcast();
+  final _receivedCollections =
+      StreamController<SharedCollectionPayload>.broadcast();
   LocalSharingState _state = const LocalSharingState();
   AppSettings _settings = const AppSettings();
 
@@ -52,6 +59,10 @@ class PassiveLocalSharingService implements LocalSharingService {
   @override
   Stream<SharedClipboardPayload> get receivedPayloads =>
       _receivedPayloads.stream;
+
+  @override
+  Stream<SharedCollectionPayload> get receivedCollections =>
+      _receivedCollections.stream;
 
   @override
   Future<void> start(AppSettings settings) async {
@@ -108,6 +119,14 @@ class PassiveLocalSharingService implements LocalSharingService {
     throw StateError('No active network transport');
   }
 
+  @override
+  Future<void> sendCollection(
+    String deviceId,
+    SharedCollectionPayload payload,
+  ) async {
+    throw StateError('No active network transport');
+  }
+
   void _emit(LocalSharingState next) {
     _state = next;
     if (!_states.isClosed) _states.add(next);
@@ -117,5 +136,6 @@ class PassiveLocalSharingService implements LocalSharingService {
   Future<void> dispose() async {
     await _states.close();
     await _receivedPayloads.close();
+    await _receivedCollections.close();
   }
 }

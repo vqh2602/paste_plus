@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'shared_collection_payload.dart';
+
 class SharedClipboardPayload {
   const SharedClipboardPayload({
     required this.messageId,
@@ -8,7 +10,9 @@ class SharedClipboardPayload {
     this.text,
     this.imageBytes,
     this.isPinned = false,
-    this.collectionNames = const [],
+    this.collections = const [],
+    this.writeToSystemClipboard = true,
+    this.metadataAuthoritative = false,
   });
 
   final String messageId;
@@ -17,5 +21,7 @@ class SharedClipboardPayload {
   final String? text;
   final Uint8List? imageBytes;
   final bool isPinned;
-  final List<String> collectionNames;
+  final List<SharedCollectionPayload> collections;
+  final bool writeToSystemClipboard;
+  final bool metadataAuthoritative;
 }

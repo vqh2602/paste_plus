@@ -132,4 +132,13 @@ class ClipboardCollection {
       sortOrder: map['sort_order'] as int? ?? 0,
     );
   }
+
+  Map<String, Object?> toMap() => {
+    'id': id,
+    'name': name,
+    'icon': icon,
+    'created_at': createdAt.millisecondsSinceEpoch,
+    'updated_at': updatedAt.millisecondsSinceEpoch,
+    'sort_order': sortOrder,
+  };
 }

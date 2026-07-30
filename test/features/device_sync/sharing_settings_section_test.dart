@@ -4,6 +4,7 @@ import 'package:clipflow/app/providers.dart';
 import 'package:clipflow/core/localization/app_translations.dart';
 import 'package:clipflow/features/device_sync/domain/local_sharing_state.dart';
 import 'package:clipflow/features/device_sync/domain/peer_connection_info.dart';
+import 'package:clipflow/features/device_sync/domain/shared_collection_payload.dart';
 import 'package:clipflow/features/device_sync/domain/shared_clipboard_payload.dart';
 import 'package:clipflow/features/device_sync/services/local_sharing_service.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
@@ -39,6 +40,10 @@ class _FakeSharingService implements LocalSharingService {
   Stream<SharedClipboardPayload> get receivedPayloads => const Stream.empty();
 
   @override
+  Stream<SharedCollectionPayload> get receivedCollections =>
+      const Stream.empty();
+
+  @override
   Future<void> start(AppSettings settings) async {
     controller.add(LocalSharingState(peers: [peer], isDiscovering: true));
   }
@@ -62,6 +67,12 @@ class _FakeSharingService implements LocalSharingService {
   Future<void> sendClipboard(
     String deviceId,
     SharedClipboardPayload payload,
+  ) async {}
+
+  @override
+  Future<void> sendCollection(
+    String deviceId,
+    SharedCollectionPayload payload,
   ) async {}
 
   @override

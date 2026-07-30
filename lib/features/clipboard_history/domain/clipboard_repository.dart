@@ -20,6 +20,7 @@ abstract interface class ClipboardRepository {
   Future<void> clearHistory({bool includePinned = false});
   Future<List<ClipboardCollection>> getCollections();
   Future<ClipboardCollection> createCollection(String name);
+  Future<void> upsertCollection(ClipboardCollection collection);
   Future<void> renameCollection(String id, String name);
   Future<void> deleteCollection(String id);
   Future<void> addToCollection(String itemId, String collectionId);

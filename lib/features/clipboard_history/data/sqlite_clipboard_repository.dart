@@ -281,6 +281,32 @@ class SqliteClipboardRepository implements ClipboardRepository {
   }
 
   @override
+  Future<void> upsertCollection(ClipboardCollection collection) async {
+    final value = collection.toMap();
+    await _db.rawInsert(
+      '''
+      INSERT INTO collections
+        (id, name, icon, created_at, updated_at, sort_order)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        icon = excluded.icon,
+        updated_at = excluded.updated_at,
+        sort_order = excluded.sort_order
+      WHERE excluded.updated_at >= collections.updated_at
+      ''',
+      [
+        value['id'],
+        value['name'],
+        value['icon'],
+        value['created_at'],
+        value['updated_at'],
+        value['sort_order'],
+      ],
+    );
+  }
+
+  @override
   Future<void> renameCollection(String id, String name) async {
     await _db.update(
       'collections',
@@ -305,20 +331,38 @@ class SqliteClipboardRepository implements ClipboardRepository {
 
   @override
   Future<void> addToCollection(String itemId, String collectionId) async {
-    await _db.insert('clipboard_item_collections', {
-      'clipboard_item_id': itemId,
-      'collection_id': collectionId,
-      'created_at': DateTime.now().millisecondsSinceEpoch,
-    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.transaction((transaction) async {
+      await transaction.insert('clipboard_item_collections', {
+        'clipboard_item_id': itemId,
+        'collection_id': collectionId,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await transaction.update(
+        'clipboard_items',
+        {'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [itemId],
+      );
+    });
   }
 
   @override
-  Future<void> removeFromCollection(String itemId, String collectionId) {
-    return _db.delete(
-      'clipboard_item_collections',
-      where: 'clipboard_item_id = ? AND collection_id = ?',
-      whereArgs: [itemId, collectionId],
-    );
+  Future<void> removeFromCollection(String itemId, String collectionId) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.transaction((transaction) async {
+      await transaction.delete(
+        'clipboard_item_collections',
+        where: 'clipboard_item_id = ? AND collection_id = ?',
+        whereArgs: [itemId, collectionId],
+      );
+      await transaction.update(
+        'clipboard_items',
+        {'updated_at': now},
+        where: 'id = ?',
+        whereArgs: [itemId],
+      );
+    });
   }
 
   @override

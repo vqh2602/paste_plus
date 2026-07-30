@@ -15,6 +15,10 @@ class SharingPreferencesSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
     final enabled = settings.localSharingEnabled;
+    final localSharingState = ref.watch(localSharingControllerProvider);
+    final hasConnectedDevices = localSharingState.connectedCount > 0;
+    final canEditDeviceName = enabled && !hasConnectedDevices;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -24,7 +28,7 @@ class SharingPreferencesSection extends ConsumerWidget {
             _DeviceNameRow(
               value: settings.deviceDisplayName,
               placeholder: Platform.localHostname,
-              enabled: enabled,
+              enabled: canEditDeviceName,
               onChanged: (value) => updateSettings(
                 ref,
                 (current) => current.copyWith(deviceDisplayName: value.trim()),

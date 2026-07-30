@@ -1,4 +1,5 @@
 import 'package:clipflow/features/device_sync/domain/shared_clipboard_payload.dart';
+import 'package:clipflow/features/device_sync/domain/shared_collection_payload.dart';
 import 'package:clipflow/features/device_sync/services/device_identity_store.dart';
 import 'package:clipflow/features/device_sync/services/mdns_tls_local_sharing_service.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
@@ -91,6 +92,24 @@ void main() {
         bobConnected.timeout(const Duration(seconds: 10)),
       ]);
 
+      final now = DateTime.now();
+      final collection = SharedCollectionPayload(
+        messageId: 'collection-message-1',
+        sourceDeviceId: alice.deviceId!,
+        collectionId: 'collection-1',
+        name: 'Shared',
+        icon: 'folder',
+        createdAt: now,
+        updatedAt: now,
+        sortOrder: 10,
+      );
+      final receivedCollection = bob.receivedCollections.first;
+      await alice.sendCollection(bob.deviceId!, collection);
+      expect(
+        (await receivedCollection.timeout(const Duration(seconds: 10))).name,
+        'Shared',
+      );
+
       final received = bob.receivedPayloads.first;
       await alice.sendClipboard(
         bob.deviceId!,
@@ -99,12 +118,18 @@ void main() {
           sourceDeviceId: alice.deviceId!,
           createdAt: DateTime.now(),
           text: 'TLS clipboard payload',
+          isPinned: true,
+          collections: [collection],
+          writeToSystemClipboard: false,
         ),
       );
-      expect(
-        (await received.timeout(const Duration(seconds: 10))).text,
-        'TLS clipboard payload',
+      final receivedPayload = await received.timeout(
+        const Duration(seconds: 10),
       );
+      expect(receivedPayload.text, 'TLS clipboard payload');
+      expect(receivedPayload.isPinned, isTrue);
+      expect(receivedPayload.collections.single.collectionId, 'collection-1');
+      expect(receivedPayload.writeToSystemClipboard, isFalse);
 
       final bobDisconnected = bob.states.firstWhere(
         (state) => state.connectedCount == 0,
