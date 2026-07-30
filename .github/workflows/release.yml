@@ -1,4 +1,4 @@
-name: Build & Release macOS App
+name: Build & Release ClipFlow (macOS & Windows)
 
 on:
   push:
@@ -60,7 +60,7 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create GitHub Release & Upload Asset
+      - name: Create GitHub Release & Upload macOS Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
@@ -71,5 +71,56 @@ jobs:
           generate_release_notes: true
           files: |
             build/macos/Build/Products/Release/ClipFlow-macOS.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows:
+    name: Build & Release Windows
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows Release App
+        run: flutter build windows --release
+
+      - name: Create ZIP archive of Windows App
+        run: |
+          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ClipFlow-Windows.zip
+        shell: powershell
+
+      - name: Determine Release Tag
+        id: tag_info
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ github.event.inputs.tag_name }}" -ne "") {
+            echo "tag=${{ github.event.inputs.tag_name }}" >> $env:GITHUB_OUTPUT
+          } else {
+            echo "tag=${env:GITHUB_REF_NAME}" >> $env:GITHUB_OUTPUT
+          }
+        shell: powershell
+
+      - name: Create GitHub Release & Upload Windows Asset
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ steps.tag_info.outputs.tag }}
+          name: Release ${{ steps.tag_info.outputs.tag }}
+          draft: ${{ github.event.inputs.draft || false }}
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          generate_release_notes: true
+          files: ClipFlow-Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

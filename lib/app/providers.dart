@@ -47,7 +47,9 @@ final clipboardRepositoryProvider = Provider<ClipboardRepository>((ref) {
 final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
   final watcher = Platform.isMacOS
       ? MacOSClipboardWatcher()
-      : FlutterClipboardWatcher();
+      : Platform.isWindows
+          ? WindowsClipboardWatcher()
+          : FlutterClipboardWatcher();
   ref.onDispose(watcher.dispose);
   return watcher;
 });

@@ -132,3 +132,43 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
     });
   }
 }
+
+class WindowsClipboardWatcher extends FlutterClipboardWatcher {
+  WindowsClipboardWatcher({super.pollInterval});
+
+  static const _channel = MethodChannel('clipflow/clipboard');
+
+  @override
+  Future<ClipboardPayload?> readCurrent() async {
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      if (result == null) return null;
+      final imageSource = result['imageBase64'] as String?;
+      final payload = ClipboardPayload(
+        text: result['text'] as String?,
+        imageBytes: imageSource == null ? null : base64Decode(imageSource),
+        sourceAppName: result['sourceAppName'] as String?,
+        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
+      );
+      return payload.isEmpty ? null : payload;
+    } on PlatformException {
+      return super.readCurrent();
+    } on MissingPluginException {
+      return super.readCurrent();
+    }
+  }
+
+  @override
+  Future<void> write(ClipboardPayload payload) async {
+    if (payload.imageBytes == null) {
+      await super.write(payload);
+      return;
+    }
+    suppress(payload);
+    await _channel.invokeMethod<void>('writeImage', {
+      'imageBase64': base64Encode(payload.imageBytes!),
+    });
+  }
+}
