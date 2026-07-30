@@ -532,6 +532,30 @@ Future<void> showLicensesDialog(BuildContext context) async {
   }
 }
 
+String _getFallbackBackupPath() {
+  final env = Platform.environment;
+  final home = env['HOME'] ?? env['USERPROFILE'] ?? '/tmp';
+  return '$home/Downloads/clipflow_backup.clipflow';
+}
+
+Future<String?> _resolveSavePath(WidgetRef ref) async {
+  final desktopService = ref.read(desktopIntegrationProvider);
+  if (desktopService.hasWindowPlugin) {
+    return await desktopService.saveConfigFile(
+      defaultName: 'clipflow_backup.clipflow',
+    );
+  }
+  return _getFallbackBackupPath();
+}
+
+Future<String?> _resolvePickPath(WidgetRef ref) async {
+  final desktopService = ref.read(desktopIntegrationProvider);
+  if (desktopService.hasWindowPlugin) {
+    return await desktopService.pickConfigFile();
+  }
+  return _getFallbackBackupPath();
+}
+
 Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
   final passwordController = TextEditingController();
   final result = await showCupertinoDialog<bool>(
@@ -568,27 +592,32 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
 
   if (result == true && context.mounted) {
     final pwd = passwordController.text;
-    final settings = ref.read(settingsControllerProvider);
-    final homeDir = Platform.environment['HOME'] ?? '/tmp';
-    final filePath = '$homeDir/Downloads/clipflow_backup.clipflow';
-
-    final res = await const SettingsBackupService().exportSettings(
-      settings: settings,
-      password: pwd,
-      filePath: filePath,
-    );
-
-    if (context.mounted) {
-      showCupertinoNotice(
-        context,
-        res.isSuccess ? 'backup_exported'.tr : (res.errorMessage ?? 'backup_export_failed'.tr),
+    final filePath = await _resolveSavePath(ref);
+    if (filePath != null && filePath.isNotEmpty && context.mounted) {
+      final settings = ref.read(settingsControllerProvider);
+      final res = await const SettingsBackupService().exportSettings(
+        settings: settings,
+        password: pwd,
+        filePath: filePath,
       );
+
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          res.isSuccess
+              ? 'backup_exported'.tr
+              : (res.errorMessage ?? 'backup_export_failed'.tr),
+        );
+      }
     }
   }
   passwordController.dispose();
 }
 
 Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
+  final filePath = await _resolvePickPath(ref);
+  if (filePath == null || filePath.isEmpty || !context.mounted) return;
+
   final passwordController = TextEditingController();
   final result = await showCupertinoDialog<bool>(
     context: context,
@@ -624,9 +653,6 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
 
   if (result == true && context.mounted) {
     final pwd = passwordController.text;
-    final homeDir = Platform.environment['HOME'] ?? '/tmp';
-    final filePath = '$homeDir/Downloads/clipflow_backup.clipflow';
-
     final res = await const SettingsBackupService().importSettings(
       filePath: filePath,
       password: pwd,
@@ -639,7 +665,9 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
     if (context.mounted) {
       showCupertinoNotice(
         context,
-        res.isSuccess ? 'backup_imported'.tr : (res.errorMessage ?? 'backup_import_failed'.tr),
+        res.isSuccess
+            ? 'backup_imported'.tr
+            : (res.errorMessage ?? 'backup_import_failed'.tr),
       );
     }
   }

@@ -273,16 +273,18 @@ class GeneralSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 14),
-        CupertinoSurface(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'accent_color'.tr,
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: CupertinoSurface(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'accent_color'.tr,
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
               Wrap(
                 spacing: 10,
                 runSpacing: 10,
@@ -383,7 +385,8 @@ class GeneralSettingsSection extends ConsumerWidget {
             ],
           ),
         ),
-      ],
-    );
+      ),
+    ],
+  );
   }
 }

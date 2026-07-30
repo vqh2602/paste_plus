@@ -1,30 +1,42 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
-import 'package:flutter_test/flutter_test.dart';
-
 import 'package:clipflow/app/app.dart';
+import 'package:clipflow/app/providers.dart';
+import 'package:clipflow/features/clipboard_history/domain/clipboard_content_type.dart';
+import 'package:clipflow/features/clipboard_history/domain/clipboard_item.dart';
+import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.dart';
+import 'package:clipflow/features/settings/data/settings_repository.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class _FakeClipboardRepository extends Fake implements ClipboardRepository {
+  @override
+  Future<List<ClipboardItem>> getItems({
+    bool pinnedOnly = false,
+    ClipboardContentType? type,
+    String? collectionId,
+    int limit = 2000,
+  }) async => [];
+
+  @override
+  Future<List<ClipboardCollection>> getCollections() async => [];
+}
 
 void main() {
-  testWidgets('ClipFlowApp test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const ClipFlowApp());
+  testWidgets('ClipFlowApp smoke test', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final settingsRepo = SettingsRepository(prefs);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(settingsRepo),
+          clipboardRepositoryProvider.overrideWithValue(_FakeClipboardRepository()),
+        ],
+        child: const ClipFlowApp(),
+      ),
+    );
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(ClipFlowApp), findsOneWidget);
   });
 }
