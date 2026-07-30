@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 class _RecordingTransport implements LocalSharingService {
   final sentItems = <SharedClipboardPayload>[];
   final sentCollections = <SharedCollectionPayload>[];
+  bool failNextCollection = false;
 
   @override
   Stream<SharedCollectionPayload> get receivedCollections =>
@@ -37,7 +38,13 @@ class _RecordingTransport implements LocalSharingService {
   Future<void> sendCollection(
     String deviceId,
     SharedCollectionPayload payload,
-  ) async => sentCollections.add(payload);
+  ) async {
+    if (failNextCollection) {
+      failNextCollection = false;
+      throw StateError('temporary collection failure');
+    }
+    sentCollections.add(payload);
+  }
 
   @override
   Future<void> block(String deviceId) async {}
@@ -119,4 +126,65 @@ void main() {
       lessThan(const Duration(minutes: 1)),
     );
   });
+
+  test(
+    'collection failure does not block pinned backfill and is retried',
+    () async {
+      final database = await AppDatabase.open(inMemory: true);
+      addTearDown(database.close);
+      final repository = SqliteClipboardRepository(database);
+      final item = await repository.store(
+        const ClipboardPayload(text: 'Pinned before connecting'),
+        const AppSettings(ignoreSensitive: false),
+      );
+      await repository.setPinned(item!.id, true);
+      await repository.createCollection('Retry collection');
+
+      final transport = _RecordingTransport()..failNextCollection = true;
+      final coordinator = ClipboardSyncCoordinator(
+        transport: transport,
+        syncStates: ItemSyncStateRepository(database),
+        clipboardRepository: repository,
+        readSettings: () => const AppSettings(
+          localSharingEnabled: true,
+          autoSyncClipboard: true,
+        ),
+      );
+      const peer = PeerConnectionInfo(
+        deviceId: 'device-b',
+        deviceName: 'Device B',
+        platform: 'test',
+        ipAddress: '127.0.0.1',
+        port: 1234,
+        status: PeerConnectionStatus.connected,
+        quality: ConnectionQuality.excellent,
+        pendingItems: 0,
+        isTrusted: true,
+        isBlocked: false,
+      );
+      const state = LocalSharingState(peers: [peer]);
+
+      await coordinator.drainConnectedPeers(state);
+      expect(
+        transport.sentItems.any(
+          (payload) => payload.text == 'Pinned before connecting',
+        ),
+        isTrue,
+      );
+      expect(
+        transport.sentCollections.any(
+          (payload) => payload.collectionId == 'work',
+        ),
+        isFalse,
+      );
+
+      await coordinator.drainConnectedPeers(state);
+      expect(
+        transport.sentCollections.any(
+          (payload) => payload.collectionId == 'work',
+        ),
+        isTrue,
+      );
+    },
+  );
 }

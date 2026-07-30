@@ -28,6 +28,9 @@ class ClipboardSyncCoordinator {
   final _drainingPeers = <String>{};
   final _sendingOperations = <String>{};
   final _connectedPeers = <String>{};
+  final _metadataSyncedPeers = <String>{};
+  final _lastMetadataSync = <String, DateTime>{};
+  static const _metadataRefreshInterval = Duration(minutes: 2);
 
   Future<void> itemStored(ClipboardItem item, LocalSharingState sharing) async {
     final settings = _readSettings();
@@ -76,10 +79,15 @@ class ClipboardSyncCoordinator {
     for (final peer in sharing.pairedDevices.where(
       (peer) => peer.isConnected,
     )) {
-      await _transport.sendCollection(
-        peer.deviceId,
-        _collectionPayload(collection, deleted: deleted),
-      );
+      try {
+        await _transport.sendCollection(
+          peer.deviceId,
+          _collectionPayload(collection, deleted: deleted),
+        );
+      } on Object {
+        _metadataSyncedPeers.remove(peer.deviceId);
+        _lastMetadataSync.remove(peer.deviceId);
+      }
     }
   }
 
@@ -89,14 +97,36 @@ class ClipboardSyncCoordinator {
         .map((peer) => peer.deviceId)
         .toSet();
     _connectedPeers.removeWhere((peerId) => !connectedNow.contains(peerId));
+    _metadataSyncedPeers.removeWhere(
+      (peerId) => !connectedNow.contains(peerId),
+    );
+    _lastMetadataSync.removeWhere(
+      (peerId, _) => !connectedNow.contains(peerId),
+    );
     for (final peer in sharing.pairedDevices.where(
       (peer) => peer.isConnected,
     )) {
       final isNewConnection = _connectedPeers.add(peer.deviceId);
+      final lastMetadataSync = _lastMetadataSync[peer.deviceId];
+      final metadataExpired =
+          lastMetadataSync == null ||
+          DateTime.now().difference(lastMetadataSync) >=
+              _metadataRefreshInterval;
+      final shouldSyncMetadata =
+          isNewConnection ||
+          !_metadataSyncedPeers.contains(peer.deviceId) ||
+          metadataExpired;
       if (!_drainingPeers.add(peer.deviceId)) continue;
       try {
-        if (isNewConnection) await _sendCollections(peer.deviceId);
-        await _drain(peer.deviceId, includeSavedItems: isNewConnection);
+        var collectionsSynced = true;
+        if (shouldSyncMetadata) {
+          collectionsSynced = await _sendCollections(peer.deviceId);
+        }
+        await _drain(peer.deviceId, includeSavedItems: shouldSyncMetadata);
+        if (shouldSyncMetadata && collectionsSynced) {
+          _metadataSyncedPeers.add(peer.deviceId);
+          _lastMetadataSync[peer.deviceId] = DateTime.now();
+        }
       } finally {
         _drainingPeers.remove(peer.deviceId);
       }
@@ -140,13 +170,19 @@ class ClipboardSyncCoordinator {
     }
   }
 
-  Future<void> _sendCollections(String peerId) async {
+  Future<bool> _sendCollections(String peerId) async {
     final settings = _readSettings();
-    if (!_sharingEnabled(settings)) return;
+    if (!_sharingEnabled(settings)) return false;
     final collections = await _clipboardRepository.getCollections();
+    var allSucceeded = true;
     for (final collection in collections) {
-      await _transport.sendCollection(peerId, _collectionPayload(collection));
+      try {
+        await _transport.sendCollection(peerId, _collectionPayload(collection));
+      } on Object {
+        allSucceeded = false;
+      }
     }
+    return allSucceeded;
   }
 
   Future<void> _send(
