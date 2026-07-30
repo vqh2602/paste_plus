@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers.dart';
 import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../device_sync/presentation/widgets/sharing_quick_status_button.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
@@ -76,6 +77,10 @@ class HistoryPaneWidget extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (settings.localSharingEnabled) ...[
+                const SharingQuickStatusButton(),
+                const SizedBox(width: 2),
+              ],
               if (settings.aiEnabled) ...[
                 CupertinoIconControl(
                   key: const Key('history-ai-button'),

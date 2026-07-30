@@ -18,6 +18,7 @@ void main() {
       'settings_title',
       'tab_general',
       'tab_clipboard',
+      'tab_sharing_devices',
       'tab_privacy',
       'tab_storage',
       'tab_shortcuts',

@@ -91,8 +91,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   ClipboardHistoryController(
     this._repository,
     this._watcher,
-    this._readSettings,
-  ) : super(const ClipboardHistoryState()) {
+    this._readSettings, {
+    this.onItemStored,
+  }) : super(const ClipboardHistoryState()) {
     _subscription = _watcher.watch().listen(
       _capture,
       onError: (Object _) {
@@ -107,6 +108,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   final ClipboardRepository _repository;
   final ClipboardWatcher _watcher;
   final AppSettings Function() _readSettings;
+  final Future<void> Function(ClipboardItem item)? onItemStored;
+  ClipboardPayload? _suppressedRemotePayload;
+  DateTime? _suppressRemoteUntil;
   late final StreamSubscription<ClipboardPayload> _subscription;
 
   Future<void> initialize() async {
@@ -168,9 +172,44 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   }
 
   Future<void> _capture(ClipboardPayload payload) async {
+    final suppressionActive =
+        _suppressRemoteUntil?.isAfter(DateTime.now()) ?? false;
+    if (suppressionActive && _samePayload(payload, _suppressedRemotePayload)) {
+      _suppressedRemotePayload = null;
+      _suppressRemoteUntil = null;
+      return;
+    }
+    _suppressedRemotePayload = null;
+    _suppressRemoteUntil = null;
+    await _storeAndQueue(payload);
+    await _repository.cleanup(_readSettings());
+    await reload();
+  }
+
+  Future<void> receiveRemote(ClipboardPayload payload) async {
+    _suppressedRemotePayload = payload;
+    _suppressRemoteUntil = DateTime.now().add(const Duration(seconds: 2));
+    await _watcher.write(payload);
     await _repository.store(payload, _readSettings());
     await _repository.cleanup(_readSettings());
     await reload();
+  }
+
+  bool _samePayload(ClipboardPayload current, ClipboardPayload? expected) {
+    if (expected == null || current.text != expected.text) return false;
+    final a = current.imageBytes;
+    final b = expected.imageBytes;
+    if (a == null || b == null) return a == null && b == null;
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  Future<void> _storeAndQueue(ClipboardPayload payload) async {
+    final item = await _repository.store(payload, _readSettings());
+    if (item != null) await onItemStored?.call(item);
   }
 
   Future<bool> captureCurrent() async {
@@ -307,7 +346,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   Future<String?> addTextItem(String text) async {
     final payload = ClipboardPayload(text: text);
     await _watcher.write(payload);
-    await _repository.store(payload, _readSettings());
+    await _storeAndQueue(payload);
     await _repository.cleanup(_readSettings());
     await reload();
     return text;

@@ -51,6 +51,11 @@ dependencies:
   launch_at_startup: ^0.5.1
   llamadart: ^0.8.17
   url_launcher: ^6.3.2
+  bonsoir: ^7.1.4
+  flutter_secure_storage: ^10.3.1
+  cryptography: ^2.9.0
+  cryptography_flutter: ^2.3.4
+  basic_utils: ^5.8.2
 
 dev_dependencies:
   flutter_test:

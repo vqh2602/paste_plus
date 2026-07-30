@@ -1,4 +1,12 @@
 PODS:
+  - bonsoir_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
+  - cryptography_flutter (0.0.1):
+    - FlutterMacOS
+  - flutter_secure_storage_darwin (10.0.0):
+    - Flutter
+    - FlutterMacOS
   - FlutterMacOS (1.0.0)
   - HotKey (0.2.1)
   - hotkey_manager_macos (0.0.1):
@@ -20,6 +28,9 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - bonsoir_darwin (from `Flutter/ephemeral/.symlinks/plugins/bonsoir_darwin/darwin`)
+  - cryptography_flutter (from `Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos`)
+  - flutter_secure_storage_darwin (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - hotkey_manager_macos (from `Flutter/ephemeral/.symlinks/plugins/hotkey_manager_macos/macos`)
   - screen_retriever_macos (from `Flutter/ephemeral/.symlinks/plugins/screen_retriever_macos/macos`)
@@ -34,6 +45,12 @@ SPEC REPOS:
     - HotKey
 
 EXTERNAL SOURCES:
+  bonsoir_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/bonsoir_darwin/darwin
+  cryptography_flutter:
+    :path: Flutter/ephemeral/.symlinks/plugins/cryptography_flutter/macos
+  flutter_secure_storage_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin
   FlutterMacOS:
     :path: Flutter/ephemeral
   hotkey_manager_macos:
@@ -52,6 +69,9 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/window_manager/macos
 
 SPEC CHECKSUMS:
+  bonsoir_darwin: 14bd7429acb51db6a8e51f6574ac3b1ea0037a87
+  cryptography_flutter: be2b3e0e31603521b6a1c2bea232a88a2488a91c
+  flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   HotKey: 400beb7caa29054ea8d864c96f5ba7e5b4852277
   hotkey_manager_macos: a4317849af96d2430fa89944d3c58977ca089fbe

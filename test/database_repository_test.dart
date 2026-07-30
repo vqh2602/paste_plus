@@ -2,6 +2,8 @@ import 'package:clipflow/core/database/app_database.dart';
 import 'package:clipflow/features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
+import 'package:clipflow/features/device_sync/data/item_sync_state_repository.dart';
+import 'package:clipflow/features/device_sync/domain/item_sync_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -26,6 +28,7 @@ void main() {
         'clipboard_items',
         'collections',
         'clipboard_item_collections',
+        'item_sync_states',
       ]),
     );
 
@@ -35,6 +38,7 @@ void main() {
     final indexNames = indexes.map((row) => row['name']).toSet();
     expect(indexNames, contains('idx_clipboard_items_hash'));
     expect(indexNames, contains('idx_clipboard_items_created'));
+    expect(indexNames, contains('idx_sync_states_peer_status'));
   });
 
   test('repository hashes, deduplicates, pins and deletes', () async {
@@ -71,4 +75,25 @@ void main() {
       expect(await repository.getItems(), hasLength(1));
     },
   );
+
+  test('sync state is tracked independently for every peer', () async {
+    final stored = await repository.store(
+      const ClipboardPayload(text: 'Share independently'),
+      const AppSettings(ignoreSensitive: false),
+    );
+    final syncStates = ItemSyncStateRepository(database);
+    await syncStates.enqueue(stored!.id, const ['peer-a', 'peer-b']);
+
+    await syncStates.markSending(stored.id, 'peer-a');
+    await syncStates.markCompleted(stored.id, 'peer-a');
+    await syncStates.markSending(stored.id, 'peer-b');
+    await syncStates.markFailed(stored.id, 'peer-b', errorMessage: 'offline');
+
+    expect(await syncStates.pendingForPeer('peer-a'), isEmpty);
+    final peerB = await syncStates.pendingForPeer('peer-b');
+    expect(peerB, hasLength(1));
+    expect(peerB.single.status, ItemSyncStatus.failed);
+    expect(peerB.single.retryCount, 1);
+    expect(peerB.single.errorMessage, 'offline');
+  });
 }

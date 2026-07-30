@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-
 import 'dart:io';
 import 'package:window_manager/window_manager.dart';
 
@@ -15,10 +14,20 @@ import 'widgets/ai_settings_section.dart';
 import 'widgets/clipboard_settings_section.dart';
 import 'widgets/general_settings_section.dart';
 import 'widgets/privacy_settings_section.dart';
+import 'widgets/sharing_settings_section.dart';
 import 'widgets/shortcut_settings_section.dart';
 import 'widgets/storage_settings_section.dart';
 
-enum SettingsPage { general, clipboard, privacy, storage, shortcuts, ai, about }
+enum SettingsPage {
+  general,
+  clipboard,
+  sharing,
+  privacy,
+  storage,
+  shortcuts,
+  ai,
+  about,
+}
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key, this.initialPage});
@@ -59,7 +68,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(width: 16),
                     Text(
                       'settings_title'.tr,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const Spacer(),
                     CupertinoIconControl(
@@ -106,7 +118,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         SizedBox(
                           width: 220,
                           child: ColoredBox(
-                            color: resolveColor(context, ClipFlowColors.sidebar),
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.sidebar,
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -124,14 +139,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       Icon(
                                         CupertinoIcons.lock_shield,
                                         size: 15,
-                                        color: resolveColor(context, ClipFlowColors.secondaryText),
+                                        color: resolveColor(
+                                          context,
+                                          ClipFlowColors.secondaryText,
+                                        ),
                                       ),
                                       const SizedBox(width: 7),
                                       Text(
                                         'local_data_saved'.tr,
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: resolveColor(context, ClipFlowColors.secondaryText),
+                                          color: resolveColor(
+                                            context,
+                                            ClipFlowColors.secondaryText,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -143,7 +164,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         SizedBox(
                           width: 1,
-                          child: ColoredBox(color: resolveColor(context, ClipFlowColors.border)),
+                          child: ColoredBox(
+                            color: resolveColor(context, ClipFlowColors.border),
+                          ),
                         ),
                         Expanded(child: _SettingsContent(page: _page)),
                       ],
@@ -234,6 +257,7 @@ class _SettingsContent extends StatelessWidget {
     final content = switch (page) {
       SettingsPage.general => const GeneralSettingsSection(),
       SettingsPage.clipboard => const ClipboardSettingsSection(),
+      SettingsPage.sharing => const SharingSettingsSection(),
       SettingsPage.privacy => const PrivacySettingsSection(),
       SettingsPage.storage => const StorageSettingsSection(),
       SettingsPage.shortcuts => const ShortcutSettingsSection(),
@@ -268,6 +292,7 @@ class _SettingsContent extends StatelessWidget {
 String _label(SettingsPage page) => switch (page) {
   SettingsPage.general => 'tab_general'.tr,
   SettingsPage.clipboard => 'tab_clipboard'.tr,
+  SettingsPage.sharing => 'tab_sharing_devices'.tr,
   SettingsPage.privacy => 'tab_privacy'.tr,
   SettingsPage.storage => 'tab_storage'.tr,
   SettingsPage.shortcuts => 'tab_shortcuts'.tr,
@@ -278,6 +303,7 @@ String _label(SettingsPage page) => switch (page) {
 IconData _icon(SettingsPage page) => switch (page) {
   SettingsPage.general => CupertinoIcons.settings,
   SettingsPage.clipboard => CupertinoIcons.doc_on_clipboard,
+  SettingsPage.sharing => CupertinoIcons.antenna_radiowaves_left_right,
   SettingsPage.privacy => CupertinoIcons.hand_raised,
   SettingsPage.storage => CupertinoIcons.archivebox,
   SettingsPage.shortcuts => CupertinoIcons.keyboard,

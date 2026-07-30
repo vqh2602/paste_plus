@@ -33,6 +33,12 @@ void main() {
       allowedTypes: {'text', 'url'},
       excludedApplications: ['Password App'],
       openPanelShortcut: openShortcut,
+      localSharingEnabled: true,
+      deviceDisplayName: 'Work Mac',
+      autoConnectTrustedDevices: false,
+      syncPinnedItemsOnly: true,
+      sharingMaxImageMb: 42,
+      allConnectionsPaused: true,
     );
 
     await repository.save(changed);
@@ -45,6 +51,12 @@ void main() {
     expect(loaded.freeImageApiKey, '6d207e02198a847aa98d0a2a901485a5');
     expect(loaded.allowedTypes, {'text', 'url'});
     expect(loaded.excludedApplications, ['Password App']);
+    expect(loaded.localSharingEnabled, isTrue);
+    expect(loaded.deviceDisplayName, 'Work Mac');
+    expect(loaded.autoConnectTrustedDevices, isFalse);
+    expect(loaded.syncPinnedItemsOnly, isTrue);
+    expect(loaded.sharingMaxImageMb, 42);
+    expect(loaded.allConnectionsPaused, isTrue);
     expect(
       shortcutSignature(
         decodeShortcut(loaded.openPanelShortcut, ShortcutAction.openPanel),
