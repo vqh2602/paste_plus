@@ -281,6 +281,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
   }
 
   void _showGenerationSettings() {
+    final aiState = ref.read(aiControllerProvider);
     showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => CupertinoActionSheet(
@@ -291,19 +292,47 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
             ('ai_profile_precise'.tr, 0.2, 2048),
             ('ai_profile_balanced'.tr, 0.55, 4096),
             ('ai_profile_creative'.tr, 0.85, 8192),
-          ])
-            CupertinoActionSheetAction(
-              onPressed: () {
-                ref
-                    .read(aiControllerProvider.notifier)
-                    .setGenerationProfile(
-                      temperature: profile.$2,
-                      contextSize: profile.$3,
-                    );
-                Navigator.pop(context);
-              },
-              child: Text(profile.$1),
-            ),
+          ]) ...[
+            () {
+              final isSelected =
+                  (aiState.temperature - profile.$2).abs() < 0.05 &&
+                  aiState.contextSize == profile.$3;
+              return CupertinoActionSheetAction(
+                onPressed: () {
+                  ref
+                      .read(aiControllerProvider.notifier)
+                      .setGenerationProfile(
+                        temperature: profile.$2,
+                        contextSize: profile.$3,
+                      );
+                  Navigator.pop(context);
+                },
+                isDefaultAction: isSelected,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (isSelected)
+                      const Padding(
+                        padding: EdgeInsets.only(right: 6),
+                        child: Icon(
+                          CupertinoIcons.checkmark,
+                          size: 18,
+                          color: CupertinoColors.activeBlue,
+                        ),
+                      ),
+                    Text(
+                      profile.$1,
+                      style: TextStyle(
+                        fontWeight:
+                            isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected ? CupertinoColors.activeBlue : null,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }(),
+          ],
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),

@@ -180,9 +180,32 @@ class PickerRowWidget<T> extends StatelessWidget {
       builder: (context) => CupertinoActionSheet(
         title: Text(title),
         actions: items.entries.map((entry) {
+          final isSelected = entry.key == value;
           return CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, entry.key),
-            child: Text(entry.value),
+            isDefaultAction: isSelected,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isSelected)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(
+                      CupertinoIcons.checkmark,
+                      size: 18,
+                      color: CupertinoColors.activeBlue,
+                    ),
+                  ),
+                Text(
+                  entry.value,
+                  style: TextStyle(
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    color: isSelected ? CupertinoColors.activeBlue : null,
+                  ),
+                ),
+              ],
+            ),
           );
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
