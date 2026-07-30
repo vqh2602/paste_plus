@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
 
 import '../../../core/localization/app_translations.dart';
@@ -52,9 +53,32 @@ class LocalAiEngine {
     final effectiveHistory = clipboardContext == null
         ? clipboardHistory
         : const <ClipboardItem>[];
-    var contextText = clipboardContext?.content.trim().isNotEmpty == true
-        ? clipboardContext!.content.trim()
-        : _buildHistoryContext(effectiveHistory);
+    late String contextText;
+    if (clipboardContext != null) {
+      if (clipboardContext.contentType == ClipboardContentType.image) {
+        final fileName = clipboardContext.imagePath != null
+            ? clipboardContext.imagePath!.split(Platform.pathSeparator).last
+            : 'image.png';
+        final ocrContent = clipboardContext.content.trim();
+        final hasText = ocrContent.isNotEmpty && ocrContent != '[Image]';
+        final sourceApp = clipboardContext.sourceAppName ?? 'Unknown';
+
+        contextText = '''
+[Dữ liệu hình ảnh được đính kèm làm ngữ cảnh]
+- Nguồn: $sourceApp
+- Tên tệp hình ảnh: $fileName
+- Đường dẫn tệp: ${clipboardContext.imagePath ?? 'N/A'}
+- Nội dung văn bản trích xuất qua OCR từ hình ảnh:
+${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc hình ảnh là biểu đồ/họa tiết)'}
+
+[Hướng dẫn phân tích]: Người dùng đã chọn hình ảnh này làm ngữ cảnh. Hãy phân tích kỹ thông tin chi tiết và văn bản OCR (nếu có) ở trên để giải thích, trích xuất dữ liệu, hoặc trả lời câu hỏi của người dùng.
+''';
+      } else {
+        contextText = clipboardContext.content.trim();
+      }
+    } else {
+      contextText = _buildHistoryContext(effectiveHistory);
+    }
     final systemPrompt = _buildSystemPrompt(
       featureGroup,
       selectedOption,
@@ -1265,11 +1289,21 @@ class LocalAiEngine {
     const maximumCharacters = 16000;
     final buffer = StringBuffer();
     for (var index = 0; index < items.length; index++) {
-      final content = items[index].content.trim();
+      final item = items[index];
+      var content = item.content.trim();
+      if (item.contentType == ClipboardContentType.image) {
+        final fileName =
+            item.imagePath?.split(Platform.pathSeparator).last ?? 'image.png';
+        if (content.isEmpty || content == '[Image]') {
+          content = '(Hình ảnh: $fileName)';
+        } else {
+          content = '(Hình ảnh: $fileName, OCR: "$content")';
+        }
+      }
       if (content.isEmpty) continue;
       final entry =
-          '[clip:${items[index].id}] (${items[index].contentType.name}) '
-          '${items[index].sourceAppName ?? 'Unknown'}: $content\n';
+          '[clip:${item.id}] (${item.contentType.name}) '
+          '${item.sourceAppName ?? 'Unknown'}: $content\n';
       if (buffer.length + entry.length > maximumCharacters) break;
       buffer.write(entry);
     }

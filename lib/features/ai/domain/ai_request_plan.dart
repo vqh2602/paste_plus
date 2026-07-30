@@ -46,7 +46,9 @@ class AiRequestPlanner {
     final referencesCurrentContent = words.any(_referenceTerms.contains);
     final isFollowUp =
         hasConversation &&
-        (words.any(_followUpTerms.contains) || referencesCurrentContent);
+        (words.any(_followUpTerms.contains) ||
+            referencesCurrentContent ||
+            asksToTransform);
 
     if (featureGroup != null) {
       final searchesHistory =
@@ -70,8 +72,7 @@ class AiRequestPlanner {
       );
     }
 
-    if (hasSelectedClipboard &&
-        (referencesClipboard || referencesCurrentContent || asksToTransform)) {
+    if (hasSelectedClipboard && !(referencesClipboard && asksToFind)) {
       return AiRequestPlan(
         intent: AiRequestIntent.clipboardAction,
         useClipboardHistory: false,
@@ -160,6 +161,17 @@ class AiRequestPlanner {
     'that',
     'above',
     'it',
+    'ảnh',
+    'hình',
+    'photo',
+    'image',
+    'picture',
+    'png',
+    'jpg',
+    'jpeg',
+    'screenshot',
+    'tệp',
+    'file',
   };
   static const _actionTerms = {
     'dịch',

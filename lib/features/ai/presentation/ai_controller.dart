@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/services/ai_debug_service.dart';
+import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
@@ -316,9 +317,33 @@ class AiController extends StateNotifier<AiState> {
     final conversationMessages = usesConversationHistory
         ? _recentConversationMessages(state.chatMessages)
         : const <AiChatMessage>[];
-    final activeContext = requestPlan.useSelectedClipboard
+    var activeContext = requestPlan.useSelectedClipboard
         ? selectedContext
         : null;
+
+    final targetContext = activeContext;
+    if (targetContext != null &&
+        targetContext.contentType == ClipboardContentType.image) {
+      final ocrTextInContent = targetContext.content.trim();
+      final hasOcrText =
+          ocrTextInContent.isNotEmpty && ocrTextInContent != '[Image]';
+      if (!hasOcrText && targetContext.imagePath != null) {
+        try {
+          final historyNotifier =
+              _ref.read(historyControllerProvider.notifier);
+          final extracted =
+              await historyNotifier.performOcr(targetContext);
+          if (extracted != null && extracted.trim().isNotEmpty) {
+            activeContext = targetContext.copyWith(
+              content: extracted.trim(),
+              normalizedContent: extracted.trim(),
+            );
+          }
+        } catch (_) {
+          // Ignore OCR errors gracefully
+        }
+      }
+    }
     final clipboardHistory = requestPlan.useClipboardHistory
         ? _ref
               .read(historyControllerProvider)
