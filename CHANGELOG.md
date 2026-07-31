@@ -2,6 +2,11 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.1.2] - 2026-07-31
+
+### 🐛 Sửa lỗi
+- **Quick Panel**: Sau khi dán một kết quả tìm kiếm, xóa đồng thời query lọc và nội dung ô tìm kiếm. Lần mở Quick Panel kế tiếp luôn hiển thị danh sách đúng, không còn trạng thái lọc cũ dưới ô tìm kiếm trống.
+
 ## [1.1.1] - 2026-07-30
 
 ### 🐛 Sửa lỗi & Cải tiến

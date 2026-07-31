@@ -30,7 +30,7 @@ class UpdateInfo {
 class UpdateService {
   const UpdateService();
 
-  static const String currentVersion = '1.1.1';
+  static const String currentVersion = '1.1.2';
   static const MethodChannel _windowChannel = MethodChannel('clipflow/window');
   static bool _autoUpdateChecked = false;
 

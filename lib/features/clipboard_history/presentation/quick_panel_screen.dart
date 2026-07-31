@@ -104,6 +104,12 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
 
   Future<void> _pasteItem(ClipboardItem item) async {
     final desktop = ref.read(desktopIntegrationProvider);
+    // The quick panel is recreated whenever it is opened. Clear the provider
+    // query as well as this controller so a previous search cannot leave a
+    // filtered list behind under an empty search field on the next opening.
+    _searchController.clear();
+    ref.read(historyControllerProvider.notifier).search('');
+    if (mounted) setState(() => _selectedIndex = 0);
     ref.read(quickPanelModeProvider.notifier).state = false;
     await ref.read(historyControllerProvider.notifier).copy(item);
     await desktop.hideQuickPanel();
@@ -345,12 +351,15 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
                                         number: index + 1,
                                         selected: isSelected,
                                         onTap: () {
-                                          setState(() => _selectedIndex = index);
+                                          setState(
+                                            () => _selectedIndex = index,
+                                          );
                                           _pasteItem(item);
                                         },
                                         onPin: () => ref
                                             .read(
-                                              historyControllerProvider.notifier,
+                                              historyControllerProvider
+                                                  .notifier,
                                             )
                                             .togglePinned(item),
                                         onActions: (ctx) =>
