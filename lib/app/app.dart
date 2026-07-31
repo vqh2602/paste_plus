@@ -5,9 +5,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../core/platform/desktop_integration_service.dart';
-
 import '../core/localization/app_translations.dart';
+import '../core/platform/desktop_integration_service.dart';
+import '../core/services/update_download_provider.dart';
 import '../core/ui/ai_debug_overlay.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -63,6 +63,12 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
               router.go('/');
               ref.read(quickPanelModeProvider.notifier).state = false;
               ref.read(aiWindowModeProvider.notifier).state = true;
+            },
+            onCheckUpdatesRequested: () {
+              router.go('/settings?page=about');
+              final updates = ref.read(updateDownloadProvider.notifier);
+              updates.reset();
+              unawaited(updates.checkOnly());
             },
             onTrayStatusChanged: (enabled) {
               unawaited(

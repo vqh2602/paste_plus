@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +19,7 @@ class SidebarWidget extends ConsumerWidget {
     required this.onCreateCollection,
     required this.onDeleteCollection,
     this.reserveWindowControls = false,
+    this.onNavigationSelected,
   });
 
   final ClipboardHistoryState state;
@@ -25,10 +28,18 @@ class SidebarWidget extends ConsumerWidget {
   final VoidCallback onCreateCollection;
   final ValueChanged<ClipboardCollection> onDeleteCollection;
   final bool reserveWindowControls;
+  final VoidCallback? onNavigationSelected;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
+
+    void selectSection(HistorySection section, {String? collectionId}) {
+      unawaited(
+        historyNotifier.selectSection(section, collectionId: collectionId),
+      );
+      onNavigationSelected?.call();
+    }
 
     return ColoredBox(
       color: resolveColor(context, ClipFlowColors.sidebar),
@@ -74,36 +85,31 @@ class SidebarWidget extends ConsumerWidget {
                   icon: CupertinoIcons.tray_full,
                   label: 'all'.tr,
                   selected: state.section == HistorySection.all,
-                  onTap: () =>
-                      historyNotifier.selectSection(HistorySection.all),
+                  onTap: () => selectSection(HistorySection.all),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.pin,
                   label: 'pinned'.tr,
                   selected: state.section == HistorySection.pinned,
-                  onTap: () =>
-                      historyNotifier.selectSection(HistorySection.pinned),
+                  onTap: () => selectSection(HistorySection.pinned),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.photo,
                   label: 'images'.tr,
                   selected: state.section == HistorySection.images,
-                  onTap: () =>
-                      historyNotifier.selectSection(HistorySection.images),
+                  onTap: () => selectSection(HistorySection.images),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.link,
                   label: 'links'.tr,
                   selected: state.section == HistorySection.links,
-                  onTap: () =>
-                      historyNotifier.selectSection(HistorySection.links),
+                  onTap: () => selectSection(HistorySection.links),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.chevron_left_slash_chevron_right,
                   label: 'code'.tr,
                   selected: state.section == HistorySection.code,
-                  onTap: () =>
-                      historyNotifier.selectSection(HistorySection.code),
+                  onTap: () => selectSection(HistorySection.code),
                 ),
                 const SizedBox(height: 18),
                 Row(
@@ -142,7 +148,7 @@ class SidebarWidget extends ConsumerWidget {
                           selected:
                               state.section == HistorySection.collection &&
                               state.collectionId == collection.id,
-                          onTap: () => historyNotifier.selectSection(
+                          onTap: () => selectSection(
                             HistorySection.collection,
                             collectionId: collection.id,
                           ),

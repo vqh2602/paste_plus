@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:path/path.dart' as path;
 
 class UpdateInfo {
   const UpdateInfo({
@@ -88,7 +88,6 @@ class UpdateService {
     navigateToAbout(context);
   }
 
-
   /// Check GitHub releases for available update
   Future<UpdateInfo?> checkForUpdate() async {
     try {
@@ -120,22 +119,10 @@ class UpdateService {
           (json['html_url'] as String?) ??
           'https://github.com/vqh2602/paste_plus/releases';
 
-      String? downloadUrl;
-      if (json['assets'] is List) {
-        final assets = json['assets'] as List<dynamic>;
-        for (final asset in assets) {
-          if (asset is Map<String, dynamic>) {
-            final name = (asset['name'] as String? ?? '').toLowerCase();
-            final url = asset['browser_download_url'] as String?;
-            if (name.endsWith('.zip') ||
-                name.endsWith('.dmg') ||
-                name.endsWith('.tar.gz')) {
-              downloadUrl = url;
-              break;
-            }
-          }
-        }
-      }
+      final assets = json['assets'] is List
+          ? json['assets'] as List<dynamic>
+          : const <dynamic>[];
+      final downloadUrl = selectPlatformAssetUrl(assets);
 
       final cleanRemote = tagName.replaceAll(RegExp(r'[^0-9.]'), '');
       final hasUpdate = isVersionHigher(cleanRemote, currentVersion);
@@ -154,11 +141,36 @@ class UpdateService {
     }
   }
 
-  /// Download release zip asset, unpack and install automatically on macOS.
+  static String? selectPlatformAssetUrl(
+    List<dynamic> assets, {
+    String? platform,
+  }) {
+    final target = platform ?? Platform.operatingSystem;
+    final expectedName = switch (target) {
+      'windows' => 'clipflow-windows.zip',
+      'macos' => 'clipflow-macos.zip',
+      'android' => 'clipflow-android.apk',
+      'ios' => 'clipflow-ios.ipa',
+      _ => null,
+    };
+    if (expectedName == null) return null;
+
+    for (final asset in assets) {
+      if (asset is! Map) continue;
+      final name = '${asset['name'] ?? ''}'.toLowerCase();
+      if (name != expectedName) continue;
+      final url = asset['browser_download_url'];
+      if (url is String && url.isNotEmpty) return url;
+    }
+    return null;
+  }
+
+  /// Download the platform release archive and install it automatically.
   Future<bool> downloadAndInstallUpdate({
     required String downloadUrl,
     required ValueChanged<double> onProgress,
   }) async {
+    if (!Platform.isMacOS && !Platform.isWindows) return false;
     try {
       final tempDir = await Directory.systemTemp.createTemp('clipflow_update_');
       final zipPath = '${tempDir.path}/update.zip';
@@ -191,24 +203,29 @@ class UpdateService {
 
       final extractDir = '${tempDir.path}/extracted';
       await Directory(extractDir).create(recursive: true);
-      final unzipResult = await Process.run('unzip', [
-        '-o',
-        zipPath,
-        '-d',
-        extractDir,
-      ]);
+      final unzipResult = Platform.isWindows
+          ? await Process.run('powershell.exe', [
+              '-NoProfile',
+              '-NonInteractive',
+              '-Command',
+              r'Expand-Archive -LiteralPath $args[0] '
+                  r'-DestinationPath $args[1] -Force',
+              zipPath,
+              extractDir,
+            ])
+          : await Process.run('unzip', ['-o', zipPath, '-d', extractDir]);
       if (unzipResult.exitCode != 0) {
         return false;
       }
 
-      final extractedEntities = Directory(extractDir).listSync();
-      FileSystemEntity? appEntity;
-      for (final entity in extractedEntities) {
-        if (entity.path.endsWith('.app')) {
-          appEntity = entity;
-          break;
-        }
+      if (Platform.isWindows) {
+        return _installWindowsDirectory(
+          extractedDirectory: Directory(extractDir),
+          temporaryDirectory: tempDir,
+        );
       }
+
+      final appEntity = await _findMacApp(Directory(extractDir));
 
       if (appEntity == null) {
         return false;
@@ -255,4 +272,72 @@ rm -rf "${tempDir.path}"
       return false;
     }
   }
+
+  Future<bool> _installWindowsDirectory({
+    required Directory extractedDirectory,
+    required Directory temporaryDirectory,
+  }) async {
+    final currentExecutable = File(Platform.resolvedExecutable);
+    final executableName = path.basename(currentExecutable.path);
+    final newExecutable = await findExtractedExecutable(
+      extractedDirectory,
+      executableName,
+    );
+    if (newExecutable == null) return false;
+
+    final sourceDirectory = newExecutable.parent.path;
+    final targetDirectory = currentExecutable.parent.path;
+    if (path.equals(sourceDirectory, targetDirectory)) return false;
+
+    final targetExecutable = path.join(targetDirectory, executableName);
+    final script = File(
+      path.join(temporaryDirectory.path, 'install-update.ps1'),
+    );
+    await script.writeAsString('''
+\$ErrorActionPreference = 'Stop'
+Wait-Process -Id $pid -ErrorAction SilentlyContinue
+robocopy.exe ${_powerShellQuote(sourceDirectory)} ${_powerShellQuote(targetDirectory)} /MIR /R:5 /W:1
+\$copyExitCode = \$LASTEXITCODE
+if (\$copyExitCode -gt 7) { exit \$copyExitCode }
+Start-Process -FilePath ${_powerShellQuote(targetExecutable)}
+Start-Sleep -Seconds 2
+Remove-Item -LiteralPath ${_powerShellQuote(temporaryDirectory.path)} -Recurse -Force -ErrorAction SilentlyContinue
+''', flush: true);
+
+    await Process.start('powershell.exe', [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      script.path,
+    ], mode: ProcessStartMode.detached);
+    exit(0);
+  }
+
+  static Future<File?> findExtractedExecutable(
+    Directory root,
+    String executableName,
+  ) async {
+    final expected = executableName.toLowerCase();
+    await for (final entity in root.list(recursive: true, followLinks: false)) {
+      if (entity is File &&
+          path.basename(entity.path).toLowerCase() == expected) {
+        return entity;
+      }
+    }
+    return null;
+  }
+
+  static Future<Directory?> _findMacApp(Directory root) async {
+    await for (final entity in root.list(recursive: true, followLinks: false)) {
+      if (entity is Directory && entity.path.toLowerCase().endsWith('.app')) {
+        return entity;
+      }
+    }
+    return null;
+  }
+
+  static String _powerShellQuote(String value) =>
+      "'${value.replaceAll("'", "''")}'";
 }
