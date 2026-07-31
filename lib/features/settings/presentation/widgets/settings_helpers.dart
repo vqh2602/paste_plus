@@ -2,14 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show showLicensePage;
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hotkey_manager/hotkey_manager.dart';
 
 import '../../../../app/providers.dart';
 
 import '../../../../core/localization/app_translations.dart';
-import '../../../../core/platform/shortcut_config.dart';
 import '../../../../core/services/update_service.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/domain/clipboard_content_type.dart';
@@ -90,7 +87,10 @@ class SettingsTileWidget extends StatelessWidget {
                     subtitle!,
                     style: TextStyle(
                       fontSize: 12,
-                      color: resolveColor(context, ClipFlowColors.secondaryText),
+                      color: resolveColor(
+                        context,
+                        ClipFlowColors.secondaryText,
+                      ),
                     ),
                   ),
                 ],
@@ -199,8 +199,9 @@ class PickerRowWidget<T> extends StatelessWidget {
                 Text(
                   entry.value,
                   style: TextStyle(
-                    fontWeight:
-                        isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
                     color: isSelected ? CupertinoColors.activeBlue : null,
                   ),
                 ),
@@ -248,8 +249,7 @@ class _TextRowWidgetState extends State<TextRowWidget> {
   @override
   void didUpdateWidget(covariant TextRowWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value &&
-        _controller.text != widget.value) {
+    if (oldWidget.value != widget.value && _controller.text != widget.value) {
       _controller.text = widget.value;
     }
   }
@@ -267,10 +267,7 @@ class _TextRowWidgetState extends State<TextRowWidget> {
       child: Row(
         children: [
           Expanded(
-            child: Text(
-              widget.title,
-              style: const TextStyle(fontSize: 14),
-            ),
+            child: Text(widget.title, style: const TextStyle(fontSize: 14)),
           ),
           const SizedBox(width: 12),
           SizedBox(
@@ -334,115 +331,6 @@ class NumberRowWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class ShortcutRowWidget extends StatefulWidget {
-  const ShortcutRowWidget({
-    super.key,
-    required this.title,
-    required this.shortcut,
-    required this.action,
-    required this.onChanged,
-    this.subtitle,
-  });
-
-  final String title;
-  final String? subtitle;
-  final String shortcut;
-  final ShortcutAction action;
-  final ValueChanged<HotKey> onChanged;
-
-  @override
-  State<ShortcutRowWidget> createState() => _ShortcutRowWidgetState();
-}
-
-class _ShortcutRowWidgetState extends State<ShortcutRowWidget> {
-  bool _isRecording = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = CupertinoTheme.of(context).primaryColor;
-    return SettingsTileWidget(
-      title: widget.title,
-      subtitle: widget.subtitle,
-      trailing: CupertinoPressable(
-        onPressed: () => _toggleRecording(context),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: _isRecording
-                ? CupertinoColors.systemOrange.withValues(alpha: 0.18)
-                : resolveColor(context, ClipFlowColors.surface),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: _isRecording
-                  ? CupertinoColors.systemOrange
-                  : resolveColor(context, ClipFlowColors.border),
-            ),
-          ),
-          child: Text(
-            _isRecording ? 'press_shortcut'.tr : widget.shortcut,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: _isRecording ? CupertinoColors.systemOrange : primary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _toggleRecording(BuildContext context) async {
-    if (_isRecording) {
-      await hotKeyManager.unregisterAll();
-      setState(() => _isRecording = false);
-      return;
-    }
-
-    setState(() => _isRecording = true);
-
-    bool onKey(KeyEvent event) {
-      if (event is! KeyDownEvent) return false;
-      if (event.logicalKey == LogicalKeyboardKey.escape) {
-        HardwareKeyboard.instance.removeHandler(onKey);
-        if (mounted) setState(() => _isRecording = false);
-        return true;
-      }
-
-      final modifiers = <HotKeyModifier>[];
-      if (HardwareKeyboard.instance.isMetaPressed) {
-        modifiers.add(HotKeyModifier.meta);
-      }
-      if (HardwareKeyboard.instance.isControlPressed) {
-        modifiers.add(HotKeyModifier.control);
-      }
-      if (HardwareKeyboard.instance.isAltPressed) {
-        modifiers.add(HotKeyModifier.alt);
-      }
-      if (HardwareKeyboard.instance.isShiftPressed) {
-        modifiers.add(HotKeyModifier.shift);
-      }
-
-      final hotKey = HotKey(
-        key: event.logicalKey,
-        modifiers: modifiers,
-        scope: widget.action == ShortcutAction.openPanel
-            ? HotKeyScope.system
-            : HotKeyScope.inapp,
-      );
-
-      HardwareKeyboard.instance.removeHandler(onKey);
-      if (mounted) {
-        setState(() => _isRecording = false);
-        widget.onChanged(hotKey);
-      }
-      return true;
-    }
-
-    HardwareKeyboard.instance.addHandler(onKey);
   }
 }
 
@@ -527,7 +415,11 @@ Future<void> showLicensesDialog(BuildContext context) async {
             'LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, '
             'OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE '
             'SOFTWARE.',
-            style: TextStyle(fontSize: 11, fontFamily: 'monospace', height: 1.3),
+            style: TextStyle(
+              fontSize: 11,
+              fontFamily: 'monospace',
+              height: 1.3,
+            ),
           ),
         ),
       ),

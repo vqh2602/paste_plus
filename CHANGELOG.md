@@ -2,6 +2,20 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.1.2] - 2026-07-31
+
+### 🐛 Sửa lỗi
+- **Quick Panel**: Sau khi dán một kết quả tìm kiếm, xóa đồng thời query lọc và nội dung ô tìm kiếm. Lần mở Quick Panel kế tiếp luôn hiển thị danh sách đúng, không còn trạng thái lọc cũ dưới ô tìm kiếm trống.
+
+## [1.1.1] - 2026-07-30
+
+### 🐛 Sửa lỗi & Cải tiến
+- **Ghi phím tắt đáng tin cậy**: Recorder hiện lắng nghe trọn vẹn tổ hợp phím, bỏ qua phím bổ trợ đơn lẻ và chỉ lưu khi người dùng bấm **Lưu**.
+- **Chặn shortcut trong khi ghi**: Tạm dừng global hotkey và chặn sự kiện phím trong suốt quá trình nhập, tránh việc tổ hợp cũ mở Quick Panel ngoài ý muốn; hủy bằng Escape sẽ phục hồi shortcut cũ.
+- **Sửa lỗi đóng ứng dụng khi lưu**: Không còn unregister/register native hotkey lặp trong lúc recorder đang mở; callback global được chặn an toàn rồi bật lại sau khi lưu hoặc hủy.
+- **Khôi phục mặc định**: Thêm nút khôi phục toàn bộ phím tắt mặc định, bao gồm phím mở Quick Panel và các phím tắt trong ứng dụng.
+- **Độ ổn định đăng ký hệ thống**: Chỉ lưu shortcut toàn hệ thống sau khi hệ điều hành đăng ký thành công; nếu bị ứng dụng khác chiếm, cấu hình trước đó được giữ nguyên.
+
 ## [1.1.0] - 2026-07-30
 
 ### 🚀 Tính năng nổi bật & Cải tiến

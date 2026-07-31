@@ -56,6 +56,7 @@ class DesktopIntegrationService with TrayListener {
   Rect? _aiWindowBounds;
   DateTime _ignoreBlurUntil = DateTime.fromMillisecondsSinceEpoch(0);
   bool _trayActive = false;
+  bool _globalHotKeysSuspended = false;
 
   static const _startupChannel = MethodChannel('launch_at_startup');
   static const _windowChannel = MethodChannel('clipflow/window');
@@ -127,9 +128,10 @@ class DesktopIntegrationService with TrayListener {
       );
       await hotKeyManager.register(
         systemHotKey,
-        keyDownHandler: (_) => unawaited(toggleQuickPanel()),
+        keyDownHandler: _handleGlobalHotKey,
       );
       _hotKeys.add(systemHotKey);
+      _globalHotKeysSuspended = false;
       return true;
     } on Object catch (error) {
       _logger.log(
@@ -141,7 +143,7 @@ class DesktopIntegrationService with TrayListener {
         try {
           await hotKeyManager.register(
             previousHotKey,
-            keyDownHandler: (_) => unawaited(toggleQuickPanel()),
+            keyDownHandler: _handleGlobalHotKey,
           );
           _hotKeys.add(previousHotKey);
         } on Object catch (restoreError) {
@@ -152,8 +154,24 @@ class DesktopIntegrationService with TrayListener {
           );
         }
       }
+      _globalHotKeysSuspended = false;
       return false;
     }
+  }
+
+  Future<void> suspendGlobalHotKeys() async {
+    if (!isDesktop || _globalHotKeysSuspended) return;
+    _globalHotKeysSuspended = true;
+  }
+
+  Future<void> resumeGlobalHotKeys() async {
+    if (!isDesktop || !_globalHotKeysSuspended) return;
+    _globalHotKeysSuspended = false;
+  }
+
+  void _handleGlobalHotKey(HotKey _) {
+    if (_globalHotKeysSuspended) return;
+    unawaited(toggleQuickPanel());
   }
 
   Future<bool> setTrayEnabled(bool enabled) async {

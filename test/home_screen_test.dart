@@ -294,6 +294,21 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    repository.items.add(
+      ClipboardItem(
+        id: 'item-2',
+        content: 'https://example.com/khong-khop',
+        normalizedContent: 'https://example.com/khong-khop',
+        contentHash: 'hash-2',
+        contentType: ClipboardContentType.url,
+        createdAt: DateTime(2026, 7, 27),
+        updatedAt: DateTime(2026, 7, 27),
+        lastCopiedAt: DateTime(2026, 7, 27),
+        isPinned: false,
+        isSensitive: false,
+        copyCount: 1,
+      ),
+    );
 
     await tester.pumpWidget(app(quickPanel: true));
     await tester.pumpAndSettle();
@@ -331,6 +346,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Riêng tư & cục bộ'), findsNothing);
     expect(find.text('Liên kết'), findsAtLeast(1));
+    await tester.enterText(
+      find.byKey(const Key('quick-panel-search')),
+      'flutter.dev',
+    );
+    await tester.pump();
     tester.view.physicalSize = const Size(1400, 900);
     await tester.pump();
     await tester.tap(find.textContaining('flutter.dev').last);
@@ -338,6 +358,7 @@ void main() {
     expect(watcher.current?.text, 'https://flutter.dev');
     expect(find.byKey(const Key('quick-panel-search')), findsNothing);
     expect(find.byKey(const Key('history-search')), findsOneWidget);
+    expect(find.text('https://example.com/khong-khop'), findsOneWidget);
   });
 
   test('copy keeps the visible item order until an explicit reload', () async {
