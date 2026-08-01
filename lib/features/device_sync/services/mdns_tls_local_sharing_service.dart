@@ -22,7 +22,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   MdnsTlsLocalSharingService({
     DeviceIdentityStore? identityStore,
     this.enableMdns = true,
-    this.appVersion = '1.1.2',
+    this.appVersion = '1.1.3',
     this.platformOverride,
     this.reconnectDelayOverride,
   }) : _identityStore =
