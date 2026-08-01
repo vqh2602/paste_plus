@@ -9,6 +9,7 @@ import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dar
 import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.dart';
 import 'package:clipflow/features/clipboard_history/presentation/home_screen.dart';
 import 'package:clipflow/features/clipboard_history/presentation/history_controller.dart';
+import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
 import 'package:flutter/cupertino.dart';
@@ -41,6 +42,7 @@ class MockClipboardWatcher implements ClipboardWatcher {
 }
 
 class InMemoryClipboardRepository implements ClipboardRepository {
+  final collections = <ClipboardCollection>[];
   final items = <ClipboardItem>[
     ClipboardItem(
       id: 'item-1',
@@ -91,7 +93,7 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   Future<Set<String>> collectionIdsForItem(String itemId) async => {};
 
   @override
-  Future<List<ClipboardCollection>> getCollections() async => [];
+  Future<List<ClipboardCollection>> getCollections() async => collections;
 
   @override
   Future<List<ClipboardItem>> getItems({
@@ -360,6 +362,66 @@ void main() {
     expect(find.byKey(const Key('history-search')), findsOneWidget);
     expect(find.text('https://example.com/khong-khop'), findsOneWidget);
   });
+
+  testWidgets(
+    'mobile sidebar is inset and closes after tab or collection selection',
+    (tester) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      repository.collections.add(
+        ClipboardCollection(
+          id: 'mobile-collection',
+          name: 'Mobile collection',
+          icon: 'folder',
+          createdAt: DateTime(2026, 7, 31),
+          updatedAt: DateTime(2026, 7, 31),
+          sortOrder: 10,
+        ),
+      );
+
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('mobile-sidebar-button')));
+      await tester.pumpAndSettle();
+
+      final sheet = tester.getSize(
+        find.byKey(const Key('mobile-sidebar-sheet')),
+      );
+      expect(sheet.width, lessThan(390));
+
+      await tester.tap(find.text('Liên kết'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mobile-sidebar-sheet')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('mobile-sidebar-button')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<SidebarTileWidget>(
+              find.widgetWithText(SidebarTileWidget, 'Liên kết'),
+            )
+            .selected,
+        isTrue,
+      );
+
+      await tester.tap(find.text('Mobile collection'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('mobile-sidebar-sheet')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('mobile-sidebar-button')));
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<SidebarTileWidget>(
+              find.widgetWithText(SidebarTileWidget, 'Mobile collection'),
+            )
+            .selected,
+        isTrue,
+      );
+    },
+  );
 
   test('copy keeps the visible item order until an explicit reload', () async {
     repository.items.add(

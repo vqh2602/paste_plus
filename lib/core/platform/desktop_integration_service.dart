@@ -9,6 +9,7 @@ import 'package:screen_retriever/screen_retriever.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
+import '../localization/app_translations.dart';
 import '../services/logging_service.dart';
 import 'shortcut_config.dart';
 
@@ -50,6 +51,7 @@ class DesktopIntegrationService with TrayListener {
   VoidCallback? _onMainWindowRequested;
   VoidCallback? _onQuickPanelDismissed;
   VoidCallback? _onAiWindowRequested;
+  VoidCallback? _onCheckUpdatesRequested;
   DesktopWindowMode _windowMode = DesktopWindowMode.main;
   DesktopWindowMode get windowMode => _windowMode;
   _MainWindowSnapshot? _mainWindowSnapshot;
@@ -75,6 +77,7 @@ class DesktopIntegrationService with TrayListener {
     required VoidCallback onMainWindowRequested,
     required VoidCallback onQuickPanelDismissed,
     VoidCallback? onAiWindowRequested,
+    VoidCallback? onCheckUpdatesRequested,
     ValueChanged<bool>? onTrayStatusChanged,
     ValueChanged<bool>? onOpenAtLoginStatusChanged,
   }) async {
@@ -82,6 +85,7 @@ class DesktopIntegrationService with TrayListener {
     _onMainWindowRequested = onMainWindowRequested;
     _onQuickPanelDismissed = onQuickPanelDismissed;
     _onAiWindowRequested = onAiWindowRequested;
+    _onCheckUpdatesRequested = onCheckUpdatesRequested;
 
     if (!isDesktop || _initialized) return;
     _initialized = true;
@@ -187,20 +191,24 @@ class DesktopIntegrationService with TrayListener {
       trayManager.removeListener(this);
       trayManager.addListener(this);
       await trayManager.setIcon(
-        'assets/tray_icon.png',
+        Platform.isWindows ? 'assets/tray_icon.ico' : 'assets/tray_icon.png',
         isTemplate: Platform.isMacOS,
       );
       await trayManager.setToolTip('ClipFlow');
       await trayManager.setContextMenu(
         Menu(
           items: [
-            MenuItem(label: 'Mở ClipFlow', onClick: (_) => showMainWindow()),
+            MenuItem(label: 'main_window'.tr, onClick: (_) => showMainWindow()),
             MenuItem(
-              label: 'Mở bảng clipboard',
+              label: 'open_quick_panel'.tr,
               onClick: (_) => toggleQuickPanel(),
             ),
             MenuItem.separator(),
-            MenuItem(label: 'Thoát', onClick: (_) => exit(0)),
+            MenuItem(
+              label: 'check_updates'.tr,
+              onClick: (_) => unawaited(_checkUpdatesFromTray()),
+            ),
+            MenuItem(label: 'quit_app'.tr, onClick: (_) => exit(0)),
           ],
         ),
       );
@@ -216,6 +224,11 @@ class DesktopIntegrationService with TrayListener {
       );
       return false;
     }
+  }
+
+  Future<void> _checkUpdatesFromTray() async {
+    await showMainWindow();
+    _onCheckUpdatesRequested?.call();
   }
 
   Future<OpenAtLoginResult> getOpenAtLoginState() async {
@@ -729,6 +742,11 @@ class DesktopIntegrationService with TrayListener {
   @override
   void onTrayIconMouseDown() {
     showMainWindow();
+  }
+
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
   }
 
   Future<void> dispose() async {

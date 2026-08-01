@@ -62,6 +62,7 @@ class HistoryPaneWidget extends ConsumerWidget {
             children: [
               if (compact && onOpenSidebar != null) ...[
                 CupertinoIconControl(
+                  key: const Key('mobile-sidebar-button'),
                   icon: CupertinoIcons.sidebar_left,
                   onPressed: onOpenSidebar!,
                 ),

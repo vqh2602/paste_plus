@@ -44,6 +44,9 @@ class LocalSharingState {
   int get connectedCount =>
       pairedDevices.where((peer) => peer.isConnected).length;
 
+  bool get hasActiveConnections =>
+      peers.any((peer) => peer.isConnected) || pairingSession != null;
+
   LocalSharingState copyWith({
     List<PeerConnectionInfo>? peers,
     bool? isDiscovering,

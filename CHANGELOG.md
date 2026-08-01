@@ -2,6 +2,13 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.1.3] - 2026-08-01
+
+### 🚀 Cải tiến & Sửa lỗi
+- **Menu ngữ cảnh chuột phải trên Khay hệ thống (System Tray)**:
+  - Bổ sung xử lý sự kiện click chuột phải (`onTrayIconRightMouseDown`) trên icon thanh Menu Bar (macOS) và Khay hệ thống (Windows).
+  - Tự động bật pop-up menu hỗ trợ 4 lựa chọn nhanh: Màn hình chính, Mở Quick Panel, Kiểm tra cập nhật và Thoát ứng dụng.
+
 ## [1.1.2] - 2026-07-31
 
 ### 🐛 Sửa lỗi

@@ -16,8 +16,7 @@ class SharingPreferencesSection extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final enabled = settings.localSharingEnabled;
     final localSharingState = ref.watch(localSharingControllerProvider);
-    final hasConnectedDevices = localSharingState.connectedCount > 0;
-    final canEditDeviceName = enabled && !hasConnectedDevices;
+    final canEditDeviceName = enabled && !localSharingState.hasActiveConnections;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

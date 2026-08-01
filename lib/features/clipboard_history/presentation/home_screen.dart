@@ -18,6 +18,7 @@ import '../domain/clipboard_item.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
+import 'widgets/mobile_sidebar_sheet.dart';
 import 'widgets/sidebar_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -411,15 +412,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           onOpenSidebar: () {
                             showCupertinoModalPopup<void>(
                               context: context,
-                              builder: (context) => SizedBox(
-                                width: 280,
-                                child: SidebarWidget(
-                                  state: state,
-                                  collections: collections,
-                                  onOpenSettings: _openSettings,
-                                  onCreateCollection: _showCreateCollectionDialog,
-                                  onDeleteCollection: _handleDeleteCollection,
-                                ),
+                              builder: (context) => MobileSidebarSheet(
+                                state: state,
+                                collections: collections,
+                                onOpenSettings: _openSettings,
+                                onCreateCollection: _showCreateCollectionDialog,
+                                onDeleteCollection: _handleDeleteCollection,
                               ),
                             );
                           },
@@ -438,8 +436,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             ),
                             ColoredBox(
-                              color: resolveColor(context, ClipFlowColors.border),
-                              child: const SizedBox(width: 1, height: double.infinity),
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.border,
+                              ),
+                              child: const SizedBox(
+                                width: 1,
+                                height: double.infinity,
+                              ),
                             ),
                             Expanded(
                               flex: 3,
@@ -455,13 +459,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             if (!isMedium) ...[
                               ColoredBox(
-                                color: resolveColor(context, ClipFlowColors.border),
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.border,
+                                ),
                                 child: const SizedBox(
                                   width: 1,
                                   height: double.infinity,
                                 ),
                               ),
-                              const Expanded(flex: 2, child: DetailPaneWidget()),
+                              const Expanded(
+                                flex: 2,
+                                child: DetailPaneWidget(),
+                              ),
                             ],
                           ],
                         ),
