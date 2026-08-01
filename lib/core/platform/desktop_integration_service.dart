@@ -744,6 +744,11 @@ class DesktopIntegrationService with TrayListener {
     showMainWindow();
   }
 
+  @override
+  void onTrayIconRightMouseDown() {
+    trayManager.popUpContextMenu();
+  }
+
   Future<void> dispose() async {
     if (!isDesktop) return;
     trayManager.removeListener(this);
