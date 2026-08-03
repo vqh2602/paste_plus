@@ -13,6 +13,66 @@ class AiPlannerService {
   final AiRequestPlanner _requestPlanner;
   final AiPlanValidator _validator;
 
+  /// Evaluates whether a prompt is complex or multi-step enough to require LLM model planning.
+  bool shouldUseModelPlanner({
+    required String prompt,
+    required bool hasSelectedClipboard,
+    AiFeatureGroup? featureGroup,
+  }) {
+    final lower = prompt.toLowerCase();
+
+    // Check sequence connectives ("rồi", "sau đó", "and then", "sau đấy", "tiếp theo", "bước 1", "vừa ... vừa")
+    final hasSequenceConnective = lower.contains('rồi') ||
+        lower.contains('sau đó') ||
+        lower.contains('and then') ||
+        lower.contains('sau đấy') ||
+        lower.contains('tiếp theo') ||
+        lower.contains('bước 1') ||
+        (lower.contains('vừa ') && lower.contains(' vừa '));
+
+    // Check context references ("nó", "đoạn vừa", "kết quả trên", "mục đó", "file đó")
+    final hasContextReference = lower.contains('đoạn vừa') ||
+        lower.contains('kết quả trên') ||
+        lower.contains('mục đó') ||
+        lower.contains('nó ') ||
+        lower.contains(' nó') ||
+        lower.contains('file đó') ||
+        lower.contains('kết quả vừa');
+
+    // Check filter constraints (time or content type)
+    final hasFilterConstraint = lower.contains('hôm qua') ||
+        lower.contains('yesterday') ||
+        lower.contains('hôm nay') ||
+        lower.contains('today') ||
+        lower.contains('json') ||
+        lower.contains('code') ||
+        lower.contains('url');
+
+    // Action keywords
+    final actionKeywords = [
+      'tìm', 'search', 'find', 'lọc',
+      'trích', 'extract', 'lấy url', 'lấy link',
+      'giải thích', 'explain',
+      'xóa', 'delete', 'pin', 'ghim', 'bộ sưu tập', 'collection',
+    ];
+    var actionCount = 0;
+    for (final kw in actionKeywords) {
+      if (lower.contains(kw)) {
+        actionCount++;
+      }
+    }
+
+    if (hasSequenceConnective || hasContextReference) {
+      return true;
+    }
+
+    if (actionCount >= 2 && (hasFilterConstraint || !hasSelectedClipboard)) {
+      return true;
+    }
+
+    return false;
+  }
+
   /// Creates an [AiRequestPlan] containing a validated [AiExecutionPlan].
   AiRequestPlan createPlan({
     required String prompt,

@@ -29,10 +29,9 @@ class LocalAiResponse {
 }
 
 class LocalAiEngine {
-  LocalAiEngine([this._modelDownloader, this._debug])
-    : _inferenceService = _modelDownloader == null
-          ? null
-          : LlamaInferenceService();
+  LocalAiEngine([this._modelDownloader, this._debug, LlamaInferenceService? inferenceService])
+    : _inferenceService = inferenceService ??
+          (_modelDownloader == null ? null : LlamaInferenceService());
 
   final AiModelDownloaderService? _modelDownloader;
   final AiDebugController? _debug;
@@ -89,7 +88,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       contextText = _buildHistoryContext(effectiveHistory);
     }
 
-    final effectivePlan =
+    final initialPlan =
         requestPlan ??
         _plannerService.createPlan(
           prompt: prompt,
@@ -98,6 +97,34 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
               conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
           featureGroup: featureGroup,
         );
+
+    var effectivePlan = initialPlan;
+
+    if (requestPlan == null &&
+        _plannerService.shouldUseModelPlanner(
+          prompt: prompt,
+          hasSelectedClipboard: clipboardContext != null,
+          featureGroup: featureGroup,
+        )) {
+      final rawPlanJson = await _generatePlannerJson(
+        model: model,
+        prompt: prompt,
+        responseLanguage: initialPlan.responseLanguage,
+        contextSize: contextSize ?? model.contextWindow,
+        debugRequestId: debugRequestId,
+      );
+
+      if (rawPlanJson != null && rawPlanJson.trim().isNotEmpty) {
+        effectivePlan = _plannerService.createPlan(
+          prompt: prompt,
+          hasSelectedClipboard: clipboardContext != null,
+          hasConversation:
+              conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
+          featureGroup: featureGroup,
+          rawModelPlanJson: rawPlanJson,
+        );
+      }
+    }
 
     if (effectivePlan.executionPlan?.isMultiStep == true) {
       final stepResults = await _agentOrchestrator.executePlan(
@@ -1505,5 +1532,68 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       return 'Cảm ơn bạn đã gửi thông tin. Bạn có thể gửi thêm cho tôi chi tiết cụ thể hơn để tôi nắm rõ hơn không?';
     }
     return 'Cảm ơn bạn! Tôi đã nhận được thông tin và sẽ phản hồi sớm.';
+  }
+
+  Future<String?> _generatePlannerJson({
+    required AiModelInfo model,
+    required String prompt,
+    required String responseLanguage,
+    int contextSize = 2048,
+    String? debugRequestId,
+  }) async {
+    if (_modelDownloader == null || _inferenceService == null) return null;
+
+    try {
+      final modelFile = await _modelDownloader.getModelFile(model.id);
+      final fileExists = await modelFile.exists();
+      if (!fileExists) return null;
+
+      final systemPrompt = AiPrompts.plannerSystemPrompt(
+        responseLanguage: responseLanguage,
+      );
+
+      _debug?.log(
+        level: AiDebugLevel.info,
+        stage: 'planner-llm',
+        requestId: debugRequestId,
+        message: 'Kích hoạt LLM Planner sinh JSON plan',
+        details: 'systemPrompt:\n$systemPrompt\n\nuserPrompt:\n$prompt',
+      );
+
+      final buffer = StringBuffer();
+      await for (final token in _inferenceService.generate(
+        modelPath: modelFile.path,
+        contextSize: contextSize,
+        systemPrompt: systemPrompt,
+        userPrompt: prompt,
+        temperature: 0.1,
+        maxTokens: 512,
+        thinkingModel: model.isThinkingModel,
+      )) {
+        if (token.content != null) {
+          buffer.write(token.content);
+        }
+      }
+
+      final rawOutput = buffer.toString();
+      _debug?.log(
+        level: AiDebugLevel.info,
+        stage: 'planner-llm',
+        requestId: debugRequestId,
+        message: 'LLM Planner kết thúc sinh plan JSON',
+        details: rawOutput,
+      );
+
+      return _outputValidator.extractJson(rawOutput);
+    } catch (e, st) {
+      _debug?.log(
+        level: AiDebugLevel.error,
+        stage: 'planner-llm',
+        requestId: debugRequestId,
+        message: 'Lỗi khi sinh JSON plan từ LLM Planner: $e',
+        details: '$st',
+      );
+      return null;
+    }
   }
 }

@@ -7,7 +7,12 @@ class AiPlanValidator {
   static const maxAllowedSteps = 4;
   static const supportedTools = <String>{
     'search_clipboard',
+    'get_clipboard_item',
     'extract_urls',
+    'list_collections',
+    'pin_clipboard',
+    'add_to_collection',
+    'delete_clipboard_item',
     'explain_content',
     'summarize_text',
     'translate_text',
