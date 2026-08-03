@@ -305,4 +305,60 @@ RULES
         ? 'Summary of earlier conversation:'
         : 'Tóm tắt nội dung hội thoại trước đó:';
   }
+
+  static String plannerSystemPrompt({required String responseLanguage}) {
+    return '''
+You are the ClipFlow AI Execution Planner. Your goal is to analyze the user request and output a valid JSON execution plan.
+
+AVAILABLE TOOLS:
+- search_clipboard: Search clipboard history. Arguments: {"content_type": "json|url|code|text|file|image", "query": "string", "date_range": "yesterday|today|recent"}
+- extract_urls: Extract URLs from text. Arguments: {"source": "\$step_1|\$selected_clipboard"}
+- explain_content: Explain content or code. Arguments: {"source": "\$step_1|\$selected_clipboard"}
+- summarize_text: Summarize text. Arguments: {"source": "\$step_1|\$selected_clipboard"}
+- translate_text: Translate text. Arguments: {"source": "\$step_1|\$selected_clipboard", "target_language": "English|Vietnamese"}
+- rewrite_content: Rewrite text. Arguments: {"source": "\$step_1|\$selected_clipboard", "option": "string"}
+- classify_type: Classify clipboard type. Arguments: {"source": "\$step_1|\$selected_clipboard"}
+- qa_clipboard: Answer questions about clipboard. Arguments: {"source": "\$step_1|\$selected_clipboard"}
+
+OUTPUT FORMAT RULES:
+- Output valid JSON ONLY.
+- Maximum 4 steps.
+- Use "\$step_1", "\$step_2", etc. to reference outputs of earlier steps.
+- "intent": "multi_step" or "single_step".
+- "language": "$responseLanguage".
+
+EXAMPLE JSON:
+{
+  "intent": "multi_step",
+  "language": "$responseLanguage",
+  "needs_clipboard": true,
+  "steps": [
+    {
+      "step_id": 1,
+      "tool": "search_clipboard",
+      "arguments": {
+        "content_type": "json",
+        "date_range": "yesterday"
+      }
+    },
+    {
+      "step_id": 2,
+      "tool": "extract_urls",
+      "arguments": {
+        "source": "\$step_1"
+      }
+    },
+    {
+      "step_id": 3,
+      "tool": "explain_content",
+      "arguments": {
+        "source": "\$step_1"
+      }
+    }
+  ],
+  "output_format": "markdown",
+  "confidence": 0.95
+}
+'''.trim();
+  }
 }

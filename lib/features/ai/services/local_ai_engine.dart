@@ -10,8 +10,10 @@ import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
+import 'ai_agent_orchestrator.dart';
 import 'ai_clipboard_relevance_ranker.dart';
 import 'ai_model_downloader_service.dart';
+import 'ai_planner_service.dart';
 import 'ai_prompts.dart';
 import 'ai_token_budget_manager.dart';
 import 'llama_inference_service.dart';
@@ -33,6 +35,8 @@ class LocalAiEngine {
   final AiDebugController? _debug;
   final LlamaInferenceService? _inferenceService;
   static const _clipboardRanker = AiClipboardRelevanceRanker();
+  static const _plannerService = AiPlannerService();
+  static const _agentOrchestrator = AiAgentOrchestrator();
 
   /// Process prompt locally and stream tokens back.
   /// Yields pairs of (thinkingChunk, outputChunk).
@@ -79,13 +83,31 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     } else {
       contextText = _buildHistoryContext(effectiveHistory);
     }
+
+    final effectivePlan = requestPlan ??
+        _plannerService.createPlan(
+          prompt: prompt,
+          hasSelectedClipboard: clipboardContext != null,
+          hasConversation: conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
+          featureGroup: featureGroup,
+        );
+
+    if (effectivePlan.executionPlan?.isMultiStep == true) {
+      final stepResults = _agentOrchestrator.executePlan(
+        plan: effectivePlan.executionPlan!,
+        prompt: prompt,
+        contextText: contextText,
+        clipboardHistory: effectiveHistory,
+      );
+      contextText = _agentOrchestrator.synthesizeContext(stepResults, contextText);
+    }
+
     final systemPrompt = _buildSystemPrompt(
       featureGroup,
       selectedOption,
       conversationContext,
-      requestPlan?.intent ?? AiRequestIntent.conversation,
-      requestPlan?.responseLanguage ??
-          (AppTranslations.currentLanguage == 'en' ? 'English' : 'Vietnamese'),
+      effectivePlan.intent,
+      effectivePlan.responseLanguage,
     );
     _debug?.log(
       level: AiDebugLevel.info,

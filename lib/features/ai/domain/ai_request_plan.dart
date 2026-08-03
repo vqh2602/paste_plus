@@ -1,4 +1,5 @@
 import '../../../core/localization/app_translations.dart';
+import 'ai_execution_plan.dart';
 import 'ai_feature_action.dart';
 
 enum AiRequestIntent {
@@ -15,6 +16,7 @@ class AiRequestPlan {
     required this.useSelectedClipboard,
     required this.maxOutputTokens,
     required this.responseLanguage,
+    this.executionPlan,
   });
 
   final AiRequestIntent intent;
@@ -22,6 +24,7 @@ class AiRequestPlan {
   final bool useSelectedClipboard;
   final int maxOutputTokens;
   final String responseLanguage;
+  final AiExecutionPlan? executionPlan;
 }
 
 class AiRequestPlanner {
