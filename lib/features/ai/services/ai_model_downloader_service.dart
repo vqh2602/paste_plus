@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -99,6 +100,20 @@ class AiModelDownloaderService {
       return file.length();
     }
     return 0;
+  }
+
+  /// Verifies SHA-256 checksum of downloaded model file.
+  Future<bool> verifyModelChecksum(File file, String? expectedSha256) async {
+    if (expectedSha256 == null || expectedSha256.isEmpty) {
+      return true;
+    }
+    if (!await file.exists()) return false;
+    try {
+      final digest = await sha256.bind(file.openRead()).first;
+      return digest.toString().toLowerCase() == expectedSha256.toLowerCase();
+    } catch (_) {
+      return false;
+    }
   }
 
   Stream<ModelDownloadProgress> downloadModel(AiModelInfo model) {

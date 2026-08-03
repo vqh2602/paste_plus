@@ -11,6 +11,9 @@ class AiModelInfo {
     required this.fileSizeMb,
     required this.downloadUrl,
     required String recommendedFor,
+    this.sha256,
+    this.quantization = 'Q4_0',
+    this.license = 'Gemma / Apache 2.0',
     this.isThinkingModel = true,
     this.isMultimodal = false,
     this.mmprojUrl,
@@ -25,6 +28,9 @@ class AiModelInfo {
   final int fileSizeMb;
   final String downloadUrl;
   final String _rawRecommendedFor;
+  final String? sha256;
+  final String quantization;
+  final String license;
   final bool isThinkingModel;
   final bool isMultimodal;
   final String? mmprojUrl;

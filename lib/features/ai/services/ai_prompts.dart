@@ -361,4 +361,17 @@ EXAMPLE JSON:
 }
 '''.trim();
   }
+
+  /// Securely wraps untrusted clipboard context using a dynamic random per-request nonce delimiter.
+  static String wrapUntrustedClipboard(String contextText, [String? nonce]) {
+    final effectiveNonce = nonce ?? DateTime.now().microsecondsSinceEpoch.toRadixString(36);
+    final beginTag = 'BEGIN_CLIPBOARD_$effectiveNonce';
+    final endTag = 'END_CLIPBOARD_$effectiveNonce';
+
+    final safeText = contextText
+        .replaceAll(beginTag, '[REMOVED_DELIMITER]')
+        .replaceAll(endTag, '[REMOVED_DELIMITER]');
+
+    return '\n$beginTag\n$safeText\n$endTag\n';
+  }
 }
