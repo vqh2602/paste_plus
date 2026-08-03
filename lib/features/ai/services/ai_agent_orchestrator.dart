@@ -24,13 +24,14 @@ class AiAgentOrchestrator {
   const AiAgentOrchestrator([
     dynamic repositoryOrRegistry,
     AiToolRegistry? customRegistry,
-  ])  : _repository = repositoryOrRegistry is ClipboardRepository
-            ? repositoryOrRegistry
-            : null,
-        _customRegistry = customRegistry ??
-            (repositoryOrRegistry is AiToolRegistry
-                ? repositoryOrRegistry
-                : null);
+  ]) : _repository = repositoryOrRegistry is ClipboardRepository
+           ? repositoryOrRegistry
+           : null,
+       _customRegistry =
+           customRegistry ??
+           (repositoryOrRegistry is AiToolRegistry
+               ? repositoryOrRegistry
+               : null);
 
   final ClipboardRepository? _repository;
   final AiToolRegistry? _customRegistry;
@@ -42,9 +43,10 @@ class AiAgentOrchestrator {
     required String contextText,
     required List<ClipboardItem> clipboardHistory,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
-        onConfirmationRequested,
+    onConfirmationRequested,
   }) async {
-    final registry = _customRegistry ?? _buildDefaultRegistry(clipboardHistory, _repository);
+    final registry =
+        _customRegistry ?? _buildDefaultRegistry(clipboardHistory, _repository);
     final agentLoop = AiAgentLoop(
       maxSteps: plan.steps.isNotEmpty ? plan.steps.length : 4,
       toolRegistry: registry,
@@ -78,12 +80,14 @@ class AiAgentOrchestrator {
   String synthesizeContext(List<AiStepResult> results, String defaultContext) {
     if (results.isEmpty) return defaultContext;
     if (results.length == 1 && results.first.items.isEmpty) {
-      return results.first.output.isNotEmpty ? results.first.output : defaultContext;
+      return results.first.output.isNotEmpty
+          ? results.first.output
+          : defaultContext;
     }
 
     final buffer = StringBuffer();
     for (final result in results) {
-      buffer.writeln('[Bước ${result.stepId} - Công cụ ${result.tool}]');
+      buffer.writeln('[step:${result.stepId} tool:${result.tool}]');
       buffer.writeln(result.output.trim());
       buffer.writeln();
     }

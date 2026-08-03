@@ -1,61 +1,70 @@
 import 'package:clipflow/features/ai/services/ai_planner_service.dart';
+import 'package:clipflow/features/ai/services/ai_prompts.dart';
+import 'package:clipflow/features/ai/services/structured_output_validator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   const service = AiPlannerService();
 
   group('AiPlannerService - Model Planner Trigger', () {
-    test('shouldUseModelPlanner returns false for simple single-action prompts', () {
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'dịch đoạn này sang tiếng Anh',
-          hasSelectedClipboard: true,
-        ),
-        isFalse,
-      );
+    test(
+      'shouldUseModelPlanner delegates every non-feature request to the model',
+      () {
+        expect(
+          service.shouldUseModelPlanner(
+            prompt: 'dịch đoạn này sang tiếng Anh',
+            hasSelectedClipboard: true,
+          ),
+          isTrue,
+        );
 
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'tóm tắt văn bản',
-          hasSelectedClipboard: true,
-        ),
-        isFalse,
-      );
+        expect(
+          service.shouldUseModelPlanner(
+            prompt: 'tóm tắt văn bản',
+            hasSelectedClipboard: true,
+          ),
+          isTrue,
+        );
 
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'sửa lỗi chính tả',
-          hasSelectedClipboard: true,
-        ),
-        isFalse,
-      );
-    });
+        expect(
+          service.shouldUseModelPlanner(
+            prompt: 'sửa lỗi chính tả',
+            hasSelectedClipboard: true,
+          ),
+          isTrue,
+        );
+      },
+    );
 
-    test('shouldUseModelPlanner returns true for complex multi-step or reference prompts', () {
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'Tìm đoạn JSON tôi copy hôm qua, lấy URL rồi giải thích API',
-          hasSelectedClipboard: false,
-        ),
-        isTrue,
-      );
+    test(
+      'shouldUseModelPlanner returns true for complex multi-step or reference prompts',
+      () {
+        expect(
+          service.shouldUseModelPlanner(
+            prompt:
+                'Tìm đoạn JSON tôi copy hôm qua, lấy URL rồi giải thích API',
+            hasSelectedClipboard: false,
+          ),
+          isTrue,
+        );
 
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'Lấy link từ đoạn code vừa tìm rồi ghim vào bộ sưu tập',
-          hasSelectedClipboard: false,
-        ),
-        isTrue,
-      );
+        expect(
+          service.shouldUseModelPlanner(
+            prompt: 'Lấy link từ đoạn code vừa tìm rồi ghim vào bộ sưu tập',
+            hasSelectedClipboard: false,
+          ),
+          isTrue,
+        );
 
-      expect(
-        service.shouldUseModelPlanner(
-          prompt: 'giải thích kĩ hơn kết quả vừa rồi',
-          hasSelectedClipboard: false,
-        ),
-        isTrue,
-      );
-    });
+        expect(
+          service.shouldUseModelPlanner(
+            prompt: 'giải thích kĩ hơn kết quả vừa rồi',
+            hasSelectedClipboard: false,
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('createPlan parses valid rawModelPlanJson into executionPlan', () {
       const validJson = '''
@@ -113,9 +122,52 @@ void main() {
         rawModelPlanJson: invalidJson,
       );
 
-      expect(requestPlan.executionPlan, isNotNull);
-      expect(requestPlan.executionPlan!.steps.length, 1);
-      expect(requestPlan.executionPlan!.steps.first.tool, isNot('unsupported_malicious_tool'));
+      expect(requestPlan.executionPlan, isNull);
     });
+
+    test(
+      'planner prompt advertises only executable tools and collection_id',
+      () {
+        final prompt = AiPrompts.plannerSystemPrompt(
+          responseLanguageTag: 'vi-VN',
+        );
+
+        for (final tool in const [
+          'search_clipboard',
+          'get_clipboard_item',
+          'extract_urls',
+          'list_collections',
+          'pin_clipboard',
+          'add_to_collection',
+          'delete_clipboard_item',
+        ]) {
+          expect(prompt, contains('- $tool:'));
+        }
+        expect(prompt, isNot(contains('- explain_content:')));
+        expect(prompt, isNot(contains('- summarize_text:')));
+        expect(prompt, contains('"collection_id": "string"'));
+        expect(prompt, isNot(contains('"collection_name": "string"')));
+      },
+    );
+
+    test(
+      'execution plan grammar models parser fields and generic arguments',
+      () {
+        const grammar = StructuredOutputValidator.executionPlanGrammar;
+
+        expect(grammar, contains(r'\"language\"'));
+        expect(grammar, contains(r'\"needs_clipboard\"'));
+        expect(grammar, contains(r'\"arguments\"'));
+        expect(grammar, contains(r'\"output_format\"'));
+        expect(grammar, contains(r'\"confidence\"'));
+        expect(
+          grammar,
+          contains(
+            'Value ::= String | Number | Object | Array | Boolean | Null',
+          ),
+        );
+        expect(grammar, isNot(contains(r'\"query\"')));
+      },
+    );
   });
 }

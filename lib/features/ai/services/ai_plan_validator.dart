@@ -52,7 +52,7 @@ class AiPlanValidator {
   AiExecutionPlan validateOrFallback(
     AiExecutionPlan? plan, {
     required String defaultTool,
-    required String defaultLanguage,
+    required String defaultLanguageTag,
     Map<String, dynamic> defaultArguments = const {},
   }) {
     if (plan != null && isValid(plan)) {
@@ -60,7 +60,7 @@ class AiPlanValidator {
     }
     return AiExecutionPlan.singleStepFallback(
       tool: defaultTool,
-      language: defaultLanguage,
+      language: defaultLanguageTag,
       arguments: defaultArguments,
     );
   }

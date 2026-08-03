@@ -63,7 +63,8 @@ void main() {
     test('executes multi-step search, extract, and explain pipeline', () async {
       final jsonItem = mockItem(
         id: 'json_clip',
-        content: '{"api": "https://api.example.com/v1/user", "status": "active"}',
+        content:
+            '{"api": "https://api.example.com/v1/user", "status": "active"}',
         type: ClipboardContentType.json,
       );
 
@@ -107,53 +108,54 @@ void main() {
       expect(results[2].tool, 'explain_content');
       expect(results[2].output, contains('https://api.example.com/v1/user'));
 
-      final synthesized = orchestrator.synthesizeContext(results, jsonItem.content);
-      expect(synthesized, contains('Bước 1'));
-      expect(synthesized, contains('Bước 2'));
-      expect(synthesized, contains('Bước 3'));
+      final synthesized = orchestrator.synthesizeContext(
+        results,
+        jsonItem.content,
+      );
+      expect(synthesized, contains('step:1'));
+      expect(synthesized, contains('step:2'));
+      expect(synthesized, contains('step:3'));
     });
 
-    test('awaits real tool execution and passes observation output to subsequent steps', () async {
-      final fakeRegistry = AiToolRegistry();
-      final fakeTool1 = FakeTool('fake_tool_1', 'OUTPUT_FROM_REAL_TOOL');
-      final fakeTool2 = FakeTool('fake_tool_2', 'FINAL_STEP_OUTPUT');
-      fakeRegistry.register(fakeTool1);
-      fakeRegistry.register(fakeTool2);
+    test(
+      'awaits real tool execution and passes observation output to subsequent steps',
+      () async {
+        final fakeRegistry = AiToolRegistry();
+        final fakeTool1 = FakeTool('fake_tool_1', 'OUTPUT_FROM_REAL_TOOL');
+        final fakeTool2 = FakeTool('fake_tool_2', 'FINAL_STEP_OUTPUT');
+        fakeRegistry.register(fakeTool1);
+        fakeRegistry.register(fakeTool2);
 
-      final customOrchestrator = AiAgentOrchestrator(fakeRegistry);
+        final customOrchestrator = AiAgentOrchestrator(fakeRegistry);
 
-      final plan = const AiExecutionPlan(
-        intent: 'multi_step',
-        language: 'Vietnamese',
-        needsClipboard: true,
-        steps: [
-          AiExecutionStep(
-            stepId: 1,
-            tool: 'fake_tool_1',
-            arguments: {},
-          ),
-          AiExecutionStep(
-            stepId: 2,
-            tool: 'fake_tool_2',
-            arguments: {'source': r'$step_1'},
-          ),
-        ],
-      );
+        final plan = const AiExecutionPlan(
+          intent: 'multi_step',
+          language: 'Vietnamese',
+          needsClipboard: true,
+          steps: [
+            AiExecutionStep(stepId: 1, tool: 'fake_tool_1', arguments: {}),
+            AiExecutionStep(
+              stepId: 2,
+              tool: 'fake_tool_2',
+              arguments: {'source': r'$step_1'},
+            ),
+          ],
+        );
 
-      final results = await customOrchestrator.executePlan(
-        plan: plan,
-        prompt: 'test prompt',
-        contextText: 'UNRELATED_INITIAL_CONTEXT',
-        clipboardHistory: const [],
-      );
+        final results = await customOrchestrator.executePlan(
+          plan: plan,
+          prompt: 'test prompt',
+          contextText: 'UNRELATED_INITIAL_CONTEXT',
+          clipboardHistory: const [],
+        );
 
-      expect(fakeTool1.executionCount, 1);
-      expect(results[0].output, equals('OUTPUT_FROM_REAL_TOOL'));
+        expect(fakeTool1.executionCount, 1);
+        expect(results[0].output, equals('OUTPUT_FROM_REAL_TOOL'));
 
-      expect(fakeTool2.executionCount, 1);
-      expect(fakeTool2.lastReceivedText, equals('OUTPUT_FROM_REAL_TOOL'));
-      expect(results[1].output, equals('FINAL_STEP_OUTPUT'));
-    });
+        expect(fakeTool2.executionCount, 1);
+        expect(fakeTool2.lastReceivedText, equals('OUTPUT_FROM_REAL_TOOL'));
+        expect(results[1].output, equals('FINAL_STEP_OUTPUT'));
+      },
+    );
   });
 }
-

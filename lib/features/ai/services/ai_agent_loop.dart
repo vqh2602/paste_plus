@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_execution_plan.dart';
@@ -13,17 +15,17 @@ class AiAgentDecision {
     this.arguments = const {},
   });
 
-  factory AiAgentDecision.finalAnswer(String answer) => AiAgentDecision(
-        isFinalAnswer: true,
-        answer: answer,
-      );
+  factory AiAgentDecision.finalAnswer(String answer) =>
+      AiAgentDecision(isFinalAnswer: true, answer: answer);
 
-  factory AiAgentDecision.callTool(String toolName, Map<String, dynamic> arguments) =>
-      AiAgentDecision(
-        isFinalAnswer: false,
-        toolName: toolName,
-        arguments: arguments,
-      );
+  factory AiAgentDecision.callTool(
+    String toolName,
+    Map<String, dynamic> arguments,
+  ) => AiAgentDecision(
+    isFinalAnswer: false,
+    toolName: toolName,
+    arguments: arguments,
+  );
 
   final bool isFinalAnswer;
   final String? answer;
@@ -44,7 +46,13 @@ class AiAgentState {
   void addStepResult(AiStepResult result) {
     stepResults.add(result);
     stepResultMap[result.stepId] = result;
-    observations.add('[Bước ${result.stepId} - Công cụ: ${result.tool}]\n${result.output}');
+    observations.add(
+      jsonEncode({
+        'step_id': result.stepId,
+        'tool': result.tool,
+        'output': result.output,
+      }),
+    );
   }
 
   String buildContextSummary() {
@@ -54,10 +62,7 @@ class AiAgentState {
 
 /// Runs the multi-step agent loop with tool execution and confirmation handling.
 class AiAgentLoop {
-  const AiAgentLoop({
-    this.maxSteps = 4,
-    required this.toolRegistry,
-  });
+  const AiAgentLoop({this.maxSteps = 4, required this.toolRegistry});
 
   final int maxSteps;
   final AiToolRegistry toolRegistry;
@@ -69,7 +74,7 @@ class AiAgentLoop {
     required String contextText,
     required List<ClipboardItem> clipboardHistory,
     Future<bool> Function(String toolName, Map<String, dynamic> args)?
-        onConfirmationRequested,
+    onConfirmationRequested,
   }) async {
     final state = AiAgentState();
 
@@ -126,8 +131,10 @@ class AiAgentLoop {
   /// Runs a dynamic decision agent loop.
   Future<String> run({
     required String prompt,
-    required Future<AiAgentDecision> Function(AiAgentState state, int step) nextDecision,
-    Future<bool> Function(String toolName, Map<String, dynamic> args)? onConfirmationRequested,
+    required Future<AiAgentDecision> Function(AiAgentState state, int step)
+    nextDecision,
+    Future<bool> Function(String toolName, Map<String, dynamic> args)?
+    onConfirmationRequested,
   }) async {
     final state = AiAgentState();
 
@@ -135,7 +142,7 @@ class AiAgentLoop {
       final decision = await nextDecision(state, step);
 
       if (decision.isFinalAnswer) {
-        return decision.answer ?? 'Đã hoàn thành xử lý.';
+        return decision.answer ?? jsonEncode({'code': 'completed'});
       }
 
       if (decision.toolName != null && decision.toolName!.isNotEmpty) {
@@ -146,14 +153,18 @@ class AiAgentLoop {
         );
 
         state.addObservation(
-          '[Bước ${step + 1} - Công cụ: ${decision.toolName}]\n${result.output}',
+          jsonEncode({
+            'step_id': step + 1,
+            'tool': decision.toolName,
+            'output': result.output,
+          }),
         );
       }
     }
 
     return state.observations.isNotEmpty
         ? state.observations.join('\n\n')
-        : 'Đã hoàn thành các bước xử lý.';
+        : jsonEncode({'code': 'completed'});
   }
 
   String _resolveSource({
@@ -180,15 +191,31 @@ class AiAgentLoop {
   }) {
     switch (step.tool) {
       case 'search_clipboard':
-        final contentTypeArg = (step.arguments['content_type'] ?? '').toString().toLowerCase();
-        final dateRangeArg = (step.arguments['date_range'] ?? '').toString().toLowerCase();
+        final contentTypeArg = (step.arguments['content_type'] ?? '')
+            .toString()
+            .toLowerCase();
+        final dateRangeArg = (step.arguments['date_range'] ?? '')
+            .toString()
+            .toLowerCase();
 
         final matches = clipboardHistory.where((item) {
           if (contentTypeArg.isNotEmpty) {
-            if (contentTypeArg == 'json' && item.contentType != ClipboardContentType.json) return false;
-            if (contentTypeArg == 'url' && item.contentType != ClipboardContentType.url) return false;
-            if (contentTypeArg == 'code' && item.contentType != ClipboardContentType.code) return false;
-            if (contentTypeArg == 'image' && item.contentType != ClipboardContentType.image) return false;
+            if (contentTypeArg == 'json' &&
+                item.contentType != ClipboardContentType.json) {
+              return false;
+            }
+            if (contentTypeArg == 'url' &&
+                item.contentType != ClipboardContentType.url) {
+              return false;
+            }
+            if (contentTypeArg == 'code' &&
+                item.contentType != ClipboardContentType.code) {
+              return false;
+            }
+            if (contentTypeArg == 'image' &&
+                item.contentType != ClipboardContentType.image) {
+              return false;
+            }
           }
           if (dateRangeArg == 'yesterday') {
             final now = DateTime.now();
@@ -199,21 +226,39 @@ class AiAgentLoop {
         }).toList();
 
         final targetItems = matches.isNotEmpty ? matches : clipboardHistory;
-        final formattedItems = targetItems.take(5).map((item) => '[clip:${item.id}] (${item.contentType.name}): ${item.content}').join('\n---\n');
+        final formattedItems = targetItems
+            .take(5)
+            .map(
+              (item) =>
+                  '[clip:${item.id}] (${item.contentType.name}): ${item.content}',
+            )
+            .join('\n---\n');
 
         return AiStepResult(
           stepId: step.stepId,
           tool: step.tool,
-          output: 'Đã tìm thấy ${targetItems.length} mục clipboard khớp:\n$formattedItems',
+          output: jsonEncode({
+            'code': 'success',
+            'count': targetItems.length,
+            'items': formattedItems,
+          }),
           items: targetItems,
         );
 
       case 'extract_urls':
-        final urlRegex = RegExp(r'https?://[^\s<>"]+|www\.[^\s<>"]+', caseSensitive: false);
-        final matches = urlRegex.allMatches(sourceText).map((m) => m.group(0)!).toList();
-        final outputText = matches.isNotEmpty
-            ? 'Đã trích xuất ${matches.length} URL:\n${matches.join('\n')}'
-            : 'Không tìm thấy URL nào trong nguồn dữ liệu.';
+        final urlRegex = RegExp(
+          r'https?://[^\s<>"]+|www\.[^\s<>"]+',
+          caseSensitive: false,
+        );
+        final matches = urlRegex
+            .allMatches(sourceText)
+            .map((m) => m.group(0)!)
+            .toList();
+        final outputText = jsonEncode({
+          'code': matches.isNotEmpty ? 'success' : 'not_found',
+          'count': matches.length,
+          'urls': matches,
+        });
         return AiStepResult(
           stepId: step.stepId,
           tool: step.tool,
@@ -226,7 +271,11 @@ class AiAgentLoop {
         return AiStepResult(
           stepId: step.stepId,
           tool: step.tool,
-          output: 'Nội dung phân tích/giải thích:\n$sourceText',
+          output: jsonEncode({
+            'code': 'unsupported_tool',
+            'tool': step.tool,
+            'source': sourceText,
+          }),
         );
     }
   }

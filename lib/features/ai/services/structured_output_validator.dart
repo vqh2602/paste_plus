@@ -14,10 +14,10 @@ class ClipboardSearchMatch {
   String value;
 
   Map<String, dynamic> toJson() => {
-        'clip_id': clipId,
-        'value': value,
-        'reason': reason,
-      };
+    'clip_id': clipId,
+    'value': value,
+    'reason': reason,
+  };
 }
 
 class ClipboardSearchResponse {
@@ -30,19 +30,35 @@ class ClipboardSearchResponse {
     if (matchesRaw is List) {
       for (final item in matchesRaw) {
         if (item is Map<String, dynamic>) {
-          final clipId = (item['clip_id'] ?? item['clipId'] ?? '').toString().trim();
+          final clipId = (item['clip_id'] ?? item['clipId'] ?? '')
+              .toString()
+              .trim();
           final reason = (item['reason'] ?? '').toString().trim();
           final value = (item['value'] ?? '').toString();
           if (clipId.isNotEmpty) {
-            matches.add(ClipboardSearchMatch(clipId: clipId, reason: reason, value: value));
+            matches.add(
+              ClipboardSearchMatch(
+                clipId: clipId,
+                reason: reason,
+                value: value,
+              ),
+            );
           }
         } else if (item is Map) {
           final map = Map<String, dynamic>.from(item);
-          final clipId = (map['clip_id'] ?? map['clipId'] ?? '').toString().trim();
+          final clipId = (map['clip_id'] ?? map['clipId'] ?? '')
+              .toString()
+              .trim();
           final reason = (map['reason'] ?? '').toString().trim();
           final value = (map['value'] ?? '').toString();
           if (clipId.isNotEmpty) {
-            matches.add(ClipboardSearchMatch(clipId: clipId, reason: reason, value: value));
+            matches.add(
+              ClipboardSearchMatch(
+                clipId: clipId,
+                reason: reason,
+                value: value,
+              ),
+            );
           }
         }
       }
@@ -54,8 +70,8 @@ class ClipboardSearchResponse {
   final List<ClipboardSearchMatch> matches;
 
   Map<String, dynamic> toJson() => {
-        'matches': matches.map((m) => m.toJson()).toList(),
-      };
+    'matches': matches.map((m) => m.toJson()).toList(),
+  };
 }
 
 /// 3-Layer Validation Service: JSON extraction -> Schema Validation -> DB Ground-Truth Verifier.
@@ -74,10 +90,17 @@ ws ::= [ \\t\\n\\r]*
   /// GBNF JSON Schema grammar enforcing strict execution plan JSON syntax.
   static const executionPlanGrammar = '''
 root ::= ExecutionPlan
-ExecutionPlan ::= "{" ws "\\"intent\\":" ws String ws "," ws "\\"steps\\":" ws "[" ws (Step ("," ws Step)*)? ws "]" ws "}"
-Step ::= "{" ws "\\"step_id\\":" ws Number ws "," ws "\\"tool\\":" ws String ws "," ws "\\"query\\":" ws String ws "}"
+ExecutionPlan ::= "{" ws "\\"intent\\":" ws String ws "," ws "\\"language\\":" ws String ws "," ws "\\"needs_clipboard\\":" ws Boolean ws "," ws "\\"steps\\":" ws "[" ws (Step ("," ws Step)*)? ws "]" ws "," ws "\\"output_format\\":" ws String ws "," ws "\\"confidence\\":" ws Number ws "}"
+Step ::= "{" ws "\\"step_id\\":" ws Integer ws "," ws "\\"tool\\":" ws String ws "," ws "\\"arguments\\":" ws Object ws "}"
+Object ::= "{" ws (Member ("," ws Member)*)? ws "}"
+Member ::= String ws ":" ws Value
+Array ::= "[" ws (Value ("," ws Value)*)? ws "]"
+Value ::= String | Number | Object | Array | Boolean | Null
 String ::= "\\"" ([^"\\\\\\x00-\\x1F] | "\\\\" (["\\\\/bfnrt] | "u" [0-9a-fA-F]{4}))* "\\""
-Number ::= [0-9]+
+Integer ::= [0-9]+
+Number ::= "-"? ("0" | [1-9] [0-9]*) ("." [0-9]+)? ([eE] [+-]? [0-9]+)?
+Boolean ::= "true" | "false"
+Null ::= "null"
 ws ::= [ \\t\\n\\r]*
 ''';
 
@@ -108,7 +131,9 @@ ws ::= [ \\t\\n\\r]*
       final parsed = jsonDecode(jsonStr);
       decoded = parsed is Map<String, dynamic>
           ? parsed
-          : (parsed is Map ? Map<String, dynamic>.from(parsed) : {'matches': []});
+          : (parsed is Map
+                ? Map<String, dynamic>.from(parsed)
+                : {'matches': []});
     } on Object {
       decoded = {'matches': []};
     }

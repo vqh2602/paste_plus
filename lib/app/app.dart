@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
 
 import '../core/localization/app_translations.dart';
 import '../core/platform/desktop_integration_service.dart';
@@ -120,6 +121,9 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
       accentKey: settings.accentColor,
     );
     return CupertinoApp.router(
+      locale: Locale(settings.language),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       title: 'ClipFlow',
       debugShowCheckedModeBanner: false,
       theme: theme,

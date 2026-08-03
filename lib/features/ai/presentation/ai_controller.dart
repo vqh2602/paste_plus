@@ -354,7 +354,9 @@ class AiController extends StateNotifier<AiState> {
       state.chatMessages,
     );
     final conversationContext = availableConversationContext;
-    final conversationMessages = _recentConversationMessages(state.chatMessages);
+    final conversationMessages = _recentConversationMessages(
+      state.chatMessages,
+    );
     var activeContext = selectedContext;
 
     final targetContext = activeContext;
@@ -366,10 +368,8 @@ class AiController extends StateNotifier<AiState> {
       String? extractedText;
       if (!hasOcrText && targetContext.imagePath != null) {
         try {
-          final historyNotifier =
-              _ref.read(historyControllerProvider.notifier);
-          final extracted =
-              await historyNotifier.performOcr(targetContext);
+          final historyNotifier = _ref.read(historyControllerProvider.notifier);
+          final extracted = await historyNotifier.performOcr(targetContext);
           if (extracted != null && extracted.trim().isNotEmpty) {
             extractedText = extracted.trim();
           }
@@ -380,15 +380,23 @@ class AiController extends StateNotifier<AiState> {
         extractedText = ocrTextInContent;
       }
 
-      final fileName = targetContext.imagePath?.split(Platform.pathSeparator).last ?? 'image.png';
+      final fileName =
+          targetContext.imagePath?.split(Platform.pathSeparator).last ??
+          'image.png';
       final sourceApp = targetContext.sourceAppName ?? 'Unknown App';
       final imageInfoBuffer = StringBuffer()
-        ..writeln('(Tệp hình ảnh được chọn làm ngữ cảnh: "$fileName", Ứng dụng nguồn: "$sourceApp")');
+        ..writeln(
+          '(Tệp hình ảnh được chọn làm ngữ cảnh: "$fileName", Ứng dụng nguồn: "$sourceApp")',
+        );
 
       if (extractedText != null && extractedText.isNotEmpty) {
-        imageInfoBuffer.writeln('\nVăn bản nhận diện được từ OCR trong hình ảnh:\n"$extractedText"');
+        imageInfoBuffer.writeln(
+          '\nVăn bản nhận diện được từ OCR trong hình ảnh:\n"$extractedText"',
+        );
       } else {
-        imageInfoBuffer.writeln('\n[Lưu ý: Hình ảnh này không chứa văn bản (OCR không tìm thấy chữ). Đây là một hình ảnh đồ họa/ảnh chụp/minh họa.]');
+        imageInfoBuffer.writeln(
+          '\n[Lưu ý: Hình ảnh này không chứa văn bản (OCR không tìm thấy chữ). Đây là một hình ảnh đồ họa/ảnh chụp/minh họa.]',
+        );
       }
 
       activeContext = targetContext.copyWith(
@@ -470,6 +478,7 @@ class AiController extends StateNotifier<AiState> {
       conversationContext: conversationContext,
       requestPlan: null,
       conversationMessages: conversationMessages,
+      appLanguageTag: _ref.read(settingsControllerProvider).language,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,

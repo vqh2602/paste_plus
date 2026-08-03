@@ -1,0 +1,6 @@
+{
+  "@@locale": "en",
+  "aiTitle": "AI Assistant",
+  "aiThinking": "Thinking…",
+  "aiModelNotReady": "The AI model is not ready."
+}

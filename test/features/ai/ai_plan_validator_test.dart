@@ -119,7 +119,7 @@ void main() {
       final validated = validator.validateOrFallback(
         invalidPlan,
         defaultTool: 'search_clipboard',
-        defaultLanguage: 'Vietnamese',
+        defaultLanguageTag: 'vi-VN',
       );
 
       expect(validated.steps.length, 1);

@@ -17,43 +17,21 @@ class AiClipboardRelevanceRanker {
     required String prompt,
     required Iterable<ClipboardItem> items,
     Map<String, double> semanticScores = const {},
+    bool preferImageUrls = false,
   }) {
     final normalizedPrompt = _normalize(prompt);
-    final queryTerms = _terms(
-      normalizedPrompt,
-    ).where((term) => !_stopWords.contains(term));
+    final queryTerms = _terms(normalizedPrompt);
     final uniqueTerms = queryTerms.toSet();
-    final asksForLink = _containsAny(normalizedPrompt, const {
-      'link',
-      'url',
-      'đường dẫn',
-      'duong dan',
-      'liên kết',
-      'lien ket',
-      'hyperlink',
-      'http',
-      'https',
-    });
-    final asksForImage = _containsAny(normalizedPrompt, const {
-      'ảnh',
-      'anh',
-      'image',
-      'photo',
-      'picture',
-      'hình',
-      'hinh',
-      'png',
-      'jpg',
-      'jpeg',
-      'gif',
-      'webp',
-      'svg',
-      'heic',
-      'avif',
-    });
+    final asksForLink =
+        preferImageUrls ||
+        RegExp(
+          r'https?://|www\.',
+          caseSensitive: false,
+        ).hasMatch(normalizedPrompt);
     final requestedExtensions = _imageExtensions
         .where((extension) => normalizedPrompt.contains(extension.substring(1)))
         .toSet();
+    final asksForImage = preferImageUrls || requestedExtensions.isNotEmpty;
 
     final ranked = <({ClipboardItem item, double score, int order})>[];
     var order = 0;
@@ -69,8 +47,10 @@ class AiClipboardRelevanceRanker {
       }
 
       final isUrlType = item.contentType == ClipboardContentType.url;
-      final containsHttpUrl =
-          RegExp(r'https?://', caseSensitive: false).hasMatch(content);
+      final containsHttpUrl = RegExp(
+        r'https?://',
+        caseSensitive: false,
+      ).hasMatch(content);
       // final looksLikeUrl = isUrlType || containsHttpUrl;
       final imageLink = isImageUrl(content);
 
@@ -104,13 +84,6 @@ class AiClipboardRelevanceRanker {
         }
       }
 
-      final isLogMetadata = normalizedContent.contains('mục clipboard') ||
-          normalizedContent.contains('clipbroad') ||
-          normalizedContent.contains('phân tích nội dung clipboard');
-      if (isLogMetadata) {
-        lexicalScore -= 15.0;
-      }
-
       final semanticScore = semanticScores[item.id] ?? 0;
       final pinnedBoost = item.isPinned ? 0.8 : 0.0;
       final age = DateTime.now().difference(item.lastCopiedAt);
@@ -133,14 +106,16 @@ class AiClipboardRelevanceRanker {
 
   bool isImageUrl(String content) {
     final lower = content.toLowerCase().trim();
-    final looksLikeUrl =
-        RegExp(r'https?://', caseSensitive: false).hasMatch(lower);
+    final looksLikeUrl = RegExp(
+      r'https?://',
+      caseSensitive: false,
+    ).hasMatch(lower);
     if (!looksLikeUrl) return false;
 
-    final hasImageExt =
-        _imageExtensions.any((ext) => lower.contains(ext));
-    final hasImageDomain =
-        _imageHostDomains.any((domain) => lower.contains(domain));
+    final hasImageExt = _imageExtensions.any((ext) => lower.contains(ext));
+    final hasImageDomain = _imageHostDomains.any(
+      (domain) => lower.contains(domain),
+    );
     return hasImageExt || hasImageDomain;
   }
 
@@ -150,9 +125,6 @@ class AiClipboardRelevanceRanker {
   Iterable<String> _terms(String value) => value
       .split(RegExp(r'[^\p{L}\p{N}.]+', unicode: true))
       .where((term) => term.length > 1);
-
-  bool _containsAny(String value, Set<String> terms) =>
-      terms.any(value.contains);
 
   static const _imageExtensions = {
     '.png',
@@ -173,31 +145,5 @@ class AiClipboardRelevanceRanker {
     'cloudinary.com',
     'unsplash.com',
     'postimg.cc',
-  };
-
-  static const _stopWords = {
-    'tìm',
-    'tim',
-    'cho',
-    'tôi',
-    'toi',
-    'các',
-    'cac',
-    'bản',
-    'ban',
-    'ghi',
-    'về',
-    've',
-    'trong',
-    'clipboard',
-    'hãy',
-    'hay',
-    'find',
-    'search',
-    'for',
-    'the',
-    'records',
-    'items',
-    'please',
   };
 }

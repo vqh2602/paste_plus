@@ -1,6 +1,6 @@
-import '../../../core/localization/app_translations.dart';
 import 'ai_execution_plan.dart';
 import 'ai_feature_action.dart';
+import '../localization/ai_locale_spec.dart';
 
 enum AiRequestIntent {
   conversation,
@@ -15,7 +15,7 @@ class AiRequestPlan {
     required this.useClipboardHistory,
     required this.useSelectedClipboard,
     required this.maxOutputTokens,
-    required this.responseLanguage,
+    required this.responseLanguageTag,
     this.executionPlan,
   });
 
@@ -23,7 +23,10 @@ class AiRequestPlan {
   final bool useClipboardHistory;
   final bool useSelectedClipboard;
   final int maxOutputTokens;
-  final String responseLanguage;
+  final String responseLanguageTag;
+
+  @Deprecated('Use responseLanguageTag.')
+  String get responseLanguage => responseLanguageTag;
   final AiExecutionPlan? executionPlan;
 }
 
@@ -35,6 +38,7 @@ class AiRequestPlanner {
     required bool hasSelectedClipboard,
     required bool hasConversation,
     AiFeatureGroup? featureGroup,
+    String appLanguageTag = 'vi-VN',
   }) {
     final normalized = prompt.toLowerCase().trim();
     final words = normalized
@@ -43,7 +47,9 @@ class AiRequestPlanner {
         .where((word) => word.isNotEmpty)
         .toSet();
     final referencesClipboard = words.any(_clipboardTerms.contains);
-    final responseLanguage = _detectLanguage(normalized, words);
+    final responseLanguageTag =
+        _detectLanguageTag(normalized) ??
+        AiLanguageRegistry.normalizeTag(appLanguageTag);
     final asksToFind = words.any(_searchTerms.contains);
     final asksToTransform = words.any(_actionTerms.contains);
     final referencesCurrentContent = words.any(_referenceTerms.contains);
@@ -61,7 +67,7 @@ class AiRequestPlanner {
         useClipboardHistory: searchesHistory,
         useSelectedClipboard: hasSelectedClipboard,
         maxOutputTokens: 1536,
-        responseLanguage: responseLanguage,
+        responseLanguageTag: responseLanguageTag,
       );
     }
 
@@ -71,7 +77,7 @@ class AiRequestPlanner {
         useClipboardHistory: true,
         useSelectedClipboard: false,
         maxOutputTokens: 1536,
-        responseLanguage: responseLanguage,
+        responseLanguageTag: responseLanguageTag,
       );
     }
 
@@ -81,7 +87,7 @@ class AiRequestPlanner {
         useClipboardHistory: false,
         useSelectedClipboard: true,
         maxOutputTokens: 1200,
-        responseLanguage: responseLanguage,
+        responseLanguageTag: responseLanguageTag,
       );
     }
 
@@ -91,7 +97,7 @@ class AiRequestPlanner {
         useClipboardHistory: false,
         useSelectedClipboard: false,
         maxOutputTokens: 900,
-        responseLanguage: responseLanguage,
+        responseLanguageTag: responseLanguageTag,
       );
     }
 
@@ -100,36 +106,28 @@ class AiRequestPlanner {
       useClipboardHistory: false,
       useSelectedClipboard: false,
       maxOutputTokens: 768,
-      responseLanguage: responseLanguage,
+      responseLanguageTag: responseLanguageTag,
     );
   }
 
-  String _detectLanguage(String prompt, Set<String> words) {
-    final isEnMode = AppTranslations.currentLanguage == 'en';
-
-    final hasVietnameseAccents = RegExp(
-      r'[ăâđêôơưàáạảãằắặẳẵầấậẩẫèéẹẻẽềếệểễìíịỉĩòóọỏõồốộổỗờớợởỡùúụủũừứựửữỳýỵỷỹ]',
-    ).hasMatch(prompt);
-    final vietnameseWordCount = words.where(_vietnameseWords.contains).length;
-
-    if (hasVietnameseAccents || vietnameseWordCount >= 1) {
-      final hasEnglishWords = words.any((w) => [
-            'create', 'word', 'make', 'write', 'please', 'help', 'search', 'find',
-            'the', 'is', 'for', 'with', 'hello', 'hi', 'translate', 'summarize',
-            'perform', 'option', 'rewrite', 'explain'
-          ].contains(w));
-      if (hasEnglishWords && vietnameseWordCount == 0) {
-        return isEnMode ? 'English' : 'Vietnamese';
-      }
-      return 'Vietnamese';
+  String? _detectLanguageTag(String prompt) {
+    final lower = prompt.toLowerCase();
+    const explicitTags = <String, List<String>>{
+      'vi-VN': ['tiếng việt', 'vietnamese'],
+      'en-US': ['tiếng anh', 'english'],
+      'ja-JP': ['tiếng nhật', 'japanese', '日本語'],
+      'ko-KR': ['tiếng hàn', 'korean', '한국어'],
+      'de-DE': ['tiếng đức', 'german', 'deutsch'],
+      'zh-Hans-CN': ['tiếng trung', 'chinese', '中文'],
+    };
+    for (final entry in explicitTags.entries) {
+      if (entry.value.any(lower.contains)) return entry.key;
     }
-
-    if (isEnMode) {
-      return 'English';
-    }
-
-    if (RegExp(r'^[\x00-\x7F]+$').hasMatch(prompt)) return 'English';
-    return 'Vietnamese';
+    if (RegExp(r'[\u3040-\u30ff]').hasMatch(prompt)) return 'ja-JP';
+    if (RegExp(r'[\uac00-\ud7af]').hasMatch(prompt)) return 'ko-KR';
+    if (RegExp(r'[\u0600-\u06ff]').hasMatch(prompt)) return 'ar-SA';
+    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(prompt)) return 'zh-Hans-CN';
+    return null;
   }
 
   static const _clipboardTerms = {
@@ -211,27 +209,5 @@ class AiRequestPlanner {
     'continue',
     'more',
     'explain',
-  };
-  static const _vietnameseWords = {
-    'xin',
-    'chào',
-    'chao',
-    'tôi',
-    'toi',
-    'bạn',
-    'ban',
-    'cho',
-    'với',
-    'voi',
-    'không',
-    'khong',
-    'là',
-    'la',
-    'gì',
-    'gi',
-    'hãy',
-    'hay',
-    'cần',
-    'can',
   };
 }
