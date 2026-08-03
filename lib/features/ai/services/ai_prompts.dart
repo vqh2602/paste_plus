@@ -103,18 +103,116 @@ class AiPrompts {
 
     final rawOption = sanitizeSelectedOption(selectedOption);
     final optionStr = rawOption.isNotEmpty ? rawOption : (isRespEn ? 'default' : 'mặc định');
-    return isRespEn
-        ? 'You are ClipFlow performing the clipboard task '
-            '${featureGroup.title} with option "$optionStr". '
-            'Perform the task directly, preserve factual details and formatting, '
-            'reply in English, and never describe internal processing.\n\n'
-            '$safety'
-        : 'Bạn là ClipFlow đang thực hiện tác vụ clipboard '
-            '${featureGroup.title} với tùy chọn "$optionStr". '
-            'Thực hiện trực tiếp tác vụ, giữ nguyên chi tiết thực tế và định dạng, '
-            'trả lời bằng Tiếng Việt, và không bao giờ mô tả '
-            'quá trình xử lý nội bộ.\n\n'
-            '$safety';
+    final contract = _featureGroupContract(featureGroup, optionStr, isRespEn);
+    return '$contract\n\n$safety';
+  }
+
+  static String _featureGroupContract(
+    AiFeatureGroup group,
+    String optionStr,
+    bool isRespEn,
+  ) {
+    if (isRespEn) {
+      return switch (group) {
+        AiFeatureGroup.rewrite =>
+          'TASK: Rewrite content with option "$optionStr".\n'
+          'OUTPUT CONTRACT: Output only the rewritten content. Preserve core meaning, '
+          'factual details, placeholders, and URLs. Do not describe internal steps.',
+        AiFeatureGroup.grammar =>
+          'TASK: Fix spelling, grammar, and punctuation according to "$optionStr".\n'
+          'OUTPUT CONTRACT: Output only the corrected text. Maintain original tone, '
+          'facts, and formatting without introductory text.',
+        AiFeatureGroup.summary =>
+          'TASK: Summarize content according to "$optionStr".\n'
+          'OUTPUT CONTRACT: Provide a concise, well-structured summary. Preserve key facts, '
+          'names, dates, numbers, and URLs verbatim. Do not invent missing facts.',
+        AiFeatureGroup.translate =>
+          'TASK: Translate text according to "$optionStr".\n'
+          'OUTPUT CONTRACT: Output only the translation. Preserve paragraphs, formatting, '
+          'code blocks, placeholders, URLs, and proper names verbatim.',
+        AiFeatureGroup.smartReply =>
+          'TASK: Generate a reply message with goal "$optionStr".\n'
+          'OUTPUT CONTRACT: Return a polite, context-appropriate reply ready to send directly. '
+          'Do not include introductory commentary.',
+        AiFeatureGroup.generate =>
+          'TASK: Generate new content for "$optionStr".\n'
+          'OUTPUT CONTRACT: Create structured, ready-to-use content. Ensure clear layout, '
+          'accurate details, and appropriate tone.',
+        AiFeatureGroup.qa =>
+          'TASK: Answer question based on clipboard data.\n'
+          'OUTPUT CONTRACT: Provide a direct, concise, and accurate answer strictly derived from '
+          'the source data. State clearly if information is missing.',
+        AiFeatureGroup.codeExplain =>
+          'TASK: Explain code or fix errors ($optionStr).\n'
+          'OUTPUT CONTRACT: Preserve the programming language and syntax. Do not alter unrelated '
+          'logic. Provide fixed code snippet first, followed by concise root-cause explanation.',
+        AiFeatureGroup.extractInfo =>
+          'TASK: Extract information into format "$optionStr".\n'
+          'OUTPUT CONTRACT: Return valid JSON or structured output only. Use null for missing fields. '
+          'Never infer or hallucinate values not present in source.',
+        AiFeatureGroup.titlesTags =>
+          'TASK: Generate title and tags ($optionStr).\n'
+          'OUTPUT CONTRACT: Output a short descriptive title followed by a list of relevant category tags.',
+        AiFeatureGroup.classify =>
+          'TASK: Classify clipboard content ($optionStr).\n'
+          'OUTPUT CONTRACT: Output exactly one category value from: link, email, phone, code, json, file, image, text. '
+          'Do not include any conversational explanation.',
+        AiFeatureGroup.ocrRefine =>
+          'TASK: Refine OCR extracted text ($optionStr).\n'
+          'OUTPUT CONTRACT: Clean up recognition artifacts, broken words, and typo characters. '
+          'Output neat, readable text preserving original layout.',
+      };
+    } else {
+      return switch (group) {
+        AiFeatureGroup.rewrite =>
+          'NHIỆM VỤ: Viết lại nội dung theo tùy chọn "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Chỉ xuất phần nội dung đã viết lại. Giữ nguyên ý nghĩa cốt lõi, '
+          'thực tế, vị trí giữ chỗ và URL. Không mô tả các bước xử lý nội bộ.',
+        AiFeatureGroup.grammar =>
+          'NHIỆM VỤ: Sửa lỗi chính tả, ngữ pháp và dấu câu theo "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Chỉ xuất văn bản đã được sửa lỗi. Giữ nguyên tông giọng, '
+          'thực tế và định dạng mà không thêm câu chào hỏi dẫn dắt.',
+        AiFeatureGroup.summary =>
+          'NHIỆM VỤ: Tóm tắt nội dung theo tùy chọn "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Cung cấp bản tóm tắt ngắn gọn, rõ ràng. Giữ nguyên thực tế, '
+          'tên riêng, ngày tháng, số liệu và URL. Không tự bịa thông tin thiếu.',
+        AiFeatureGroup.translate =>
+          'NHIỆM VỤ: Dịch văn bản theo tùy chọn "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Chỉ xuất bản dịch. Giữ nguyên cấu trúc đoạn, định dạng, '
+          'khối code, vị trí giữ chỗ, URL và tên riêng.',
+        AiFeatureGroup.smartReply =>
+          'NHIỆM VỤ: Tạo câu trả lời theo định hướng "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Trả về câu trả lời lịch sự, phù hợp ngữ cảnh để có thể gửi ngay. '
+          'Không kèm câu dẫn dắt ngoài nội dung tin nhắn.',
+        AiFeatureGroup.generate =>
+          'NHIỆM VỤ: Sinh nội dung mới theo tùy chọn "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Tạo nội dung sẵn sàng sử dụng có cấu trúc rõ ràng, '
+          'chính xác và đúng văn phong yêu cầu.',
+        AiFeatureGroup.qa =>
+          'NHIỆM VỤ: Trả lời câu hỏi dựa trên dữ liệu clipboard.\n'
+          'HỢP ĐỒNG ĐẦU RA: Đưa ra câu trả lời trực tiếp, ngắn gọn và chính xác trích xuất từ dữ liệu. '
+          'Nói rõ nếu dữ liệu không chứa đủ thông tin.',
+        AiFeatureGroup.codeExplain =>
+          'NHIỆM VỤ: Giải thích code hoặc sửa lỗi ($optionStr).\n'
+          'HỢP ĐỒNG ĐẦU RA: Giữ nguyên ngôn ngữ lập trình và cú pháp. Không thay đổi logic không liên quan. '
+          'Đưa đoạn code đã sửa lên đầu, sau đó giải thích ngắn gọn nguyên nhân rễ cây (root cause).',
+        AiFeatureGroup.extractInfo =>
+          'NHIỆM VỤ: Trích xuất thông tin thành định dạng "$optionStr".\n'
+          'HỢP ĐỒNG ĐẦU RA: Chỉ trả về JSON hợp lệ hoặc bảng định dạng chuẩn. Sử dụng null cho các trường bị thiếu. '
+          'Không tự suy đoán hoặc suy diễn dữ liệu không có trong nguồn.',
+        AiFeatureGroup.titlesTags =>
+          'NHIỆM VỤ: Tạo tiêu đề và từ khóa ($optionStr).\n'
+          'HỢP ĐỒNG ĐẦU RA: Xuất tiêu đề ngắn gọn súc tích kèm danh sách các thẻ từ khóa liên quan.',
+        AiFeatureGroup.classify =>
+          'NHIỆM VỤ: Phân loại nội dung clipboard ($optionStr).\n'
+          'HỢP ĐỒNG ĐẦU RA: Chỉ xuất ĐÚNG 1 giá trị danh mục từ: link, email, phone, code, json, file, image, text. '
+          'Không kèm bất kỳ lời giải thích nào.',
+        AiFeatureGroup.ocrRefine =>
+          'NHIỆM VỤ: Làm sạch văn bản trích xuất từ OCR ($optionStr).\n'
+          'HỢP ĐỒNG ĐẦU RA: Sửa các lỗi nhận dạng ký tự lạ, từ bị đứt đoạn và dấu câu. '
+          'Xuất văn bản sạch sẽ, giữ nguyên bố cục ban đầu.',
+      };
+    }
   }
 
   static String translateChunkSystemPrompt(String? selectedOption, String prompt) {
