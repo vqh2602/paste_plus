@@ -17,6 +17,7 @@ import 'ai_planner_service.dart';
 import 'ai_prompts.dart';
 import 'ai_token_budget_manager.dart';
 import 'llama_inference_service.dart';
+import 'structured_output_validator.dart';
 
 class LocalAiResponse {
   LocalAiResponse({required this.thinkingContent, required this.outputContent});
@@ -37,6 +38,7 @@ class LocalAiEngine {
   static const _clipboardRanker = AiClipboardRelevanceRanker();
   static const _plannerService = AiPlannerService();
   static const _agentOrchestrator = AiAgentOrchestrator();
+  static const _outputValidator = StructuredOutputValidator();
 
   /// Process prompt locally and stream tokens back.
   /// Yields pairs of (thinkingChunk, outputChunk).

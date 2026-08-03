@@ -79,6 +79,7 @@ class LlamaInferenceService {
     double temperature = 0.55,
     int maxTokens = 768,
     bool thinkingModel = false,
+    String? grammar,
     List<LlamaConversationTurn> conversation = const [],
   }) async* {
     await _ensureLoaded(modelPath, contextSize);
@@ -91,6 +92,7 @@ class LlamaInferenceService {
         topP: 0.9,
         topK: 40,
         penalty: 1.08,
+        grammar: grammar,
       ),
       enableThinking: thinkingModel,
     )) {
