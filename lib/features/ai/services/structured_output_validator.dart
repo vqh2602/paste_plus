@@ -71,6 +71,16 @@ String ::= "\\"" ([^"\\\\\\x00-\\x1F] | "\\\\" (["\\\\/bfnrt] | "u" [0-9a-fA-F]{
 ws ::= [ \\t\\n\\r]*
 ''';
 
+  /// GBNF JSON Schema grammar enforcing strict execution plan JSON syntax.
+  static const executionPlanGrammar = '''
+root ::= ExecutionPlan
+ExecutionPlan ::= "{" ws "\\"intent\\":" ws String ws "," ws "\\"steps\\":" ws "[" ws (Step ("," ws Step)*)? ws "]" ws "}"
+Step ::= "{" ws "\\"step_id\\":" ws Number ws "," ws "\\"tool\\":" ws String ws "," ws "\\"query\\":" ws String ws "}"
+String ::= "\\"" ([^"\\\\\\x00-\\x1F] | "\\\\" (["\\\\/bfnrt] | "u" [0-9a-fA-F]{4}))* "\\""
+Number ::= [0-9]+
+ws ::= [ \\t\\n\\r]*
+''';
+
   /// Extracts valid JSON string from raw model output or markdown code fences.
   String extractJson(String rawText) {
     final trimmed = rawText.trim();

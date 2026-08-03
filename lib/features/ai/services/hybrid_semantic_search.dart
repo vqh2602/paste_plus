@@ -66,10 +66,9 @@ class HybridSemanticSearch {
     if (db != null) {
       try {
         final sanitizedQuery = lowerQuery
-            .replaceAll(RegExp(r'[^\w\s]'), ' ')
-            .split(RegExp(r'\s+'))
+            .split(RegExp(r'[^\p{L}\p{N}_]+', unicode: true))
             .where((w) => w.isNotEmpty)
-            .map((w) => '$w*')
+            .map((w) => '"${w.replaceAll('"', '""')}"*')
             .join(' OR ');
 
         if (sanitizedQuery.isNotEmpty) {

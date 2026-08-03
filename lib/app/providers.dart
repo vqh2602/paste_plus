@@ -12,6 +12,7 @@ import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
+import '../features/ai/services/clipboard_embedding_indexer.dart';
 import '../features/ai/services/clipboard_vector_store.dart';
 import '../features/ai/services/hybrid_semantic_search.dart';
 import '../features/ai/services/local_ai_engine.dart';
@@ -120,6 +121,9 @@ final historyControllerProvider =
         ref.watch(clipboardWatcherProvider),
         () => ref.read(settingsControllerProvider),
         onItemStored: (item) async {
+          unawaited(
+            ref.read(clipboardEmbeddingIndexerProvider).enqueue(item),
+          );
           final settings = ref.read(settingsControllerProvider);
           if (!settings.localSharingEnabled ||
               settings.allConnectionsPaused ||
@@ -262,12 +266,20 @@ final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
   );
 });
 
+final clipboardEmbeddingIndexerProvider =
+    Provider<ClipboardEmbeddingIndexer>((ref) {
+  return ClipboardEmbeddingIndexer(
+    vectorStore: ref.watch(clipboardVectorStoreProvider),
+  );
+});
+
 final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
   final engine = LocalAiEngine(
     ref.watch(aiModelDownloaderProvider),
     ref.read(aiDebugControllerProvider.notifier),
     null,
     ref.watch(hybridSemanticSearchProvider),
+    ref.watch(clipboardRepositoryProvider),
   );
   ref.onDispose(engine.dispose);
   return engine;

@@ -8,6 +8,7 @@ import '../../../core/localization/app_translations.dart';
 import '../../../core/services/ai_debug_service.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
+import '../../clipboard_history/domain/clipboard_repository.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_request_plan.dart';
@@ -36,17 +37,19 @@ class LocalAiEngine {
     this._debug,
     LlamaInferenceService? inferenceService,
     HybridSemanticSearch? hybridSearch,
+    ClipboardRepository? repository,
   ])  : _inferenceService = inferenceService ??
           (_modelDownloader == null ? null : LlamaInferenceService()),
-        _hybridSearch = hybridSearch ?? const HybridSemanticSearch();
+        _hybridSearch = hybridSearch ?? const HybridSemanticSearch(),
+        _agentOrchestrator = AiAgentOrchestrator(repository);
 
   final AiModelDownloaderService? _modelDownloader;
   final AiDebugController? _debug;
   final LlamaInferenceService? _inferenceService;
   final HybridSemanticSearch _hybridSearch;
+  final AiAgentOrchestrator _agentOrchestrator;
   static const _clipboardRanker = AiClipboardRelevanceRanker();
   static const _plannerService = AiPlannerService();
-  static const _agentOrchestrator = AiAgentOrchestrator();
   static const _outputValidator = StructuredOutputValidator();
   static const _responseVerifier = AiResponseVerifier();
 
@@ -242,6 +245,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
             items: effectiveHistory,
             modelPath: modelFile.path,
             contextSize: effectiveContextSize,
+            modelId: model.id,
           );
           contextText = _buildHistoryContext(semanticItems);
           _debug?.log(
@@ -1682,9 +1686,10 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
         contextSize: contextSize,
         systemPrompt: systemPrompt,
         userPrompt: prompt,
-        temperature: 0.1,
+        temperature: 0.0,
         maxTokens: 512,
-        thinkingModel: model.isThinkingModel,
+        thinkingModel: false,
+        grammar: StructuredOutputValidator.executionPlanGrammar,
       )) {
         if (token.content != null) {
           buffer.write(token.content);

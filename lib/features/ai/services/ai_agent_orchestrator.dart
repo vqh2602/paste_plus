@@ -1,4 +1,5 @@
 import '../../clipboard_history/domain/clipboard_item.dart';
+import '../../clipboard_history/domain/clipboard_repository.dart';
 import '../domain/ai_execution_plan.dart';
 import '../tools/ai_tool_registry.dart';
 import '../tools/impl/clipboard_tools.dart';
@@ -20,8 +21,18 @@ class AiStepResult {
 
 /// Orchestrates multi-step AI tool execution pipelines using [AiAgentLoop] and [AiToolRegistry].
 class AiAgentOrchestrator {
-  const AiAgentOrchestrator([this._customRegistry]);
+  const AiAgentOrchestrator([
+    dynamic repositoryOrRegistry,
+    AiToolRegistry? customRegistry,
+  ])  : _repository = repositoryOrRegistry is ClipboardRepository
+            ? repositoryOrRegistry
+            : null,
+        _customRegistry = customRegistry ??
+            (repositoryOrRegistry is AiToolRegistry
+                ? repositoryOrRegistry
+                : null);
 
+  final ClipboardRepository? _repository;
   final AiToolRegistry? _customRegistry;
 
   /// Executes [plan] sequentially by delegating to [AiAgentLoop].
@@ -33,7 +44,7 @@ class AiAgentOrchestrator {
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
         onConfirmationRequested,
   }) async {
-    final registry = _customRegistry ?? _buildDefaultRegistry(clipboardHistory);
+    final registry = _customRegistry ?? _buildDefaultRegistry(clipboardHistory, _repository);
     final agentLoop = AiAgentLoop(
       maxSteps: plan.steps.isNotEmpty ? plan.steps.length : 4,
       toolRegistry: registry,
@@ -48,15 +59,18 @@ class AiAgentOrchestrator {
     );
   }
 
-  AiToolRegistry _buildDefaultRegistry(List<ClipboardItem> history) {
+  AiToolRegistry _buildDefaultRegistry(
+    List<ClipboardItem> history, [
+    ClipboardRepository? repository,
+  ]) {
     final registry = AiToolRegistry();
-    registry.register(SearchClipboardTool(history));
-    registry.register(GetClipboardItemTool(history));
+    registry.register(SearchClipboardTool(history, repository));
+    registry.register(GetClipboardItemTool(history, repository));
     registry.register(ExtractUrlsTool());
-    registry.register(ListCollectionsTool());
-    registry.register(PinClipboardTool());
-    registry.register(AddToCollectionTool());
-    registry.register(DeleteClipboardItemTool());
+    registry.register(ListCollectionsTool(repository));
+    registry.register(PinClipboardTool(repository, history));
+    registry.register(AddToCollectionTool(repository, history));
+    registry.register(DeleteClipboardItemTool(repository, history));
     return registry;
   }
 

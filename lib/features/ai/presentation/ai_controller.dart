@@ -324,7 +324,12 @@ class AiController extends StateNotifier<AiState> {
   }
 
   void approvePendingToolCall() {
-    state.pendingToolCall?.completer.complete(true);
+    final pending = state.pendingToolCall;
+    pending?.completer.complete(true);
+    Future.microtask(() async {
+      await _ref.read(historyControllerProvider.notifier).reload();
+      await _ref.read(collectionsControllerProvider.notifier).reload();
+    });
   }
 
   void rejectPendingToolCall() {

@@ -52,15 +52,37 @@ class LlamaInferenceService {
 
     if (modelChanged) {
       await _engine?.dispose();
-      final engine = LlamaEngine(LlamaBackend());
-      await engine.loadModel(
-        modelPath,
-        modelParams: ModelParams(
-          contextSize: contextSize,
-          gpuLayers: _resolveGpuLayers(modelPath),
-        ),
-      );
-      _engine = engine;
+
+      final initialLayers = _resolveGpuLayers(modelPath);
+      final candidateGpuLayers = <int>{initialLayers, 33, 16, 0}.toList();
+
+      bool loaded = false;
+      Object? lastError;
+
+      for (final layers in candidateGpuLayers) {
+        try {
+          final engine = LlamaEngine(LlamaBackend());
+          await engine.loadModel(
+            modelPath,
+            modelParams: ModelParams(
+              contextSize: contextSize,
+              gpuLayers: layers,
+            ),
+          );
+          _engine = engine;
+          loaded = true;
+          break;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      if (!loaded) {
+        throw Exception(
+          'Không thể khởi tạo model $modelPath với bất kỳ GPU offload profile nào: $lastError',
+        );
+      }
+
       _loadedModelPath = modelPath;
       _loadedContextSize = contextSize;
       _loadedMmprojPath = null;

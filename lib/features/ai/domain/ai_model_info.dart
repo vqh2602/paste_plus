@@ -2,6 +2,11 @@ import '../../../core/localization/app_translations.dart';
 
 enum AiModality { text, image, audio }
 
+bool isValidSha256(String? value) {
+  if (value == null || value.trim().isEmpty) return false;
+  return RegExp(r'^[a-fA-F0-9]{64}$').hasMatch(value.trim());
+}
+
 class AiModelInfo {
   static const defaultModelId = 'gemma-4-e2b';
 
@@ -19,6 +24,8 @@ class AiModelInfo {
     this.isThinkingModel = true,
     this.isMultimodal = false,
     this.mmprojUrl,
+    this.mmprojSha256,
+    this.mmprojFileSizeMb,
     this.supportedModalities = const {AiModality.text},
     this.contextWindow = 8192,
   })  : _rawDescription = description,
@@ -37,6 +44,8 @@ class AiModelInfo {
   final bool isThinkingModel;
   final bool isMultimodal;
   final String? mmprojUrl;
+  final String? mmprojSha256;
+  final int? mmprojFileSizeMb;
   final Set<AiModality> supportedModalities;
   final int contextWindow;
 
@@ -128,7 +137,7 @@ class AiModelInfo {
       fileSizeMb: 3195,
       downloadUrl:
           'https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf',
-      sha256: 'a67e42b6a8a3c8e4d2f09918737213456789abcdef0123456789abcdef012345',
+      sha256: null,
       recommendedFor:
           'Chat hằng ngày, hỏi đáp Clipboard, tóm tắt và dịch thuật',
       isThinkingModel: true,
@@ -144,7 +153,7 @@ class AiModelInfo {
       fileSizeMb: 4917,
       downloadUrl:
           'https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf',
-      sha256: 'b78f53c7b9b4d9f5e3a1002984832456789abcdef0123456789abcdef012346',
+      sha256: null,
       recommendedFor:
           'Hỏi đáp chuyên sâu, phân tích nội dung dài và tác vụ phức tạp',
       isThinkingModel: true,
@@ -160,7 +169,7 @@ class AiModelInfo {
       fileSizeMb: 610,
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf',
-      sha256: 'c89a64d8c0c5ea0f6b2111309594356789abcdef0123456789abcdef012347',
+      sha256: null,
       recommendedFor: 'Chat nhanh, phân loại, tiêu đề và tác vụ ngắn',
       isThinkingModel: true,
       contextWindow: 32768,
@@ -174,7 +183,7 @@ class AiModelInfo {
       fileSizeMb: 1120,
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf',
-      sha256: 'd90b75e9d1d6fb1a7c322241a60546789abcdef0123456789abcdef012348',
+      sha256: null,
       recommendedFor: 'Tóm tắt nhanh, viết lại, sửa chính tả, Smart Reply',
       isThinkingModel: true,
     ),
@@ -187,7 +196,7 @@ class AiModelInfo {
       fileSizeMb: 4480,
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf',
-      sha256: 'ea1c86fae2e7ac2b8d433352b7165789abcdef0123456789abcdef012349',
+      sha256: null,
       recommendedFor:
           'Phân tích code, giải thích bug, trích xuất dữ liệu phức tạp',
       isThinkingModel: true,
@@ -201,7 +210,7 @@ class AiModelInfo {
       fileSizeMb: 4920,
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF/resolve/main/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf',
-      sha256: 'fb2d97abf3f8bd3c9e544463c8276789abcdef0123456789abcdef01234a',
+      sha256: null,
       recommendedFor: 'Soạn thảo email, bài viết dài, trích xuất JSON/Table',
       isThinkingModel: true,
     ),
@@ -214,7 +223,7 @@ class AiModelInfo {
       fileSizeMb: 4680,
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf',
-      sha256: 'ac3e08bc04a9ce4da6655574d9387789abcdef0123456789abcdef01234b',
+      sha256: null,
       recommendedFor: 'Code explanation, refactoring, debug log analysis',
       isThinkingModel: true,
     ),
@@ -227,13 +236,14 @@ class AiModelInfo {
       fileSizeMb: 7500,
       downloadUrl:
           'https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf/resolve/main/gemma-4-12b-it-qat-q4_0.gguf',
-      sha256: 'bd4f19cd15b0df5eb7766685ea49889abcdef0123456789abcdef01234c',
+      sha256: null,
       recommendedFor: 'Phân tích hình ảnh, đọc giao diện ảnh chụp màn hình, hỏi đáp biểu đồ',
       isThinkingModel: true,
       isMultimodal: true,
       supportedModalities: {AiModality.text, AiModality.image},
       mmprojUrl:
           'https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf/resolve/main/mmproj-gemma-4-12b-f16.gguf',
+      mmprojFileSizeMb: 600,
     ),
     AiModelInfo(
       id: 'qwen2.5-vl-7b',
@@ -244,13 +254,14 @@ class AiModelInfo {
       fileSizeMb: 4400,
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/qwen2.5-vl-7b-instruct-q4_k_m.gguf',
-      sha256: 'ce5a20de26c1ea6fc8877796fb5a990abcdef0123456789abcdef01234d',
+      sha256: null,
       recommendedFor: 'Trích xuất tài liệu ảnh, đọc ảnh phức tạp, suy luận hình ảnh',
       isThinkingModel: false,
       isMultimodal: true,
       supportedModalities: {AiModality.text, AiModality.image},
       mmprojUrl:
           'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/mmproj-qwen2.5-vl-7b-f16.gguf',
+      mmprojFileSizeMb: 550,
     ),
   ];
 
