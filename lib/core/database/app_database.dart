@@ -42,7 +42,55 @@ class AppDatabase {
         supportDirectory: supportDirectory!,
       );
     }
+    if (!inMemory && supportDirectory != null) {
+      await _repairImagePaths(db, supportDirectory.path);
+    }
     return AppDatabase._(db, dbPath);
+  }
+
+  static Future<void> _repairImagePaths(
+    Database db,
+    String currentSupportPath,
+  ) async {
+    try {
+      final rows = await db.query(
+        'clipboard_items',
+        columns: ['id', 'image_path'],
+        where: "image_path IS NOT NULL AND image_path != ''",
+      );
+      if (rows.isEmpty) return;
+
+      final currentImagesDir = p.join(currentSupportPath, 'clipboard_images');
+      final batch = db.batch();
+      var hasUpdates = false;
+
+      for (final row in rows) {
+        final id = row['id'] as String?;
+        final rawPath = row['image_path'] as String?;
+        if (id == null || rawPath == null || rawPath.isEmpty) continue;
+
+        final file = File(rawPath);
+        if (!await file.exists()) {
+          final filename = p.basename(rawPath);
+          final candidatePath = p.join(currentImagesDir, filename);
+          if (await File(candidatePath).exists()) {
+            batch.update(
+              'clipboard_items',
+              {'image_path': candidatePath},
+              where: 'id = ?',
+              whereArgs: [id],
+            );
+            hasUpdates = true;
+          }
+        }
+      }
+
+      if (hasUpdates) {
+        await batch.commit(noResult: true);
+      }
+    } catch (_) {
+      // Ignore non-critical startup repair errors
+    }
   }
 
   static Future<String?> _legacyMacOSSupportPath(

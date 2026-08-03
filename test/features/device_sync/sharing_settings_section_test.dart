@@ -204,4 +204,39 @@ void main() {
     await tester.tap(find.text('Kết nối lại'));
     expect(reconnectedId, 'macbook');
   });
+
+  testWidgets('allows editing device display name when local sharing is disabled', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final repository = SettingsRepository(
+      await SharedPreferences.getInstance(),
+    );
+    await repository.save(
+      const AppSettings(localSharingEnabled: false, language: 'vi'),
+    );
+    AppTranslations.currentLanguage = 'vi';
+    final service = _FakeSharingService();
+    addTearDown(service.dispose);
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(repository),
+          localSharingServiceProvider.overrideWithValue(service),
+        ],
+        child: const CupertinoApp(
+          home: CupertinoPageScaffold(
+            child: SingleChildScrollView(child: SharingSettingsSection()),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final textField = tester.widget<CupertinoTextField>(
+      find.byType(CupertinoTextField),
+    );
+    expect(textField.enabled, isTrue);
+  });
 }

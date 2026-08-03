@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -327,6 +328,7 @@ class AiController extends StateNotifier<AiState> {
       final ocrTextInContent = targetContext.content.trim();
       final hasOcrText =
           ocrTextInContent.isNotEmpty && ocrTextInContent != '[Image]';
+      String? extractedText;
       if (!hasOcrText && targetContext.imagePath != null) {
         try {
           final historyNotifier =
@@ -334,15 +336,30 @@ class AiController extends StateNotifier<AiState> {
           final extracted =
               await historyNotifier.performOcr(targetContext);
           if (extracted != null && extracted.trim().isNotEmpty) {
-            activeContext = targetContext.copyWith(
-              content: extracted.trim(),
-              normalizedContent: extracted.trim(),
-            );
+            extractedText = extracted.trim();
           }
         } catch (_) {
           // Ignore OCR errors gracefully
         }
+      } else if (hasOcrText) {
+        extractedText = ocrTextInContent;
       }
+
+      final fileName = targetContext.imagePath?.split(Platform.pathSeparator).last ?? 'image.png';
+      final sourceApp = targetContext.sourceAppName ?? 'Unknown App';
+      final imageInfoBuffer = StringBuffer()
+        ..writeln('(Tệp hình ảnh được chọn làm ngữ cảnh: "$fileName", Ứng dụng nguồn: "$sourceApp")');
+
+      if (extractedText != null && extractedText.isNotEmpty) {
+        imageInfoBuffer.writeln('\nVăn bản nhận diện được từ OCR trong hình ảnh:\n"$extractedText"');
+      } else {
+        imageInfoBuffer.writeln('\n[Lưu ý: Hình ảnh này không chứa văn bản (OCR không tìm thấy chữ). Đây là một hình ảnh đồ họa/ảnh chụp/minh họa.]');
+      }
+
+      activeContext = targetContext.copyWith(
+        content: imageInfoBuffer.toString(),
+        normalizedContent: imageInfoBuffer.toString(),
+      );
     }
     final clipboardHistory = requestPlan.useClipboardHistory
         ? _ref
