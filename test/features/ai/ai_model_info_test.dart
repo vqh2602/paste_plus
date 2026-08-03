@@ -18,7 +18,7 @@ void main() {
     expect(gemmaE2b.downloadUrl, endsWith('gemma-4-E2B_q4_0-it.gguf'));
     expect(gemmaE4b.name, contains('Gemma 4 E4B'));
     expect(gemmaE4b.downloadUrl, endsWith('gemma-4-E4B_q4_0-it.gguf'));
-    expect(qwen3.name, 'Qwen3 0.6B');
+    expect(qwen3.name, contains('Qwen3 0.6B'));
     expect(qwen3.downloadUrl, endsWith('Qwen3-0.6B-Q8_0.gguf'));
   });
 

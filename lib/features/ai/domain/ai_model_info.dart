@@ -60,9 +60,12 @@ class AiModelInfo {
       'qwen2.5-coder-7b' => isEn
           ? 'Specialized Code & Logic model, highly effective for code simplification and refactoring.'
           : 'Model chuyên biệt về Code & Logic suy luận, cực kỳ mạnh mẽ trong việc đơn giản hóa code và refactor.',
-      'qwen2.5-1.5b' => isEn
-          ? 'Ultra-lightweight model running directly on low RAM, smooth translation between languages.'
-          : 'Model siêu nhẹ chạy trực tiếp trên RAM thấp, đa ngôn ngữ mượt mà từ Việt sang Anh và ngược lại.',
+      'gemma-4-12b-vision' => isEn
+          ? 'Google Multimodal Vision & Reasoning model, capable of inspecting image pixels and visual UI.'
+          : 'Model Multimodal Vision & Suy luận của Google, có khả năng phân tích trực tiếp pixel hình ảnh và giao diện.',
+      'qwen2.5-vl-7b' => isEn
+          ? 'Advanced Vision-Language model for image understanding, OCR, and diagram analysis.'
+          : 'Model Vision-Language thế hệ mới cho nhận diện hình ảnh, phân tích biểu đồ và văn bản trên ảnh.',
       _ => _rawDescription,
     };
   }
@@ -88,6 +91,12 @@ class AiModelInfo {
       'deepseek-r1-8b' => isEn
           ? 'Drafting emails, long articles, JSON/Table extraction'
           : 'Soạn thảo email, bài viết dài, trích xuất JSON/Table',
+      'gemma-4-12b-vision' => isEn
+          ? 'Image analysis, screenshot UI inspection, diagram Q&A'
+          : 'Phân tích hình ảnh, đọc giao diện ảnh chụp màn hình, hỏi đáp biểu đồ',
+      'qwen2.5-vl-7b' => isEn
+          ? 'Visual document parsing, OCR cleanup, image reasoning'
+          : 'Trích xuất tài liệu ảnh, đọc ảnh phức tạp, suy luận hình ảnh',
       _ => _rawRecommendedFor,
     };
   }
@@ -100,10 +109,11 @@ class AiModelInfo {
     return '$fileSizeMb MB';
   }
 
+  /// Model catalog containing exclusively Thinking AI models and Vision AI models.
   static const List<AiModelInfo> thinkingModels = [
     AiModelInfo(
       id: 'gemma-4-e2b',
-      name: 'Gemma 4 E2B Instruct',
+      name: 'Gemma 4 E2B Instruct (Thinking)',
       description:
           'Model đa ngôn ngữ thế hệ mới của Google, tối ưu cho hội thoại và xử lý cục bộ trên thiết bị.',
       parameterSize: 'E2B',
@@ -112,11 +122,12 @@ class AiModelInfo {
           'https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf',
       recommendedFor:
           'Chat hằng ngày, hỏi đáp Clipboard, tóm tắt và dịch thuật',
+      isThinkingModel: true,
       contextWindow: 32768,
     ),
     AiModelInfo(
       id: 'gemma-4-e4b',
-      name: 'Gemma 4 E4B Instruct',
+      name: 'Gemma 4 E4B Instruct (Thinking)',
       description:
           'Bản Gemma 4 mạnh hơn dành cho câu hỏi phức tạp, lập luận dài và độ chính xác cao hơn.',
       parameterSize: 'E4B',
@@ -125,11 +136,12 @@ class AiModelInfo {
           'https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf',
       recommendedFor:
           'Hỏi đáp chuyên sâu, phân tích nội dung dài và tác vụ phức tạp',
+      isThinkingModel: true,
       contextWindow: 32768,
     ),
     AiModelInfo(
       id: 'qwen3-0.6b',
-      name: 'Qwen3 0.6B',
+      name: 'Qwen3 0.6B (Thinking)',
       description:
           'Model cực nhẹ, phản hồi nhanh và hỗ trợ đa ngôn ngữ tốt trên máy có ít RAM.',
       parameterSize: '0.6B',
@@ -137,6 +149,7 @@ class AiModelInfo {
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen3-0.6B-GGUF/resolve/main/Qwen3-0.6B-Q8_0.gguf',
       recommendedFor: 'Chat nhanh, phân loại, tiêu đề và tác vụ ngắn',
+      isThinkingModel: true,
       contextWindow: 32768,
     ),
     AiModelInfo(
@@ -149,6 +162,7 @@ class AiModelInfo {
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-1.5B-Q4_K_M.gguf',
       recommendedFor: 'Tóm tắt nhanh, viết lại, sửa chính tả, Smart Reply',
+      isThinkingModel: true,
     ),
     AiModelInfo(
       id: 'deepseek-r1-7b',
@@ -161,6 +175,7 @@ class AiModelInfo {
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF/resolve/main/DeepSeek-R1-Distill-Qwen-7B-Q4_K_M.gguf',
       recommendedFor:
           'Phân tích code, giải thích bug, trích xuất dữ liệu phức tạp',
+      isThinkingModel: true,
     ),
     AiModelInfo(
       id: 'deepseek-r1-8b',
@@ -172,6 +187,7 @@ class AiModelInfo {
       downloadUrl:
           'https://huggingface.co/unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF/resolve/main/DeepSeek-R1-Distill-Llama-8B-Q4_K_M.gguf',
       recommendedFor: 'Soạn thảo email, bài viết dài, trích xuất JSON/Table',
+      isThinkingModel: true,
     ),
     AiModelInfo(
       id: 'qwen2.5-coder-7b',
@@ -183,18 +199,37 @@ class AiModelInfo {
       downloadUrl:
           'https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_k_m.gguf',
       recommendedFor: 'Code explanation, refactoring, debug log analysis',
+      isThinkingModel: true,
     ),
     AiModelInfo(
-      id: 'qwen2.5-1.5b',
-      name: 'Qwen2.5-1.5B-Instruct (Thinking)',
+      id: 'gemma-4-12b-vision',
+      name: 'Gemma 4 12B Multimodal (Vision & Thinking)',
       description:
-          'Model siêu nhẹ chạy trực tiếp trên RAM thấp, đa ngôn ngữ mượt mà từ Việt sang Anh và ngược lại.',
-      parameterSize: '1.5B',
-      fileSizeMb: 980,
+          'Model Multimodal Vision & Suy luận của Google, có khả năng phân tích trực tiếp pixel hình ảnh và giao diện.',
+      parameterSize: '12B',
+      fileSizeMb: 7500,
       downloadUrl:
-          'https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf',
-      recommendedFor: 'Dịch thuật, phân loại thông minh, tạo tiêu đề & tag',
+          'https://huggingface.co/google/gemma-4-12B-Vision-GGUF/resolve/main/gemma-4-12B-Vision-Q4_K_M.gguf',
+      recommendedFor: 'Phân tích hình ảnh, đọc giao diện ảnh chụp màn hình, hỏi đáp biểu đồ',
+      isThinkingModel: true,
+      isMultimodal: true,
+      mmprojUrl:
+          'https://huggingface.co/google/gemma-4-12B-Vision-GGUF/resolve/main/mmproj-gemma-4-12b-f16.gguf',
+    ),
+    AiModelInfo(
+      id: 'qwen2.5-vl-7b',
+      name: 'Qwen2.5-VL-7B Instruct (Vision)',
+      description:
+          'Model Vision-Language thế hệ mới cho nhận diện hình ảnh, phân tích biểu đồ và văn bản trên ảnh.',
+      parameterSize: '7B',
+      fileSizeMb: 4400,
+      downloadUrl:
+          'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/qwen2.5-vl-7b-instruct-q4_k_m.gguf',
+      recommendedFor: 'Trích xuất tài liệu ảnh, đọc ảnh phức tạp, suy luận hình ảnh',
       isThinkingModel: false,
+      isMultimodal: true,
+      mmprojUrl:
+          'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/mmproj-qwen2.5-vl-7b-f16.gguf',
     ),
   ];
 
