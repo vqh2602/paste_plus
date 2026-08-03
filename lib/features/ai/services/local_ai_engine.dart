@@ -16,6 +16,7 @@ import '../domain/ai_chat_message.dart';
 import 'ai_agent_orchestrator.dart';
 import 'ai_clipboard_relevance_ranker.dart';
 import 'ai_model_downloader_service.dart';
+import 'ai_plan_validator.dart';
 import 'ai_planner_service.dart';
 import 'ai_prompts.dart';
 import 'ai_token_budget_manager.dart';
@@ -38,10 +39,11 @@ class LocalAiEngine {
     LlamaInferenceService? inferenceService,
     HybridSemanticSearch? hybridSearch,
     ClipboardRepository? repository,
-  ])  : _inferenceService = inferenceService ??
-          (_modelDownloader == null ? null : LlamaInferenceService()),
-        _hybridSearch = hybridSearch ?? const HybridSemanticSearch(),
-        _agentOrchestrator = AiAgentOrchestrator(repository);
+  ]) : _inferenceService =
+           inferenceService ??
+           (_modelDownloader == null ? null : LlamaInferenceService()),
+       _hybridSearch = hybridSearch ?? const HybridSemanticSearch(),
+       _agentOrchestrator = AiAgentOrchestrator(repository);
 
   final AiModelDownloaderService? _modelDownloader;
   final AiDebugController? _debug;
@@ -69,7 +71,7 @@ class LocalAiEngine {
     List<AiChatMessage> conversationMessages = const [],
     String? debugRequestId,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
-        onConfirmationRequested,
+    onConfirmationRequested,
   }) async* {
     final initialPlan =
         requestPlan ??
@@ -109,10 +111,12 @@ class LocalAiEngine {
       }
     }
 
-    final effectiveClipboardContext =
-        effectivePlan.useSelectedClipboard ? clipboardContext : null;
-    final effectiveHistory =
-        effectivePlan.useClipboardHistory ? clipboardHistory : const <ClipboardItem>[];
+    final effectiveClipboardContext = effectivePlan.useSelectedClipboard
+        ? clipboardContext
+        : null;
+    final effectiveHistory = effectivePlan.useClipboardHistory
+        ? clipboardHistory
+        : const <ClipboardItem>[];
 
     List<String> imagePaths = const [];
     if (effectiveClipboardContext?.imagePath != null &&
@@ -135,7 +139,9 @@ class LocalAiEngine {
     if (effectiveClipboardContext != null) {
       if (effectiveClipboardContext.contentType == ClipboardContentType.image) {
         final fileName = effectiveClipboardContext.imagePath != null
-            ? effectiveClipboardContext.imagePath!.split(Platform.pathSeparator).last
+            ? effectiveClipboardContext.imagePath!
+                  .split(Platform.pathSeparator)
+                  .last
             : 'image.png';
         final ocrContent = effectiveClipboardContext.content.trim();
         final hasText = ocrContent.isNotEmpty && ocrContent != '[Image]';
@@ -164,9 +170,14 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       contextText = _buildHistoryContext(effectiveHistory);
     }
 
-    if (effectivePlan.executionPlan?.isMultiStep == true) {
+    final executionPlan = effectivePlan.executionPlan;
+    if (executionPlan != null &&
+        executionPlan.steps.isNotEmpty &&
+        executionPlan.steps.every(
+          (step) => AiPlanValidator.supportedTools.contains(step.tool),
+        )) {
       final stepResults = await _agentOrchestrator.executePlan(
-        plan: effectivePlan.executionPlan!,
+        plan: executionPlan,
         prompt: prompt,
         contextText: contextText,
         clipboardHistory: effectiveHistory,
@@ -193,10 +204,10 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       details: kReleaseMode
           ? 'model_id: ${model.id}\ncontext_items_count: ${effectiveHistory.length}\ncontext_length: ${contextText.length}'
           : 'systemPrompt:\n$systemPrompt\n\n'
-            'userPrompt:\n$prompt\n\n'
-            'contextText (${contextText.length} chars):\n$contextText\n\n'
-            'conversationContext (${conversationContext.length} chars):\n'
-            '$conversationContext',
+                'userPrompt:\n$prompt\n\n'
+                'contextText (${contextText.length} chars):\n$contextText\n\n'
+                'conversationContext (${conversationContext.length} chars):\n'
+                '$conversationContext',
     );
 
     if (_modelDownloader != null && _inferenceService != null) {
@@ -224,10 +235,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           stage: 'model-load',
           requestId: debugRequestId,
           message: 'Model đã sẵn sàng',
-          details: 'contextSize: $effectiveContextSize\nmultimodalReady: ${caps.multimodalReady}',
+          details:
+              'contextSize: $effectiveContextSize\nmultimodalReady: ${caps.multimodalReady}',
         );
 
-        if (effectiveClipboardContext?.contentType == ClipboardContentType.image &&
+        if (effectiveClipboardContext?.contentType ==
+                ClipboardContentType.image &&
             (!caps.multimodalReady || imagePaths.isEmpty)) {
           contextText = contextText.replaceAll(
             '[Hướng dẫn phân tích]: Pixel hình ảnh thực tế đã được nạp trực tiếp vào Multimodal Vision LLM.',
@@ -256,8 +269,8 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
             details: kReleaseMode
                 ? 'inputItems: ${effectiveHistory.length}\nselectedItems: ${semanticItems.length}'
                 : 'inputItems: ${effectiveHistory.length}\n'
-                  'selectedItems: ${semanticItems.length}\n'
-                  'effectiveContext:\n$contextText',
+                      'selectedItems: ${semanticItems.length}\n'
+                      'effectiveContext:\n$contextText',
           );
         }
 
@@ -377,7 +390,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     String? mmprojPath,
     List<ClipboardItem> candidates = const [],
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
-        onConfirmationRequested,
+    onConfirmationRequested,
   }) async* {
     final conversation = _toConversationTurns(conversationMessages);
     final userPrompt = _buildModelUserPrompt(prompt, contextText);
@@ -712,7 +725,8 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       throw StateError('Model kết thúc mà không tạo nội dung trả lời.');
     }
 
-    final requiresJson = (grammar != null) || (intent == AiRequestIntent.clipboardSearch);
+    final requiresJson =
+        (grammar != null) || (intent == AiRequestIntent.clipboardSearch);
     final report = _responseVerifier.verifyAndCorrect(
       draftText: output,
       candidates: candidates,
@@ -1118,6 +1132,22 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
 
   void cancelGeneration() => _inferenceService?.cancel();
 
+  /// Creates an embedding with an installed model for background indexing.
+  Future<List<double>> embedText({
+    required AiModelInfo model,
+    required String text,
+  }) async {
+    if (_modelDownloader == null || _inferenceService == null) return const [];
+    final modelFile = await _modelDownloader.getModelFile(model.id);
+    if (!await modelFile.exists()) return const [];
+    final vectors = await _inferenceService.embedBatch(
+      modelPath: modelFile.path,
+      contextSize: model.contextWindow,
+      texts: [text],
+    );
+    return vectors.isEmpty ? const [] : vectors.first;
+  }
+
   Future<void> dispose() async => _inferenceService?.dispose();
 
   Future<List<ClipboardItem>> _semanticRank({
@@ -1154,7 +1184,10 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
 
       return results.isNotEmpty ? results : items.take(8).toList();
     } catch (_) {
-      return _clipboardRanker.rank(prompt: prompt, items: items).take(8).toList();
+      return _clipboardRanker
+          .rank(prompt: prompt, items: items)
+          .take(8)
+          .toList();
     }
   }
 

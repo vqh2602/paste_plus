@@ -44,10 +44,26 @@ void main() {
         needsClipboard: true,
         steps: const [
           AiExecutionStep(stepId: 1, tool: 'search_clipboard'),
-          AiExecutionStep(stepId: 2, tool: 'extract_urls', arguments: {'source': r'$step_1'}),
-          AiExecutionStep(stepId: 3, tool: 'explain_content', arguments: {'source': r'$step_2'}),
-          AiExecutionStep(stepId: 4, tool: 'summarize_text', arguments: {'source': r'$step_3'}),
-          AiExecutionStep(stepId: 5, tool: 'translate_text', arguments: {'source': r'$step_4'}),
+          AiExecutionStep(
+            stepId: 2,
+            tool: 'extract_urls',
+            arguments: {'source': r'$step_1'},
+          ),
+          AiExecutionStep(
+            stepId: 3,
+            tool: 'explain_content',
+            arguments: {'source': r'$step_2'},
+          ),
+          AiExecutionStep(
+            stepId: 4,
+            tool: 'summarize_text',
+            arguments: {'source': r'$step_3'},
+          ),
+          AiExecutionStep(
+            stepId: 5,
+            tool: 'translate_text',
+            arguments: {'source': r'$step_4'},
+          ),
         ],
       );
 
@@ -66,12 +82,25 @@ void main() {
 
       expect(validator.isValid(invalidToolPlan), isFalse);
 
+      final advertisedButUnimplementedToolPlan = AiExecutionPlan(
+        intent: 'single_step',
+        language: 'Vietnamese',
+        needsClipboard: true,
+        steps: const [AiExecutionStep(stepId: 1, tool: 'summarize_text')],
+      );
+
+      expect(validator.isValid(advertisedButUnimplementedToolPlan), isFalse);
+
       final invalidRefPlan = AiExecutionPlan(
         intent: 'multi_step',
         language: 'English',
         needsClipboard: true,
         steps: const [
-          AiExecutionStep(stepId: 1, tool: 'extract_urls', arguments: {'source': r'$step_2'}),
+          AiExecutionStep(
+            stepId: 1,
+            tool: 'extract_urls',
+            arguments: {'source': r'$step_2'},
+          ),
           AiExecutionStep(stepId: 2, tool: 'search_clipboard'),
         ],
       );
@@ -84,9 +113,7 @@ void main() {
         intent: 'single_step',
         language: 'Vietnamese',
         needsClipboard: false,
-        steps: const [
-          AiExecutionStep(stepId: 1, tool: 'malicious_tool'),
-        ],
+        steps: const [AiExecutionStep(stepId: 1, tool: 'malicious_tool')],
       );
 
       final validated = validator.validateOrFallback(

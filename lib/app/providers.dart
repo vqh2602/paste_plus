@@ -11,6 +11,7 @@ import '../core/services/ai_debug_service.dart';
 import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
+import '../features/ai/domain/ai_model_info.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
 import '../features/ai/services/clipboard_embedding_indexer.dart';
 import '../features/ai/services/clipboard_vector_store.dart';
@@ -121,9 +122,7 @@ final historyControllerProvider =
         ref.watch(clipboardWatcherProvider),
         () => ref.read(settingsControllerProvider),
         onItemStored: (item) async {
-          unawaited(
-            ref.read(clipboardEmbeddingIndexerProvider).enqueue(item),
-          );
+          unawaited(ref.read(clipboardEmbeddingIndexerProvider).enqueue(item));
           final settings = ref.read(settingsControllerProvider);
           if (!settings.localSharingEnabled ||
               settings.allConnectionsPaused ||
@@ -254,9 +253,7 @@ final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
 });
 
 final clipboardVectorStoreProvider = Provider<ClipboardVectorStore>((ref) {
-  return ClipboardVectorStore(
-    ref.watch(appDatabaseProvider),
-  );
+  return ClipboardVectorStore(ref.watch(appDatabaseProvider));
 });
 
 final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
@@ -266,10 +263,17 @@ final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
   );
 });
 
-final clipboardEmbeddingIndexerProvider =
-    Provider<ClipboardEmbeddingIndexer>((ref) {
+final clipboardEmbeddingIndexerProvider = Provider<ClipboardEmbeddingIndexer>((
+  ref,
+) {
+  final model = AiModelInfo.findById(
+    ref.watch(settingsControllerProvider).selectedAiModel,
+  );
   return ClipboardEmbeddingIndexer(
     vectorStore: ref.watch(clipboardVectorStoreProvider),
+    modelId: model.id,
+    embedder: (text) =>
+        ref.read(localAiEngineProvider).embedText(model: model, text: text),
   );
 });
 

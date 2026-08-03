@@ -95,7 +95,9 @@ class AiModelDownloaderService {
     final partFile = await _getPartFile(modelId);
     final mmprojPartFile = File('${(await getMmprojFile(modelId)).path}.part');
     if (await partFile.exists() && await partFile.length() > 0) return true;
-    if (await mmprojPartFile.exists() && await mmprojPartFile.length() > 0) return true;
+    if (await mmprojPartFile.exists() && await mmprojPartFile.length() > 0) {
+      return true;
+    }
     return false;
   }
 
@@ -169,7 +171,8 @@ class AiModelDownloaderService {
     }
 
     int bytesReceived = existingBytes;
-    int totalBytes = (model.fileSizeMb + (model.mmprojFileSizeMb ?? 0)) * 1024 * 1024;
+    int totalBytes =
+        (model.fileSizeMb + (model.mmprojFileSizeMb ?? 0)) * 1024 * 1024;
     DateTime lastTime = DateTime.now();
     int bytesSinceLastTime = 0;
     double currentSpeed = 0;
@@ -190,11 +193,13 @@ class AiModelDownloaderService {
         if (contentRange != null) {
           final totalMatch = RegExp(r'/(\d+)').firstMatch(contentRange);
           if (totalMatch != null) {
-            totalBytes = int.parse(totalMatch.group(1)!) +
+            totalBytes =
+                int.parse(totalMatch.group(1)!) +
                 ((model.mmprojFileSizeMb ?? 0) * 1024 * 1024);
           }
         } else if (response.contentLength > 0) {
-          totalBytes = existingBytes +
+          totalBytes =
+              existingBytes +
               response.contentLength +
               ((model.mmprojFileSizeMb ?? 0) * 1024 * 1024);
         }
@@ -203,7 +208,8 @@ class AiModelDownloaderService {
         existingBytes = 0;
         bytesReceived = 0;
         if (response.contentLength > 0) {
-          totalBytes = response.contentLength +
+          totalBytes =
+              response.contentLength +
               ((model.mmprojFileSizeMb ?? 0) * 1024 * 1024);
         }
       } else {
@@ -320,7 +326,10 @@ class AiModelDownloaderService {
           await mmSink.close();
 
           if (model.mmprojSha256 != null && model.mmprojSha256!.isNotEmpty) {
-            final valid = await verifyModelChecksum(mmprojPartFile, model.mmprojSha256);
+            final valid = await verifyModelChecksum(
+              mmprojPartFile,
+              model.mmprojSha256,
+            );
             if (valid) {
               await mmprojPartFile.rename(mmprojFile.path);
             } else {
@@ -387,6 +396,16 @@ class AiModelDownloaderService {
       await partFile.delete();
       deleted = true;
     }
+    final mmprojFile = await getMmprojFile(modelId);
+    if (await mmprojFile.exists()) {
+      await mmprojFile.delete();
+      deleted = true;
+    }
+    final mmprojPartFile = File('${mmprojFile.path}.part');
+    if (await mmprojPartFile.exists()) {
+      await mmprojPartFile.delete();
+      deleted = true;
+    }
     return deleted;
   }
 
@@ -396,6 +415,10 @@ class AiModelDownloaderService {
     final partFile = await _getPartFile(modelId);
     if (await partFile.exists()) {
       await partFile.delete();
+    }
+    final mmprojPartFile = File('${(await getMmprojFile(modelId)).path}.part');
+    if (await mmprojPartFile.exists()) {
+      await mmprojPartFile.delete();
     }
   }
 }

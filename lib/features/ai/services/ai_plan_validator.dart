@@ -13,13 +13,6 @@ class AiPlanValidator {
     'pin_clipboard',
     'add_to_collection',
     'delete_clipboard_item',
-    'explain_content',
-    'summarize_text',
-    'translate_text',
-    'rewrite_content',
-    'classify_type',
-    'refine_ocr',
-    'qa_clipboard',
   };
 
   /// Validates [plan] and returns true if it meets all safety and execution criteria.
