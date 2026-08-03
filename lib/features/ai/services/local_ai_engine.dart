@@ -70,14 +70,14 @@ class LocalAiEngine {
         final sourceApp = clipboardContext.sourceAppName ?? 'Unknown';
 
         contextText = '''
-[Dữ liệu hình ảnh được đính kèm làm ngữ cảnh]
+[Dữ liệu hình ảnh Multimodal & OCR đính kèm làm ngữ cảnh]
 - Nguồn: $sourceApp
 - Tên tệp hình ảnh: $fileName
 - Đường dẫn tệp: ${clipboardContext.imagePath ?? 'N/A'}
-- Nội dung văn bản trích xuất qua OCR từ hình ảnh:
-${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc hình ảnh là biểu đồ/họa tiết)'}
+- Nội dung văn bản trích xuất qua OCR (Dữ liệu hỗ trợ thứ cấp):
+${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc hình ảnh là biểu đồ/họa tiết/giao diện)'}
 
-[Hướng dẫn phân tích]: Người dùng đã chọn hình ảnh này làm ngữ cảnh. Hãy phân tích kỹ thông tin chi tiết và văn bản OCR (nếu có) ở trên để giải thích, trích xuất dữ liệu, hoặc trả lời câu hỏi của người dùng.
+[Hướng dẫn phân tích]: Pixel hình ảnh thực tế đã được nạp trực tiếp vào Multimodal Vision LLM. Hãy sử dụng cả khả năng nhìn ảnh thực tế và dữ liệu OCR hỗ trợ ở trên để phân tích giao diện, biểu đồ, hình ảnh hoặc giải đáp câu hỏi của người dùng.
 ''';
       } else {
         contextText = clipboardContext.content.trim();

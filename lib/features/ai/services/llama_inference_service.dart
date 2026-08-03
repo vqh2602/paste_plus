@@ -80,6 +80,8 @@ class LlamaInferenceService {
     int maxTokens = 768,
     bool thinkingModel = false,
     String? grammar,
+    String? mmprojPath,
+    List<String> imagePaths = const [],
     List<LlamaConversationTurn> conversation = const [],
   }) async* {
     await _ensureLoaded(modelPath, contextSize);

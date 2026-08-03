@@ -12,6 +12,8 @@ class AiModelInfo {
     required this.downloadUrl,
     required String recommendedFor,
     this.isThinkingModel = true,
+    this.isMultimodal = false,
+    this.mmprojUrl,
     this.contextWindow = 8192,
   })  : _rawDescription = description,
         _rawRecommendedFor = recommendedFor;
@@ -24,6 +26,8 @@ class AiModelInfo {
   final String downloadUrl;
   final String _rawRecommendedFor;
   final bool isThinkingModel;
+  final bool isMultimodal;
+  final String? mmprojUrl;
   final int contextWindow;
 
   String get description {
