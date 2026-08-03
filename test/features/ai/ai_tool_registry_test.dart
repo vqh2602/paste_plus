@@ -74,5 +74,30 @@ void main() {
       expect(approvedResult.success, isTrue);
       expect(approvedResult.output, contains('ghim'));
     });
+
+    test('mutating tool is blocked (fail-closed) when no confirmation callback provided', () async {
+      // Fix #9: Without a callback, mutating tools must be cancelled, not executed
+      final result = await registry.execute(
+        'delete_clipboard_item',
+        {'clip_id': 'clip_abc'},
+        // No onConfirmationRequested provided
+      );
+
+      expect(result.success, isFalse);
+      expect(result.cancelled, isTrue);
+      expect(result.output, contains('xác nhận'));
+    });
+
+    test('mutating tool is blocked when callback is null regardless of tool type', () async {
+      // All mutating tools must fail-closed — test pin and add_to_collection
+      for (final toolName in ['pin_clipboard', 'add_to_collection']) {
+        final result = await registry.execute(
+          toolName,
+          {'clip_id': 'clip_test', 'collection_id': 'col_1', 'pinned': true},
+        );
+        expect(result.cancelled, isTrue,
+            reason: '$toolName should be blocked without confirmation callback');
+      }
+    });
   });
 }

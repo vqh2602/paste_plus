@@ -233,6 +233,28 @@ class AiModelDownloaderService {
 
       await sink.close();
 
+      // Fix #8: Verify checksum before promoting .part → .gguf
+      if (model.sha256 != null && model.sha256!.isNotEmpty) {
+        final valid = await verifyModelChecksum(partFile, model.sha256);
+        if (!valid) {
+          await partFile.delete();
+          client.close();
+          _activeClients.remove(model.id);
+          controller.add(
+            ModelDownloadProgress(
+              modelId: model.id,
+              bytesReceived: bytesReceived,
+              totalBytes: totalBytes,
+              speedBytesPerSec: 0,
+              state: DownloadState.error,
+            ),
+          );
+          throw const FormatException(
+            'Model checksum không hợp lệ. File có thể bị lỗi hoặc bị thay đổi trong quá trình tải.',
+          );
+        }
+      }
+
       // Download complete — rename .part to .gguf
       final finalFile = await getModelFile(model.id);
       await partFile.rename(finalFile.path);

@@ -29,11 +29,17 @@ class AiToolRegistry {
       return AiToolResult.error('Tool "$toolName" không tồn tại trong hệ thống.');
     }
 
-    if (tool.requiresConfirmation && onConfirmationRequested != null) {
+    // Fix #9: Fail-closed — never execute mutating tools without confirmation callback
+    if (tool.requiresConfirmation) {
+      if (onConfirmationRequested == null) {
+        return AiToolResult.cancelled(
+          'Không thể thực thi "$toolName": chưa có cơ chế xác nhận từ người dùng.',
+        );
+      }
       final approved = await onConfirmationRequested(toolName, arguments);
       if (!approved) {
         return AiToolResult.cancelled(
-          'Người dùng từ chối thực thi công cụ "$toolName".',
+          'Người dùng đã từ chối thao tác "$toolName".',
         );
       }
     }
