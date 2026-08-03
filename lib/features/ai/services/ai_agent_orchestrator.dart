@@ -25,14 +25,14 @@ class AiAgentOrchestrator {
   final AiToolRegistry? _customRegistry;
 
   /// Executes [plan] sequentially, resolving step dependencies `$step_N`.
-  List<AiStepResult> executePlan({
+  Future<List<AiStepResult>> executePlan({
     required AiExecutionPlan plan,
     required String prompt,
     required String contextText,
     required List<ClipboardItem> clipboardHistory,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
         onConfirmationRequested,
-  }) {
+  }) async {
     final stepResults = <int, AiStepResult>{};
     final outputList = <AiStepResult>[];
     final registry = _customRegistry ?? _buildDefaultRegistry(clipboardHistory);
@@ -44,7 +44,7 @@ class AiAgentOrchestrator {
         stepResults: stepResults,
       );
 
-      final result = _executeStep(
+      final result = await _executeStep(
         step: step,
         prompt: prompt,
         sourceText: sourceText,
@@ -105,7 +105,7 @@ class AiAgentOrchestrator {
     return contextText;
   }
 
-  AiStepResult _executeStep({
+  Future<AiStepResult> _executeStep({
     required AiExecutionStep step,
     required String prompt,
     required String sourceText,
@@ -113,27 +113,31 @@ class AiAgentOrchestrator {
     required AiToolRegistry registry,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
         onConfirmationRequested,
-  }) {
+  }) async {
     final registeredTool = registry.getTool(step.tool);
     if (registeredTool != null) {
       final args = Map<String, dynamic>.from(step.arguments);
       if (!args.containsKey('text') && sourceText.isNotEmpty) {
         args['text'] = sourceText;
       }
-      final toolResult = registry.execute(
+      final toolResult = await registry.execute(
         step.tool,
         args,
         onConfirmationRequested: onConfirmationRequested,
       );
 
-      final outputText = toolResult.then((r) => r.output);
-      // Synchronous return wrapper for orchestrator pipeline
+      final items = <ClipboardItem>[];
+      if (toolResult.data is List<ClipboardItem>) {
+        items.addAll(toolResult.data as List<ClipboardItem>);
+      } else if (toolResult.data is ClipboardItem) {
+        items.add(toolResult.data as ClipboardItem);
+      }
+
       return AiStepResult(
         stepId: step.stepId,
         tool: step.tool,
-        output: registeredTool.requiresConfirmation
-            ? 'Đã thực thi công cụ có xác nhận [${step.tool}]'
-            : sourceText,
+        output: toolResult.output,
+        items: items,
       );
     }
 

@@ -100,7 +100,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
         );
 
     if (effectivePlan.executionPlan?.isMultiStep == true) {
-      final stepResults = _agentOrchestrator.executePlan(
+      final stepResults = await _agentOrchestrator.executePlan(
         plan: effectivePlan.executionPlan!,
         prompt: prompt,
         contextText: contextText,
