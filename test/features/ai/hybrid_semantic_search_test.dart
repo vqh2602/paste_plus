@@ -40,23 +40,32 @@ void main() {
         allCandidates: [item1, item2, item3],
       );
 
-      expect(fused.map((i) => i.id), containsAll(['item_1', 'item_2', 'item_3']));
+      expect(
+        fused.map((i) => i.id),
+        containsAll(['item_1', 'item_2', 'item_3']),
+      );
       // Item 1 appeared in both lists, so its fused rank score should place it first!
       expect(fused.first.id, equals('item_1'));
     });
 
-    test('search returns top 6-10 items without per-candidate re-embedding overhead', () async {
-      const search = HybridSemanticSearch();
-      final items = List.generate(20, (i) => mockItem('item_$i', 'Clipboard item text content $i'));
+    test(
+      'search returns top 6-10 items without per-candidate re-embedding overhead',
+      () async {
+        const search = HybridSemanticSearch();
+        final items = List.generate(
+          20,
+          (i) => mockItem('item_$i', 'Clipboard item text content $i'),
+        );
 
-      final results = await search.search(
-        query: 'content 5',
-        allCandidates: items,
-        maxFinalItems: 8,
-      );
+        final results = await search.search(
+          query: 'content 5',
+          allCandidates: items,
+          maxFinalItems: 8,
+        );
 
-      expect(results.length, lessThanOrEqualTo(8));
-      expect(results.length, greaterThanOrEqualTo(1));
-    });
+        expect(results.length, lessThanOrEqualTo(8));
+        expect(results.length, greaterThanOrEqualTo(1));
+      },
+    );
   });
 }

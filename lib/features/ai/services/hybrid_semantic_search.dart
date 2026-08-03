@@ -26,7 +26,11 @@ class HybridSemanticSearch {
     if (allCandidates.isEmpty) return const [];
 
     // 1. Lexical candidate selection (Top 50) using FTS5 if available
-    final lexicalCandidates = await _lexicalSearch(query, allCandidates, limit: 50);
+    final lexicalCandidates = await _lexicalSearch(
+      query,
+      allCandidates,
+      limit: 50,
+    );
 
     // 2. Vector candidate selection (Top 30) using pre-computed vector store
     List<VectorMatch> vectorMatches = const [];
@@ -46,10 +50,10 @@ class HybridSemanticSearch {
     );
 
     // 4. Final Reranking to select top 6-10 items for LLM context
-    final reranked = _ranker.rank(
-      prompt: query,
-      items: fusedCandidates,
-    ).take(maxFinalItems.clamp(6, 10)).toList();
+    final reranked = _ranker
+        .rank(prompt: query, items: fusedCandidates)
+        .take(maxFinalItems.clamp(6, 10))
+        .toList();
 
     return reranked;
   }
@@ -92,7 +96,10 @@ class HybridSemanticSearch {
       }
     }
 
-    final queryWords = lowerQuery.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
+    final queryWords = lowerQuery
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .toSet();
 
     final scored = items.map((item) {
       final content = item.normalizedContent;

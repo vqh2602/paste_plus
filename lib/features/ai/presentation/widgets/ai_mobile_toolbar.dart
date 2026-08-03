@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 
 class AiMobileToolbar extends StatelessWidget {
@@ -26,7 +26,7 @@ class AiMobileToolbar extends StatelessWidget {
           CupertinoIconControl(
             key: const Key('ai-mobile-close'),
             icon: CupertinoIcons.xmark,
-            tooltip: 'close'.tr,
+            tooltip: context.l10n.close,
             onPressed: onClose,
           ),
           const SizedBox(width: 2),
@@ -38,7 +38,7 @@ class AiMobileToolbar extends StatelessWidget {
           const SizedBox(width: 7),
           Expanded(
             child: Text(
-              'ai_chat_assistant'.tr,
+              context.l10n.ai_chat_assistant,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
@@ -50,14 +50,14 @@ class AiMobileToolbar extends StatelessWidget {
                 ? CupertinoIcons.doc_on_clipboard_fill
                 : CupertinoIcons.doc_on_clipboard,
             size: 18,
-            tooltip: 'ai_choose_context'.tr,
+            tooltip: context.l10n.ai_choose_context,
             onPressed: onChooseContext,
           ),
           CupertinoIconControl(
             key: const Key('ai-mobile-history'),
             icon: CupertinoIcons.clock,
             size: 18,
-            tooltip: 'ai_conversation_history'.tr,
+            tooltip: context.l10n.ai_conversation_history,
             onPressed: onShowHistory,
           ),
         ],

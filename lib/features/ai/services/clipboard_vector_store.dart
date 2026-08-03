@@ -6,10 +6,7 @@ import '../../../core/database/app_database.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 
 class VectorMatch {
-  const VectorMatch({
-    required this.clipboardId,
-    required this.score,
-  });
+  const VectorMatch({required this.clipboardId, required this.score});
 
   final String clipboardId;
   final double score;
@@ -30,10 +27,18 @@ class ClipboardVectorStore {
   /// Decodes SQLite BLOB bytes back into Float32List.
   static Float32List decodeVector(Uint8List blob) {
     final buffer = blob.buffer;
-    return floatListFromBuffer(buffer, blob.offsetInBytes, blob.lengthInBytes ~/ 4);
+    return floatListFromBuffer(
+      buffer,
+      blob.offsetInBytes,
+      blob.lengthInBytes ~/ 4,
+    );
   }
 
-  static Float32List floatListFromBuffer(ByteBuffer buffer, int offset, int length) {
+  static Float32List floatListFromBuffer(
+    ByteBuffer buffer,
+    int offset,
+    int length,
+  ) {
     return buffer.asFloat32List(offset, length);
   }
 
@@ -89,17 +94,13 @@ class ClipboardVectorStore {
     if (db == null) return;
 
     final now = DateTime.now().millisecondsSinceEpoch;
-    await db.insert(
-      'clipboard_embeddings',
-      {
-        'clipboard_id': clipboardId,
-        'content_hash': contentHash,
-        'model_id': modelId,
-        'vector': existingVector,
-        'created_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('clipboard_embeddings', {
+      'clipboard_id': clipboardId,
+      'content_hash': contentHash,
+      'model_id': modelId,
+      'vector': existingVector,
+      'created_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// High-level indexer method: Checks pre-computed hash cache first, or embeds and persists vector.
@@ -156,23 +157,20 @@ class ClipboardVectorStore {
     );
 
     Uint8List blobBytes;
-    if (existingHashRows.isNotEmpty && existingHashRows.first['vector'] is Uint8List) {
+    if (existingHashRows.isNotEmpty &&
+        existingHashRows.first['vector'] is Uint8List) {
       blobBytes = existingHashRows.first['vector'] as Uint8List;
     } else {
       blobBytes = encodeVector(vector);
     }
 
-    await db.insert(
-      'clipboard_embeddings',
-      {
-        'clipboard_id': clipboardId,
-        'content_hash': contentHash,
-        'model_id': modelId,
-        'vector': blobBytes,
-        'created_at': now,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('clipboard_embeddings', {
+      'clipboard_id': clipboardId,
+      'content_hash': contentHash,
+      'model_id': modelId,
+      'vector': blobBytes,
+      'created_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   /// Computes cosine distance against stored embeddings for [modelId] and returns top matches.

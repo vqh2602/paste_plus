@@ -25,11 +25,11 @@ class AiToolResult {
   final bool cancelled;
 
   Map<String, dynamic> toJson() => {
-        'success': success,
-        'output': output,
-        'data': data,
-        'cancelled': cancelled,
-      };
+    'success': success,
+    'output': output,
+    'data': data,
+    'cancelled': cancelled,
+  };
 }
 
 /// Abstract contract for all ClipFlow AI Tools.

@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import 'device_card.dart';
 
@@ -54,7 +54,7 @@ class SharingOverviewCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'local_network_sharing'.tr,
+                      context.l10n.local_network_sharing,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -74,7 +74,7 @@ class SharingOverviewCard extends StatelessWidget {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            _statusText,
+                            _statusText(context),
                             style: TextStyle(
                               fontSize: 12,
                               color: resolveColor(
@@ -100,7 +100,7 @@ class SharingOverviewCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'sharing_private_note'.tr,
+                    context.l10n.sharing_private_note,
                     style: TextStyle(
                       fontSize: 12,
                       color: resolveColor(
@@ -111,7 +111,10 @@ class SharingOverviewCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 12),
-                DeviceActionButton(label: 'refresh'.tr, onPressed: onRefresh),
+                DeviceActionButton(
+                  label: context.l10n.refresh,
+                  onPressed: onRefresh,
+                ),
               ],
             ),
           ],
@@ -120,16 +123,16 @@ class SharingOverviewCard extends StatelessWidget {
     );
   }
 
-  String get _statusText {
-    if (!enabled) return 'sharing_disabled'.tr;
-    if (paused) return 'sharing_paused'.tr;
+  String _statusText(BuildContext context) {
+    if (!enabled) return context.l10n.sharing_disabled;
+    if (paused) return context.l10n.sharing_paused;
     if (connectedCount > 0) {
-      return 'devices_connected_count'.tr.replaceFirst(
+      return context.l10n.devices_connected_count.replaceFirst(
         '@count',
         '$connectedCount',
       );
     }
-    if (isDiscovering) return 'searching_devices'.tr;
-    return 'no_connected_devices'.tr;
+    if (isDiscovering) return context.l10n.searching_devices;
+    return context.l10n.no_connected_devices;
   }
 }

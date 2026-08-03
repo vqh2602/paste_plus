@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 
 class QuickEmptyStateWidget extends StatelessWidget {
@@ -21,7 +21,9 @@ class QuickEmptyStateWidget extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            hasQuery ? 'no_matching_clips'.tr : 'clipboard_empty'.tr,
+            hasQuery
+                ? context.l10n.no_matching_clips
+                : context.l10n.clipboard_empty,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -30,7 +32,9 @@ class QuickEmptyStateWidget extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            hasQuery ? 'try_different_search'.tr : 'copy_text_hint'.tr,
+            hasQuery
+                ? context.l10n.try_different_search
+                : context.l10n.copy_text_hint,
             style: TextStyle(
               fontSize: 12,
               color: resolveColor(context, ClipFlowColors.secondaryText),

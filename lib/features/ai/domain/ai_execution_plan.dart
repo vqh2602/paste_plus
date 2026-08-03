@@ -8,21 +8,24 @@ class AiExecutionStep {
     this.arguments = const {},
   });
 
-  factory AiExecutionStep.fromJson(Map<String, dynamic> json, int defaultStepId) {
+  factory AiExecutionStep.fromJson(
+    Map<String, dynamic> json,
+    int defaultStepId,
+  ) {
     final stepId = json['step_id'] is int
         ? json['step_id'] as int
         : (json['stepId'] is int ? json['stepId'] as int : defaultStepId);
-    final tool = (json['tool'] ?? json['action'] ?? 'search_clipboard').toString().trim();
+    final tool = (json['tool'] ?? json['action'] ?? 'search_clipboard')
+        .toString()
+        .trim();
     final argsRaw = json['arguments'] ?? json['args'];
     final Map<String, dynamic> arguments = argsRaw is Map<String, dynamic>
         ? Map<String, dynamic>.from(argsRaw)
-        : (argsRaw is Map ? Map<String, dynamic>.from(argsRaw) : <String, dynamic>{});
+        : (argsRaw is Map
+              ? Map<String, dynamic>.from(argsRaw)
+              : <String, dynamic>{});
 
-    return AiExecutionStep(
-      stepId: stepId,
-      tool: tool,
-      arguments: arguments,
-    );
+    return AiExecutionStep(stepId: stepId, tool: tool, arguments: arguments);
   }
 
   final int stepId;
@@ -30,10 +33,10 @@ class AiExecutionStep {
   final Map<String, dynamic> arguments;
 
   Map<String, dynamic> toJson() => {
-        'step_id': stepId,
-        'tool': tool,
-        'arguments': arguments,
-      };
+    'step_id': stepId,
+    'tool': tool,
+    'arguments': arguments,
+  };
 }
 
 /// Structured multi-step or single-step execution plan produced by planner.
@@ -56,22 +59,21 @@ class AiExecutionPlan {
       intent: 'single_step',
       language: language,
       needsClipboard: true,
-      steps: [
-        AiExecutionStep(
-          stepId: 1,
-          tool: tool,
-          arguments: arguments,
-        ),
-      ],
+      steps: [AiExecutionStep(stepId: 1, tool: tool, arguments: arguments)],
     );
   }
 
   factory AiExecutionPlan.fromJson(Map<String, dynamic> json) {
     final intent = (json['intent'] ?? 'single_step').toString();
     final language = (json['language'] ?? 'Vietnamese').toString();
-    final needsClipboard = json['needs_clipboard'] == true || json['needsClipboard'] == true;
-    final outputFormat = (json['output_format'] ?? json['outputFormat'] ?? 'markdown').toString();
-    final confidence = (json['confidence'] is num) ? (json['confidence'] as num).toDouble() : 1.0;
+    final needsClipboard =
+        json['needs_clipboard'] == true || json['needsClipboard'] == true;
+    final outputFormat =
+        (json['output_format'] ?? json['outputFormat'] ?? 'markdown')
+            .toString();
+    final confidence = (json['confidence'] is num)
+        ? (json['confidence'] as num).toDouble()
+        : 1.0;
 
     final stepsRaw = json['steps'];
     final steps = <AiExecutionStep>[];
@@ -81,7 +83,12 @@ class AiExecutionPlan {
         if (item is Map<String, dynamic>) {
           steps.add(AiExecutionStep.fromJson(item, index + 1));
         } else if (item is Map) {
-          steps.add(AiExecutionStep.fromJson(Map<String, dynamic>.from(item), index + 1));
+          steps.add(
+            AiExecutionStep.fromJson(
+              Map<String, dynamic>.from(item),
+              index + 1,
+            ),
+          );
         }
       }
     }
@@ -129,11 +136,11 @@ class AiExecutionPlan {
   bool get isMultiStep => steps.length > 1;
 
   Map<String, dynamic> toJson() => {
-        'intent': intent,
-        'language': language,
-        'needs_clipboard': needsClipboard,
-        'steps': steps.map((s) => s.toJson()).toList(),
-        'output_format': outputFormat,
-        'confidence': confidence,
-      };
+    'intent': intent,
+    'language': language,
+    'needs_clipboard': needsClipboard,
+    'steps': steps.map((s) => s.toJson()).toList(),
+    'output_format': outputFormat,
+    'confidence': confidence,
+  };
 }

@@ -1,37 +1,45 @@
-import '../../../../core/localization/app_translations.dart';
+import 'package:clipflow/core/localization/localization_extensions.dart';
+import 'package:flutter/widgets.dart';
 import '../../domain/peer_connection_info.dart';
 
-String connectionStatusLabel(PeerConnectionStatus status) => switch (status) {
-  PeerConnectionStatus.discovered => 'peer_status_available'.tr,
-  PeerConnectionStatus.pairing => 'peer_status_pairing'.tr,
-  PeerConnectionStatus.connecting => 'peer_status_connecting'.tr,
-  PeerConnectionStatus.authenticating => 'peer_status_authenticating'.tr,
-  PeerConnectionStatus.syncing => 'peer_status_syncing'.tr,
-  PeerConnectionStatus.reconnecting => 'peer_status_reconnecting'.tr,
-  PeerConnectionStatus.connected => 'peer_status_connected'.tr,
-  PeerConnectionStatus.disconnected => 'peer_status_disconnected'.tr,
-  PeerConnectionStatus.rejected => 'peer_status_rejected'.tr,
-  PeerConnectionStatus.incompatible => 'peer_status_incompatible'.tr,
-  PeerConnectionStatus.blocked => 'peer_status_blocked'.tr,
+String connectionStatusLabel(
+  BuildContext context,
+  PeerConnectionStatus status,
+) => switch (status) {
+  PeerConnectionStatus.discovered => context.l10n.peer_status_available,
+  PeerConnectionStatus.pairing => context.l10n.peer_status_pairing,
+  PeerConnectionStatus.connecting => context.l10n.peer_status_connecting,
+  PeerConnectionStatus.authenticating =>
+    context.l10n.peer_status_authenticating,
+  PeerConnectionStatus.syncing => context.l10n.peer_status_syncing,
+  PeerConnectionStatus.reconnecting => context.l10n.peer_status_reconnecting,
+  PeerConnectionStatus.connected => context.l10n.peer_status_connected,
+  PeerConnectionStatus.disconnected => context.l10n.peer_status_disconnected,
+  PeerConnectionStatus.rejected => context.l10n.peer_status_rejected,
+  PeerConnectionStatus.incompatible => context.l10n.peer_status_incompatible,
+  PeerConnectionStatus.blocked => context.l10n.peer_status_blocked,
 };
 
-String connectionQualityLabel(ConnectionQuality quality) => switch (quality) {
-  ConnectionQuality.excellent => 'quality_excellent'.tr,
-  ConnectionQuality.good => 'quality_good'.tr,
-  ConnectionQuality.fair => 'quality_fair'.tr,
-  ConnectionQuality.poor => 'quality_poor'.tr,
-  ConnectionQuality.offline => 'quality_offline'.tr,
+String connectionQualityLabel(
+  BuildContext context,
+  ConnectionQuality quality,
+) => switch (quality) {
+  ConnectionQuality.excellent => context.l10n.quality_excellent,
+  ConnectionQuality.good => context.l10n.quality_good,
+  ConnectionQuality.fair => context.l10n.quality_fair,
+  ConnectionQuality.poor => context.l10n.quality_poor,
+  ConnectionQuality.offline => context.l10n.quality_offline,
 };
 
-String relativePeerTime(DateTime? value) {
-  if (value == null) return 'never'.tr;
+String relativePeerTime(BuildContext context, DateTime? value) {
+  if (value == null) return context.l10n.never;
   final difference = DateTime.now().difference(value);
-  if (difference.inMinutes < 1) return 'just_now'.tr;
+  if (difference.inMinutes < 1) return context.l10n.just_now;
   if (difference.inHours < 1) {
-    return 'mins_ago'.tr.replaceFirst('@m', '${difference.inMinutes}');
+    return context.l10n.mins_ago.replaceFirst('@m', '${difference.inMinutes}');
   }
   if (difference.inDays < 1) {
-    return 'hours_ago'.tr.replaceFirst('@h', '${difference.inHours}');
+    return context.l10n.hours_ago.replaceFirst('@h', '${difference.inHours}');
   }
-  return 'days_ago'.tr.replaceFirst('@d', '${difference.inDays}');
+  return context.l10n.days_ago.replaceFirst('@d', '${difference.inDays}');
 }

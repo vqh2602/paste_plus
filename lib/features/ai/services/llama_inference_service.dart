@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:llamadart/llamadart.dart';
@@ -16,9 +15,7 @@ class LlamaStreamToken {
 }
 
 class ModelLoadCapabilities {
-  const ModelLoadCapabilities({
-    required this.multimodalReady,
-  });
+  const ModelLoadCapabilities({required this.multimodalReady});
 
   final bool multimodalReady;
 }
@@ -111,8 +108,7 @@ class LlamaInferenceService {
     String modelPath,
     int contextSize, {
     String? mmprojPath,
-  }) =>
-      _ensureLoaded(modelPath, contextSize, mmprojPath: mmprojPath);
+  }) => _ensureLoaded(modelPath, contextSize, mmprojPath: mmprojPath);
 
   Future<List<int>> tokenize(String text) async {
     final engine = _engine;

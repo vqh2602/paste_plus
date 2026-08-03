@@ -15,8 +15,10 @@ void main() {
       final List<ClipboardItem> items = [
         ClipboardItem(
           id: 'item_1',
-          content: 'Đây là đường dẫn tới tài liệu API chính thức https://example.com',
-          normalizedContent: 'đây là đường dẫn tới tài liệu api chính thức https://example.com',
+          content:
+              'Đây là đường dẫn tới tài liệu API chính thức https://example.com',
+          normalizedContent:
+              'đây là đường dẫn tới tài liệu api chính thức https://example.com',
           contentHash: 'h1',
           contentType: ClipboardContentType.text,
           createdAt: DateTime.now(),
@@ -97,9 +99,16 @@ void main() {
           allCandidates: items,
         );
 
-        expect(results, isNotEmpty, reason: 'Query "$query" should match items');
-        expect(results.first.id, equals(expectedId),
-            reason: 'Query "$query" should match $expectedId');
+        expect(
+          results,
+          isNotEmpty,
+          reason: 'Query "$query" should match items',
+        );
+        expect(
+          results.first.id,
+          equals(expectedId),
+          reason: 'Query "$query" should match $expectedId',
+        );
       }
     });
   });

@@ -70,6 +70,7 @@ class LocalAiEngine {
     AiRequestPlan? requestPlan,
     List<AiChatMessage> conversationMessages = const [],
     String appLanguageTag = 'vi-VN',
+    String? responseLanguageTag,
     String? debugRequestId,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
     onConfirmationRequested,
@@ -83,6 +84,7 @@ class LocalAiEngine {
               conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
           featureGroup: featureGroup,
           appLanguageTag: appLanguageTag,
+          resolvedResponseLanguageTag: responseLanguageTag,
         );
 
     var effectivePlan = initialPlan;
@@ -110,6 +112,7 @@ class LocalAiEngine {
           featureGroup: featureGroup,
           rawModelPlanJson: rawPlanJson,
           appLanguageTag: appLanguageTag,
+          resolvedResponseLanguageTag: responseLanguageTag,
         );
       }
     }
@@ -1146,6 +1149,51 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
       texts: [text],
     );
     return vectors.isEmpty ? const [] : vectors.first;
+  }
+
+  Future<String?> detectLanguageTag({
+    required AiModelInfo model,
+    required String text,
+  }) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    final scripted = _detectScriptLanguage(trimmed);
+    if (scripted != null) return scripted;
+    if (_modelDownloader == null || _inferenceService == null) return null;
+    final modelFile = await _modelDownloader.getModelFile(model.id);
+    if (!await modelFile.exists()) return null;
+
+    final output = StringBuffer();
+    try {
+      await for (final token in _inferenceService.generate(
+        modelPath: modelFile.path,
+        contextSize: min(model.contextWindow, 2048),
+        systemPrompt:
+            'Identify the language of the user text. Output one BCP-47 tag only.',
+        userPrompt: trimmed,
+        temperature: 0,
+        maxTokens: 16,
+        thinkingModel: false,
+        grammar:
+            r'root ::= "\"vi-VN\"" | "\"en-US\"" | "\"ja-JP\"" | "\"ko-KR\"" | "\"zh-Hans-CN\"" | "\"de-DE\"" | "\"fr-FR\"" | "\"es-ES\"" | "\"it-IT\"" | "\"pt-PT\"" | "\"id-ID\"" | "\"ar-SA\""',
+      )) {
+        output.write(token.content ?? '');
+      }
+      final tag = output.toString().replaceAll('"', '').trim();
+      return RegExp(r'^[a-z]{2,3}(?:-[A-Za-z]{2,4}){1,2}$').hasMatch(tag)
+          ? tag
+          : null;
+    } on Object {
+      return null;
+    }
+  }
+
+  String? _detectScriptLanguage(String text) {
+    if (RegExp(r'[\u3040-\u30ff]').hasMatch(text)) return 'ja-JP';
+    if (RegExp(r'[\uac00-\ud7af]').hasMatch(text)) return 'ko-KR';
+    if (RegExp(r'[\u0600-\u06ff]').hasMatch(text)) return 'ar-SA';
+    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(text)) return 'zh-Hans-CN';
+    return null;
   }
 
   Future<void> dispose() async => _inferenceService?.dispose();

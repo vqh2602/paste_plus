@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
 
-
 import '../../app/theme/app_theme.dart';
 export '../../app/theme/app_theme.dart';
 
@@ -232,10 +231,13 @@ class CupertinoIconControl extends StatelessWidget {
         child: Icon(
           icon,
           size: size,
-          color: color ??
+          color:
+              color ??
               (onPressed == null
-                  ? resolveColor(context, ClipFlowColors.secondaryText)
-                      .withValues(alpha: 0.4)
+                  ? resolveColor(
+                      context,
+                      ClipFlowColors.secondaryText,
+                    ).withValues(alpha: 0.4)
                   : resolveColor(context, ClipFlowColors.text)),
         ),
       ),
@@ -322,9 +324,7 @@ void showCupertinoNotice(BuildContext context, String message) {
       right: 0,
       bottom: 32,
       child: IgnorePointer(
-        child: Center(
-          child: _AnimatedToastNotice(message: message),
-        ),
+        child: Center(child: _AnimatedToastNotice(message: message)),
       ),
     ),
   );
@@ -361,9 +361,15 @@ class _AnimatedToastNoticeState extends State<_AnimatedToastNotice>
       vsync: this,
       duration: const Duration(milliseconds: 260),
     );
-    final curve = CurvedAnimation(parent: _controller, curve: Curves.easeOutBack);
+    final curve = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
     _fade = Tween<double>(begin: 0.0, end: 1.0).animate(_controller);
-    _slide = Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero).animate(curve);
+    _slide = Tween<Offset>(
+      begin: const Offset(0, 0.4),
+      end: Offset.zero,
+    ).animate(curve);
     _scale = Tween<double>(begin: 0.88, end: 1.0).animate(curve);
 
     _controller.forward();

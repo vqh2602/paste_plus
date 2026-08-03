@@ -34,10 +34,7 @@ class AiResponseVerifier {
     bool requiresJson = false,
   }) {
     if (draftText.trim().isEmpty) {
-      return const VerificationReport(
-        isValid: true,
-        correctedText: '',
-      );
+      return const VerificationReport(isValid: true, correctedText: '');
     }
 
     var text = draftText;
@@ -46,7 +43,10 @@ class AiResponseVerifier {
     final validIds = {for (final item in candidates) item.id};
 
     // 1. Verify and repair clip_id citations (e.g. [clip:id] or "clip_id": "id")
-    final idRegex = RegExp(r'\[clip:([a-zA-Z0-9_\-]+)\]|"?clip_id"?\s*:\s*"([a-zA-Z0-9_\-]+)"', caseSensitive: false);
+    final idRegex = RegExp(
+      r'\[clip:([a-zA-Z0-9_\-]+)\]|"?clip_id"?\s*:\s*"([a-zA-Z0-9_\-]+)"',
+      caseSensitive: false,
+    );
 
     text = text.replaceAllMapped(idRegex, (match) {
       final id = match.group(1) ?? match.group(2) ?? '';

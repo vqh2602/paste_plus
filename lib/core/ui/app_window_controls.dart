@@ -6,10 +6,7 @@ import 'package:window_manager/window_manager.dart';
 /// Renders native window control buttons (Minimize, Maximize/Restore, Close)
 /// for Windows & Linux platforms where `TitleBarStyle.hidden` strips system window controls.
 class AppWindowControls extends StatefulWidget {
-  const AppWindowControls({
-    super.key,
-    this.brightness,
-  });
+  const AppWindowControls({super.key, this.brightness});
 
   final Brightness? brightness;
 
@@ -54,7 +51,7 @@ class _AppWindowControlsState extends State<AppWindowControls> {
 
     final isDark =
         (widget.brightness ?? CupertinoTheme.of(context).brightness) ==
-            Brightness.dark;
+        Brightness.dark;
     final iconColor = isDark ? CupertinoColors.white : CupertinoColors.black;
     final hoverBg = isDark
         ? CupertinoColors.white.withValues(alpha: 0.12)
@@ -130,11 +127,7 @@ class _WindowControlButtonState extends State<_WindowControlButton> {
           height: 38,
           color: _isHovered ? widget.hoverColor : CupertinoColors.transparent,
           alignment: Alignment.center,
-          child: Icon(
-            widget.icon,
-            size: 13,
-            color: activeIconColor,
-          ),
+          child: Icon(widget.icon, size: 13, color: activeIconColor),
         ),
       ),
     );
@@ -169,10 +162,7 @@ class AppWindowHeader extends StatelessWidget {
         height: height,
         child: Row(
           children: [
-            if (leading != null) ...[
-              const SizedBox(width: 12),
-              leading!,
-            ],
+            if (leading != null) ...[const SizedBox(width: 12), leading!],
             if (showTitle) ...[
               Padding(
                 padding: EdgeInsets.only(left: leading != null ? 8.0 : 14.0),

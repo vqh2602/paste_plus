@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/local_sharing_state.dart';
 import '../../domain/peer_connection_info.dart';
@@ -23,22 +23,22 @@ class AvailableDevicesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceListSection(
-      title: 'available_devices'.tr,
+      title: context.l10n.available_devices,
       devices: state.availableDevices,
       emptyIcon: state.isDiscovering
           ? CupertinoIcons.antenna_radiowaves_left_right
           : CupertinoIcons.wifi_slash,
       emptyTitle: state.isDiscovering
-          ? 'searching_nearby_devices'.tr
-          : 'sharing_discovery_off'.tr,
+          ? context.l10n.searching_nearby_devices
+          : context.l10n.sharing_discovery_off,
       emptySubtitle: state.isDiscovering
-          ? 'searching_nearby_devices_sub'.tr
-          : 'sharing_discovery_off_sub'.tr,
+          ? context.l10n.searching_nearby_devices_sub
+          : context.l10n.sharing_discovery_off_sub,
       itemBuilder: (peer) => DeviceCard(
         peer: peer,
-        primaryLabel: 'connect'.tr,
+        primaryLabel: context.l10n.connect,
         onPrimary: enabled ? () => onConnect(peer.deviceId) : null,
-        secondaryLabel: 'block_device'.tr,
+        secondaryLabel: context.l10n.block_device,
         onSecondary: enabled ? () => onBlock(peer.deviceId) : null,
         secondaryDestructive: true,
       ),
@@ -67,17 +67,17 @@ class PairedDevicesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DeviceListSection(
-      title: 'paired_devices'.tr,
+      title: context.l10n.paired_devices,
       devices: devices,
       emptyIcon: CupertinoIcons.checkmark_shield,
-      emptyTitle: 'no_paired_devices'.tr,
-      emptySubtitle: 'no_paired_devices_sub'.tr,
+      emptyTitle: context.l10n.no_paired_devices,
+      emptySubtitle: context.l10n.no_paired_devices_sub,
       itemBuilder: (peer) => DeviceCard(
         peer: peer,
         primaryLabel: peer.isConnected
-            ? 'disconnect'.tr
+            ? context.l10n.disconnect
             : peer.requiresManualReconnect
-            ? 'reconnect_manually'.tr
+            ? context.l10n.reconnect_manually
             : null,
         onPrimary: !enabled
             ? null
@@ -86,10 +86,10 @@ class PairedDevicesSection extends StatelessWidget {
             : peer.requiresManualReconnect
             ? () => onReconnect(peer.deviceId)
             : null,
-        secondaryLabel: 'forget_device'.tr,
+        secondaryLabel: context.l10n.forget_device,
         onSecondary: enabled ? () => onForget(peer.deviceId) : null,
         secondaryDestructive: true,
-        tertiaryLabel: 'block_device'.tr,
+        tertiaryLabel: context.l10n.block_device,
         onTertiary: enabled ? () => onBlock(peer.deviceId) : null,
       ),
     );
@@ -110,14 +110,14 @@ class BlockedDevicesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (devices.isEmpty) return const SizedBox.shrink();
     return DeviceListSection(
-      title: 'blocked_devices'.tr,
+      title: context.l10n.blocked_devices,
       devices: devices,
       emptyIcon: CupertinoIcons.nosign,
       emptyTitle: '',
       emptySubtitle: '',
       itemBuilder: (peer) => DeviceCard(
         peer: peer,
-        primaryLabel: 'unblock_device'.tr,
+        primaryLabel: context.l10n.unblock_device,
         onPrimary: () => onUnblock(peer.deviceId),
       ),
     );

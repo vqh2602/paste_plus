@@ -25,7 +25,10 @@ void main() {
 
   group('AiResponseVerifier', () {
     test('strips non-existent hallucinated clip_id citations', () {
-      final validItem = mockItem('clip_valid_123', 'Valid clipboard text content');
+      final validItem = mockItem(
+        'clip_valid_123',
+        'Valid clipboard text content',
+      );
 
       const draftText = '''
 Here is the result from your clipboard:
@@ -46,28 +49,31 @@ Here is the result from your clipboard:
       expect(report.issues.length, 1);
     });
 
-    test('restores truncated or mutilated URLs back to exact SQLite database content', () {
-      final dbItem = mockItem(
-        'url_clip',
-        'Check out https://github.com/vqh2602/paste_plus/releases/tag/v1.0.0 for updates.',
-      );
+    test(
+      'restores truncated or mutilated URLs back to exact SQLite database content',
+      () {
+        final dbItem = mockItem(
+          'url_clip',
+          'Check out https://github.com/vqh2602/paste_plus/releases/tag/v1.0.0 for updates.',
+        );
 
-      // Model truncated the URL parameter query
-      const draftWithMutilatedUrl = '''
+        // Model truncated the URL parameter query
+        const draftWithMutilatedUrl = '''
 You can download the update from https://github.com/vqh2602/paste_plus/releases.
 ''';
 
-      final report = verifier.verifyAndCorrect(
-        draftText: draftWithMutilatedUrl,
-        candidates: [dbItem],
-        responseLanguage: 'English',
-      );
+        final report = verifier.verifyAndCorrect(
+          draftText: draftWithMutilatedUrl,
+          candidates: [dbItem],
+          responseLanguage: 'English',
+        );
 
-      expect(
-        report.correctedText,
-        contains('https://github.com/vqh2602/paste_plus/releases/tag/v1.0.0'),
-      );
-      expect(report.issues.first, contains('Phục hồi URL chính xác'));
-    });
+        expect(
+          report.correctedText,
+          contains('https://github.com/vqh2602/paste_plus/releases/tag/v1.0.0'),
+        );
+        expect(report.issues.first, contains('Phục hồi URL chính xác'));
+      },
+    );
   });
 }

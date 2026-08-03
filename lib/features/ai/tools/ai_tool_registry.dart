@@ -22,11 +22,13 @@ class AiToolRegistry {
     String toolName,
     Map<String, dynamic> arguments, {
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
-        onConfirmationRequested,
+    onConfirmationRequested,
   }) async {
     final tool = getTool(toolName);
     if (tool == null) {
-      return AiToolResult.error('Tool "$toolName" không tồn tại trong hệ thống.');
+      return AiToolResult.error(
+        'Tool "$toolName" không tồn tại trong hệ thống.',
+      );
     }
 
     // Fix #9: Fail-closed — never execute mutating tools without confirmation callback

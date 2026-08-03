@@ -1,9 +1,9 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -21,28 +21,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   List<(IconData, String, String)> get _pages => [
     (
       CupertinoIcons.doc_on_clipboard,
-      'onboarding_title_1'.tr,
-      'onboarding_desc_1'.tr,
+      context.l10n.onboarding_title_1,
+      context.l10n.onboarding_desc_1,
     ),
     (
       CupertinoIcons.shield,
-      'onboarding_title_2'.tr,
-      'onboarding_desc_2'.tr,
+      context.l10n.onboarding_title_2,
+      context.l10n.onboarding_desc_2,
     ),
     (
       CupertinoIcons.slider_horizontal_3,
-      'onboarding_title_3'.tr,
-      'onboarding_desc_3'.tr,
+      context.l10n.onboarding_title_3,
+      context.l10n.onboarding_desc_3,
     ),
     (
       CupertinoIcons.clock,
-      'onboarding_title_4'.tr,
-      'onboarding_desc_4'.tr,
+      context.l10n.onboarding_title_4,
+      context.l10n.onboarding_desc_4,
     ),
     (
       CupertinoIcons.keyboard,
-      'onboarding_title_5'.tr,
-      'onboarding_desc_5'.tr,
+      context.l10n.onboarding_title_5,
+      context.l10n.onboarding_desc_5,
     ),
   ];
 
@@ -140,8 +140,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                         children: [7, 30, 90, -1].map((days) {
                                           return CupertinoChoicePill(
                                             label: days == -1
-                                                ? 'unlimited'.tr
-                                                : 'days_ago'.tr.replaceAll('@d', '$days'),
+                                                ? context.l10n.unlimited
+                                                : context.l10n.days_ago
+                                                      .replaceAll(
+                                                        '@d',
+                                                        '$days',
+                                                      ),
                                             selected: _retentionDays == days,
                                             onPressed: () => setState(
                                               () => _retentionDays = days,
@@ -190,8 +194,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 children: [
                                   Text(
                                     _page == _pages.length - 1
-                                        ? 'start_btn'.tr
-                                        : 'continue_btn'.tr,
+                                        ? context.l10n.start_btn
+                                        : context.l10n.continue_btn,
                                   ),
                                   const SizedBox(width: 7),
                                   Icon(

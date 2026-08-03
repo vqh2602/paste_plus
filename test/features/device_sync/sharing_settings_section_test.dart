@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:clipflow/app/providers.dart';
-import 'package:clipflow/core/localization/app_translations.dart';
 import 'package:clipflow/features/device_sync/domain/local_sharing_state.dart';
 import 'package:clipflow/features/device_sync/domain/peer_connection_info.dart';
 import 'package:clipflow/features/device_sync/domain/shared_collection_payload.dart';
@@ -11,6 +10,7 @@ import 'package:clipflow/features/device_sync/presentation/widgets/device_sectio
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
 import 'package:clipflow/features/settings/presentation/widgets/sharing_settings_section.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -135,7 +135,6 @@ void main() {
     await repository.save(
       const AppSettings(localSharingEnabled: true, language: 'vi'),
     );
-    AppTranslations.currentLanguage = 'vi';
     final service = _FakeSharingService();
     addTearDown(service.dispose);
 
@@ -146,6 +145,9 @@ void main() {
           localSharingServiceProvider.overrideWithValue(service),
         ],
         child: const CupertinoApp(
+          locale: Locale('vi'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: CupertinoPageScaffold(
             child: SingleChildScrollView(child: SharingSettingsSection()),
           ),
@@ -170,11 +172,13 @@ void main() {
   testWidgets('shows manual reconnect after five failed attempts', (
     tester,
   ) async {
-    AppTranslations.currentLanguage = 'vi';
     var reconnectedId = '';
     final service = _FakeSharingService();
     await tester.pumpWidget(
       CupertinoApp(
+        locale: const Locale('vi'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: CupertinoPageScaffold(
           child: PairedDevicesSection(
             devices: [
@@ -205,38 +209,41 @@ void main() {
     expect(reconnectedId, 'macbook');
   });
 
-  testWidgets('allows editing device display name when local sharing is disabled', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({});
-    final repository = SettingsRepository(
-      await SharedPreferences.getInstance(),
-    );
-    await repository.save(
-      const AppSettings(localSharingEnabled: false, language: 'vi'),
-    );
-    AppTranslations.currentLanguage = 'vi';
-    final service = _FakeSharingService();
-    addTearDown(service.dispose);
+  testWidgets(
+    'allows editing device display name when local sharing is disabled',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final repository = SettingsRepository(
+        await SharedPreferences.getInstance(),
+      );
+      await repository.save(
+        const AppSettings(localSharingEnabled: false, language: 'vi'),
+      );
+      final service = _FakeSharingService();
+      addTearDown(service.dispose);
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(repository),
-          localSharingServiceProvider.overrideWithValue(service),
-        ],
-        child: const CupertinoApp(
-          home: CupertinoPageScaffold(
-            child: SingleChildScrollView(child: SharingSettingsSection()),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repository),
+            localSharingServiceProvider.overrideWithValue(service),
+          ],
+          child: const CupertinoApp(
+            locale: Locale('vi'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: CupertinoPageScaffold(
+              child: SingleChildScrollView(child: SharingSettingsSection()),
+            ),
           ),
         ),
-      ),
-    );
-    await tester.pumpAndSettle();
+      );
+      await tester.pumpAndSettle();
 
-    final textField = tester.widget<CupertinoTextField>(
-      find.byType(CupertinoTextField),
-    );
-    expect(textField.enabled, isTrue);
-  });
+      final textField = tester.widget<CupertinoTextField>(
+        find.byType(CupertinoTextField),
+      );
+      expect(textField.enabled, isTrue);
+    },
+  );
 }

@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../device_sync/presentation/widgets/sharing_quick_status_button.dart';
 import '../../domain/clipboard_content_type.dart';
@@ -73,7 +73,7 @@ class HistoryPaneWidget extends ConsumerWidget {
                   key: const Key('history-search'),
                   controller: searchController,
                   focusNode: focusNode,
-                  placeholder: 'search_history_placeholder'.tr,
+                  placeholder: context.l10n.search_history_placeholder,
                   onChanged: historyNotifier.search,
                 ),
               ),
@@ -304,7 +304,9 @@ class EmptyStateWidget extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            hasQuery ? 'no_results_found'.tr : 'clipboard_empty_title'.tr,
+            hasQuery
+                ? context.l10n.no_results_found
+                : context.l10n.clipboard_empty_title,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -314,8 +316,8 @@ class EmptyStateWidget extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             hasQuery
-                ? 'try_different_search'.tr
-                : 'clipboard_empty_subtitle'.tr,
+                ? context.l10n.try_different_search
+                : context.l10n.clipboard_empty_subtitle,
             style: TextStyle(
               fontSize: 13,
               color: resolveColor(context, ClipFlowColors.secondaryText),

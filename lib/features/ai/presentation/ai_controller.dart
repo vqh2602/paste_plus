@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -11,6 +12,9 @@ import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
+import '../localization/ai_language_context.dart';
+import '../localization/ai_language_detector.dart';
+import '../localization/ai_response_locale_resolver.dart';
 import '../services/ai_model_downloader_service.dart';
 import '../services/local_ai_engine.dart';
 
@@ -95,6 +99,7 @@ class AiController extends StateNotifier<AiState> {
     this._downloaderService,
     this._localEngine,
     this._conversationRepository,
+    this._languageDetector,
     this._ref,
   ) : super(
         AiState(
@@ -110,6 +115,7 @@ class AiController extends StateNotifier<AiState> {
   final AiModelDownloaderService _downloaderService;
   final LocalAiEngine _localEngine;
   final AiConversationRepository _conversationRepository;
+  final AiLanguageDetector _languageDetector;
   final Ref _ref;
   late final Future<void> _restoreFuture;
   bool _restoreCompleted = false;
@@ -409,6 +415,24 @@ class AiController extends StateNotifier<AiState> {
         .items
         .where((item) => !item.isSensitive)
         .toList(growable: false);
+    final settings = _ref.read(settingsControllerProvider);
+    final detectedInputTag = await _languageDetector.detect(userText);
+    final translationTargetTag = featureGroup == AiFeatureGroup.translate
+        ? switch (selectedOption) {
+            'Auto -> Vietnamese' => 'vi-VN',
+            'Auto -> English' => 'en-US',
+            _ => null,
+          }
+        : null;
+    final languageContext = AiLanguageContext(
+      appLocale: Locale(settings.language),
+      responseMode: AiResponseLanguageMode.matchUser,
+      detectedInputTag: detectedInputTag,
+      translationTargetTag: translationTargetTag,
+    );
+    final responseLanguageTag = const AiResponseLocaleResolver().resolve(
+      languageContext,
+    );
     debug.log(
       level: AiDebugLevel.info,
       stage: 'request',
@@ -479,6 +503,7 @@ class AiController extends StateNotifier<AiState> {
       requestPlan: null,
       conversationMessages: conversationMessages,
       appLanguageTag: _ref.read(settingsControllerProvider).language,
+      responseLanguageTag: responseLanguageTag,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,

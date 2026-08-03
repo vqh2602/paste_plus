@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/database/app_database.dart';
 import '../core/platform/desktop_integration_service.dart';
@@ -12,6 +14,7 @@ import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/domain/ai_model_info.dart';
+import '../features/ai/localization/ai_language_detector.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
 import '../features/ai/services/clipboard_embedding_indexer.dart';
 import '../features/ai/services/clipboard_vector_store.dart';
@@ -67,7 +70,12 @@ final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
 });
 
 final desktopIntegrationProvider = Provider<DesktopIntegrationService>((ref) {
-  final service = DesktopIntegrationService(ref.watch(loggingServiceProvider));
+  final service = DesktopIntegrationService(
+    ref.watch(loggingServiceProvider),
+    () => lookupAppLocalizations(
+      Locale(ref.read(settingsControllerProvider).language),
+    ),
+  );
   ref.onDispose(service.dispose);
   return service;
 });
@@ -295,6 +303,15 @@ final aiConversationRepositoryProvider = Provider<AiConversationRepository>((
   return const AiConversationRepository();
 });
 
+final aiLanguageDetectorProvider = Provider<AiLanguageDetector>((ref) {
+  return CallbackAiLanguageDetector((text) {
+    final modelId = ref.read(settingsControllerProvider).selectedAiModel;
+    return ref
+        .read(localAiEngineProvider)
+        .detectLanguageTag(model: AiModelInfo.findById(modelId), text: text);
+  });
+});
+
 final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
   ref,
 ) {
@@ -302,6 +319,7 @@ final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
     ref.watch(aiModelDownloaderProvider),
     ref.watch(localAiEngineProvider),
     ref.watch(aiConversationRepositoryProvider),
+    ref.watch(aiLanguageDetectorProvider),
     ref,
   );
 });

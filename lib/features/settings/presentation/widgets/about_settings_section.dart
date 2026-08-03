@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show LinearProgressIndicator, Tooltip;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/services/update_download_provider.dart';
 import '../../../../core/services/update_service.dart';
 import '../../../../core/ui/cupertino_components.dart';
@@ -14,7 +14,8 @@ class AboutSettingsSection extends ConsumerStatefulWidget {
   const AboutSettingsSection({super.key});
 
   @override
-  ConsumerState<AboutSettingsSection> createState() => _AboutSettingsSectionState();
+  ConsumerState<AboutSettingsSection> createState() =>
+      _AboutSettingsSectionState();
 }
 
 class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
@@ -48,7 +49,9 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                           .read(aiDebugControllerProvider.notifier)
                           .registerAppIconTap();
                       if (!changed) return;
-                      final enabled = ref.read(aiDebugControllerProvider).isEnabled;
+                      final enabled = ref
+                          .read(aiDebugControllerProvider)
+                          .isEnabled;
                       showCupertinoNotice(
                         context,
                         enabled ? 'Đã bật AI Debug' : 'Đã tắt AI Debug',
@@ -60,7 +63,9 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
                         image: const DecorationImage(
-                          image: AssetImage('assets/branding/clipflow_app_icon.png'),
+                          image: AssetImage(
+                            'assets/branding/clipflow_app_icon.png',
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -75,14 +80,23 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                       children: [
                         const Text(
                           'ClipFlow',
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'version_label'.tr.replaceAll('@v', UpdateService.currentVersion),
+                          context.l10n.version_label.replaceAll(
+                            '@v',
+                            UpdateService.currentVersion,
+                          ),
                           style: TextStyle(
                             fontSize: 13,
-                            color: resolveColor(context, ClipFlowColors.secondaryText),
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
                           ),
                         ),
                         // Show available version if found
@@ -99,10 +113,13 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                         ],
                         const SizedBox(height: 4),
                         Text(
-                          'about_tagline'.tr,
+                          context.l10n.about_tagline,
                           style: TextStyle(
                             fontSize: 12,
-                            color: resolveColor(context, ClipFlowColors.secondaryText),
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
                           ),
                         ),
                       ],
@@ -114,27 +131,33 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Tooltip(
-                        message: 'github_source'.tr,
+                        message: context.l10n.github_source,
                         child: CupertinoButton(
                           padding: const EdgeInsets.all(8),
                           onPressed: () => ref
                               .read(desktopIntegrationProvider)
                               .openUrl('https://github.com/vqh2602/paste_plus'),
-                          child: const FaIcon(FontAwesomeIcons.github, size: 18),
+                          child: const FaIcon(
+                            FontAwesomeIcons.github,
+                            size: 18,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
                       CupertinoButton.filled(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         borderRadius: BorderRadius.circular(10),
                         onPressed: update.isActive
                             ? null
                             : () => ref
-                                .read(updateDownloadProvider.notifier)
-                                .checkAndDownload(),
+                                  .read(updateDownloadProvider.notifier)
+                                  .checkAndDownload(),
                         child: update.status == UpdateDownloadStatus.checking
                             ? const CupertinoActivityIndicator(radius: 8)
-                            : Text('check_update'.tr),
+                            : Text(context.l10n.check_update),
                       ),
                     ],
                   ),
@@ -153,8 +176,8 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
         SettingsGroupWidget(
           children: [
             SettingsTileWidget(
-              title: 'privacy_policy'.tr,
-              subtitle: 'privacy_policy_sub'.tr,
+              title: context.l10n.privacy_policy,
+              subtitle: context.l10n.privacy_policy_sub,
               leading: const Icon(
                 CupertinoIcons.shield_fill,
                 color: CupertinoColors.activeGreen,
@@ -162,12 +185,12 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => showPrivacyPolicyDialog(context),
-                child: Text('view_policy'.tr),
+                child: Text(context.l10n.view_policy),
               ),
             ),
             SettingsTileWidget(
-              title: 'open_source_licenses'.tr,
-              subtitle: 'licenses_sub'.tr,
+              title: context.l10n.open_source_licenses,
+              subtitle: context.l10n.licenses_sub,
               leading: const Icon(
                 CupertinoIcons.doc_plaintext,
                 color: CupertinoColors.activeBlue,
@@ -175,7 +198,7 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => showLicensesDialog(context),
-                child: Text('view_licenses'.tr),
+                child: Text(context.l10n.view_licenses),
               ),
             ),
           ],
@@ -203,7 +226,10 @@ class _UpdateStatusRow extends StatelessWidget {
           children: [
             const CupertinoActivityIndicator(radius: 7),
             const SizedBox(width: 8),
-            Text('Đang kiểm tra cập nhật…', style: TextStyle(fontSize: 12, color: secondary)),
+            Text(
+              'Đang kiểm tra cập nhật…',
+              style: TextStyle(fontSize: 12, color: secondary),
+            ),
           ],
         );
 
@@ -245,7 +271,11 @@ class _UpdateStatusRow extends StatelessWidget {
       case UpdateDownloadStatus.done:
         return Row(
           children: [
-            Icon(CupertinoIcons.checkmark_circle_fill, size: 14, color: CupertinoColors.activeGreen),
+            Icon(
+              CupertinoIcons.checkmark_circle_fill,
+              size: 14,
+              color: CupertinoColors.activeGreen,
+            ),
             const SizedBox(width: 6),
             Text(
               'Đã tải ${update.latestVersion}. Đang khởi động lại…',
@@ -257,7 +287,11 @@ class _UpdateStatusRow extends StatelessWidget {
       case UpdateDownloadStatus.failed:
         return Row(
           children: [
-            const Icon(CupertinoIcons.xmark_circle_fill, size: 14, color: CupertinoColors.destructiveRed),
+            const Icon(
+              CupertinoIcons.xmark_circle_fill,
+              size: 14,
+              color: CupertinoColors.destructiveRed,
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
@@ -271,7 +305,11 @@ class _UpdateStatusRow extends StatelessWidget {
       case UpdateDownloadStatus.upToDate:
         return Row(
           children: [
-            const Icon(CupertinoIcons.checkmark_seal_fill, size: 14, color: CupertinoColors.activeGreen),
+            const Icon(
+              CupertinoIcons.checkmark_seal_fill,
+              size: 14,
+              color: CupertinoColors.activeGreen,
+            ),
             const SizedBox(width: 6),
             Text(
               'Bạn đang dùng phiên bản mới nhất',

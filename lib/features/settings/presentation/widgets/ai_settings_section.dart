@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../ai/domain/ai_model_info.dart';
 import '../../../ai/services/ai_model_downloader_service.dart';
@@ -26,10 +26,14 @@ class AiSettingsSection extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: CupertinoTheme.of(context).primaryColor.withValues(alpha: 0.12),
+            color: CupertinoTheme.of(
+              context,
+            ).primaryColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: CupertinoTheme.of(context).primaryColor.withValues(alpha: 0.25),
+              color: CupertinoTheme.of(
+                context,
+              ).primaryColor.withValues(alpha: 0.25),
             ),
           ),
           child: Row(
@@ -45,7 +49,7 @@ class AiSettingsSection extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'ai_privacy_title'.tr,
+                      context.l10n.ai_privacy_title,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -53,10 +57,13 @@ class AiSettingsSection extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'ai_privacy_notice'.tr,
+                      context.l10n.ai_privacy_notice,
                       style: TextStyle(
                         fontSize: 12,
-                        color: resolveColor(context, ClipFlowColors.secondaryText),
+                        color: resolveColor(
+                          context,
+                          ClipFlowColors.secondaryText,
+                        ),
                         height: 1.3,
                       ),
                     ),
@@ -73,8 +80,8 @@ class AiSettingsSection extends ConsumerWidget {
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'ai_enabled'.tr,
-              subtitle: 'ai_enabled_sub'.tr,
+              title: context.l10n.ai_enabled,
+              subtitle: context.l10n.ai_enabled_sub,
               value: settings.aiEnabled,
               onChanged: (value) {
                 updateSettings(
@@ -89,9 +96,9 @@ class AiSettingsSection extends ConsumerWidget {
         const SizedBox(height: 24),
 
         // Thinking AI Models List Section
-        CupertinoSectionLabel('ai_model_selection'.tr),
+        CupertinoSectionLabel(context.l10n.ai_model_selection),
         Text(
-          'ai_model_selection_sub'.tr,
+          context.l10n.ai_model_selection_sub,
           style: TextStyle(
             fontSize: 12,
             color: resolveColor(context, ClipFlowColors.secondaryText),
@@ -122,7 +129,10 @@ class AiSettingsSection extends ConsumerWidget {
                               : CupertinoIcons.circle,
                           color: isSelected
                               ? CupertinoTheme.of(context).primaryColor
-                              : resolveColor(context, ClipFlowColors.secondaryText),
+                              : resolveColor(
+                                  context,
+                                  ClipFlowColors.secondaryText,
+                                ),
                           size: 20,
                         ),
                       ),
@@ -154,7 +164,9 @@ class AiSettingsSection extends ConsumerWidget {
                                         decoration: BoxDecoration(
                                           color: CupertinoColors.systemPurple
                                               .withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: const Text(
                                           'Thinking AI',
@@ -176,7 +188,9 @@ class AiSettingsSection extends ConsumerWidget {
                                         decoration: BoxDecoration(
                                           color: CupertinoColors.activeBlue
                                               .withValues(alpha: 0.12),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: const Text(
                                           'Vision AI',
@@ -211,7 +225,7 @@ class AiSettingsSection extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        '${'ai_size_label'.tr}: ${model.fileSizeFormatted} • ${model.parameterSize}',
+                        '${context.l10n.ai_size_label}: ${model.fileSizeFormatted} • ${model.parameterSize}',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -231,8 +245,9 @@ class AiSettingsSection extends ConsumerWidget {
                             vertical: 3,
                           ),
                           decoration: BoxDecoration(
-                            color: CupertinoColors.activeGreen
-                                .withValues(alpha: 0.15),
+                            color: CupertinoColors.activeGreen.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Row(
@@ -244,7 +259,7 @@ class AiSettingsSection extends ConsumerWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'ai_downloaded'.tr,
+                                context.l10n.ai_downloaded,
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -259,19 +274,20 @@ class AiSettingsSection extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           onPressed: () => aiNotifier.deleteModel(model.id),
                           child: Text(
-                            'ai_delete_model'.tr,
+                            context.l10n.ai_delete_model,
                             style: const TextStyle(
                               fontSize: 12,
                               color: CupertinoColors.systemRed,
                             ),
                           ),
                         ),
-                      ] else if (downloadState == DownloadState.downloading) ...[
+                      ] else if (downloadState ==
+                          DownloadState.downloading) ...[
                         CupertinoButton(
                           padding: const EdgeInsets.symmetric(horizontal: 10),
                           onPressed: () => aiNotifier.cancelDownload(model.id),
                           child: Text(
-                            'ai_cancel_download'.tr,
+                            context.l10n.ai_cancel_download,
                             style: const TextStyle(
                               fontSize: 12,
                               color: CupertinoColors.systemOrange,
@@ -283,7 +299,7 @@ class AiSettingsSection extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           onPressed: () => aiNotifier.deleteModel(model.id),
                           child: Text(
-                            'ai_delete_partial'.tr,
+                            context.l10n.ai_delete_partial,
                             style: const TextStyle(
                               fontSize: 11,
                               color: CupertinoColors.systemRed,
@@ -303,7 +319,7 @@ class AiSettingsSection extends ConsumerWidget {
                               const Icon(CupertinoIcons.play_fill, size: 12),
                               const SizedBox(width: 4),
                               Text(
-                                'ai_resume_download'.tr,
+                                context.l10n.ai_resume_download,
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -318,7 +334,7 @@ class AiSettingsSection extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                           onPressed: () => aiNotifier.startDownload(model),
                           child: Text(
-                            'ai_download_model'.tr,
+                            context.l10n.ai_download_model,
                             style: const TextStyle(fontSize: 12),
                           ),
                         ),
@@ -327,13 +343,17 @@ class AiSettingsSection extends ConsumerWidget {
                   ),
 
                   // Download Progress Bar
-                  if (downloadState == DownloadState.downloading && progress != null) ...[
+                  if (downloadState == DownloadState.downloading &&
+                      progress != null) ...[
                     const SizedBox(height: 10),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: progress.progress,
-                        backgroundColor: resolveColor(context, ClipFlowColors.border),
+                        backgroundColor: resolveColor(
+                          context,
+                          ClipFlowColors.border,
+                        ),
                         valueColor: AlwaysStoppedAnimation(
                           CupertinoTheme.of(context).primaryColor,
                         ),
@@ -347,14 +367,20 @@ class AiSettingsSection extends ConsumerWidget {
                           '${progress.bytesFormatted} (${progress.percentage}%)',
                           style: TextStyle(
                             fontSize: 11,
-                            color: resolveColor(context, ClipFlowColors.secondaryText),
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
                           ),
                         ),
                         Text(
                           progress.speedFormatted,
                           style: TextStyle(
                             fontSize: 11,
-                            color: resolveColor(context, ClipFlowColors.secondaryText),
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
                           ),
                         ),
                       ],

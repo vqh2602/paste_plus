@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/local_sharing_state.dart';
 import 'device_card.dart';
@@ -38,7 +38,7 @@ class PairingSessionCard extends StatelessWidget {
               const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  'pairing_request_title'.tr.replaceFirst(
+                  context.l10n.pairing_request_title.replaceFirst(
                     '@device',
                     session.peer.deviceName,
                   ),
@@ -61,7 +61,7 @@ class PairingSessionCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'pairing_code_help'.tr,
+            context.l10n.pairing_code_help,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -72,12 +72,15 @@ class PairingSessionCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              DeviceActionButton(label: 'cancel'.tr, onPressed: onCancel),
+              DeviceActionButton(
+                label: context.l10n.cancel,
+                onPressed: onCancel,
+              ),
               const SizedBox(width: 8),
               DeviceActionButton(
                 label: session.isLocalConfirmed
-                    ? 'waiting_other_device'.tr
-                    : 'codes_match'.tr,
+                    ? context.l10n.waiting_other_device
+                    : context.l10n.codes_match,
                 onPressed: session.isExpired || session.isLocalConfirmed
                     ? onCancel
                     : onConfirm,

@@ -34,6 +34,7 @@ class AiPlannerService {
     AiFeatureGroup? featureGroup,
     String? rawModelPlanJson,
     String appLanguageTag = 'vi-VN',
+    String? resolvedResponseLanguageTag,
   }) {
     final legacyPlan = _requestPlanner.plan(
       prompt: prompt,
@@ -41,6 +42,7 @@ class AiPlannerService {
       hasConversation: hasConversation,
       featureGroup: featureGroup,
       appLanguageTag: appLanguageTag,
+      resolvedResponseLanguageTag: resolvedResponseLanguageTag,
     );
 
     // 1. Try parsing model-generated JSON plan if available

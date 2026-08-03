@@ -1,9 +1,9 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/ai_model_info.dart';
 import '../../services/ai_model_downloader_service.dart';
@@ -48,7 +48,7 @@ class AiNoModelOverlay extends ConsumerWidget {
 
           // Title
           Text(
-            'ai_no_model_title'.tr,
+            context.l10n.ai_no_model_title,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             textAlign: TextAlign.center,
           ),
@@ -56,7 +56,7 @@ class AiNoModelOverlay extends ConsumerWidget {
 
           // Description
           Text(
-            'ai_no_model_desc'.tr,
+            context.l10n.ai_no_model_desc,
             style: TextStyle(
               fontSize: 14,
               color: resolveColor(context, ClipFlowColors.secondaryText),
@@ -76,7 +76,7 @@ class AiNoModelOverlay extends ConsumerWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                'ai_recommend_model'.tr,
+                context.l10n.ai_recommend_model,
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -171,7 +171,7 @@ class _ModelCard extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                'ai_recommend_model'.tr,
+                                context.l10n.ai_recommend_model,
                                 style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
@@ -279,7 +279,7 @@ class _ModelCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                'ai_downloaded'.tr,
+                context.l10n.ai_downloaded,
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -308,7 +308,7 @@ class _ModelCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               onPressed: onDeletePartial,
               child: Text(
-                'ai_delete_partial'.tr,
+                context.l10n.ai_delete_partial,
                 style: const TextStyle(
                   fontSize: 11,
                   color: CupertinoColors.systemRed,
@@ -325,7 +325,7 @@ class _ModelCard extends StatelessWidget {
                   const Icon(CupertinoIcons.play_fill, size: 12),
                   const SizedBox(width: 4),
                   Text(
-                    'ai_resume_download'.tr,
+                    context.l10n.ai_resume_download,
                     style: const TextStyle(fontSize: 12),
                   ),
                 ],
@@ -341,7 +341,7 @@ class _ModelCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           onPressed: onDownload,
           child: Text(
-            'ai_download_model'.tr,
+            context.l10n.ai_download_model,
             style: const TextStyle(fontSize: 12),
           ),
         );

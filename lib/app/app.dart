@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:clipflow/l10n/app_localizations.dart';
 
-import '../core/localization/app_translations.dart';
 import '../core/platform/desktop_integration_service.dart';
 import '../core/services/update_download_provider.dart';
 import '../core/ui/ai_debug_overlay.dart';
@@ -115,7 +114,6 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
   @override
   Widget build(BuildContext context) {
     final settings = ref.watch(settingsControllerProvider);
-    AppTranslations.currentLanguage = settings.language;
     final theme = AppTheme.theme(
       settings.themeMode,
       accentKey: settings.accentColor,

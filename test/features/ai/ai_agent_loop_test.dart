@@ -21,15 +21,14 @@ void main() {
         prompt: 'Lấy URL rồi ghim bản ghi',
         nextDecision: (state, step) async {
           if (step == 0) {
-            return AiAgentDecision.callTool(
-              'extract_urls',
-              {'text': 'Visit https://example.com/api'},
-            );
+            return AiAgentDecision.callTool('extract_urls', {
+              'text': 'Visit https://example.com/api',
+            });
           } else if (step == 1) {
-            return AiAgentDecision.callTool(
-              'pin_clipboard',
-              {'clip_id': 'clip_456', 'pinned': true},
-            );
+            return AiAgentDecision.callTool('pin_clipboard', {
+              'clip_id': 'clip_456',
+              'pinned': true,
+            });
           }
           return AiAgentDecision.finalAnswer(
             'Đã trích xuất URL https://example.com/api và ghim bản ghi thành công.',
@@ -40,7 +39,9 @@ void main() {
 
       expect(
         finalAnswer,
-        equals('Đã trích xuất URL https://example.com/api và ghim bản ghi thành công.'),
+        equals(
+          'Đã trích xuất URL https://example.com/api và ghim bản ghi thành công.',
+        ),
       );
     });
 
@@ -51,10 +52,10 @@ void main() {
         prompt: 'Ghim clipboard',
         nextDecision: (state, step) async {
           if (step == 0) {
-            return AiAgentDecision.callTool(
-              'pin_clipboard',
-              {'clip_id': 'clip_789', 'pinned': true},
-            );
+            return AiAgentDecision.callTool('pin_clipboard', {
+              'clip_id': 'clip_789',
+              'pinned': true,
+            });
           }
           return AiAgentDecision.finalAnswer(
             'Không thể ghim bản ghi do người dùng từ chối.',

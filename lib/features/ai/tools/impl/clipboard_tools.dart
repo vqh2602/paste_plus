@@ -26,23 +26,25 @@ class SearchClipboardTool implements AiTool {
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'content_type': {
-            'type': 'string',
-            'enum': ['json', 'url', 'code', 'text', 'image', 'file']
-          },
-          'query': {'type': 'string'},
-          'date_range': {
-            'type': 'string',
-            'enum': ['today', 'yesterday', 'recent']
-          },
-        },
-      };
+    'type': 'object',
+    'properties': {
+      'content_type': {
+        'type': 'string',
+        'enum': ['json', 'url', 'code', 'text', 'image', 'file'],
+      },
+      'query': {'type': 'string'},
+      'date_range': {
+        'type': 'string',
+        'enum': ['today', 'yesterday', 'recent'],
+      },
+    },
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
-    final contentType = (arguments['content_type'] ?? '').toString().toLowerCase();
+    final contentType = (arguments['content_type'] ?? '')
+        .toString()
+        .toLowerCase();
     final query = (arguments['query'] ?? '').toString().toLowerCase();
     final dateRange = (arguments['date_range'] ?? '').toString().toLowerCase();
 
@@ -62,18 +64,37 @@ class SearchClipboardTool implements AiTool {
 
     final filtered = items.where((item) {
       if (contentType.isNotEmpty) {
-        if (contentType == 'json' && item.contentType != ClipboardContentType.json) return false;
-        if (contentType == 'url' && item.contentType != ClipboardContentType.url) return false;
-        if (contentType == 'code' && item.contentType != ClipboardContentType.code) return false;
-        if (contentType == 'image' && item.contentType != ClipboardContentType.image) return false;
-        if (contentType == 'text' && item.contentType != ClipboardContentType.text) return false;
-        if (contentType == 'file' && item.contentType != ClipboardContentType.file) return false;
+        if (contentType == 'json' &&
+            item.contentType != ClipboardContentType.json) {
+          return false;
+        }
+        if (contentType == 'url' &&
+            item.contentType != ClipboardContentType.url) {
+          return false;
+        }
+        if (contentType == 'code' &&
+            item.contentType != ClipboardContentType.code) {
+          return false;
+        }
+        if (contentType == 'image' &&
+            item.contentType != ClipboardContentType.image) {
+          return false;
+        }
+        if (contentType == 'text' &&
+            item.contentType != ClipboardContentType.text) {
+          return false;
+        }
+        if (contentType == 'file' &&
+            item.contentType != ClipboardContentType.file) {
+          return false;
+        }
       }
       if (queryTokens.isNotEmpty) {
         final contentLower = item.content.toLowerCase();
         final appNameLower = item.sourceAppName?.toLowerCase() ?? '';
         final matches = queryTokens.any(
-          (token) => contentLower.contains(token) || appNameLower.contains(token),
+          (token) =>
+              contentLower.contains(token) || appNameLower.contains(token),
         );
         if (!matches) return false;
       }
@@ -129,19 +150,20 @@ class GetClipboardItemTool implements AiTool {
   String get name => 'get_clipboard_item';
 
   @override
-  String get description => 'Lấy chi tiết một mục clipboard cụ thể theo clip_id.';
+  String get description =>
+      'Lấy chi tiết một mục clipboard cụ thể theo clip_id.';
 
   @override
   bool get requiresConfirmation => false;
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'clip_id': {'type': 'string'},
-        },
-        'required': ['clip_id'],
-      };
+    'type': 'object',
+    'properties': {
+      'clip_id': {'type': 'string'},
+    },
+    'required': ['clip_id'],
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
@@ -157,7 +179,9 @@ class GetClipboardItemTool implements AiTool {
     );
 
     if (found == null) {
-      return AiToolResult.notFound('Không tìm thấy mục clipboard có ID: "$clipId".');
+      return AiToolResult.notFound(
+        'Không tìm thấy mục clipboard có ID: "$clipId".',
+      );
     }
 
     return AiToolResult.ok(
@@ -173,24 +197,28 @@ class ExtractUrlsTool implements AiTool {
   String get name => 'extract_urls';
 
   @override
-  String get description => 'Trích xuất tất cả các đường dẫn URL hoặc endpoint từ văn bản.';
+  String get description =>
+      'Trích xuất tất cả các đường dẫn URL hoặc endpoint từ văn bản.';
 
   @override
   bool get requiresConfirmation => false;
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'text': {'type': 'string'},
-        },
-        'required': ['text'],
-      };
+    'type': 'object',
+    'properties': {
+      'text': {'type': 'string'},
+    },
+    'required': ['text'],
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     final text = arguments['text']?.toString() ?? '';
-    final urlRegex = RegExp(r'https?://[^\s<>"]+|www\.[^\s<>"]+', caseSensitive: false);
+    final urlRegex = RegExp(
+      r'https?://[^\s<>"]+|www\.[^\s<>"]+',
+      caseSensitive: false,
+    );
     final matches = urlRegex.allMatches(text).map((m) => m.group(0)!).toList();
 
     return AiToolResult.ok(
@@ -224,9 +252,13 @@ class ListCollectionsTool implements AiTool {
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     if (_repository != null) {
       final collections = await _repository.getCollections();
-      final list = collections.map((c) => '- [collection:${c.id}] ${c.name}').join('\n');
+      final list = collections
+          .map((c) => '- [collection:${c.id}] ${c.name}')
+          .join('\n');
       return AiToolResult.ok(
-        collections.isNotEmpty ? 'Danh sách bộ sưu tập:\n$list' : 'Chưa có bộ sưu tập nào.',
+        collections.isNotEmpty
+            ? 'Danh sách bộ sưu tập:\n$list'
+            : 'Chưa có bộ sưu tập nào.',
         collections,
       );
     }
@@ -252,13 +284,13 @@ class PinClipboardTool implements AiTool {
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'clip_id': {'type': 'string'},
-          'pinned': {'type': 'boolean'},
-        },
-        'required': ['clip_id'],
-      };
+    'type': 'object',
+    'properties': {
+      'clip_id': {'type': 'string'},
+      'pinned': {'type': 'boolean'},
+    },
+    'required': ['clip_id'],
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
@@ -266,7 +298,9 @@ class PinClipboardTool implements AiTool {
     final pinned = arguments['pinned'] == true;
 
     if (_repository == null) {
-      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
+      return AiToolResult.error(
+        'Không thể thao tác: Repository chưa được khởi tạo.',
+      );
     }
     if (clipId.isEmpty) {
       return AiToolResult.error('Tham số clip_id không hợp lệ.');
@@ -278,11 +312,15 @@ class PinClipboardTool implements AiTool {
       _repository,
     );
     if (item == null) {
-      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId] để ghim.');
+      return AiToolResult.notFound(
+        'Không tìm thấy mục clipboard [clip:$clipId] để ghim.',
+      );
     }
 
     await _repository.setPinned(clipId, pinned);
-    return AiToolResult.ok('Đã ${pinned ? 'ghim' : 'bỏ ghim'} mục clipboard [clip:$clipId] thành công.');
+    return AiToolResult.ok(
+      'Đã ${pinned ? 'ghim' : 'bỏ ghim'} mục clipboard [clip:$clipId] thành công.',
+    );
   }
 }
 
@@ -304,13 +342,13 @@ class AddToCollectionTool implements AiTool {
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'clip_id': {'type': 'string'},
-          'collection_id': {'type': 'string'},
-        },
-        'required': ['clip_id', 'collection_id'],
-      };
+    'type': 'object',
+    'properties': {
+      'clip_id': {'type': 'string'},
+      'collection_id': {'type': 'string'},
+    },
+    'required': ['clip_id', 'collection_id'],
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
@@ -318,10 +356,14 @@ class AddToCollectionTool implements AiTool {
     final collectionId = arguments['collection_id']?.toString() ?? '';
 
     if (_repository == null) {
-      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
+      return AiToolResult.error(
+        'Không thể thao tác: Repository chưa được khởi tạo.',
+      );
     }
     if (clipId.isEmpty || collectionId.isEmpty) {
-      return AiToolResult.error('Tham số clip_id và collection_id không được để trống.');
+      return AiToolResult.error(
+        'Tham số clip_id và collection_id không được để trống.',
+      );
     }
 
     final item = await _findItemInRepoOrHistory(
@@ -330,17 +372,24 @@ class AddToCollectionTool implements AiTool {
       _repository,
     );
     if (item == null) {
-      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId].');
+      return AiToolResult.notFound(
+        'Không tìm thấy mục clipboard [clip:$clipId].',
+      );
     }
 
     await _repository.addToCollection(clipId, collectionId);
-    return AiToolResult.ok('Đã thêm mục [clip:$clipId] vào bộ sưu tập [collection:$collectionId].');
+    return AiToolResult.ok(
+      'Đã thêm mục [clip:$clipId] vào bộ sưu tập [collection:$collectionId].',
+    );
   }
 }
 
 /// Mutating tool: Deletes a clipboard item.
 class DeleteClipboardItemTool implements AiTool {
-  DeleteClipboardItemTool([this._repository, this._clipboardHistory = const []]);
+  DeleteClipboardItemTool([
+    this._repository,
+    this._clipboardHistory = const [],
+  ]);
 
   final ClipboardRepository? _repository;
   final List<ClipboardItem> _clipboardHistory;
@@ -356,19 +405,21 @@ class DeleteClipboardItemTool implements AiTool {
 
   @override
   Map<String, dynamic> get inputSchema => {
-        'type': 'object',
-        'properties': {
-          'clip_id': {'type': 'string'},
-        },
-        'required': ['clip_id'],
-      };
+    'type': 'object',
+    'properties': {
+      'clip_id': {'type': 'string'},
+    },
+    'required': ['clip_id'],
+  };
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     final clipId = arguments['clip_id']?.toString() ?? '';
 
     if (_repository == null) {
-      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
+      return AiToolResult.error(
+        'Không thể thao tác: Repository chưa được khởi tạo.',
+      );
     }
     if (clipId.isEmpty) {
       return AiToolResult.error('Tham số clip_id không hợp lệ.');
@@ -380,7 +431,9 @@ class DeleteClipboardItemTool implements AiTool {
       _repository,
     );
     if (item == null) {
-      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId] để xóa.');
+      return AiToolResult.notFound(
+        'Không tìm thấy mục clipboard [clip:$clipId] để xóa.',
+      );
     }
 
     await _repository.deleteItem(clipId);

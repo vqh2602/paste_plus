@@ -4,3 +4,4 @@ output-localization-file: app_localizations.dart
 output-class: AppLocalizations
 nullable-getter: false
 untranslated-messages-file: untranslated_messages.json
+use-escaping: true

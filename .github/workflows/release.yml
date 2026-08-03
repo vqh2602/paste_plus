@@ -40,6 +40,11 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Verify generated localizations
+        run: |
+          flutter gen-l10n
+          git diff --exit-code -- lib/l10n/app_localizations*.dart
+
       - name: Run unit tests
         run: flutter test
 

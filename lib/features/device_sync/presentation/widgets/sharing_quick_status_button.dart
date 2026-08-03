@@ -1,9 +1,9 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import 'device_sync_labels.dart';
 
@@ -61,10 +61,14 @@ class SharingQuickStatusButton extends ConsumerWidget {
       context: context,
       builder: (context) => CupertinoActionSheet(
         title: Text(
-          _summary(settings.allConnectionsPaused, state.connectedCount),
+          _summary(
+            context,
+            settings.allConnectionsPaused,
+            state.connectedCount,
+          ),
         ),
         message: state.pairedDevices.isEmpty
-            ? Text('no_paired_devices'.tr)
+            ? Text(context.l10n.no_paired_devices)
             : null,
         actions: [
           for (final peer in state.pairedDevices)
@@ -76,7 +80,7 @@ class SharingQuickStatusButton extends ConsumerWidget {
                     child: Text(peer.deviceName, textAlign: TextAlign.left),
                   ),
                   Text(
-                    connectionStatusLabel(peer.status),
+                    connectionStatusLabel(context, peer.status),
                     style: const TextStyle(fontSize: 13),
                   ),
                   if (peer.latencyMs != null) ...[
@@ -92,12 +96,12 @@ class SharingQuickStatusButton extends ConsumerWidget {
           CupertinoActionSheetAction(
             isDefaultAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: Text('manage_devices'.tr),
+            child: Text(context.l10n.manage_devices),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -106,10 +110,10 @@ class SharingQuickStatusButton extends ConsumerWidget {
     }
   }
 
-  String _summary(bool paused, int connectedCount) {
-    if (paused) return 'sharing_paused'.tr;
-    if (connectedCount == 0) return 'no_connected_devices'.tr;
-    return 'devices_connected_count'.tr.replaceFirst(
+  String _summary(BuildContext context, bool paused, int connectedCount) {
+    if (paused) return context.l10n.sharing_paused;
+    if (connectedCount == 0) return context.l10n.no_connected_devices;
+    return context.l10n.devices_connected_count.replaceFirst(
       '@count',
       '$connectedCount',
     );

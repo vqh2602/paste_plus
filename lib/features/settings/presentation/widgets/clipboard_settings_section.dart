@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../domain/app_settings.dart';
@@ -20,10 +20,10 @@ class ClipboardSettingsSection extends ConsumerWidget {
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'clipboard_monitoring'.tr,
+              title: context.l10n.clipboard_monitoring,
               subtitle: settings.monitoringEnabled
-                  ? 'monitoring_active'.tr
-                  : 'monitoring_paused'.tr,
+                  ? context.l10n.monitoring_active
+                  : context.l10n.monitoring_paused,
               value: settings.monitoringEnabled,
               onChanged: (value) async {
                 await updateSettings(
@@ -36,7 +36,7 @@ class ClipboardSettingsSection extends ConsumerWidget {
               },
             ),
             SwitchRowWidget(
-              title: 'ignore_duplicates'.tr,
+              title: context.l10n.ignore_duplicates,
               value: settings.ignoreDuplicates,
               onChanged: (value) => updateSettings(
                 ref,
@@ -44,12 +44,12 @@ class ClipboardSettingsSection extends ConsumerWidget {
               ),
             ),
             PickerRowWidget<DuplicateBehavior>(
-              title: 'duplicate_behavior'.tr,
+              title: context.l10n.duplicate_behavior,
               value: settings.duplicateBehavior,
               items: {
-                DuplicateBehavior.bringToTop: 'bring_to_top'.tr,
-                DuplicateBehavior.createNew: 'create_new'.tr,
-                DuplicateBehavior.keepPosition: 'keep_position'.tr,
+                DuplicateBehavior.bringToTop: context.l10n.bring_to_top,
+                DuplicateBehavior.createNew: context.l10n.create_new,
+                DuplicateBehavior.keepPosition: context.l10n.keep_position,
               },
               onChanged: (value) => updateSettings(
                 ref,
@@ -59,31 +59,34 @@ class ClipboardSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('allowed_content_types'.tr),
+        CupertinoSectionLabel(context.l10n.allowed_content_types),
         Wrap(
           spacing: 8,
           runSpacing: 8,
           children: ClipboardContentType.values.map((type) {
             final selected = settings.allowedTypes.contains(type.name);
             return CupertinoChoicePill(
-              label: typeNameHelper(type),
+              label: typeNameHelper(context, type),
               selected: selected,
               onPressed: () {
                 final next = {...settings.allowedTypes};
                 selected ? next.remove(type.name) : next.add(type.name);
-                updateSettings(ref, (current) => current.copyWith(allowedTypes: next));
+                updateSettings(
+                  ref,
+                  (current) => current.copyWith(allowedTypes: next),
+                );
               },
             );
           }).toList(),
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('content_limits'.tr),
+        CupertinoSectionLabel(context.l10n.content_limits),
         SettingsGroupWidget(
           children: [
             NumberRowWidget(
-              title: 'min_length'.tr,
+              title: context.l10n.min_length,
               value: settings.minTextLength,
-              suffix: 'chars_unit'.tr,
+              suffix: context.l10n.chars_unit,
               min: 1,
               max: 1000,
               onChanged: (value) => updateSettings(
@@ -92,9 +95,9 @@ class ClipboardSettingsSection extends ConsumerWidget {
               ),
             ),
             NumberRowWidget(
-              title: 'max_length'.tr,
+              title: context.l10n.max_length,
               value: settings.maxTextLength,
-              suffix: 'chars_unit'.tr,
+              suffix: context.l10n.chars_unit,
               min: 1000,
               max: 1000000,
               onChanged: (value) => updateSettings(
@@ -103,7 +106,7 @@ class ClipboardSettingsSection extends ConsumerWidget {
               ),
             ),
             NumberRowWidget(
-              title: 'max_image_size'.tr,
+              title: context.l10n.max_image_size,
               value: settings.maxImageMb,
               suffix: 'MB',
               min: 1,

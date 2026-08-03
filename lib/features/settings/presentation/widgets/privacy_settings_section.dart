@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import 'settings_helpers.dart';
 
 class PrivacySettingsSection extends ConsumerWidget {
@@ -26,11 +26,7 @@ class PrivacySettingsSection extends ConsumerWidget {
             children: [
               const Icon(CupertinoIcons.lock_shield),
               const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'privacy_db_notice'.tr,
-                ),
-              ),
+              Expanded(child: Text(context.l10n.privacy_db_notice)),
             ],
           ),
         ),
@@ -38,8 +34,8 @@ class PrivacySettingsSection extends ConsumerWidget {
         SettingsGroupWidget(
           children: [
             SettingsTileWidget(
-              title: 'privacy_policy'.tr,
-              subtitle: 'privacy_policy_sub'.tr,
+              title: context.l10n.privacy_policy,
+              subtitle: context.l10n.privacy_policy_sub,
               leading: const Icon(
                 CupertinoIcons.shield_fill,
                 color: CupertinoColors.activeGreen,
@@ -47,7 +43,7 @@ class PrivacySettingsSection extends ConsumerWidget {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => showPrivacyPolicyDialog(context),
-                child: Text('view_policy'.tr),
+                child: Text(context.l10n.view_policy),
               ),
             ),
           ],
@@ -56,8 +52,8 @@ class PrivacySettingsSection extends ConsumerWidget {
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'ignore_sensitive'.tr,
-              subtitle: 'ignore_sensitive_sub'.tr,
+              title: context.l10n.ignore_sensitive,
+              subtitle: context.l10n.ignore_sensitive_sub,
               value: settings.ignoreSensitive,
               onChanged: (value) => updateSettings(
                 ref,
@@ -65,8 +61,8 @@ class PrivacySettingsSection extends ConsumerWidget {
               ),
             ),
             SwitchRowWidget(
-              title: 'ignore_otp'.tr,
-              subtitle: 'ignore_otp_sub'.tr,
+              title: context.l10n.ignore_otp,
+              subtitle: context.l10n.ignore_otp_sub,
               value: settings.ignoreOtp,
               onChanged: (value) => updateSettings(
                 ref,
@@ -74,8 +70,8 @@ class PrivacySettingsSection extends ConsumerWidget {
               ),
             ),
             SwitchRowWidget(
-              title: 'ignore_long_token'.tr,
-              subtitle: 'ignore_long_token_sub'.tr,
+              title: context.l10n.ignore_long_token,
+              subtitle: context.l10n.ignore_long_token_sub,
               value: settings.ignoreLongToken,
               onChanged: (value) => updateSettings(
                 ref,

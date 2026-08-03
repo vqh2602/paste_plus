@@ -39,6 +39,7 @@ class AiRequestPlanner {
     required bool hasConversation,
     AiFeatureGroup? featureGroup,
     String appLanguageTag = 'vi-VN',
+    String? resolvedResponseLanguageTag,
   }) {
     final normalized = prompt.toLowerCase().trim();
     final words = normalized
@@ -48,6 +49,7 @@ class AiRequestPlanner {
         .toSet();
     final referencesClipboard = words.any(_clipboardTerms.contains);
     final responseLanguageTag =
+        resolvedResponseLanguageTag ??
         _detectLanguageTag(normalized) ??
         AiLanguageRegistry.normalizeTag(appLanguageTag);
     final asksToFind = words.any(_searchTerms.contains);

@@ -1,4 +1,3 @@
-
 import 'package:clipflow/core/database/app_database.dart';
 import 'package:clipflow/features/ai/services/clipboard_vector_store.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_content_type.dart';
@@ -23,67 +22,76 @@ void main() {
       final v2 = [1.0, 0.0, 0.0];
       final v3 = [0.0, 1.0, 0.0];
 
-      expect(ClipboardVectorStore.cosineSimilarity(v1, v2), closeTo(1.0, 0.0001));
-      expect(ClipboardVectorStore.cosineSimilarity(v1, v3), closeTo(0.0, 0.0001));
+      expect(
+        ClipboardVectorStore.cosineSimilarity(v1, v2),
+        closeTo(1.0, 0.0001),
+      );
+      expect(
+        ClipboardVectorStore.cosineSimilarity(v1, v3),
+        closeTo(0.0, 0.0001),
+      );
     });
 
-    test('indexClipboardItem reuses pre-computed vector for identical content hash', () async {
-      final db = await AppDatabase.open(inMemory: true);
-      final store = ClipboardVectorStore(db);
+    test(
+      'indexClipboardItem reuses pre-computed vector for identical content hash',
+      () async {
+        final db = await AppDatabase.open(inMemory: true);
+        final store = ClipboardVectorStore(db);
 
-      final item1 = ClipboardItem(
-        id: 'clip_1',
-        content: 'shared content text',
-        normalizedContent: 'shared content text',
-        contentHash: 'hash_shared_123',
-        contentType: ClipboardContentType.text,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        lastCopiedAt: DateTime.now(),
-        isPinned: false,
-        isSensitive: false,
-        copyCount: 1,
-      );
+        final item1 = ClipboardItem(
+          id: 'clip_1',
+          content: 'shared content text',
+          normalizedContent: 'shared content text',
+          contentHash: 'hash_shared_123',
+          contentType: ClipboardContentType.text,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          lastCopiedAt: DateTime.now(),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+        );
 
-      await db.database.insert('clipboard_items', item1.toMap());
+        await db.database.insert('clipboard_items', item1.toMap());
 
-      var embedCallCount = 0;
-      Future<List<double>> mockEmbedder(String text) async {
-        embedCallCount++;
-        return [0.5, 0.5, 0.5];
-      }
+        var embedCallCount = 0;
+        Future<List<double>> mockEmbedder(String text) async {
+          embedCallCount++;
+          return [0.5, 0.5, 0.5];
+        }
 
-      await store.indexClipboardItem(
-        item: item1,
-        modelId: 'test_model',
-        embedder: mockEmbedder,
-      );
-      expect(embedCallCount, 1);
+        await store.indexClipboardItem(
+          item: item1,
+          modelId: 'test_model',
+          embedder: mockEmbedder,
+        );
+        expect(embedCallCount, 1);
 
-      final item2 = ClipboardItem(
-        id: 'clip_2',
-        content: 'shared content text',
-        normalizedContent: 'shared content text',
-        contentHash: 'hash_shared_123',
-        contentType: ClipboardContentType.text,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        lastCopiedAt: DateTime.now(),
-        isPinned: false,
-        isSensitive: false,
-        copyCount: 1,
-      );
+        final item2 = ClipboardItem(
+          id: 'clip_2',
+          content: 'shared content text',
+          normalizedContent: 'shared content text',
+          contentHash: 'hash_shared_123',
+          contentType: ClipboardContentType.text,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          lastCopiedAt: DateTime.now(),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+        );
 
-      await db.database.insert('clipboard_items', item2.toMap());
+        await db.database.insert('clipboard_items', item2.toMap());
 
-      await store.indexClipboardItem(
-        item: item2,
-        modelId: 'test_model',
-        embedder: mockEmbedder,
-      );
-      expect(embedCallCount, 1);
+        await store.indexClipboardItem(
+          item: item2,
+          modelId: 'test_model',
+          embedder: mockEmbedder,
+        );
+        expect(embedCallCount, 1);
 
-      await db.close();
-    });
+        await db.close();
+      },
+    );
   });
 }

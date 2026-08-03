@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import 'settings_helpers.dart';
 
@@ -15,13 +15,13 @@ class StorageSettingsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CupertinoSectionLabel('retention_and_limits'.tr),
+        CupertinoSectionLabel(context.l10n.retention_and_limits),
         SettingsGroupWidget(
           children: [
             NumberRowWidget(
-              title: 'retention_period'.tr,
+              title: context.l10n.retention_period,
               value: settings.retentionDays,
-              suffix: 'days_unit'.tr,
+              suffix: context.l10n.days_unit,
               min: 1,
               max: 365,
               onChanged: (value) => updateSettings(
@@ -30,9 +30,9 @@ class StorageSettingsSection extends ConsumerWidget {
               ),
             ),
             NumberRowWidget(
-              title: 'max_items'.tr,
+              title: context.l10n.max_items,
               value: settings.maxItems,
-              suffix: 'items_unit'.tr,
+              suffix: context.l10n.items_unit,
               min: 100,
               max: 50000,
               onChanged: (value) => updateSettings(
@@ -41,7 +41,7 @@ class StorageSettingsSection extends ConsumerWidget {
               ),
             ),
             NumberRowWidget(
-              title: 'max_database_size'.tr,
+              title: context.l10n.max_database_size,
               value: settings.maxDatabaseMb,
               suffix: 'MB',
               min: 50,
@@ -54,12 +54,12 @@ class StorageSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('cleanup_rules'.tr),
+        CupertinoSectionLabel(context.l10n.cleanup_rules),
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'delete_images_first'.tr,
-              subtitle: 'delete_images_first_sub'.tr,
+              title: context.l10n.delete_images_first,
+              subtitle: context.l10n.delete_images_first_sub,
               value: settings.deleteImagesFirst,
               onChanged: (value) => updateSettings(
                 ref,
@@ -67,7 +67,7 @@ class StorageSettingsSection extends ConsumerWidget {
               ),
             ),
             SwitchRowWidget(
-              title: 'protect_pinned'.tr,
+              title: context.l10n.protect_pinned,
               value: settings.protectPinned,
               onChanged: (value) => updateSettings(
                 ref,
@@ -75,7 +75,7 @@ class StorageSettingsSection extends ConsumerWidget {
               ),
             ),
             SwitchRowWidget(
-              title: 'protect_collections'.tr,
+              title: context.l10n.protect_collections,
               value: settings.protectCollections,
               onChanged: (value) => updateSettings(
                 ref,
@@ -85,12 +85,12 @@ class StorageSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('database_cleanup'.tr),
+        CupertinoSectionLabel(context.l10n.database_cleanup),
         SettingsGroupWidget(
           children: [
             SettingsTileWidget(
-              title: 'export_backup'.tr,
-              subtitle: 'export_backup_sub'.tr,
+              title: context.l10n.export_backup,
+              subtitle: context.l10n.export_backup_sub,
               leading: const Icon(
                 CupertinoIcons.share_up,
                 color: CupertinoColors.activeBlue,
@@ -98,12 +98,12 @@ class StorageSettingsSection extends ConsumerWidget {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => exportBackupDialog(context, ref),
-                child: Text('export'.tr),
+                child: Text(context.l10n.export),
               ),
             ),
             SettingsTileWidget(
-              title: 'import_backup'.tr,
-              subtitle: 'import_backup_sub'.tr,
+              title: context.l10n.import_backup,
+              subtitle: context.l10n.import_backup_sub,
               leading: const Icon(
                 CupertinoIcons.cloud_download,
                 color: CupertinoColors.activeGreen,
@@ -111,12 +111,12 @@ class StorageSettingsSection extends ConsumerWidget {
               trailing: CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 onPressed: () => importBackupDialog(context, ref),
-                child: Text('import'.tr),
+                child: Text(context.l10n.import),
               ),
             ),
             SettingsTileWidget(
-              title: 'clear_unpinned'.tr,
-              subtitle: 'clear_unpinned_sub'.tr,
+              title: context.l10n.clear_unpinned,
+              subtitle: context.l10n.clear_unpinned_sub,
               leading: const Icon(
                 CupertinoIcons.trash,
                 color: CupertinoColors.systemOrange,
@@ -128,15 +128,15 @@ class StorageSettingsSection extends ConsumerWidget {
                       .read(historyControllerProvider.notifier)
                       .clearHistory(includePinned: false);
                   if (context.mounted) {
-                    showCupertinoNotice(context, 'unpinned_cleared'.tr);
+                    showCupertinoNotice(context, context.l10n.unpinned_cleared);
                   }
                 },
-                child: Text('clear'.tr),
+                child: Text(context.l10n.clear),
               ),
             ),
             SettingsTileWidget(
-              title: 'clear_all_history'.tr,
-              subtitle: 'clear_all_sub'.tr,
+              title: context.l10n.clear_all_history,
+              subtitle: context.l10n.clear_all_sub,
               leading: const Icon(
                 CupertinoIcons.delete_solid,
                 color: CupertinoColors.systemRed,
@@ -146,20 +146,20 @@ class StorageSettingsSection extends ConsumerWidget {
                 onPressed: () async {
                   final confirmed = await confirmDeleteDialog(
                     context,
-                    title: 'clear_all_confirm_title'.tr,
-                    message: 'clear_all_confirm_msg'.tr,
+                    title: context.l10n.clear_all_confirm_title,
+                    message: context.l10n.clear_all_confirm_msg,
                   );
                   if (confirmed == true) {
                     await ref
                         .read(historyControllerProvider.notifier)
                         .clearHistory(includePinned: true);
                     if (context.mounted) {
-                      showCupertinoNotice(context, 'all_cleared'.tr);
+                      showCupertinoNotice(context, context.l10n.all_cleared);
                     }
                   }
                 },
                 child: Text(
-                  'clear_all'.tr,
+                  context.l10n.clear_all,
                   style: const TextStyle(color: CupertinoColors.systemRed),
                 ),
               ),
