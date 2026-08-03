@@ -3,6 +3,10 @@ import '../../../clipboard_history/domain/clipboard_item.dart';
 import '../../../clipboard_history/domain/clipboard_repository.dart';
 import '../ai_tool.dart';
 
+bool isSameDate(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
+
 /// Read-only tool: Searches clipboard history with filters.
 class SearchClipboardTool implements AiTool {
   SearchClipboardTool(this._clipboardHistory, [this._repository]);
@@ -24,9 +28,15 @@ class SearchClipboardTool implements AiTool {
   Map<String, dynamic> get inputSchema => {
         'type': 'object',
         'properties': {
-          'content_type': {'type': 'string', 'enum': ['json', 'url', 'code', 'text', 'image', 'file']},
+          'content_type': {
+            'type': 'string',
+            'enum': ['json', 'url', 'code', 'text', 'image', 'file']
+          },
           'query': {'type': 'string'},
-          'date_range': {'type': 'string', 'enum': ['today', 'yesterday', 'recent']},
+          'date_range': {
+            'type': 'string',
+            'enum': ['today', 'yesterday', 'recent']
+          },
         },
       };
 
@@ -41,28 +51,46 @@ class SearchClipboardTool implements AiTool {
       items = await _repository.getItems(limit: 50);
     }
 
+    final queryTokens = query
+        .split(RegExp(r'\s+'))
+        .map((w) => w.trim().toLowerCase())
+        .where((w) => w.isNotEmpty)
+        .toList();
+
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(days: 1));
+
     final filtered = items.where((item) {
       if (contentType.isNotEmpty) {
         if (contentType == 'json' && item.contentType != ClipboardContentType.json) return false;
         if (contentType == 'url' && item.contentType != ClipboardContentType.url) return false;
         if (contentType == 'code' && item.contentType != ClipboardContentType.code) return false;
         if (contentType == 'image' && item.contentType != ClipboardContentType.image) return false;
+        if (contentType == 'text' && item.contentType != ClipboardContentType.text) return false;
+        if (contentType == 'file' && item.contentType != ClipboardContentType.file) return false;
       }
-      if (query.isNotEmpty) {
-        if (!item.content.toLowerCase().contains(query) &&
-            !(item.sourceAppName?.toLowerCase().contains(query) ?? false)) {
-          return false;
-        }
+      if (queryTokens.isNotEmpty) {
+        final contentLower = item.content.toLowerCase();
+        final appNameLower = item.sourceAppName?.toLowerCase() ?? '';
+        final matches = queryTokens.any(
+          (token) => contentLower.contains(token) || appNameLower.contains(token),
+        );
+        if (!matches) return false;
       }
-      if (dateRange == 'yesterday') {
-        final now = DateTime.now();
-        final yesterday = now.subtract(const Duration(days: 1));
-        if (item.createdAt.day != yesterday.day) return false;
+      if (dateRange == 'today') {
+        if (!isSameDate(item.createdAt, now)) return false;
+      } else if (dateRange == 'yesterday') {
+        if (!isSameDate(item.createdAt, yesterday)) return false;
+      } else if (dateRange == 'recent') {
+        if (now.difference(item.createdAt).inDays > 7) return false;
       }
       return true;
     }).toList();
 
-    final formatted = filtered.take(10).map((i) => '[clip:${i.id}] (${i.contentType.name}): ${i.content}').join('\n---\n');
+    final formatted = filtered
+        .take(10)
+        .map((i) => '[clip:${i.id}] (${i.contentType.name}): ${i.content}')
+        .join('\n---\n');
 
     return AiToolResult.ok(
       filtered.isNotEmpty
@@ -73,11 +101,29 @@ class SearchClipboardTool implements AiTool {
   }
 }
 
+Future<ClipboardItem?> _findItemInRepoOrHistory(
+  String clipId,
+  List<ClipboardItem> history,
+  ClipboardRepository? repository,
+) async {
+  for (final item in history) {
+    if (item.id == clipId) return item;
+  }
+  if (repository != null) {
+    final items = await repository.getItems(limit: 2000);
+    for (final item in items) {
+      if (item.id == clipId) return item;
+    }
+  }
+  return null;
+}
+
 /// Read-only tool: Fetches a single clipboard item by ID.
 class GetClipboardItemTool implements AiTool {
-  GetClipboardItemTool(this._clipboardHistory);
+  GetClipboardItemTool(this._clipboardHistory, [this._repository]);
 
   final List<ClipboardItem> _clipboardHistory;
+  final ClipboardRepository? _repository;
 
   @override
   String get name => 'get_clipboard_item';
@@ -100,14 +146,23 @@ class GetClipboardItemTool implements AiTool {
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     final clipId = arguments['clip_id']?.toString() ?? '';
-    final item = _clipboardHistory.firstWhere(
-      (i) => i.id == clipId,
-      orElse: () => mockFallbackItem(clipId),
+    if (clipId.isEmpty) {
+      return AiToolResult.error('Tham số clip_id không được để trống.');
+    }
+
+    final found = await _findItemInRepoOrHistory(
+      clipId,
+      _clipboardHistory,
+      _repository,
     );
 
+    if (found == null) {
+      return AiToolResult.notFound('Không tìm thấy mục clipboard có ID: "$clipId".');
+    }
+
     return AiToolResult.ok(
-      '[clip:${item.id}] Loại: ${item.contentType.name}, Nội dung:\n${item.content}',
-      item,
+      '[clip:${found.id}] Loại: ${found.contentType.name}, Nội dung:\n${found.content}',
+      found,
     );
   }
 }
@@ -181,9 +236,10 @@ class ListCollectionsTool implements AiTool {
 
 /// Mutating tool: Pins or unpins a clipboard item.
 class PinClipboardTool implements AiTool {
-  PinClipboardTool([this._repository]);
+  PinClipboardTool([this._repository, this._clipboardHistory = const []]);
 
   final ClipboardRepository? _repository;
+  final List<ClipboardItem> _clipboardHistory;
 
   @override
   String get name => 'pin_clipboard';
@@ -209,18 +265,33 @@ class PinClipboardTool implements AiTool {
     final clipId = arguments['clip_id']?.toString() ?? '';
     final pinned = arguments['pinned'] == true;
 
-    if (_repository != null && clipId.isNotEmpty) {
-      await _repository.setPinned(clipId, pinned);
+    if (_repository == null) {
+      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
     }
+    if (clipId.isEmpty) {
+      return AiToolResult.error('Tham số clip_id không hợp lệ.');
+    }
+
+    final item = await _findItemInRepoOrHistory(
+      clipId,
+      _clipboardHistory,
+      _repository,
+    );
+    if (item == null) {
+      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId] để ghim.');
+    }
+
+    await _repository.setPinned(clipId, pinned);
     return AiToolResult.ok('Đã ${pinned ? 'ghim' : 'bỏ ghim'} mục clipboard [clip:$clipId] thành công.');
   }
 }
 
 /// Mutating tool: Adds a clipboard item to a collection.
 class AddToCollectionTool implements AiTool {
-  AddToCollectionTool([this._repository]);
+  AddToCollectionTool([this._repository, this._clipboardHistory = const []]);
 
   final ClipboardRepository? _repository;
+  final List<ClipboardItem> _clipboardHistory;
 
   @override
   String get name => 'add_to_collection';
@@ -246,18 +317,33 @@ class AddToCollectionTool implements AiTool {
     final clipId = arguments['clip_id']?.toString() ?? '';
     final collectionId = arguments['collection_id']?.toString() ?? '';
 
-    if (_repository != null && clipId.isNotEmpty && collectionId.isNotEmpty) {
-      await _repository.addToCollection(clipId, collectionId);
+    if (_repository == null) {
+      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
     }
+    if (clipId.isEmpty || collectionId.isEmpty) {
+      return AiToolResult.error('Tham số clip_id và collection_id không được để trống.');
+    }
+
+    final item = await _findItemInRepoOrHistory(
+      clipId,
+      _clipboardHistory,
+      _repository,
+    );
+    if (item == null) {
+      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId].');
+    }
+
+    await _repository.addToCollection(clipId, collectionId);
     return AiToolResult.ok('Đã thêm mục [clip:$clipId] vào bộ sưu tập [collection:$collectionId].');
   }
 }
 
 /// Mutating tool: Deletes a clipboard item.
 class DeleteClipboardItemTool implements AiTool {
-  DeleteClipboardItemTool([this._repository]);
+  DeleteClipboardItemTool([this._repository, this._clipboardHistory = const []]);
 
   final ClipboardRepository? _repository;
+  final List<ClipboardItem> _clipboardHistory;
 
   @override
   String get name => 'delete_clipboard_item';
@@ -280,26 +366,24 @@ class DeleteClipboardItemTool implements AiTool {
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     final clipId = arguments['clip_id']?.toString() ?? '';
-    if (_repository != null && clipId.isNotEmpty) {
-      await _repository.deleteItem(clipId);
+
+    if (_repository == null) {
+      return AiToolResult.error('Không thể thao tác: Repository chưa được khởi tạo.');
     }
+    if (clipId.isEmpty) {
+      return AiToolResult.error('Tham số clip_id không hợp lệ.');
+    }
+
+    final item = await _findItemInRepoOrHistory(
+      clipId,
+      _clipboardHistory,
+      _repository,
+    );
+    if (item == null) {
+      return AiToolResult.notFound('Không tìm thấy mục clipboard [clip:$clipId] để xóa.');
+    }
+
+    await _repository.deleteItem(clipId);
     return AiToolResult.ok('Đã xóa mục clipboard [clip:$clipId] thành công.');
   }
-}
-
-ClipboardItem mockFallbackItem(String id) {
-  final now = DateTime.now();
-  return ClipboardItem(
-    id: id,
-    content: 'Mục clipboard $id',
-    normalizedContent: 'mục clipboard $id',
-    contentHash: 'hash-$id',
-    contentType: ClipboardContentType.text,
-    createdAt: now,
-    updatedAt: now,
-    lastCopiedAt: now,
-    isPinned: false,
-    isSensitive: false,
-    copyCount: 1,
-  );
 }

@@ -11,9 +11,20 @@ import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
-import '../domain/ai_request_plan.dart';
 import '../services/ai_model_downloader_service.dart';
 import '../services/local_ai_engine.dart';
+
+class PendingToolCall {
+  const PendingToolCall({
+    required this.toolName,
+    required this.arguments,
+    required this.completer,
+  });
+
+  final String toolName;
+  final Map<String, dynamic> arguments;
+  final Completer<bool> completer;
+}
 
 class AiState {
   const AiState({
@@ -26,6 +37,7 @@ class AiState {
     this.savedConversations = const [],
     this.temperature = 0.55,
     this.contextSize = 4096,
+    this.pendingToolCall,
   });
 
   final String selectedModelId;
@@ -37,6 +49,7 @@ class AiState {
   final List<SavedAiConversation> savedConversations;
   final double temperature;
   final int contextSize;
+  final PendingToolCall? pendingToolCall;
 
   AiModelInfo get selectedModel => AiModelInfo.findById(selectedModelId);
 
@@ -55,6 +68,8 @@ class AiState {
     List<SavedAiConversation>? savedConversations,
     double? temperature,
     int? contextSize,
+    PendingToolCall? pendingToolCall,
+    bool clearPendingToolCall = false,
   }) {
     return AiState(
       selectedModelId: selectedModelId ?? this.selectedModelId,
@@ -68,6 +83,9 @@ class AiState {
       savedConversations: savedConversations ?? this.savedConversations,
       temperature: temperature ?? this.temperature,
       contextSize: contextSize ?? this.contextSize,
+      pendingToolCall: clearPendingToolCall
+          ? null
+          : (pendingToolCall ?? this.pendingToolCall),
     );
   }
 }
@@ -98,7 +116,6 @@ class AiController extends StateNotifier<AiState> {
   bool _chatChangedBeforeRestore = false;
   bool _contextChangedBeforeRestore = false;
   final Map<String, StreamSubscription> _downloadSubscriptions = {};
-  static const _requestPlanner = AiRequestPlanner();
 
   Future<void> _checkDownloadedModels() async {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
@@ -287,6 +304,33 @@ class AiController extends StateNotifier<AiState> {
     );
   }
 
+  Future<bool> requestToolConfirmation(
+    String toolName,
+    Map<String, dynamic> arguments,
+  ) {
+    final completer = Completer<bool>();
+    state = state.copyWith(
+      pendingToolCall: PendingToolCall(
+        toolName: toolName,
+        arguments: arguments,
+        completer: completer,
+      ),
+    );
+    return completer.future.whenComplete(() {
+      if (state.pendingToolCall?.completer == completer) {
+        state = state.copyWith(clearPendingToolCall: true);
+      }
+    });
+  }
+
+  void approvePendingToolCall() {
+    state.pendingToolCall?.completer.complete(true);
+  }
+
+  void rejectPendingToolCall() {
+    state.pendingToolCall?.completer.complete(false);
+  }
+
   Future<void> sendUserMessage(
     String userText, {
     AiFeatureGroup? featureGroup,
@@ -304,23 +348,9 @@ class AiController extends StateNotifier<AiState> {
     final availableConversationContext = _buildConversationContext(
       state.chatMessages,
     );
-    final requestPlan = _requestPlanner.plan(
-      prompt: userText,
-      hasSelectedClipboard: selectedContext != null,
-      hasConversation: availableConversationContext.isNotEmpty,
-      featureGroup: featureGroup,
-    );
-    final usesConversationHistory =
-        requestPlan.intent == AiRequestIntent.followUp;
-    final conversationContext = usesConversationHistory
-        ? availableConversationContext
-        : '';
-    final conversationMessages = usesConversationHistory
-        ? _recentConversationMessages(state.chatMessages)
-        : const <AiChatMessage>[];
-    var activeContext = requestPlan.useSelectedClipboard
-        ? selectedContext
-        : null;
+    final conversationContext = availableConversationContext;
+    final conversationMessages = _recentConversationMessages(state.chatMessages);
+    var activeContext = selectedContext;
 
     final targetContext = activeContext;
     if (targetContext != null &&
@@ -361,13 +391,11 @@ class AiController extends StateNotifier<AiState> {
         normalizedContent: imageInfoBuffer.toString(),
       );
     }
-    final clipboardHistory = requestPlan.useClipboardHistory
-        ? _ref
-              .read(historyControllerProvider)
-              .items
-              .where((item) => !item.isSensitive)
-              .toList(growable: false)
-        : const <ClipboardItem>[];
+    final clipboardHistory = _ref
+        .read(historyControllerProvider)
+        .items
+        .where((item) => !item.isSensitive)
+        .toList(growable: false);
     debug.log(
       level: AiDebugLevel.info,
       stage: 'request',
@@ -379,19 +407,6 @@ class AiController extends StateNotifier<AiState> {
           'option: ${selectedOption ?? 'none'}\n'
           'temperature: ${state.temperature}\n'
           'configuredContextSize: ${state.contextSize}',
-    );
-    debug.log(
-      level: AiDebugLevel.info,
-      stage: 'planner',
-      requestId: requestId,
-      message: 'Đã lập kế hoạch request',
-      details:
-          'intent: ${requestPlan.intent.name}\n'
-          'useSelectedClipboard: ${requestPlan.useSelectedClipboard}\n'
-          'useClipboardHistory: ${requestPlan.useClipboardHistory}\n'
-          'maxOutputTokens: ${requestPlan.maxOutputTokens}\n'
-          'responseLanguage: ${requestPlan.responseLanguage}\n'
-          'conversationMessages: ${conversationMessages.length}',
     );
     debug.log(
       level: AiDebugLevel.info,
@@ -448,11 +463,12 @@ class AiController extends StateNotifier<AiState> {
       featureGroup: featureGroup,
       selectedOption: selectedOption,
       conversationContext: conversationContext,
-      requestPlan: requestPlan,
+      requestPlan: null,
       conversationMessages: conversationMessages,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,
+      onConfirmationRequested: requestToolConfirmation,
     );
 
     var eventCount = 0;

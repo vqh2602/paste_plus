@@ -1,4 +1,6 @@
 
+import 'dart:io';
+
 import 'package:llamadart/llamadart.dart';
 
 class LlamaConversationTurn {
@@ -13,13 +15,32 @@ class LlamaStreamToken {
   final String? thinking;
 }
 
+class ModelLoadCapabilities {
+  const ModelLoadCapabilities({
+    required this.multimodalReady,
+  });
+
+  final bool multimodalReady;
+}
+
 class LlamaInferenceService {
   LlamaEngine? _engine;
   String? _loadedModelPath;
   int? _loadedContextSize;
   String? _loadedMmprojPath;
 
-  Future<void> _ensureLoaded(
+  int _resolveGpuLayers(String modelPath) {
+    if (Platform.isMacOS) {
+      return 999;
+    }
+    final lower = modelPath.toLowerCase();
+    if (lower.contains('12b') || lower.contains('8b') || lower.contains('7b')) {
+      return 33;
+    }
+    return 999;
+  }
+
+  Future<ModelLoadCapabilities> _ensureLoaded(
     String modelPath,
     int contextSize, {
     String? mmprojPath,
@@ -34,7 +55,10 @@ class LlamaInferenceService {
       final engine = LlamaEngine(LlamaBackend());
       await engine.loadModel(
         modelPath,
-        modelParams: ModelParams(contextSize: contextSize, gpuLayers: 999),
+        modelParams: ModelParams(
+          contextSize: contextSize,
+          gpuLayers: _resolveGpuLayers(modelPath),
+        ),
       );
       _engine = engine;
       _loadedModelPath = modelPath;
@@ -42,19 +66,31 @@ class LlamaInferenceService {
       _loadedMmprojPath = null;
     }
 
-    // Load multimodal projector if needed and not yet loaded
-    if (mmprojPath != null && mmprojPath != _loadedMmprojPath) {
-      try {
-        await _engine!.loadMultimodalProjector(mmprojPath);
-        _loadedMmprojPath = mmprojPath;
-      } catch (_) {
-        // Best-effort: if mmproj cannot be loaded, continue in text-only mode
+    var multimodalReady = false;
+    if (mmprojPath != null) {
+      if (mmprojPath == _loadedMmprojPath) {
+        multimodalReady = true;
+      } else {
+        try {
+          await _engine!.loadMultimodalProjector(mmprojPath);
+          _loadedMmprojPath = mmprojPath;
+          multimodalReady = true;
+        } catch (_) {
+          _loadedMmprojPath = null;
+          multimodalReady = false;
+        }
       }
     }
+
+    return ModelLoadCapabilities(multimodalReady: multimodalReady);
   }
 
-  Future<void> prepareModel(String modelPath, int contextSize) =>
-      _ensureLoaded(modelPath, contextSize);
+  Future<ModelLoadCapabilities> prepareModel(
+    String modelPath,
+    int contextSize, {
+    String? mmprojPath,
+  }) =>
+      _ensureLoaded(modelPath, contextSize, mmprojPath: mmprojPath);
 
   Future<List<int>> tokenize(String text) async {
     final engine = _engine;

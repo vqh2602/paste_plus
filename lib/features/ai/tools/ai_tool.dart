@@ -13,6 +13,9 @@ class AiToolResult {
   factory AiToolResult.error(String message) =>
       AiToolResult(success: false, output: message);
 
+  factory AiToolResult.notFound(String message) =>
+      AiToolResult(success: false, output: message);
+
   factory AiToolResult.cancelled(String reason) =>
       AiToolResult(success: false, output: reason, cancelled: true);
 

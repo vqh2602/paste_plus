@@ -345,6 +345,45 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AiState>(aiControllerProvider, (previous, next) {
+      if (next.pendingToolCall != null && previous?.pendingToolCall != next.pendingToolCall) {
+        final pending = next.pendingToolCall!;
+        final isEn = AppTranslations.currentLanguage == 'en';
+        final toolDisplayName = switch (pending.toolName) {
+          'pin_clipboard' => isEn ? 'Pin / Unpin Clipboard Item' : 'Ghim / Bỏ ghim mục Clipboard',
+          'delete_clipboard_item' => isEn ? 'Delete Clipboard Item' : 'Xóa mục Clipboard',
+          'add_to_collection' => isEn ? 'Add to Collection' : 'Thêm vào bộ sưu tập',
+          _ => pending.toolName,
+        };
+
+        showCupertinoDialog<bool>(
+          context: context,
+          builder: (ctx) => CupertinoAlertDialog(
+            title: const Text('Xác nhận thao tác AI'),
+            content: Text(
+              'AI đang yêu cầu thực hiện hành động:\n"$toolDisplayName"\n\n'
+              'Tham số: ${pending.arguments}',
+            ),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () {
+                  Navigator.pop(ctx, false);
+                  ref.read(aiControllerProvider.notifier).rejectPendingToolCall();
+                },
+                child: Text('cancel'.tr),
+              ),
+              CupertinoDialogAction(
+                isDestructiveAction: pending.toolName.contains('delete'),
+                onPressed: () {
+                  Navigator.pop(ctx, true);
+                  ref.read(aiControllerProvider.notifier).approvePendingToolCall();
+                },
+                child: const Text('Xác nhận'),
+              ),
+            ],
+          ),
+        );
+      }
+
       final prevLen = previous?.chatMessages.length ?? 0;
       final nextLen = next.chatMessages.length;
       final prevLastContent = previous?.chatMessages.lastOrNull?.content;

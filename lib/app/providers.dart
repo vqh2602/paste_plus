@@ -12,6 +12,8 @@ import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
+import '../features/ai/services/clipboard_vector_store.dart';
+import '../features/ai/services/hybrid_semantic_search.dart';
 import '../features/ai/services/local_ai_engine.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import '../features/clipboard_history/domain/clipboard_item.dart';
@@ -247,10 +249,25 @@ final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
   return AiModelDownloaderService();
 });
 
+final clipboardVectorStoreProvider = Provider<ClipboardVectorStore>((ref) {
+  return ClipboardVectorStore(
+    ref.watch(appDatabaseProvider),
+  );
+});
+
+final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
+  return HybridSemanticSearch(
+    ref.watch(clipboardVectorStoreProvider),
+    ref.watch(appDatabaseProvider),
+  );
+});
+
 final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
   final engine = LocalAiEngine(
     ref.watch(aiModelDownloaderProvider),
     ref.read(aiDebugControllerProvider.notifier),
+    null,
+    ref.watch(hybridSemanticSearchProvider),
   );
   ref.onDispose(engine.dispose);
   return engine;

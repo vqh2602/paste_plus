@@ -65,38 +65,9 @@ class LocalAiEngine {
     AiRequestPlan? requestPlan,
     List<AiChatMessage> conversationMessages = const [],
     String? debugRequestId,
+    Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
+        onConfirmationRequested,
   }) async* {
-    final effectiveHistory = clipboardContext == null
-        ? clipboardHistory
-        : const <ClipboardItem>[];
-    late String contextText;
-    if (clipboardContext != null) {
-      if (clipboardContext.contentType == ClipboardContentType.image) {
-        final fileName = clipboardContext.imagePath != null
-            ? clipboardContext.imagePath!.split(Platform.pathSeparator).last
-            : 'image.png';
-        final ocrContent = clipboardContext.content.trim();
-        final hasText = ocrContent.isNotEmpty && ocrContent != '[Image]';
-        final sourceApp = clipboardContext.sourceAppName ?? 'Unknown';
-
-        contextText =
-            '''
-[Dữ liệu hình ảnh Multimodal & OCR đính kèm làm ngữ cảnh]
-- Nguồn: $sourceApp
-- Tên tệp hình ảnh: $fileName
-- Đường dẫn tệp: ${clipboardContext.imagePath ?? 'N/A'}
-- Nội dung văn bản trích xuất qua OCR (Dữ liệu hỗ trợ thứ cấp):
-${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc hình ảnh là biểu đồ/họa tiết/giao diện)'}
-
-[Hướng dẫn phân tích]: Pixel hình ảnh thực tế đã được nạp trực tiếp vào Multimodal Vision LLM. Hãy sử dụng cả khả năng nhìn ảnh thực tế và dữ liệu OCR hỗ trợ ở trên để phân tích giao diện, biểu đồ, hình ảnh hoặc giải đáp câu hỏi của người dùng.
-''';
-      } else {
-        contextText = clipboardContext.content.trim();
-      }
-    } else {
-      contextText = _buildHistoryContext(effectiveHistory);
-    }
-
     final initialPlan =
         requestPlan ??
         _plannerService.createPlan(
@@ -135,12 +106,68 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       }
     }
 
+    final effectiveClipboardContext =
+        effectivePlan.useSelectedClipboard ? clipboardContext : null;
+    final effectiveHistory =
+        effectivePlan.useClipboardHistory ? clipboardHistory : const <ClipboardItem>[];
+
+    List<String> imagePaths = const [];
+    if (effectiveClipboardContext?.imagePath != null &&
+        effectiveClipboardContext!.imagePath!.isNotEmpty) {
+      final imgFile = File(effectiveClipboardContext.imagePath!);
+      if (await imgFile.exists()) {
+        imagePaths = [imgFile.path];
+      }
+    }
+
+    String? mmprojPath;
+    if (model.isMultimodalVision && _modelDownloader != null) {
+      final mmFile = await _modelDownloader.getMmprojFile(model.id);
+      if (await mmFile.exists()) {
+        mmprojPath = mmFile.path;
+      }
+    }
+
+    late String contextText;
+    if (effectiveClipboardContext != null) {
+      if (effectiveClipboardContext.contentType == ClipboardContentType.image) {
+        final fileName = effectiveClipboardContext.imagePath != null
+            ? effectiveClipboardContext.imagePath!.split(Platform.pathSeparator).last
+            : 'image.png';
+        final ocrContent = effectiveClipboardContext.content.trim();
+        final hasText = ocrContent.isNotEmpty && ocrContent != '[Image]';
+        final sourceApp = effectiveClipboardContext.sourceAppName ?? 'Unknown';
+
+        contextText =
+            '''
+[Dữ liệu hình ảnh Multimodal & OCR đính kèm làm ngữ cảnh]
+- Nguồn: $sourceApp
+- Tên tệp hình ảnh: $fileName
+- Đường dẫn tệp: ${effectiveClipboardContext.imagePath ?? 'N/A'}
+- Nội dung văn bản trích xuất qua OCR (Dữ liệu hỗ trợ thứ cấp):
+${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc hình ảnh là biểu đồ/họa tiết/giao diện)'}
+
+[Hướng dẫn phân tích]: Pixel hình ảnh thực tế đã được nạp trực tiếp vào Multimodal Vision LLM. Hãy sử dụng cả khả năng nhìn ảnh thực tế và dữ liệu OCR hỗ trợ ở trên để phân tích giao diện, biểu đồ, hình ảnh hoặc giải đáp câu hỏi của người dùng.
+''';
+      } else {
+        contextText = effectiveClipboardContext.content.trim();
+      }
+
+      if (effectiveHistory.isNotEmpty) {
+        contextText =
+            '$contextText\n\n[Lịch sử Clipboard liên quan bổ sung]:\n${_buildHistoryContext(effectiveHistory)}';
+      }
+    } else {
+      contextText = _buildHistoryContext(effectiveHistory);
+    }
+
     if (effectivePlan.executionPlan?.isMultiStep == true) {
       final stepResults = await _agentOrchestrator.executePlan(
         plan: effectivePlan.executionPlan!,
         prompt: prompt,
         contextText: contextText,
         clipboardHistory: effectiveHistory,
+        onConfirmationRequested: onConfirmationRequested,
       );
       contextText = _agentOrchestrator.synthesizeContext(
         stepResults,
@@ -184,22 +211,32 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       );
       if (fileExists && fileSize > 10 * 1024 * 1024) {
         final effectiveContextSize = contextSize ?? model.contextWindow;
-        await _inferenceService.prepareModel(
+        final caps = await _inferenceService.prepareModel(
           modelFile.path,
           effectiveContextSize,
+          mmprojPath: mmprojPath,
         );
         _debug?.log(
           level: AiDebugLevel.success,
           stage: 'model-load',
           requestId: debugRequestId,
           message: 'Model đã sẵn sàng',
-          details: 'contextSize: $effectiveContextSize',
+          details: 'contextSize: $effectiveContextSize\nmultimodalReady: ${caps.multimodalReady}',
         );
+
+        if (effectiveClipboardContext?.contentType == ClipboardContentType.image &&
+            (!caps.multimodalReady || imagePaths.isEmpty)) {
+          contextText = contextText.replaceAll(
+            '[Hướng dẫn phân tích]: Pixel hình ảnh thực tế đã được nạp trực tiếp vào Multimodal Vision LLM.',
+            '[Lưu ý phân tích]: Không thể nạp vision projector. Phân tích này chỉ dựa trên OCR và metadata đính kèm.',
+          );
+        }
+
         final budgetManager = AiTokenBudgetManager(
           tokenize: _inferenceService.tokenize,
           detokenize: _inferenceService.detokenize,
         );
-        if (clipboardContext == null && effectiveHistory.isNotEmpty) {
+        if (effectiveClipboardContext == null && effectiveHistory.isNotEmpty) {
           final semanticItems = await _semanticRank(
             prompt: prompt,
             items: effectiveHistory,
@@ -220,23 +257,6 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           );
         }
 
-        List<String> imagePaths = const [];
-        if (clipboardContext?.imagePath != null &&
-            clipboardContext!.imagePath!.isNotEmpty) {
-          final imgFile = File(clipboardContext.imagePath!);
-          if (await imgFile.exists()) {
-            imagePaths = [imgFile.path];
-          }
-        }
-
-        String? mmprojPath;
-        if (model.isMultimodalVision) {
-          final mmFile = await _modelDownloader.getMmprojFile(model.id);
-          if (await mmFile.exists()) {
-            mmprojPath = mmFile.path;
-          }
-        }
-
         yield* _runBudgetedModel(
           modelPath: modelFile.path,
           contextSize: effectiveContextSize,
@@ -245,16 +265,17 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           contextText: contextText,
           featureGroup: featureGroup,
           selectedOption: selectedOption,
-          requestPlan: requestPlan,
+          requestPlan: effectivePlan,
           budgetManager: budgetManager,
           temperature: temperature,
-          maxOutputTokens: requestPlan?.maxOutputTokens ?? 700,
+          maxOutputTokens: effectivePlan.maxOutputTokens,
           thinkingModel: model.isThinkingModel,
           conversationMessages: conversationMessages,
           debugRequestId: debugRequestId,
           imagePaths: imagePaths,
           mmprojPath: mmprojPath,
           candidates: effectiveHistory,
+          onConfirmationRequested: onConfirmationRequested,
         );
         return;
       }
@@ -351,6 +372,8 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     List<String> imagePaths = const [],
     String? mmprojPath,
     List<ClipboardItem> candidates = const [],
+    Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
+        onConfirmationRequested,
   }) async* {
     final conversation = _toConversationTurns(conversationMessages);
     final userPrompt = _buildModelUserPrompt(prompt, contextText);

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../clipboard_history/domain/clipboard_item.dart';
 import 'structured_output_validator.dart';
 
@@ -43,8 +45,8 @@ class AiResponseVerifier {
     final citations = <String>[];
     final validIds = {for (final item in candidates) item.id};
 
-    // 1. Verify and repair clip_id citations (e.g. [clip:id] or clip_id: "id")
-    final idRegex = RegExp(r'\[clip:([a-zA-Z0-9_\-]+)\]|clip_id:\s*"([a-zA-Z0-9_\-]+)"', caseSensitive: false);
+    // 1. Verify and repair clip_id citations (e.g. [clip:id] or "clip_id": "id")
+    final idRegex = RegExp(r'\[clip:([a-zA-Z0-9_\-]+)\]|"?clip_id"?\s*:\s*"([a-zA-Z0-9_\-]+)"', caseSensitive: false);
 
     text = text.replaceAllMapped(idRegex, (match) {
       final id = match.group(1) ?? match.group(2) ?? '';
@@ -52,7 +54,7 @@ class AiResponseVerifier {
         if (!citations.contains(id)) {
           citations.add(id);
         }
-        return '[clip:$id]';
+        return match.group(1) != null ? '[clip:$id]' : '"clip_id": "$id"';
       }
       issues.add('Loại bỏ trích dẫn ID không tồn tại: $id');
       return '';
@@ -85,6 +87,15 @@ class AiResponseVerifier {
       if (jsonResponse.matches.isEmpty && candidates.isNotEmpty) {
         issues.add('Model sinh JSON chưa đúng schema.');
       }
+      text = jsonEncode({
+        'matches': jsonResponse.matches.map((match) {
+          return {
+            'clip_id': match.clipId,
+            'value': match.value,
+            'reason': match.reason,
+          };
+        }).toList(),
+      });
     }
 
     // Clean up double spaces or trailing empty lines resulting from ID stripping
