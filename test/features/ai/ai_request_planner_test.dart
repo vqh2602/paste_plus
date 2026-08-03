@@ -1,6 +1,7 @@
 import 'package:clipflow/core/localization/app_translations.dart';
 import 'package:clipflow/features/ai/domain/ai_feature_action.dart';
 import 'package:clipflow/features/ai/domain/ai_request_plan.dart';
+import 'package:clipflow/features/ai/services/ai_prompts.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -87,6 +88,26 @@ void main() {
 
     expect(AiFeatureGroup.rewrite.title, 'Viết lại nội dung');
     expect(AiFeatureGroup.rewrite.options.first, 'Tự nhiên hơn');
+  });
+
+  test('AiPrompts.buildSystemPrompt honors responseLanguage over UI language', () {
+    AppTranslations.currentLanguage = 'vi';
+
+    final promptEn = AiPrompts.buildSystemPrompt(
+      featureGroup: null,
+      selectedOption: null,
+      intent: AiRequestIntent.conversation,
+      responseLanguage: 'English',
+    );
+    expect(promptEn, contains('You must reply in English.'));
+
+    final promptVi = AiPrompts.buildSystemPrompt(
+      featureGroup: null,
+      selectedOption: null,
+      intent: AiRequestIntent.conversation,
+      responseLanguage: 'Vietnamese',
+    );
+    expect(promptVi, contains('Bạn phải trả lời bằng Tiếng Việt.'));
   });
 }
 

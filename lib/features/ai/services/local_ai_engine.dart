@@ -454,13 +454,22 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     final requestLabel = AiPrompts.userRequestLabel();
     final buffer = StringBuffer()..writeln('$requestLabel $prompt');
     if (contextText.trim().isNotEmpty) {
+      final sanitizedContext = contextText
+          .replaceAll('</clipboard_data>', '&lt;/clipboard_data&gt;')
+          .replaceAll('</BEGIN_UNTRUSTED_CLIPBOARD_DATA>', '')
+          .replaceAll('</END_UNTRUSTED_CLIPBOARD_DATA>', '');
       buffer
-        ..writeln('\n<clipboard_data>')
-        ..writeln(contextText)
-        ..writeln('</clipboard_data>');
+        ..writeln('\nBEGIN_UNTRUSTED_CLIPBOARD_DATA')
+        ..writeln('<clipboard_data>')
+        ..writeln(sanitizedContext)
+        ..writeln('</clipboard_data>')
+        ..writeln('END_UNTRUSTED_CLIPBOARD_DATA');
     }
     return buffer.toString();
   }
+
+  String buildModelUserPromptForTest(String prompt, String contextText) =>
+      _buildModelUserPrompt(prompt, contextText);
 
   List<LlamaConversationTurn> _toConversationTurns(
     List<AiChatMessage> messages,
