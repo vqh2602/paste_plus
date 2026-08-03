@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 2;
+  static const version = 3;
   final Database database;
   final String databasePath;
 
@@ -243,6 +243,7 @@ class AppDatabase {
       'CREATE INDEX idx_item_collections_collection ON clipboard_item_collections(collection_id)',
     );
     await _createSyncStateTable(db);
+    await _createEmbeddingsTable(db);
     await _seedCollections(db);
   }
 
@@ -263,6 +264,28 @@ class AppDatabase {
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_sync_states_peer_status
       ON item_sync_states(peer_device_id, sync_status)
+    ''');
+  }
+
+  static Future<void> _createEmbeddingsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS clipboard_embeddings (
+        clipboard_id TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        model_id TEXT NOT NULL,
+        vector BLOB NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY (clipboard_id, model_id),
+        FOREIGN KEY (clipboard_id) REFERENCES clipboard_items(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_embeddings_hash
+      ON clipboard_embeddings(content_hash)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_embeddings_model
+      ON clipboard_embeddings(model_id)
     ''');
   }
 
@@ -295,6 +318,9 @@ class AppDatabase {
   ) async {
     if (oldVersion < 2) {
       await _createSyncStateTable(db);
+    }
+    if (oldVersion < 3) {
+      await _createEmbeddingsTable(db);
     }
   }
 

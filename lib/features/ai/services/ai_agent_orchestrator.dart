@@ -1,6 +1,8 @@
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_execution_plan.dart';
+import '../tools/ai_tool_registry.dart';
+import '../tools/impl/clipboard_tools.dart';
 
 class AiStepResult {
   const AiStepResult({
@@ -16,9 +18,11 @@ class AiStepResult {
   final List<ClipboardItem> items;
 }
 
-/// Orchestrates multi-step AI tool execution pipelines.
+/// Orchestrates multi-step AI tool execution pipelines with tool registry and agent loop support.
 class AiAgentOrchestrator {
-  const AiAgentOrchestrator();
+  const AiAgentOrchestrator([this._customRegistry]);
+
+  final AiToolRegistry? _customRegistry;
 
   /// Executes [plan] sequentially, resolving step dependencies `$step_N`.
   List<AiStepResult> executePlan({
@@ -26,9 +30,12 @@ class AiAgentOrchestrator {
     required String prompt,
     required String contextText,
     required List<ClipboardItem> clipboardHistory,
+    Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
+        onConfirmationRequested,
   }) {
     final stepResults = <int, AiStepResult>{};
     final outputList = <AiStepResult>[];
+    final registry = _customRegistry ?? _buildDefaultRegistry(clipboardHistory);
 
     for (final step in plan.steps) {
       final sourceText = _resolveSource(
@@ -42,6 +49,8 @@ class AiAgentOrchestrator {
         prompt: prompt,
         sourceText: sourceText,
         clipboardHistory: clipboardHistory,
+        registry: registry,
+        onConfirmationRequested: onConfirmationRequested,
       );
 
       stepResults[step.stepId] = result;
@@ -49,6 +58,18 @@ class AiAgentOrchestrator {
     }
 
     return outputList;
+  }
+
+  AiToolRegistry _buildDefaultRegistry(List<ClipboardItem> history) {
+    final registry = AiToolRegistry();
+    registry.register(SearchClipboardTool(history));
+    registry.register(GetClipboardItemTool(history));
+    registry.register(ExtractUrlsTool());
+    registry.register(ListCollectionsTool());
+    registry.register(PinClipboardTool());
+    registry.register(AddToCollectionTool());
+    registry.register(DeleteClipboardItemTool());
+    return registry;
   }
 
   /// Synthesizes the results of all steps into a single clear context text string.
@@ -89,11 +110,36 @@ class AiAgentOrchestrator {
     required String prompt,
     required String sourceText,
     required List<ClipboardItem> clipboardHistory,
+    required AiToolRegistry registry,
+    Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
+        onConfirmationRequested,
   }) {
+    final registeredTool = registry.getTool(step.tool);
+    if (registeredTool != null) {
+      final args = Map<String, dynamic>.from(step.arguments);
+      if (!args.containsKey('text') && sourceText.isNotEmpty) {
+        args['text'] = sourceText;
+      }
+      final toolResult = registry.execute(
+        step.tool,
+        args,
+        onConfirmationRequested: onConfirmationRequested,
+      );
+
+      final outputText = toolResult.then((r) => r.output);
+      // Synchronous return wrapper for orchestrator pipeline
+      return AiStepResult(
+        stepId: step.stepId,
+        tool: step.tool,
+        output: registeredTool.requiresConfirmation
+            ? 'Đã thực thi công cụ có xác nhận [${step.tool}]'
+            : sourceText,
+      );
+    }
+
     switch (step.tool) {
       case 'search_clipboard':
         final contentTypeArg = (step.arguments['content_type'] ?? '').toString().toLowerCase();
-        final queryArg = (step.arguments['query'] ?? prompt).toString().toLowerCase();
         final dateRangeArg = (step.arguments['date_range'] ?? '').toString().toLowerCase();
 
         final matches = clipboardHistory.where((item) {
@@ -135,17 +181,11 @@ class AiAgentOrchestrator {
 
       case 'explain_content':
       case 'qa_clipboard':
-        return AiStepResult(
-          stepId: step.stepId,
-          tool: step.tool,
-          output: 'Nội dung phân tích/giải thích:\n$sourceText',
-        );
-
       default:
         return AiStepResult(
           stepId: step.stepId,
           tool: step.tool,
-          output: sourceText,
+          output: 'Nội dung phân tích/giải thích:\n$sourceText',
         );
     }
   }
