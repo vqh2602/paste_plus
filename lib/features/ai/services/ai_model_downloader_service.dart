@@ -64,6 +64,11 @@ class AiModelDownloaderService {
     return File(p.join(dir.path, '$modelId.gguf'));
   }
 
+  Future<File> getMmprojFile(String modelId) async {
+    final dir = await _modelsDir;
+    return File(p.join(dir.path, '${modelId}_mmproj.gguf'));
+  }
+
   Future<File> _getPartFile(String modelId) async {
     final dir = await _modelsDir;
     return File(p.join(dir.path, '$modelId.gguf.part'));

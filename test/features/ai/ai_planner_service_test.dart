@@ -1,4 +1,3 @@
-import 'package:clipflow/features/ai/domain/ai_execution_plan.dart';
 import 'package:clipflow/features/ai/services/ai_planner_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 

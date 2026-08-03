@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../../../core/database/app_database.dart';
+import '../../clipboard_history/domain/clipboard_item.dart';
 
 class VectorMatch {
   const VectorMatch({
@@ -53,6 +54,84 @@ class ClipboardVectorStore {
 
     if (normA == 0.0 || normB == 0.0) return 0.0;
     return dotProduct / (sqrt(normA) * sqrt(normB));
+  }
+
+  /// Checks if a vector embedding for [contentHash] and [modelId] already exists.
+  Future<Uint8List?> findByHash({
+    required String contentHash,
+    required String modelId,
+  }) async {
+    final db = _database?.database;
+    if (db == null) return null;
+
+    final rows = await db.query(
+      'clipboard_embeddings',
+      columns: ['vector'],
+      where: 'content_hash = ? AND model_id = ?',
+      whereArgs: [contentHash, modelId],
+      limit: 1,
+    );
+
+    if (rows.isNotEmpty && rows.first['vector'] is Uint8List) {
+      return rows.first['vector'] as Uint8List;
+    }
+    return null;
+  }
+
+  /// Attaches an existing vector BLOB to [clipboardId].
+  Future<void> attachExistingVector({
+    required String clipboardId,
+    required String contentHash,
+    required String modelId,
+    required Uint8List existingVector,
+  }) async {
+    final db = _database?.database;
+    if (db == null) return;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await db.insert(
+      'clipboard_embeddings',
+      {
+        'clipboard_id': clipboardId,
+        'content_hash': contentHash,
+        'model_id': modelId,
+        'vector': existingVector,
+        'created_at': now,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  /// High-level indexer method: Checks pre-computed hash cache first, or embeds and persists vector.
+  Future<void> indexClipboardItem({
+    required ClipboardItem item,
+    required String modelId,
+    required Future<List<double>> Function(String text) embedder,
+  }) async {
+    final existingVector = await findByHash(
+      contentHash: item.contentHash,
+      modelId: modelId,
+    );
+
+    if (existingVector != null) {
+      await attachExistingVector(
+        clipboardId: item.id,
+        contentHash: item.contentHash,
+        modelId: modelId,
+        existingVector: existingVector,
+      );
+      return;
+    }
+
+    final vector = await embedder(item.content);
+    if (vector.isNotEmpty) {
+      await storeEmbedding(
+        clipboardId: item.id,
+        contentHash: item.contentHash,
+        modelId: modelId,
+        vector: vector,
+      );
+    }
   }
 
   /// Persists vector embedding for [clipboardId], re-using existing embeddings if [contentHash] exists.

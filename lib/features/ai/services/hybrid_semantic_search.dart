@@ -1,3 +1,4 @@
+import '../../../core/database/app_database.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import 'ai_clipboard_relevance_ranker.dart';
 import 'clipboard_vector_store.dart';
@@ -6,10 +7,12 @@ import 'clipboard_vector_store.dart';
 class HybridSemanticSearch {
   const HybridSemanticSearch([
     this._vectorStore,
+    this._database,
     this._ranker = const AiClipboardRelevanceRanker(),
   ]);
 
   final ClipboardVectorStore? _vectorStore;
+  final AppDatabase? _database;
   final AiClipboardRelevanceRanker _ranker;
 
   /// Executes hybrid candidate retrieval and returns the top 6 to 10 candidates.
@@ -22,8 +25,8 @@ class HybridSemanticSearch {
   }) async {
     if (allCandidates.isEmpty) return const [];
 
-    // 1. Lexical candidate selection (Top 50)
-    final lexicalCandidates = _lexicalSearch(query, allCandidates, limit: 50);
+    // 1. Lexical candidate selection (Top 50) using FTS5 if available
+    final lexicalCandidates = await _lexicalSearch(query, allCandidates, limit: 50);
 
     // 2. Vector candidate selection (Top 30) using pre-computed vector store
     List<VectorMatch> vectorMatches = const [];
@@ -51,13 +54,44 @@ class HybridSemanticSearch {
     return reranked;
   }
 
-  List<ClipboardItem> _lexicalSearch(
+  Future<List<ClipboardItem>> _lexicalSearch(
     String query,
     List<ClipboardItem> items, {
     int limit = 50,
-  }) {
+  }) async {
     final lowerQuery = query.toLowerCase().trim();
     if (lowerQuery.isEmpty) return items.take(limit).toList();
+
+    final db = _database?.database;
+    if (db != null) {
+      try {
+        final sanitizedQuery = lowerQuery
+            .replaceAll(RegExp(r'[^\w\s]'), ' ')
+            .split(RegExp(r'\s+'))
+            .where((w) => w.isNotEmpty)
+            .map((w) => '$w*')
+            .join(' OR ');
+
+        if (sanitizedQuery.isNotEmpty) {
+          final ftsRows = await db.rawQuery(
+            'SELECT clipboard_id FROM clipboard_items_fts WHERE clipboard_items_fts MATCH ? LIMIT ?',
+            [sanitizedQuery, limit],
+          );
+
+          final itemMap = {for (final item in items) item.id: item};
+          final matches = <ClipboardItem>[];
+          for (final row in ftsRows) {
+            final id = row['clipboard_id'] as String?;
+            if (id != null && itemMap.containsKey(id)) {
+              matches.add(itemMap[id]!);
+            }
+          }
+          if (matches.isNotEmpty) return matches;
+        }
+      } catch (_) {
+        // Fall back to in-memory matching if FTS search encounters edge case syntax error or missing module
+      }
+    }
 
     final queryWords = lowerQuery.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toSet();
 

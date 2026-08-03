@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 3;
+  static const version = 4;
   final Database database;
   final String databasePath;
 
@@ -244,7 +244,49 @@ class AppDatabase {
     );
     await _createSyncStateTable(db);
     await _createEmbeddingsTable(db);
+    await _createFtsTable(db);
     await _seedCollections(db);
+  }
+
+  static Future<void> _createFtsTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE VIRTUAL TABLE IF NOT EXISTS clipboard_items_fts USING fts5(
+          clipboard_id UNINDEXED,
+          normalized_content,
+          source_app_name,
+          tokenize = 'unicode61'
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_ai AFTER INSERT ON clipboard_items BEGIN
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+        END;
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_ad AFTER DELETE ON clipboard_items BEGIN
+          DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
+        END;
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_au AFTER UPDATE ON clipboard_items BEGIN
+          DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+        END;
+      ''');
+
+      await db.execute('''
+        INSERT OR IGNORE INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+        SELECT id, normalized_content, COALESCE(source_app_name, '') FROM clipboard_items;
+      ''');
+    } catch (_) {
+      // Ignore SQLite instances where FTS5 extension module is disabled
+    }
   }
 
   static Future<void> _createSyncStateTable(Database db) async {
@@ -321,6 +363,9 @@ class AppDatabase {
     }
     if (oldVersion < 3) {
       await _createEmbeddingsTable(db);
+    }
+    if (oldVersion < 4) {
+      await _createFtsTable(db);
     }
   }
 

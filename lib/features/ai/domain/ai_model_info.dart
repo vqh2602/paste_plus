@@ -36,6 +36,9 @@ class AiModelInfo {
   final String? mmprojUrl;
   final int contextWindow;
 
+  /// True if this model supports visual inputs (requires a mmproj projector file).
+  bool get isMultimodalVision => isMultimodal && mmprojUrl != null;
+
   String get description {
     final isEn = AppTranslations.currentLanguage == 'en';
     return switch (id) {

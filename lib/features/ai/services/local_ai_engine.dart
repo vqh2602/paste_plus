@@ -18,6 +18,8 @@ import 'ai_model_downloader_service.dart';
 import 'ai_planner_service.dart';
 import 'ai_prompts.dart';
 import 'ai_token_budget_manager.dart';
+import 'ai_response_verifier.dart';
+import 'hybrid_semantic_search.dart';
 import 'llama_inference_service.dart';
 import 'structured_output_validator.dart';
 
@@ -29,17 +31,24 @@ class LocalAiResponse {
 }
 
 class LocalAiEngine {
-  LocalAiEngine([this._modelDownloader, this._debug, LlamaInferenceService? inferenceService])
-    : _inferenceService = inferenceService ??
-          (_modelDownloader == null ? null : LlamaInferenceService());
+  LocalAiEngine([
+    this._modelDownloader,
+    this._debug,
+    LlamaInferenceService? inferenceService,
+    HybridSemanticSearch? hybridSearch,
+  ])  : _inferenceService = inferenceService ??
+          (_modelDownloader == null ? null : LlamaInferenceService()),
+        _hybridSearch = hybridSearch ?? const HybridSemanticSearch();
 
   final AiModelDownloaderService? _modelDownloader;
   final AiDebugController? _debug;
   final LlamaInferenceService? _inferenceService;
+  final HybridSemanticSearch _hybridSearch;
   static const _clipboardRanker = AiClipboardRelevanceRanker();
   static const _plannerService = AiPlannerService();
   static const _agentOrchestrator = AiAgentOrchestrator();
   static const _outputValidator = StructuredOutputValidator();
+  static const _responseVerifier = AiResponseVerifier();
 
   /// Process prompt locally and stream tokens back.
   /// Yields pairs of (thinkingChunk, outputChunk).
@@ -210,6 +219,24 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
                   'effectiveContext:\n$contextText',
           );
         }
+
+        List<String> imagePaths = const [];
+        if (clipboardContext?.imagePath != null &&
+            clipboardContext!.imagePath!.isNotEmpty) {
+          final imgFile = File(clipboardContext.imagePath!);
+          if (await imgFile.exists()) {
+            imagePaths = [imgFile.path];
+          }
+        }
+
+        String? mmprojPath;
+        if (model.isMultimodalVision) {
+          final mmFile = await _modelDownloader.getMmprojFile(model.id);
+          if (await mmFile.exists()) {
+            mmprojPath = mmFile.path;
+          }
+        }
+
         yield* _runBudgetedModel(
           modelPath: modelFile.path,
           contextSize: effectiveContextSize,
@@ -225,6 +252,9 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           thinkingModel: model.isThinkingModel,
           conversationMessages: conversationMessages,
           debugRequestId: debugRequestId,
+          imagePaths: imagePaths,
+          mmprojPath: mmprojPath,
+          candidates: effectiveHistory,
         );
         return;
       }
@@ -318,9 +348,18 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     required bool thinkingModel,
     required List<AiChatMessage> conversationMessages,
     String? debugRequestId,
+    List<String> imagePaths = const [],
+    String? mmprojPath,
+    List<ClipboardItem> candidates = const [],
   }) async* {
     final conversation = _toConversationTurns(conversationMessages);
     final userPrompt = _buildModelUserPrompt(prompt, contextText);
+    final grammar = (requestPlan?.intent == AiRequestIntent.clipboardSearch)
+        ? StructuredOutputValidator.searchJsonGrammar
+        : null;
+    final responseLanguage = requestPlan?.responseLanguage ?? 'vi';
+    final intent = requestPlan?.intent;
+
     final budget = budgetManager.budgetFor(
       contextWindow: contextSize,
       requestedOutputTokens: maxOutputTokens,
@@ -362,6 +401,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
         temperature: temperature,
         maxTokens: budget.outputReserve,
         thinkingModel: thinkingModel,
+        grammar: grammar,
+        mmprojPath: mmprojPath,
+        imagePaths: imagePaths,
+        candidates: candidates,
+        responseLanguage: responseLanguage,
+        intent: intent,
       );
       return;
     }
@@ -423,6 +468,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           temperature: temperature,
           maxTokens: budget.outputReserve,
           thinkingModel: thinkingModel,
+          grammar: grammar,
+          mmprojPath: mmprojPath,
+          imagePaths: imagePaths,
+          candidates: candidates,
+          responseLanguage: responseLanguage,
+          intent: intent,
         );
         return;
       case AiTokenTask.retrievalQa:
@@ -447,6 +498,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           temperature: temperature,
           maxTokens: budget.outputReserve,
           thinkingModel: thinkingModel,
+          grammar: grammar,
+          mmprojPath: mmprojPath,
+          imagePaths: imagePaths,
+          candidates: candidates,
+          responseLanguage: responseLanguage,
+          intent: intent,
         );
         return;
       case AiTokenTask.rollingChat:
@@ -467,6 +524,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
             temperature: temperature,
             maxTokens: budget.outputReserve,
             thinkingModel: thinkingModel,
+            grammar: grammar,
+            mmprojPath: mmprojPath,
+            imagePaths: imagePaths,
+            candidates: candidates,
+            responseLanguage: responseLanguage,
+            intent: intent,
           );
           return;
         }
@@ -490,6 +553,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           temperature: temperature,
           maxTokens: budget.outputReserve,
           thinkingModel: thinkingModel,
+          grammar: grammar,
+          mmprojPath: mmprojPath,
+          imagePaths: imagePaths,
+          candidates: candidates,
+          responseLanguage: responseLanguage,
+          intent: intent,
         );
         return;
       case AiTokenTask.mapReduce:
@@ -510,6 +579,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           temperature: temperature,
           maxTokens: budget.outputReserve,
           thinkingModel: thinkingModel,
+          grammar: grammar,
+          mmprojPath: mmprojPath,
+          imagePaths: imagePaths,
+          candidates: candidates,
+          responseLanguage: responseLanguage,
+          intent: intent,
         );
         return;
       case AiTokenTask.direct:
@@ -522,6 +597,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
           temperature: temperature,
           maxTokens: budget.outputReserve,
           thinkingModel: thinkingModel,
+          grammar: grammar,
+          mmprojPath: mmprojPath,
+          imagePaths: imagePaths,
+          candidates: candidates,
+          responseLanguage: responseLanguage,
+          intent: intent,
         );
         return;
     }
@@ -568,8 +649,15 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     required bool thinkingModel,
     List<LlamaConversationTurn> conversation = const [],
     String initialOutput = '',
+    String? grammar,
+    String? mmprojPath,
+    List<String> imagePaths = const [],
+    List<ClipboardItem> candidates = const [],
+    String responseLanguage = 'vi',
+    AiRequestIntent? intent,
   }) async* {
     var output = initialOutput;
+    var accumulatedThinking = '';
     final safeMaxTokens = await _safeGenerationTokens(
       contextSize: contextSize,
       systemPrompt: systemPrompt,
@@ -587,17 +675,41 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
       maxTokens: safeMaxTokens,
       thinkingModel: thinkingModel,
       conversation: conversation,
+      grammar: grammar,
+      mmprojPath: mmprojPath,
+      imagePaths: imagePaths,
     )) {
       if (token.content?.isNotEmpty == true) output += token.content!;
+      if (token.thinking?.isNotEmpty == true) {
+        accumulatedThinking += token.thinking!;
+      }
       yield {
         'type': token.content?.isNotEmpty == true ? 'output' : 'think',
         'chunk': token.content ?? token.thinking ?? '',
-        'thinking': '',
+        'thinking': accumulatedThinking,
         'output': output,
       };
     }
     if (output.trim().isEmpty) {
       throw StateError('Model kết thúc mà không tạo nội dung trả lời.');
+    }
+
+    final requiresJson = (grammar != null) || (intent == AiRequestIntent.clipboardSearch);
+    final report = _responseVerifier.verifyAndCorrect(
+      draftText: output,
+      candidates: candidates,
+      responseLanguage: responseLanguage,
+      requiresJson: requiresJson,
+    );
+
+    if (report.correctedText != output) {
+      output = report.correctedText;
+      yield {
+        'type': 'output',
+        'chunk': '',
+        'thinking': accumulatedThinking,
+        'output': output,
+      };
     }
   }
 
@@ -995,46 +1107,36 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(Không phát hiện văn bản hoặc h�
     required List<ClipboardItem> items,
     required String modelPath,
     required int contextSize,
+    String modelId = 'gemma-4-e2b',
   }) async {
-    final candidates = _clipboardRanker
-        .rank(prompt: prompt, items: items)
-        .take(80)
-        .toList(growable: false);
-    if (candidates.isEmpty || prompt.trim().isEmpty) return candidates;
+    if (items.isEmpty || prompt.trim().isEmpty) return items.take(8).toList();
     if (_clipboardRanker.hasExactFileConstraint(prompt)) {
-      return candidates.take(24).toList(growable: false);
+      return items.take(8).toList(growable: false);
     }
     try {
-      final vectors = await _inferenceService!.embedBatch(
-        modelPath: modelPath,
-        contextSize: contextSize,
-        texts: [
-          prompt,
-          for (final item in candidates)
-            item.content.substring(0, item.content.length.clamp(0, 1200)),
-        ],
-      );
-      if (vectors.length != candidates.length + 1) {
-        return candidates.take(24).toList(growable: false);
-      }
-      final query = vectors.first;
-      final semanticScores = <String, double>{};
-      for (var index = 0; index < candidates.length; index++) {
-        semanticScores[candidates[index].id] = _cosineSimilarity(
-          query,
-          vectors[index + 1],
+      List<double>? queryVector;
+      if (_inferenceService != null) {
+        final vectors = await _inferenceService.embedBatch(
+          modelPath: modelPath,
+          contextSize: contextSize,
+          texts: [prompt],
         );
+        if (vectors.isNotEmpty) {
+          queryVector = vectors.first;
+        }
       }
-      return _clipboardRanker
-          .rank(
-            prompt: prompt,
-            items: candidates,
-            semanticScores: semanticScores,
-          )
-          .take(24)
-          .toList(growable: false);
-    } on Object {
-      return candidates.take(24).toList(growable: false);
+
+      final results = await _hybridSearch.search(
+        query: prompt,
+        allCandidates: items,
+        queryVector: queryVector,
+        modelId: modelId,
+        maxFinalItems: 8,
+      );
+
+      return results.isNotEmpty ? results : items.take(8).toList();
+    } catch (_) {
+      return _clipboardRanker.rank(prompt: prompt, items: items).take(8).toList();
     }
   }
 
