@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -20,6 +21,50 @@ class SqliteClipboardRepository implements ClipboardRepository {
 
   final AppDatabase _appDatabase;
   Database get _db => _appDatabase.database;
+
+  Future<String?> _resolveImagePath(String? path) async {
+    if (path == null || path.isEmpty) return null;
+
+    final file = File(path);
+    if (await file.exists()) return path;
+
+    if (_appDatabase.databasePath == inMemoryDatabasePath) return path;
+
+    final supportPath = p.dirname(_appDatabase.databasePath);
+    final filename = p.basename(path);
+    final candidatePath = p.join(supportPath, 'clipboard_images', filename);
+    final candidateFile = File(candidatePath);
+
+    if (await candidateFile.exists()) {
+      return candidatePath;
+    }
+
+    return path;
+  }
+
+  Future<Map<String, Object?>> _normalizeRow(Map<String, Object?> row) async {
+    final rawPath = row['image_path'] as String?;
+    if (rawPath == null || rawPath.isEmpty) return row;
+
+    final resolved = await _resolveImagePath(rawPath);
+    if (resolved == rawPath) return row;
+
+    final mutable = Map<String, Object?>.from(row);
+    mutable['image_path'] = resolved;
+
+    if (resolved != null && row['id'] != null) {
+      unawaited(
+        _db.update(
+          'clipboard_items',
+          {'image_path': resolved},
+          where: 'id = ?',
+          whereArgs: [row['id']],
+        ),
+      );
+    }
+
+    return mutable;
+  }
 
   @override
   Future<List<ClipboardItem>> getItems({
@@ -49,7 +94,12 @@ class SqliteClipboardRepository implements ClipboardRepository {
       ''',
       [...args, limit],
     );
-    return rows.map(ClipboardItem.fromMap).toList(growable: false);
+    final items = <ClipboardItem>[];
+    for (final row in rows) {
+      final normalizedRow = await _normalizeRow(row);
+      items.add(ClipboardItem.fromMap(normalizedRow));
+    }
+    return items;
   }
 
   @override
@@ -104,7 +154,8 @@ class SqliteClipboardRepository implements ClipboardRepository {
         limit: 1,
       );
       if (matches.isNotEmpty) {
-        final existing = ClipboardItem.fromMap(matches.first);
+        final normalizedRow = await _normalizeRow(matches.first);
+        final existing = ClipboardItem.fromMap(normalizedRow);
         if (settings.duplicateBehavior != DuplicateBehavior.createNew) {
           final values = <String, Object?>{
             'updated_at': now.millisecondsSinceEpoch,
@@ -156,8 +207,10 @@ class SqliteClipboardRepository implements ClipboardRepository {
   }
 
   Future<String> _saveImage(String hash, Uint8List bytes) async {
-    final support = await getApplicationSupportDirectory();
-    final directory = Directory(p.join(support.path, 'clipboard_images'));
+    final supportPath = _appDatabase.databasePath == inMemoryDatabasePath
+        ? (await getApplicationSupportDirectory()).path
+        : p.dirname(_appDatabase.databasePath);
+    final directory = Directory(p.join(supportPath, 'clipboard_images'));
     await directory.create(recursive: true);
     final file = File(p.join(directory.path, '$hash.png'));
     await file.writeAsBytes(bytes, flush: true);
@@ -253,8 +306,9 @@ class SqliteClipboardRepository implements ClipboardRepository {
   }
 
   Future<void> _deleteImage(String? path) async {
-    if (path == null) return;
-    final file = File(path);
+    final resolved = await _resolveImagePath(path);
+    if (resolved == null) return;
+    final file = File(resolved);
     if (await file.exists()) await file.delete();
   }
 
@@ -431,8 +485,9 @@ class SqliteClipboardRepository implements ClipboardRepository {
       var estimatedBytes =
           utf8.encode(row['content'] as String? ?? '').length * 2;
       final imagePath = row['image_path'] as String?;
-      if (imagePath != null) {
-        final imageFile = File(imagePath);
+      final resolved = await _resolveImagePath(imagePath);
+      if (resolved != null) {
+        final imageFile = File(resolved);
         if (await imageFile.exists()) {
           estimatedBytes += await imageFile.length();
         }
@@ -456,12 +511,13 @@ class SqliteClipboardRepository implements ClipboardRepository {
     final rows = await _db.query(
       'clipboard_items',
       columns: ['image_path'],
-      where: 'image_path IS NOT NULL',
+      where: "image_path IS NOT NULL AND image_path != ''",
     );
     for (final row in rows) {
       final path = row['image_path'] as String?;
-      if (path == null) continue;
-      final file = File(path);
+      final resolved = await _resolveImagePath(path);
+      if (resolved == null) continue;
+      final file = File(resolved);
       if (await file.exists()) total += await file.length();
     }
     return total;
