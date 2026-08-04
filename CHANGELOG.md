@@ -2,6 +2,15 @@
 
 Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
 
+## [1.1.4] - 2026-08-04
+
+### 🚀 Cải tiến & Sửa lỗi
+- **Theo dõi Clipboard đáng tin cậy**:
+  - Tích hợp `changeCount` (macOS) và `GetClipboardSequenceNumber` (Windows) để bắt chính xác mọi thao tác copy (shortcut, nút Copy trên trang web/app, menu ngữ cảnh).
+  - Khôi phục chính xác ứng dụng đã copy trước đó khi ClipFlow hiển thị.
+- **Tối ưu hóa & Ổn định**:
+  - Khắc phục các cảnh báo phân tích mã nguồn (`flutter analyze`) và đảm bảo bộ kiểm thử unit test đạt 100% thành công.
+
 ## [1.1.3] - 2026-08-01
 
 ### 🚀 Cải tiến & Sửa lỗi

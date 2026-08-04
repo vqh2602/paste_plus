@@ -119,7 +119,7 @@ class _CachedNetworkImageState extends State<CachedNetworkImage> {
       final request = await client.getUrl(Uri.parse(widget.url));
       request.headers.set(
         HttpHeaders.userAgentHeader,
-        'ClipFlow/1.1.3 ImageCache',
+        'ClipFlow/1.1.4 ImageCache',
       );
       final response = await request.close();
 
