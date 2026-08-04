@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
+import '../localization/ai_locale_spec.dart';
+
 enum AiFeatureGroup {
   rewrite,
   grammar,
@@ -103,11 +105,7 @@ extension AiFeatureGroupX on AiFeatureGroup {
         'Action items',
         'Extract key information',
       ],
-      AiFeatureGroup.translate => [
-        'Auto -> Vietnamese',
-        'Auto -> English',
-        'Preserve formatting & source code',
-      ],
+      AiFeatureGroup.translate => AiLanguageRegistry.languages.keys.toList(),
       AiFeatureGroup.smartReply => [
         'Agree',
         'Polite decline',
@@ -130,5 +128,13 @@ extension AiFeatureGroupX on AiFeatureGroup {
       AiFeatureGroup.classify => ['Auto classify'],
       AiFeatureGroup.ocrRefine => ['Clean OCR text'],
     };
+  }
+
+  String optionLabel(String value) {
+    if (this != AiFeatureGroup.translate) return value;
+    final language = AiLanguageRegistry.languages[value];
+    return language == null
+        ? value
+        : '${language.nativeName} (${language.englishName})';
   }
 }

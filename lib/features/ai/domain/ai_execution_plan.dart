@@ -133,6 +133,20 @@ class AiExecutionPlan {
   final String outputFormat;
   final double confidence;
 
+  static const Set<String> executableTools = {
+    'search_clipboard',
+    'get_clipboard_item',
+    'extract_urls',
+    'list_collections',
+    'pin_clipboard',
+    'add_to_collection',
+    'delete_clipboard_item',
+  };
+
+  /// Returns true if this plan contains at least one real executable tool.
+  bool get hasExecutableTools =>
+      steps.any((step) => executableTools.contains(step.tool));
+
   bool get isMultiStep => steps.length > 1;
 
   Map<String, dynamic> toJson() => {

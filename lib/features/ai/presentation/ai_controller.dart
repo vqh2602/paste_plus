@@ -11,6 +11,7 @@ import '../../clipboard_history/domain/clipboard_item.dart';
 import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_feature_request.dart';
 import '../domain/ai_model_info.dart';
 import '../localization/ai_language_context.dart';
 import '../localization/ai_language_detector.dart';
@@ -345,6 +346,7 @@ class AiController extends StateNotifier<AiState> {
   Future<void> sendUserMessage(
     String userText, {
     AiFeatureGroup? featureGroup,
+    AiFeatureRequest? featureRequest,
     String? selectedOption,
     ClipboardItem? contextItem,
   }) async {
@@ -417,13 +419,11 @@ class AiController extends StateNotifier<AiState> {
         .toList(growable: false);
     final settings = _ref.read(settingsControllerProvider);
     final detectedInputTag = await _languageDetector.detect(userText);
-    final translationTargetTag = featureGroup == AiFeatureGroup.translate
-        ? switch (selectedOption) {
-            'Auto -> Vietnamese' => 'vi-VN',
-            'Auto -> English' => 'en-US',
-            _ => null,
-          }
-        : null;
+    final translationTargetTag = switch (featureRequest) {
+      AiTranslateRequest(:final targetLocaleTag) => targetLocaleTag,
+      _ when featureGroup == AiFeatureGroup.translate => selectedOption,
+      _ => null,
+    };
     final languageContext = AiLanguageContext(
       appLocale: Locale(settings.language),
       responseMode: AiResponseLanguageMode.matchUser,

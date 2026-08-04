@@ -230,9 +230,9 @@ class AiModelInfo {
       description:
           'Model Vision-Language thế hệ mới cho nhận diện hình ảnh, phân tích biểu đồ và văn bản trên ảnh.',
       parameterSize: '7B',
-      fileSizeMb: 4400,
+      fileSizeMb: 4460,
       downloadUrl:
-          'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/qwen2.5-vl-7b-instruct-q4_k_m.gguf',
+          'https://huggingface.co/ggml-org/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/Qwen2.5-VL-7B-Instruct-Q4_K_M.gguf',
       sha256: null,
       recommendedFor:
           'Trích xuất tài liệu ảnh, đọc ảnh phức tạp, suy luận hình ảnh',
@@ -240,8 +240,8 @@ class AiModelInfo {
       isMultimodal: true,
       supportedModalities: {AiModality.text, AiModality.image},
       mmprojUrl:
-          'https://huggingface.co/Qwen/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/mmproj-qwen2.5-vl-7b-f16.gguf',
-      mmprojFileSizeMb: 550,
+          'https://huggingface.co/ggml-org/Qwen2.5-VL-7B-Instruct-GGUF/resolve/main/mmproj-Qwen2.5-VL-7B-Instruct-f16.gguf',
+      mmprojFileSizeMb: 1290,
     ),
   ];
 

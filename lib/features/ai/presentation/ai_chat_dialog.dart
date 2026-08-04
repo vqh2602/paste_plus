@@ -8,6 +8,7 @@ import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_feature_request.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
 import 'widgets/ai_context_banner_widget.dart';
@@ -129,6 +130,9 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
         .sendUserMessage(
           promptText,
           featureGroup: group,
+          featureRequest: group == AiFeatureGroup.translate
+              ? AiTranslateRequest(targetLocaleTag: option)
+              : null,
           selectedOption: option,
           contextItem: contextItem,
         );
@@ -146,7 +150,7 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
             onPressed: () {
               Navigator.pop(context, opt);
             },
-            child: Text(opt),
+            child: Text(group.optionLabel(opt)),
           );
         }).toList(),
         cancelButton: CupertinoActionSheetAction(

@@ -86,9 +86,34 @@ Here is the execution plan:
 
       expect(fallback.intent, 'single_step');
       expect(fallback.isMultiStep, isFalse);
+      expect(fallback.hasExecutableTools, isTrue);
       expect(fallback.steps.length, 1);
       expect(fallback.steps.first.tool, 'search_clipboard');
       expect(fallback.steps.first.arguments['query'], 'test');
+    });
+
+    test('hasExecutableTools identifies actionable tool steps correctly', () {
+      final pinPlan = AiExecutionPlan.singleStepFallback(
+        tool: 'pin_clipboard',
+        language: 'Vietnamese',
+      );
+      final deletePlan = AiExecutionPlan.singleStepFallback(
+        tool: 'delete_clipboard_item',
+        language: 'Vietnamese',
+      );
+      final listPlan = AiExecutionPlan.singleStepFallback(
+        tool: 'list_collections',
+        language: 'Vietnamese',
+      );
+      final chatPlan = AiExecutionPlan.singleStepFallback(
+        tool: 'explain_content',
+        language: 'Vietnamese',
+      );
+
+      expect(pinPlan.hasExecutableTools, isTrue);
+      expect(deletePlan.hasExecutableTools, isTrue);
+      expect(listPlan.hasExecutableTools, isTrue);
+      expect(chatPlan.hasExecutableTools, isFalse);
     });
   });
 }

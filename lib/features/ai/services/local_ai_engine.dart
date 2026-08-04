@@ -177,11 +177,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     }
 
     final executionPlan = effectivePlan.executionPlan;
-    if (executionPlan != null &&
-        executionPlan.steps.isNotEmpty &&
-        executionPlan.steps.every(
-          (step) => AiPlanValidator.supportedTools.contains(step.tool),
-        )) {
+    if (executionPlan != null && executionPlan.hasExecutableTools) {
       final stepResults = await _agentOrchestrator.executePlan(
         plan: executionPlan,
         prompt: prompt,

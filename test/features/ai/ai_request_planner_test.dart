@@ -81,6 +81,18 @@ void main() {
     expect(AiFeatureGroup.rewrite.options.first, 'More natural');
   });
 
+  test('translation feature options use BCP-47 tags as semantic values', () {
+    expect(
+      AiFeatureGroup.translate.options,
+      containsAll(<String>['vi-VN', 'en-US', 'ja-JP', 'ko-KR', 'de-DE']),
+    );
+    expect(
+      AiFeatureGroup.translate.options,
+      isNot(contains('Auto -> Vietnamese')),
+    );
+    expect(AiFeatureGroup.translate.optionLabel('ja-JP'), contains('日本語'));
+  });
+
   test(
     'AiPrompts.buildSystemPrompt honors responseLanguage over UI language',
     () {

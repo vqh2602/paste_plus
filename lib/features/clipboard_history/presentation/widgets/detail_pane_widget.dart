@@ -10,6 +10,8 @@ import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../../ai/domain/ai_feature_action.dart';
+import '../../../ai/domain/ai_feature_request.dart';
+import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
@@ -45,17 +47,20 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     final settings = ref.read(settingsControllerProvider);
     setState(() => _isProcessing = true);
     try {
-      final option = settings.targetTranslationLanguage == 'en'
-          ? 'Tự động -> Tiếng Anh'
-          : 'Tự động -> Tiếng Việt';
+      final targetLocaleTag = AiLanguageRegistry.normalizeTag(
+        settings.targetTranslationLanguage,
+      );
       ref.read(aiControllerProvider.notifier).setClipboardContext(item);
       await ref.read(desktopIntegrationProvider).showAiWindow();
       await ref
           .read(aiControllerProvider.notifier)
           .sendUserMessage(
-            'Dịch nội dung clipboard sang ${settings.targetTranslationLanguage}.',
+            'Translate the clipboard content to $targetLocaleTag.',
             featureGroup: AiFeatureGroup.translate,
-            selectedOption: option,
+            featureRequest: AiTranslateRequest(
+              targetLocaleTag: targetLocaleTag,
+            ),
+            selectedOption: targetLocaleTag,
             contextItem: item,
           );
       if (!mounted) return;
