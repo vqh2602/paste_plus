@@ -459,5 +459,9 @@
   "forget_device_message": "Khóa tin cậy sẽ bị xóa. Lần kết nối sau cần ghép cặp lại bằng mã 6 số.",
   "block_device_title": "Chặn thiết bị này?",
   "block_device_message": "Thiết bị sẽ bị ngắt kết nối và mọi yêu cầu mới sẽ bị từ chối.",
-  "delete_collection_confirm": "Delete Collection Confirm"
+  "delete_collection_confirm": "Delete Collection Confirm",
+  "ai_performance_mode": "Mức độ thông minh AI",
+  "ai_performance_fast": "Nhanh",
+  "ai_performance_balanced": "Cân bằng",
+  "ai_performance_smart": "Thông minh"
 }

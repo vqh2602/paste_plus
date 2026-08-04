@@ -22,17 +22,58 @@ class AiPlannerService {
   }) {
     if (featureGroup != null || prompt.trim().isEmpty) return false;
     final lower = prompt.toLowerCase();
-    final referencesClipboard = RegExp(
-      r'\b(clipboard|clip|đã copy|đã sao chép|lịch sử)\b',
-    ).hasMatch(lower);
-    final requestsTool = RegExp(
-      r'\b(tìm|search|find|xóa|delete|ghim|pin|collection|bộ sưu tập)\b',
-    ).hasMatch(lower);
-    final multiStep = RegExp(
-      r'\b(sau đó|rồi|tiếp theo|then|after that|and then)\b',
-    ).hasMatch(lower);
-    return referencesClipboard || requestsTool || multiStep;
+    final containsKnownSyntax = RegExp(
+      r'\b(type|app|is|before|after):',
+      caseSensitive: false,
+    ).hasMatch(prompt);
+    final containsMultipleClauses =
+        RegExp(r'[,;\n]|→|->').hasMatch(prompt) ||
+        RegExp(
+          r'\b(sau đó|rồi|tiếp theo|then|after that|and then|danach)\b',
+        ).hasMatch(lower);
+    final longInstruction = prompt.length >= 100;
+    final selectedAction = hasSelectedClipboard && _looksLikeAction(lower);
+    return containsKnownSyntax ||
+        containsMultipleClauses ||
+        longInstruction ||
+        selectedAction ||
+        _containsKnownToolTerm(lower);
   }
+
+  bool _looksLikeAction(String prompt) => _actionTerms.any(prompt.contains);
+
+  bool _containsKnownToolTerm(String prompt) => _toolTerms.any(prompt.contains);
+
+  static const _actionTerms = <String>{
+    'search',
+    'find',
+    'delete',
+    'pin',
+    'collection',
+    'tìm',
+    'xóa',
+    'ghim',
+    'bộ sưu tập',
+    '検索',
+    '削除',
+    'ピン留め',
+    'コレクション',
+    'suche',
+    'finde',
+    'lösche',
+    'hefte',
+    'sammlung',
+  };
+
+  static const _toolTerms = <String>{
+    ..._actionTerms,
+    'clipboard',
+    'clip',
+    'lịch sử',
+    'コピー',
+    'zwischenablage',
+    'kopiert',
+  };
 
   /// Creates an [AiRequestPlan] containing a validated [AiExecutionPlan].
   AiRequestPlan createPlan({

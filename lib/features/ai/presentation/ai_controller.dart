@@ -14,6 +14,8 @@ import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_feature_request.dart';
 import '../domain/ai_model_info.dart';
+import '../domain/ai_performance_mode.dart';
+import '../domain/ai_request_plan.dart';
 import '../localization/ai_language_context.dart';
 import '../localization/ai_language_detector.dart';
 import '../localization/ai_response_locale_resolver.dart';
@@ -43,6 +45,7 @@ class AiState {
     this.savedConversations = const [],
     this.temperature = 0.55,
     this.contextSize = 4096,
+    this.performanceMode = AiPerformanceMode.balanced,
     this.pendingToolCall,
   });
 
@@ -55,6 +58,7 @@ class AiState {
   final List<SavedAiConversation> savedConversations;
   final double temperature;
   final int contextSize;
+  final AiPerformanceMode performanceMode;
   final PendingToolCall? pendingToolCall;
 
   AiModelInfo get selectedModel => AiModelInfo.findById(selectedModelId);
@@ -74,6 +78,7 @@ class AiState {
     List<SavedAiConversation>? savedConversations,
     double? temperature,
     int? contextSize,
+    AiPerformanceMode? performanceMode,
     PendingToolCall? pendingToolCall,
     bool clearPendingToolCall = false,
   }) {
@@ -89,6 +94,7 @@ class AiState {
       savedConversations: savedConversations ?? this.savedConversations,
       temperature: temperature ?? this.temperature,
       contextSize: contextSize ?? this.contextSize,
+      performanceMode: performanceMode ?? this.performanceMode,
       pendingToolCall: clearPendingToolCall
           ? null
           : (pendingToolCall ?? this.pendingToolCall),
@@ -216,6 +222,10 @@ class AiController extends StateNotifier<AiState> {
       clearClipboardContext: item == null,
     );
     unawaited(_saveAfterRestore());
+  }
+
+  void setPerformanceMode(AiPerformanceMode mode) {
+    state = state.copyWith(performanceMode: mode);
   }
 
   void clearChat() {
@@ -519,6 +529,7 @@ class AiController extends StateNotifier<AiState> {
       conversationMessages: conversationMessages,
       appLanguageTag: _ref.read(settingsControllerProvider).language,
       responseLanguageTag: responseLanguageTag,
+      performanceMode: state.performanceMode,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,
@@ -529,13 +540,29 @@ class AiController extends StateNotifier<AiState> {
     var firstEventLogged = false;
     var finalThinking = '';
     var finalOutput = '';
+    final timeoutPlan = const AiRequestPlanner().plan(
+      prompt: userText,
+      hasSelectedClipboard: activeContext != null,
+      hasConversation: conversationContext.isNotEmpty,
+      featureGroup: featureGroup,
+      appLanguageTag: settings.language,
+      resolvedResponseLanguageTag: responseLanguageTag,
+    );
+    final timeoutDuration = resolveGenerationTimeout(
+      intent: timeoutPlan.intent,
+      featureGroup: featureGroup,
+    );
+    final inactivityTimeout = resolveStreamInactivityTimeout(
+      intent: timeoutPlan.intent,
+      featureGroup: featureGroup,
+    );
     var generationTimedOut = false;
-    final generationTimeout = Timer(const Duration(minutes: 2), () {
+    final generationTimeout = Timer(timeoutDuration, () {
       generationTimedOut = true;
       _localEngine.cancelGeneration();
     });
     try {
-      await for (final event in stream.timeout(const Duration(seconds: 45))) {
+      await for (final event in stream.timeout(inactivityTimeout)) {
         eventCount++;
         final type = event['type'] ?? '';
         final thinking = event['thinking'] ?? '';
@@ -565,7 +592,9 @@ class AiController extends StateNotifier<AiState> {
         }
       }
       if (generationTimedOut) {
-        throw TimeoutException('AI generation exceeded two minutes.');
+        throw TimeoutException(
+          'AI generation exceeded ${timeoutDuration.inMinutes} minutes.',
+        );
       }
       debug.log(
         level: AiDebugLevel.success,

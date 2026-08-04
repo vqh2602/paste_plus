@@ -2863,6 +2863,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete Collection Confirm'**
   String get delete_collection_confirm;
+
+  /// No description provided for @ai_performance_mode.
+  ///
+  /// In en, this message translates to:
+  /// **'AI intelligence level'**
+  String get ai_performance_mode;
+
+  /// No description provided for @ai_performance_fast.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast'**
+  String get ai_performance_fast;
+
+  /// No description provided for @ai_performance_balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get ai_performance_balanced;
+
+  /// No description provided for @ai_performance_smart.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart'**
+  String get ai_performance_smart;
 }
 
 class _AppLocalizationsDelegate

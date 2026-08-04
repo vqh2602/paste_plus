@@ -459,5 +459,9 @@
   "forget_device_message": "The trusted key will be removed. Connecting again requires a new 6-digit pairing code.",
   "block_device_title": "Block this device?",
   "block_device_message": "The device will be disconnected and all new requests will be rejected.",
-  "delete_collection_confirm": "Delete Collection Confirm"
+  "delete_collection_confirm": "Delete Collection Confirm",
+  "ai_performance_mode": "AI intelligence level",
+  "ai_performance_fast": "Fast",
+  "ai_performance_balanced": "Balanced",
+  "ai_performance_smart": "Smart"
 }

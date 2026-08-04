@@ -11,6 +11,7 @@ import '../../clipboard_history/domain/clipboard_item.dart';
 import '../../clipboard_history/domain/clipboard_repository.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
+import '../domain/ai_performance_mode.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
 import '../localization/ai_language_detector.dart';
@@ -75,6 +76,7 @@ class LocalAiEngine {
     List<AiChatMessage> conversationMessages = const [],
     String appLanguageTag = 'vi-VN',
     String? responseLanguageTag,
+    AiPerformanceMode performanceMode = AiPerformanceMode.balanced,
     String? debugRequestId,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
     onConfirmationRequested,
@@ -290,10 +292,10 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           budgetManager: budgetManager,
           temperature: temperature,
           maxOutputTokens: effectivePlan.maxOutputTokens,
-          thinkingModel:
-              model.isThinkingModel &&
-              effectivePlan.intent != AiRequestIntent.conversation &&
-              effectivePlan.intent != AiRequestIntent.followUp,
+          thinkingModel: performanceMode.enablesThinking(
+            modelSupportsThinking: model.isThinkingModel,
+            intent: effectivePlan.intent,
+          ),
           conversationMessages: conversationMessages,
           debugRequestId: debugRequestId,
           imagePaths: imagePaths,

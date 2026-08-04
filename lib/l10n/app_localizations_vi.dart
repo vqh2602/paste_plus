@@ -1444,4 +1444,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get delete_collection_confirm => 'Delete Collection Confirm';
+
+  @override
+  String get ai_performance_mode => 'Mức độ thông minh AI';
+
+  @override
+  String get ai_performance_fast => 'Nhanh';
+
+  @override
+  String get ai_performance_balanced => 'Cân bằng';
+
+  @override
+  String get ai_performance_smart => 'Thông minh';
 }

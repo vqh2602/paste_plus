@@ -458,7 +458,11 @@
     "forget_device_message",
     "block_device_title",
     "block_device_message",
-    "delete_collection_confirm"
+    "delete_collection_confirm",
+    "ai_performance_mode",
+    "ai_performance_fast",
+    "ai_performance_balanced",
+    "ai_performance_smart"
   ],
 
   "ja": [
@@ -920,7 +924,11 @@
     "forget_device_message",
     "block_device_title",
     "block_device_message",
-    "delete_collection_confirm"
+    "delete_collection_confirm",
+    "ai_performance_mode",
+    "ai_performance_fast",
+    "ai_performance_balanced",
+    "ai_performance_smart"
   ],
 
   "ko": [
@@ -1382,6 +1390,10 @@
     "forget_device_message",
     "block_device_title",
     "block_device_message",
-    "delete_collection_confirm"
+    "delete_collection_confirm",
+    "ai_performance_mode",
+    "ai_performance_fast",
+    "ai_performance_balanced",
+    "ai_performance_smart"
   ]
 }

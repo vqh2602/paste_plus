@@ -9,6 +9,52 @@ enum AiRequestIntent {
   clipboardAction,
 }
 
+int resolveOutputTokens({
+  required AiRequestIntent intent,
+  required String prompt,
+  required AiFeatureGroup? featureGroup,
+}) {
+  if (featureGroup == AiFeatureGroup.translate) return 1536;
+  if (featureGroup == AiFeatureGroup.codeExplain) return 1024;
+  if (prompt.contains('```') || prompt.length > 800) return 1024;
+  return switch (intent) {
+    AiRequestIntent.conversation => 512,
+    AiRequestIntent.followUp => 640,
+    AiRequestIntent.clipboardSearch => 384,
+    AiRequestIntent.clipboardAction => 768,
+  };
+}
+
+Duration resolveGenerationTimeout({
+  required AiRequestIntent intent,
+  required AiFeatureGroup? featureGroup,
+}) {
+  if (featureGroup == AiFeatureGroup.translate ||
+      featureGroup == AiFeatureGroup.summary ||
+      featureGroup == AiFeatureGroup.codeExplain) {
+    return const Duration(minutes: 5);
+  }
+  if (intent == AiRequestIntent.clipboardAction) {
+    return const Duration(minutes: 3);
+  }
+  return const Duration(minutes: 2);
+}
+
+Duration resolveStreamInactivityTimeout({
+  required AiRequestIntent intent,
+  required AiFeatureGroup? featureGroup,
+}) {
+  if (featureGroup == AiFeatureGroup.translate ||
+      featureGroup == AiFeatureGroup.summary ||
+      featureGroup == AiFeatureGroup.codeExplain) {
+    return const Duration(seconds: 90);
+  }
+  if (intent == AiRequestIntent.clipboardAction) {
+    return const Duration(seconds: 60);
+  }
+  return const Duration(seconds: 45);
+}
+
 class AiRequestPlan {
   const AiRequestPlan({
     required this.intent,
@@ -68,7 +114,11 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardAction,
         useClipboardHistory: searchesHistory,
         useSelectedClipboard: hasSelectedClipboard,
-        maxOutputTokens: 512,
+        maxOutputTokens: resolveOutputTokens(
+          intent: AiRequestIntent.clipboardAction,
+          prompt: prompt,
+          featureGroup: featureGroup,
+        ),
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -78,7 +128,11 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardSearch,
         useClipboardHistory: true,
         useSelectedClipboard: false,
-        maxOutputTokens: 384,
+        maxOutputTokens: resolveOutputTokens(
+          intent: AiRequestIntent.clipboardSearch,
+          prompt: prompt,
+          featureGroup: featureGroup,
+        ),
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -88,7 +142,11 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardAction,
         useClipboardHistory: false,
         useSelectedClipboard: true,
-        maxOutputTokens: 512,
+        maxOutputTokens: resolveOutputTokens(
+          intent: AiRequestIntent.clipboardAction,
+          prompt: prompt,
+          featureGroup: featureGroup,
+        ),
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -98,7 +156,11 @@ class AiRequestPlanner {
         intent: AiRequestIntent.followUp,
         useClipboardHistory: false,
         useSelectedClipboard: false,
-        maxOutputTokens: 384,
+        maxOutputTokens: resolveOutputTokens(
+          intent: AiRequestIntent.followUp,
+          prompt: prompt,
+          featureGroup: featureGroup,
+        ),
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -107,7 +169,11 @@ class AiRequestPlanner {
       intent: AiRequestIntent.conversation,
       useClipboardHistory: false,
       useSelectedClipboard: false,
-      maxOutputTokens: 256,
+      maxOutputTokens: resolveOutputTokens(
+        intent: AiRequestIntent.conversation,
+        prompt: prompt,
+        featureGroup: featureGroup,
+      ),
       responseLanguageTag: responseLanguageTag,
     );
   }

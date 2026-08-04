@@ -1,4 +1,5 @@
 import 'package:clipflow/features/ai/domain/ai_feature_action.dart';
+import 'package:clipflow/features/ai/domain/ai_performance_mode.dart';
 import 'package:clipflow/features/ai/domain/ai_request_plan.dart';
 import 'package:clipflow/features/ai/services/ai_prompts.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +19,63 @@ void main() {
     expect(plan.useSelectedClipboard, isFalse);
     expect(plan.maxOutputTokens, lessThan(1000));
     expect(plan.responseLanguageTag, 'vi-VN');
+  });
+
+  test('output token and timeout policies scale with task complexity', () {
+    expect(
+      resolveOutputTokens(
+        intent: AiRequestIntent.conversation,
+        prompt: 'hello',
+        featureGroup: null,
+      ),
+      512,
+    );
+    expect(
+      resolveOutputTokens(
+        intent: AiRequestIntent.clipboardAction,
+        prompt: 'translate',
+        featureGroup: AiFeatureGroup.translate,
+      ),
+      1536,
+    );
+    expect(
+      resolveGenerationTimeout(
+        intent: AiRequestIntent.clipboardAction,
+        featureGroup: AiFeatureGroup.codeExplain,
+      ),
+      const Duration(minutes: 5),
+    );
+    expect(
+      resolveStreamInactivityTimeout(
+        intent: AiRequestIntent.clipboardAction,
+        featureGroup: AiFeatureGroup.codeExplain,
+      ),
+      const Duration(seconds: 90),
+    );
+  });
+
+  test('performance mode controls thinking by intent', () {
+    expect(
+      AiPerformanceMode.fast.enablesThinking(
+        modelSupportsThinking: true,
+        intent: AiRequestIntent.clipboardAction,
+      ),
+      isFalse,
+    );
+    expect(
+      AiPerformanceMode.balanced.enablesThinking(
+        modelSupportsThinking: true,
+        intent: AiRequestIntent.conversation,
+      ),
+      isFalse,
+    );
+    expect(
+      AiPerformanceMode.smart.enablesThinking(
+        modelSupportsThinking: true,
+        intent: AiRequestIntent.conversation,
+      ),
+      isTrue,
+    );
   });
 
   test('explicit clipboard search enables RAG', () {

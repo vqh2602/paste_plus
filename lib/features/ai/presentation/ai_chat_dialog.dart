@@ -17,6 +17,7 @@ import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
 import 'widgets/ai_mobile_toolbar.dart';
 import 'widgets/ai_no_model_overlay.dart';
+import 'widgets/ai_performance_mode_picker.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
 enum _ConversationAction { rename, togglePin, delete }
@@ -602,28 +603,43 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
                     child: Row(
                       children: [
                         Expanded(
-                          child: CupertinoTextField(
-                            controller: _inputController,
-                            focusNode: _focusNode,
-                            placeholder: context.l10n.ai_send_prompt,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              color: resolveColor(
-                                context,
-                                ClipFlowColors.surface,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AiPerformanceModePicker(
+                                value: aiState.performanceMode,
+                                onChanged: ref
+                                    .read(aiControllerProvider.notifier)
+                                    .setPerformanceMode,
                               ),
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: resolveColor(
-                                  context,
-                                  ClipFlowColors.border,
+                              CupertinoTextField(
+                                controller: _inputController,
+                                focusNode: _focusNode,
+                                placeholder: context.l10n.ai_send_prompt,
+                                minLines: 1,
+                                maxLines: 3,
+                                keyboardType: TextInputType.multiline,
+                                textInputAction: TextInputAction.newline,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.surface,
+                                  ),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: resolveColor(
+                                      context,
+                                      ClipFlowColors.border,
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                            onSubmitted: (_) => _submitPrompt(),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 8),

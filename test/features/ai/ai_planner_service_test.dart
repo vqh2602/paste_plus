@@ -66,6 +66,23 @@ void main() {
       },
     );
 
+    test('recognizes Japanese and German clipboard tool requests', () {
+      expect(
+        service.shouldUseModelPlanner(
+          prompt: '昨日コピーしたリンクを検索してピン留めして',
+          hasSelectedClipboard: false,
+        ),
+        isTrue,
+      );
+      expect(
+        service.shouldUseModelPlanner(
+          prompt: 'Finde den kopierten Link und hefte ihn an',
+          hasSelectedClipboard: false,
+        ),
+        isTrue,
+      );
+    });
+
     test('createPlan parses valid rawModelPlanJson into executionPlan', () {
       const validJson = '''
       {

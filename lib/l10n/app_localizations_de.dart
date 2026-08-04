@@ -1447,4 +1447,16 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get delete_collection_confirm => 'Delete Collection Confirm';
+
+  @override
+  String get ai_performance_mode => 'AI intelligence level';
+
+  @override
+  String get ai_performance_fast => 'Fast';
+
+  @override
+  String get ai_performance_balanced => 'Balanced';
+
+  @override
+  String get ai_performance_smart => 'Smart';
 }
