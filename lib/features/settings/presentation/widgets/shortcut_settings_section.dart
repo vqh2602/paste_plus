@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/platform/shortcut_config.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/app_settings.dart';
@@ -32,7 +32,7 @@ class ShortcutSettingsSection extends ConsumerWidget {
       final registered = await desktop.registerGlobalHotKey(openPanel);
       if (!registered) {
         if (context.mounted) {
-          showCupertinoNotice(context, 'shortcut_used_by_other_app'.tr);
+          showCupertinoNotice(context, context.l10n.shortcut_used_by_other_app);
         }
         return;
       }
@@ -52,19 +52,19 @@ class ShortcutSettingsSection extends ConsumerWidget {
         ),
       );
       if (context.mounted) {
-        showCupertinoNotice(context, 'reset_shortcuts_success'.tr);
+        showCupertinoNotice(context, context.l10n.reset_shortcuts_success);
       }
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CupertinoSectionLabel('global_shortcut_section'.tr),
+        CupertinoSectionLabel(context.l10n.global_shortcut_section),
         SettingsGroupWidget(
           children: [
             ShortcutRowWidget(
-              title: 'toggle_panel_shortcut'.tr,
-              subtitle: 'toggle_panel_shortcut_sub'.tr,
+              title: context.l10n.toggle_panel_shortcut,
+              subtitle: context.l10n.toggle_panel_shortcut_sub,
               shortcut: shortcutLabel(
                 decodeShortcut(
                   settings.openPanelShortcut,
@@ -80,7 +80,7 @@ class ShortcutSettingsSection extends ConsumerWidget {
                   if (context.mounted) {
                     showCupertinoNotice(
                       context,
-                      'shortcut_used_by_other_app'.tr,
+                      context.l10n.shortcut_used_by_other_app,
                     );
                   }
                   return;
@@ -96,12 +96,12 @@ class ShortcutSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('in_app_shortcuts'.tr),
+        CupertinoSectionLabel(context.l10n.in_app_shortcuts),
         SettingsGroupWidget(
           children: [
             ShortcutRowWidget(
-              title: 'focus_search_shortcut'.tr,
-              subtitle: 'focus_search_sub'.tr,
+              title: context.l10n.focus_search_shortcut,
+              subtitle: context.l10n.focus_search_sub,
               shortcut: shortcutLabel(
                 decodeShortcut(
                   settings.focusSearchShortcut,
@@ -118,8 +118,8 @@ class ShortcutSettingsSection extends ConsumerWidget {
               ),
             ),
             ShortcutRowWidget(
-              title: 'toggle_pin_shortcut'.tr,
-              subtitle: 'toggle_pin_sub'.tr,
+              title: context.l10n.toggle_pin_shortcut,
+              subtitle: context.l10n.toggle_pin_sub,
               shortcut: shortcutLabel(
                 decodeShortcut(
                   settings.togglePinShortcut,
@@ -136,8 +136,8 @@ class ShortcutSettingsSection extends ConsumerWidget {
               ),
             ),
             ShortcutRowWidget(
-              title: 'delete_item_shortcut'.tr,
-              subtitle: 'delete_item_sub'.tr,
+              title: context.l10n.delete_item_shortcut,
+              subtitle: context.l10n.delete_item_sub,
               shortcut: shortcutLabel(
                 decodeShortcut(
                   settings.deleteItemShortcut,
@@ -167,7 +167,7 @@ class ShortcutSettingsSection extends ConsumerWidget {
               children: [
                 const Icon(CupertinoIcons.arrow_counterclockwise, size: 16),
                 const SizedBox(width: 7),
-                Text('restore_defaults'.tr),
+                Text(context.l10n.restore_defaults),
               ],
             ),
           ),

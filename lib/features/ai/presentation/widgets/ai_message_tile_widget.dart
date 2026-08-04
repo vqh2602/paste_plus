@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/ai_chat_message.dart';
 import 'ai_markdown_content_widget.dart';
@@ -135,7 +135,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                           children: [
                             const Text('🧠 ', style: TextStyle(fontSize: 13)),
                             Text(
-                              'ai_processing'.tr,
+                              context.l10n.ai_processing,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
@@ -178,7 +178,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
 
             const SizedBox(height: 10),
             if (widget.message.content.isEmpty)
-              Text(widget.message.isThinking ? 'ai_processing'.tr : '')
+              Text(widget.message.isThinking ? context.l10n.ai_processing : '')
             else
               AiMarkdownContentWidget(
                 content: widget.message.content,
@@ -207,7 +207,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'copy_all'.tr,
+                          context.l10n.copy_all,
                           style: TextStyle(fontSize: 12, color: primary),
                         ),
                       ],
@@ -232,7 +232,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                         ),
                         SizedBox(width: 4),
                         Text(
-                          'paste_all'.tr,
+                          context.l10n.paste_all,
                           style: const TextStyle(
                             fontSize: 12,
                             color: CupertinoColors.activeGreen,
@@ -246,7 +246,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     CupertinoIconControl(
                       icon: CupertinoIcons.refresh,
                       size: 13,
-                      tooltip: 'ai_regenerate'.tr,
+                      tooltip: context.l10n.ai_regenerate,
                       onPressed: widget.onRegenerate!,
                     ),
                   ],
@@ -255,7 +255,7 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
                     CupertinoIconControl(
                       icon: CupertinoIcons.ellipsis_circle,
                       size: 13,
-                      tooltip: 'ai_continue'.tr,
+                      tooltip: context.l10n.ai_continue,
                       onPressed: widget.onContinue!,
                     ),
                   ],

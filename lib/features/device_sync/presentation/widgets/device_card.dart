@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/peer_connection_info.dart';
 import 'device_sync_labels.dart';
@@ -56,14 +56,14 @@ class DeviceCard extends StatelessWidget {
                     _StatusDot(status: peer.status),
                     const SizedBox(width: 5),
                     Text(
-                      connectionStatusLabel(peer.status),
+                      connectionStatusLabel(context, peer.status),
                       style: const TextStyle(fontSize: 12),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _metadata,
+                  _metadata(context),
                   style: TextStyle(
                     fontSize: 12,
                     color: resolveColor(context, ClipFlowColors.secondaryText),
@@ -72,9 +72,9 @@ class DeviceCard extends StatelessWidget {
                 if (peer.isTrusted) ...[
                   const SizedBox(height: 4),
                   Text(
-                    'last_sync_value'.tr.replaceFirst(
+                    context.l10n.last_sync_value.replaceFirst(
                       '@time',
-                      relativePeerTime(peer.lastSyncedAt),
+                      relativePeerTime(context, peer.lastSyncedAt),
                     ),
                     style: TextStyle(
                       fontSize: 12,
@@ -89,9 +89,8 @@ class DeviceCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     (peer.requiresManualReconnect
-                            ? 'reconnect_manual_required'
-                            : 'reconnect_attempt_value')
-                        .tr
+                            ? context.l10n.reconnect_manual_required
+                            : context.l10n.reconnect_attempt_value)
                         .replaceFirst('@count', '${peer.reconnectAttempts}'),
                     style: TextStyle(
                       fontSize: 12,
@@ -126,7 +125,7 @@ class DeviceCard extends StatelessWidget {
                         destructive: true,
                       ),
                     DeviceActionButton(
-                      label: 'details'.tr,
+                      label: context.l10n.details,
                       onPressed: () => showDeviceDetails(context, peer),
                     ),
                   ],
@@ -139,13 +138,16 @@ class DeviceCard extends StatelessWidget {
     );
   }
 
-  String get _metadata {
+  String _metadata(BuildContext context) {
     final values = <String>[
       peer.platform,
-      connectionQualityLabel(peer.quality),
+      connectionQualityLabel(context, peer.quality),
       if (peer.latencyMs != null) '${peer.latencyMs} ms',
       if (peer.pendingItems > 0)
-        'pending_items_value'.tr.replaceFirst('@count', '${peer.pendingItems}'),
+        context.l10n.pending_items_value.replaceFirst(
+          '@count',
+          '${peer.pendingItems}',
+        ),
     ];
     return values.join(' · ');
   }
@@ -276,29 +278,32 @@ Future<void> showDeviceDetails(
       title: Text(peer.deviceName),
       message: Column(
         children: [
-          _DetailLine(label: 'platform'.tr, value: peer.platform),
-          _DetailLine(label: 'local_ip'.tr, value: peer.ipAddress),
-          _DetailLine(label: 'service_port'.tr, value: '${peer.port}'),
-          _DetailLine(label: 'clipflow_version'.tr, value: peer.appVersion),
+          _DetailLine(label: context.l10n.platform, value: peer.platform),
+          _DetailLine(label: context.l10n.local_ip, value: peer.ipAddress),
+          _DetailLine(label: context.l10n.service_port, value: '${peer.port}'),
           _DetailLine(
-            label: 'protocol_version'.tr,
+            label: context.l10n.clipflow_version,
+            value: peer.appVersion,
+          ),
+          _DetailLine(
+            label: context.l10n.protocol_version,
             value: peer.protocolVersion,
           ),
           _DetailLine(
-            label: 'connection_quality'.tr,
-            value: connectionQualityLabel(peer.quality),
+            label: context.l10n.connection_quality,
+            value: connectionQualityLabel(context, peer.quality),
           ),
           _DetailLine(
-            label: 'latency'.tr,
+            label: context.l10n.latency,
             value: peer.latencyMs == null
-                ? 'not_available'.tr
+                ? context.l10n.not_available
                 : '${peer.latencyMs} ms',
           ),
         ],
       ),
       cancelButton: CupertinoActionSheetAction(
         onPressed: () => Navigator.pop(context),
-        child: Text('close'.tr),
+        child: Text(context.l10n.close),
       ),
     ),
   );
@@ -318,7 +323,9 @@ class _DetailLine extends StatelessWidget {
         children: [
           Expanded(child: Text(label, textAlign: TextAlign.left)),
           const SizedBox(width: 14),
-          Flexible(child: Text(value.isEmpty ? 'not_available'.tr : value)),
+          Flexible(
+            child: Text(value.isEmpty ? context.l10n.not_available : value),
+          ),
         ],
       ),
     );

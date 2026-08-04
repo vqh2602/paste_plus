@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
@@ -45,7 +45,9 @@ class ClipboardCardWidget extends ConsumerWidget {
     final isOnlineImage = isImageUrl(item.content);
     final historyNotifier = ref.read(historyControllerProvider.notifier);
     final state = ref.watch(historyControllerProvider);
-    final parsedColor = item.contentType == ClipboardContentType.color ? ColorParser.parse(item.content) : null;
+    final parsedColor = item.contentType == ClipboardContentType.color
+        ? ColorParser.parse(item.content)
+        : null;
 
     return CupertinoPressable(
       onPressed: onTap,
@@ -100,7 +102,7 @@ class ClipboardCardWidget extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  item.sourceAppName ?? 'unknown'.tr,
+                  item.sourceAppName ?? context.l10n.unknown,
                   style: TextStyle(
                     fontSize: 11,
                     color: resolveColor(context, ClipFlowColors.secondaryText),

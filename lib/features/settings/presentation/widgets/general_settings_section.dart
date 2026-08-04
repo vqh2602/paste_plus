@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import 'settings_helpers.dart';
 
@@ -21,8 +21,8 @@ class GeneralSettingsSection extends ConsumerWidget {
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'launch_at_login'.tr,
-              subtitle: 'launch_at_login_sub'.tr,
+              title: context.l10n.launch_at_login,
+              subtitle: context.l10n.launch_at_login_sub,
               value: settings.openAtLogin,
               onChanged: (value) async {
                 final result = await ref
@@ -38,28 +38,27 @@ class GeneralSettingsSection extends ConsumerWidget {
                       .read(desktopIntegrationProvider)
                       .openLoginItemsSettings();
                   if (!context.mounted) return;
-                  showCupertinoNotice(
-                    context,
-                    'login_items_hint'.tr,
-                  );
+                  showCupertinoNotice(context, context.l10n.login_items_hint);
                 } else {
                   if (result.errorMessage != null || result.enabled != value) {
                     showCupertinoNotice(
                       context,
-                      'open_at_login_failed'.tr,
+                      context.l10n.open_at_login_failed,
                     );
                     return;
                   }
                   showCupertinoNotice(
                     context,
-                    value ? 'open_at_login_on'.tr : 'open_at_login_off'.tr,
+                    value
+                        ? context.l10n.open_at_login_on
+                        : context.l10n.open_at_login_off,
                   );
                 }
               },
             ),
             SwitchRowWidget(
-              title: 'run_in_tray'.tr,
-              subtitle: 'run_in_tray_sub'.tr,
+              title: context.l10n.run_in_tray,
+              subtitle: context.l10n.run_in_tray_sub,
               value: settings.runInTray,
               onChanged: (value) async {
                 final success = await ref
@@ -75,22 +74,18 @@ class GeneralSettingsSection extends ConsumerWidget {
                   showCupertinoNotice(
                     context,
                     success
-                        ? (value
-                              ? 'tray_on'.tr
-                              : 'tray_off'.tr)
-                        : 'tray_failed'.tr,
+                        ? (value ? context.l10n.tray_on : context.l10n.tray_off)
+                        : context.l10n.tray_failed,
                   );
                 }
               },
             ),
             SwitchRowWidget(
-              title: 'show_in_dock'.tr,
-              subtitle: 'show_in_dock_sub'.tr,
+              title: context.l10n.show_in_dock,
+              subtitle: context.l10n.show_in_dock_sub,
               value: settings.showInDock,
               onChanged: (value) async {
-                await ref
-                    .read(desktopIntegrationProvider)
-                    .setShowInDock(value);
+                await ref.read(desktopIntegrationProvider).setShowInDock(value);
                 await updateSettings(
                   ref,
                   (current) => current.copyWith(showInDock: value),
@@ -100,12 +95,12 @@ class GeneralSettingsSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('sound_enabled'.tr),
+        CupertinoSectionLabel(context.l10n.sound_enabled),
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'sound_enabled'.tr,
-              subtitle: 'sound_enabled_sub'.tr,
+              title: context.l10n.sound_enabled,
+              subtitle: context.l10n.sound_enabled_sub,
               value: settings.soundEnabled,
               onChanged: (value) => updateSettings(
                 ref,
@@ -116,7 +111,7 @@ class GeneralSettingsSection extends ConsumerWidget {
         ),
         if (Platform.isMacOS) ...[
           const SizedBox(height: 22),
-          CupertinoSectionLabel('system_permissions'.tr),
+          CupertinoSectionLabel(context.l10n.system_permissions),
           SettingsGroupWidget(
             children: [
               FutureBuilder<bool>(
@@ -126,10 +121,10 @@ class GeneralSettingsSection extends ConsumerWidget {
                 builder: (context, snapshot) {
                   final hasPermission = snapshot.data ?? false;
                   return SettingsTileWidget(
-                    title: 'accessibility_permission'.tr,
+                    title: context.l10n.accessibility_permission,
                     subtitle: hasPermission
-                        ? 'accessibility_granted'.tr
-                        : 'accessibility_required'.tr,
+                        ? context.l10n.accessibility_granted
+                        : context.l10n.accessibility_required,
                     leading: Icon(
                       hasPermission
                           ? CupertinoIcons.checkmark_shield
@@ -140,7 +135,7 @@ class GeneralSettingsSection extends ConsumerWidget {
                     ),
                     trailing: hasPermission
                         ? Text(
-                            'granted'.tr,
+                            context.l10n.granted,
                             style: TextStyle(
                               fontSize: 13,
                               color: resolveColor(
@@ -156,14 +151,14 @@ class GeneralSettingsSection extends ConsumerWidget {
                                   .read(desktopIntegrationProvider)
                                   .requestAccessibilityPermission();
                             },
-                            child: Text('grant_permission'.tr),
+                            child: Text(context.l10n.grant_permission),
                           ),
                   );
                 },
               ),
               SettingsTileWidget(
-                title: 'restart_app'.tr,
-                subtitle: 'restart_app_sub'.tr,
+                title: context.l10n.restart_app,
+                subtitle: context.l10n.restart_app_sub,
                 leading: const Icon(
                   CupertinoIcons.arrow_counterclockwise,
                   color: CupertinoColors.activeBlue,
@@ -171,16 +166,14 @@ class GeneralSettingsSection extends ConsumerWidget {
                 trailing: CupertinoButton(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   onPressed: () async {
-                    await ref
-                        .read(desktopIntegrationProvider)
-                        .restartApp();
+                    await ref.read(desktopIntegrationProvider).restartApp();
                   },
-                  child: Text('restart'.tr),
+                  child: Text(context.l10n.restart),
                 ),
               ),
               SettingsTileWidget(
-                title: 'reset_permission'.tr,
-                subtitle: 'reset_permission_sub'.tr,
+                title: context.l10n.reset_permission,
+                subtitle: context.l10n.reset_permission_sub,
                 leading: const Icon(
                   CupertinoIcons.refresh_bold,
                   color: CupertinoColors.systemOrange,
@@ -192,37 +185,41 @@ class GeneralSettingsSection extends ConsumerWidget {
                         .read(desktopIntegrationProvider)
                         .resetAccessibilityPermission();
                   },
-                  child: Text('reset'.tr),
+                  child: Text(context.l10n.reset),
                 ),
               ),
             ],
           ),
         ],
         const SizedBox(height: 22),
-        CupertinoSectionLabel('appearance_and_theme'.tr),
+        CupertinoSectionLabel(context.l10n.appearance_and_theme),
         SettingsGroupWidget(
           children: [
             PickerRowWidget<String>(
-              title: 'theme_mode'.tr,
+              title: context.l10n.theme_mode,
               value: settings.themeMode,
               items: {
-                'system': 'theme_system'.tr,
-                'light': 'theme_light'.tr,
-                'dark': 'theme_dark'.tr,
+                'system': context.l10n.theme_system,
+                'light': context.l10n.theme_light,
+                'dark': context.l10n.theme_dark,
               },
-              onChanged: (value) =>
-                  updateSettings(ref, (current) => current.copyWith(themeMode: value)),
+              onChanged: (value) => updateSettings(
+                ref,
+                (current) => current.copyWith(themeMode: value),
+              ),
             ),
             PickerRowWidget<String>(
-              title: 'app_language'.tr,
+              title: context.l10n.app_language,
               value: settings.language,
               items: const {'vi': 'Tiếng Việt', 'en': 'English'},
-              onChanged: (value) =>
-                  updateSettings(ref, (current) => current.copyWith(language: value)),
+              onChanged: (value) => updateSettings(
+                ref,
+                (current) => current.copyWith(language: value),
+              ),
             ),
             PickerRowWidget<String>(
-              title: 'translation_language'.tr,
-              subtitle: 'translation_language_sub'.tr,
+              title: context.l10n.translation_language,
+              subtitle: context.l10n.translation_language_sub,
               value: settings.targetTranslationLanguage,
               items: const {
                 'vi': 'Tiếng Việt',
@@ -238,33 +235,35 @@ class GeneralSettingsSection extends ConsumerWidget {
               },
               onChanged: (value) => updateSettings(
                 ref,
-                (current) =>
-                    current.copyWith(targetTranslationLanguage: value),
+                (current) => current.copyWith(targetTranslationLanguage: value),
               ),
             ),
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('cloud_hosting_section'.tr),
+        CupertinoSectionLabel(context.l10n.cloud_hosting_section),
         SettingsGroupWidget(
           children: [
             PickerRowWidget<String>(
-              title: 'cloud_provider'.tr,
-              subtitle: 'cloud_provider_sub'.tr,
+              title: context.l10n.cloud_provider,
+              subtitle: context.l10n.cloud_provider_sub,
               value: settings.cloudImageHost,
               items: {
-                'freeimage': 'cloud_in_use'.tr,
-                'gdrive': 'cloud_coming_soon'.tr,
+                'freeimage': context.l10n.cloud_in_use,
+                'gdrive': context.l10n.cloud_coming_soon,
               },
               onChanged: (value) {
                 if (value == 'gdrive') return;
-                updateSettings(ref, (current) => current.copyWith(cloudImageHost: value));
+                updateSettings(
+                  ref,
+                  (current) => current.copyWith(cloudImageHost: value),
+                );
               },
             ),
             TextRowWidget(
               title: 'FreeImage API Key',
               value: settings.freeImageApiKey,
-              placeholder: 'api_key_placeholder'.tr,
+              placeholder: context.l10n.api_key_placeholder,
               onChanged: (value) => updateSettings(
                 ref,
                 (current) => current.copyWith(freeImageApiKey: value),
@@ -281,112 +280,118 @@ class GeneralSettingsSection extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'accent_color'.tr,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  context.l10n.accent_color,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: AppTheme.accentColors.entries.map((entry) {
-                  final key = entry.key;
-                  final color = entry.value;
-                  final selected = settings.accentColor == key;
-                  final name = switch (key) {
-                    'indigo' => 'Indigo Mac',
-                    'blue' => 'Ocean Blue',
-                    'mint' => 'Emerald Mint',
-                    'orange' => 'Sunset Orange',
-                    'rose' => 'Rose Pink',
-                    'violet' => 'Cyber Violet',
-                    'slate' => 'Monochrome Slate',
-                    'pastel_lavender' => 'Lavender Bloom 🪻',
-                    'pastel_periwinkle' => 'Periwinkle Sky 🌌',
-                    'pastel_sky' => 'Mây Trời ☁️',
-                    'pastel_cyan' => 'Gió Biển 🌊',
-                    'pastel_mint' => 'Bạc Hà Tươi 🌿',
-                    'pastel_sage' => 'Trà Xanh Sage 🍵',
-                    'pastel_emerald' => 'Ngọc Bích 🍃',
-                    'pastel_lime' => 'Chanh Mềm 🍐',
-                    'pastel_butter' => 'Mật Ong 🍯',
-                    'pastel_apricot' => 'Cam Mơ 🍑',
-                    'pastel_peach' => 'Đào Hoàng Hôn 🌅',
-                    'pastel_coral' => 'San Hộ 🪸',
-                    'pastel_rose' => 'Hoa Hồng 🎀',
-                    'pastel_sakura' => 'Anh Đào Sakura 🌸',
-                    'pastel_lilac' => 'Tử Đinh Hương 🪻',
-                    'pastel_plum' => 'Mận Chín 🍇',
-                    'pastel_mocha' => 'Cà Phê Mocha ☕',
-                    'pastel_slate' => 'Đá Trôi 🪨',
-                    _ => key,
-                  };
-                  return CupertinoPressable(
-                    onPressed: () => updateSettings(
-                      ref,
-                      (current) => current.copyWith(accentColor: key),
-                    ),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 160),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: AppTheme.accentColors.entries.map((entry) {
+                    final key = entry.key;
+                    final color = entry.value;
+                    final selected = settings.accentColor == key;
+                    final name = switch (key) {
+                      'indigo' => 'Indigo Mac',
+                      'blue' => 'Ocean Blue',
+                      'mint' => 'Emerald Mint',
+                      'orange' => 'Sunset Orange',
+                      'rose' => 'Rose Pink',
+                      'violet' => 'Cyber Violet',
+                      'slate' => 'Monochrome Slate',
+                      'pastel_lavender' => 'Lavender Bloom 🪻',
+                      'pastel_periwinkle' => 'Periwinkle Sky 🌌',
+                      'pastel_sky' => 'Mây Trời ☁️',
+                      'pastel_cyan' => 'Gió Biển 🌊',
+                      'pastel_mint' => 'Bạc Hà Tươi 🌿',
+                      'pastel_sage' => 'Trà Xanh Sage 🍵',
+                      'pastel_emerald' => 'Ngọc Bích 🍃',
+                      'pastel_lime' => 'Chanh Mềm 🍐',
+                      'pastel_butter' => 'Mật Ong 🍯',
+                      'pastel_apricot' => 'Cam Mơ 🍑',
+                      'pastel_peach' => 'Đào Hoàng Hôn 🌅',
+                      'pastel_coral' => 'San Hộ 🪸',
+                      'pastel_rose' => 'Hoa Hồng 🎀',
+                      'pastel_sakura' => 'Anh Đào Sakura 🌸',
+                      'pastel_lilac' => 'Tử Đinh Hương 🪻',
+                      'pastel_plum' => 'Mận Chín 🍇',
+                      'pastel_mocha' => 'Cà Phê Mocha ☕',
+                      'pastel_slate' => 'Đá Trôi 🪨',
+                      _ => key,
+                    };
+                    return CupertinoPressable(
+                      onPressed: () => updateSettings(
+                        ref,
+                        (current) => current.copyWith(accentColor: key),
                       ),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: selected ? 0.18 : 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: selected
-                              ? color
-                              : resolveColor(context, ClipFlowColors.border),
-                          width: selected ? 2 : 1,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 160),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(
+                            alpha: selected ? 0.18 : 0.08,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: selected
+                                ? color
+                                : resolveColor(context, ClipFlowColors.border),
+                            width: selected ? 2 : 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 16,
+                              height: 16,
+                              decoration: BoxDecoration(
+                                color: color,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.35),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: selected
+                                  ? const Icon(
+                                      CupertinoIcons.checkmark,
+                                      size: 10,
+                                      color: CupertinoColors.white,
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: selected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                                color: selected ? color : null,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: color,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withValues(alpha: 0.35),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: selected
-                                ? const Icon(
-                                    CupertinoIcons.checkmark,
-                                    size: 10,
-                                    color: CupertinoColors.white,
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight:
-                                  selected ? FontWeight.w600 : FontWeight.w400,
-                              color: selected ? color : null,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    ],
-  );
+      ],
+    );
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
@@ -10,10 +12,29 @@ import '../../clipboard_history/domain/clipboard_item.dart';
 import '../data/ai_conversation_repository.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_feature_request.dart';
 import '../domain/ai_model_info.dart';
+import '../domain/ai_performance_mode.dart';
 import '../domain/ai_request_plan.dart';
+import '../domain/ai_request_classification.dart';
+import '../localization/ai_language_context.dart';
+import '../localization/ai_language_detector.dart';
+import '../localization/ai_response_locale_resolver.dart';
 import '../services/ai_model_downloader_service.dart';
+import '../services/ai_utility_classifier.dart';
 import '../services/local_ai_engine.dart';
+
+class PendingToolCall {
+  const PendingToolCall({
+    required this.toolName,
+    required this.arguments,
+    required this.completer,
+  });
+
+  final String toolName;
+  final Map<String, dynamic> arguments;
+  final Completer<bool> completer;
+}
 
 class AiState {
   const AiState({
@@ -26,6 +47,8 @@ class AiState {
     this.savedConversations = const [],
     this.temperature = 0.55,
     this.contextSize = 4096,
+    this.performanceMode = AiPerformanceMode.balanced,
+    this.pendingToolCall,
   });
 
   final String selectedModelId;
@@ -37,6 +60,8 @@ class AiState {
   final List<SavedAiConversation> savedConversations;
   final double temperature;
   final int contextSize;
+  final AiPerformanceMode performanceMode;
+  final PendingToolCall? pendingToolCall;
 
   AiModelInfo get selectedModel => AiModelInfo.findById(selectedModelId);
 
@@ -55,6 +80,9 @@ class AiState {
     List<SavedAiConversation>? savedConversations,
     double? temperature,
     int? contextSize,
+    AiPerformanceMode? performanceMode,
+    PendingToolCall? pendingToolCall,
+    bool clearPendingToolCall = false,
   }) {
     return AiState(
       selectedModelId: selectedModelId ?? this.selectedModelId,
@@ -68,6 +96,10 @@ class AiState {
       savedConversations: savedConversations ?? this.savedConversations,
       temperature: temperature ?? this.temperature,
       contextSize: contextSize ?? this.contextSize,
+      performanceMode: performanceMode ?? this.performanceMode,
+      pendingToolCall: clearPendingToolCall
+          ? null
+          : (pendingToolCall ?? this.pendingToolCall),
     );
   }
 }
@@ -77,6 +109,7 @@ class AiController extends StateNotifier<AiState> {
     this._downloaderService,
     this._localEngine,
     this._conversationRepository,
+    this._utilityClassifier,
     this._ref,
   ) : super(
         AiState(
@@ -92,13 +125,13 @@ class AiController extends StateNotifier<AiState> {
   final AiModelDownloaderService _downloaderService;
   final LocalAiEngine _localEngine;
   final AiConversationRepository _conversationRepository;
+  final AiUtilityClassifier _utilityClassifier;
   final Ref _ref;
   late final Future<void> _restoreFuture;
   bool _restoreCompleted = false;
   bool _chatChangedBeforeRestore = false;
   bool _contextChangedBeforeRestore = false;
   final Map<String, StreamSubscription> _downloadSubscriptions = {};
-  static const _requestPlanner = AiRequestPlanner();
 
   Future<void> _checkDownloadedModels() async {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
@@ -191,6 +224,10 @@ class AiController extends StateNotifier<AiState> {
       clearClipboardContext: item == null,
     );
     unawaited(_saveAfterRestore());
+  }
+
+  void setPerformanceMode(AiPerformanceMode mode) {
+    state = state.copyWith(performanceMode: mode);
   }
 
   void clearChat() {
@@ -287,9 +324,42 @@ class AiController extends StateNotifier<AiState> {
     );
   }
 
+  Future<bool> requestToolConfirmation(
+    String toolName,
+    Map<String, dynamic> arguments,
+  ) {
+    final completer = Completer<bool>();
+    state = state.copyWith(
+      pendingToolCall: PendingToolCall(
+        toolName: toolName,
+        arguments: arguments,
+        completer: completer,
+      ),
+    );
+    return completer.future.whenComplete(() {
+      if (state.pendingToolCall?.completer == completer) {
+        state = state.copyWith(clearPendingToolCall: true);
+      }
+    });
+  }
+
+  void approvePendingToolCall() {
+    final pending = state.pendingToolCall;
+    pending?.completer.complete(true);
+    Future.microtask(() async {
+      await _ref.read(historyControllerProvider.notifier).reload();
+      await _ref.read(collectionsControllerProvider.notifier).reload();
+    });
+  }
+
+  void rejectPendingToolCall() {
+    state.pendingToolCall?.completer.complete(false);
+  }
+
   Future<void> sendUserMessage(
     String userText, {
     AiFeatureGroup? featureGroup,
+    AiFeatureRequest? featureRequest,
     String? selectedOption,
     ClipboardItem? contextItem,
   }) async {
@@ -304,23 +374,11 @@ class AiController extends StateNotifier<AiState> {
     final availableConversationContext = _buildConversationContext(
       state.chatMessages,
     );
-    final requestPlan = _requestPlanner.plan(
-      prompt: userText,
-      hasSelectedClipboard: selectedContext != null,
-      hasConversation: availableConversationContext.isNotEmpty,
-      featureGroup: featureGroup,
+    final conversationContext = availableConversationContext;
+    final conversationMessages = _recentConversationMessages(
+      state.chatMessages,
     );
-    final usesConversationHistory =
-        requestPlan.intent == AiRequestIntent.followUp;
-    final conversationContext = usesConversationHistory
-        ? availableConversationContext
-        : '';
-    final conversationMessages = usesConversationHistory
-        ? _recentConversationMessages(state.chatMessages)
-        : const <AiChatMessage>[];
-    var activeContext = requestPlan.useSelectedClipboard
-        ? selectedContext
-        : null;
+    var activeContext = selectedContext;
 
     final targetContext = activeContext;
     if (targetContext != null &&
@@ -331,10 +389,8 @@ class AiController extends StateNotifier<AiState> {
       String? extractedText;
       if (!hasOcrText && targetContext.imagePath != null) {
         try {
-          final historyNotifier =
-              _ref.read(historyControllerProvider.notifier);
-          final extracted =
-              await historyNotifier.performOcr(targetContext);
+          final historyNotifier = _ref.read(historyControllerProvider.notifier);
+          final extracted = await historyNotifier.performOcr(targetContext);
           if (extracted != null && extracted.trim().isNotEmpty) {
             extractedText = extracted.trim();
           }
@@ -345,15 +401,23 @@ class AiController extends StateNotifier<AiState> {
         extractedText = ocrTextInContent;
       }
 
-      final fileName = targetContext.imagePath?.split(Platform.pathSeparator).last ?? 'image.png';
+      final fileName =
+          targetContext.imagePath?.split(Platform.pathSeparator).last ??
+          'image.png';
       final sourceApp = targetContext.sourceAppName ?? 'Unknown App';
       final imageInfoBuffer = StringBuffer()
-        ..writeln('(Tệp hình ảnh được chọn làm ngữ cảnh: "$fileName", Ứng dụng nguồn: "$sourceApp")');
+        ..writeln(
+          '(Tệp hình ảnh được chọn làm ngữ cảnh: "$fileName", Ứng dụng nguồn: "$sourceApp")',
+        );
 
       if (extractedText != null && extractedText.isNotEmpty) {
-        imageInfoBuffer.writeln('\nVăn bản nhận diện được từ OCR trong hình ảnh:\n"$extractedText"');
+        imageInfoBuffer.writeln(
+          '\nVăn bản nhận diện được từ OCR trong hình ảnh:\n"$extractedText"',
+        );
       } else {
-        imageInfoBuffer.writeln('\n[Lưu ý: Hình ảnh này không chứa văn bản (OCR không tìm thấy chữ). Đây là một hình ảnh đồ họa/ảnh chụp/minh họa.]');
+        imageInfoBuffer.writeln(
+          '\n[Lưu ý: Hình ảnh này không chứa văn bản (OCR không tìm thấy chữ). Đây là một hình ảnh đồ họa/ảnh chụp/minh họa.]',
+        );
       }
 
       activeContext = targetContext.copyWith(
@@ -361,13 +425,45 @@ class AiController extends StateNotifier<AiState> {
         normalizedContent: imageInfoBuffer.toString(),
       );
     }
-    final clipboardHistory = requestPlan.useClipboardHistory
-        ? _ref
-              .read(historyControllerProvider)
-              .items
-              .where((item) => !item.isSensitive)
-              .toList(growable: false)
-        : const <ClipboardItem>[];
+    final clipboardHistory = _ref
+        .read(historyControllerProvider)
+        .items
+        .where((item) => !item.isSensitive)
+        .toList(growable: false);
+    final settings = _ref.read(settingsControllerProvider);
+    final appLanguageTag = settings.language;
+    final requestModel = _modelForRequest();
+    final fallback = fallbackClassification(
+      prompt: userText,
+      appLanguageTag: detectLanguageByScript(userText) ?? appLanguageTag,
+      featureGroup: featureGroup,
+      hasSelectedClipboard: activeContext != null,
+    );
+    final classification = canSkipUtilityClassifier(
+      prompt: userText,
+      featureGroup: featureGroup,
+    )
+        ? fallback
+        : await _utilityClassifier.classify(
+            prompt: userText,
+            appLanguageTag: appLanguageTag,
+            fallbackModel: requestModel,
+            hasSelectedClipboard: activeContext != null,
+          );
+    final translationTargetTag = switch (featureRequest) {
+      AiTranslateRequest(:final targetLocaleTag) => targetLocaleTag,
+      _ when featureGroup == AiFeatureGroup.translate => selectedOption,
+      _ => null,
+    };
+    final languageContext = AiLanguageContext(
+      appLocale: Locale(settings.language),
+      responseMode: AiResponseLanguageMode.matchUser,
+      detectedInputTag: classification.languageTag,
+      translationTargetTag: translationTargetTag,
+    );
+    final responseLanguageTag = const AiResponseLocaleResolver().resolve(
+      languageContext,
+    );
     debug.log(
       level: AiDebugLevel.info,
       stage: 'request',
@@ -379,19 +475,6 @@ class AiController extends StateNotifier<AiState> {
           'option: ${selectedOption ?? 'none'}\n'
           'temperature: ${state.temperature}\n'
           'configuredContextSize: ${state.contextSize}',
-    );
-    debug.log(
-      level: AiDebugLevel.info,
-      stage: 'planner',
-      requestId: requestId,
-      message: 'Đã lập kế hoạch request',
-      details:
-          'intent: ${requestPlan.intent.name}\n'
-          'useSelectedClipboard: ${requestPlan.useSelectedClipboard}\n'
-          'useClipboardHistory: ${requestPlan.useClipboardHistory}\n'
-          'maxOutputTokens: ${requestPlan.maxOutputTokens}\n'
-          'responseLanguage: ${requestPlan.responseLanguage}\n'
-          'conversationMessages: ${conversationMessages.length}',
     );
     debug.log(
       level: AiDebugLevel.info,
@@ -427,7 +510,6 @@ class AiController extends StateNotifier<AiState> {
     final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
     state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
-    final requestModel = _modelForRequest();
     debug.log(
       level: AiDebugLevel.info,
       stage: 'model',
@@ -448,19 +530,37 @@ class AiController extends StateNotifier<AiState> {
       featureGroup: featureGroup,
       selectedOption: selectedOption,
       conversationContext: conversationContext,
-      requestPlan: requestPlan,
+      requestPlan: null,
       conversationMessages: conversationMessages,
+      appLanguageTag: _ref.read(settingsControllerProvider).language,
+      responseLanguageTag: responseLanguageTag,
+      performanceMode: state.performanceMode,
+      classification: classification,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,
+      onConfirmationRequested: requestToolConfirmation,
     );
 
     var eventCount = 0;
     var firstEventLogged = false;
     var finalThinking = '';
     var finalOutput = '';
+    final timeoutDuration = resolveGenerationTimeout(
+      intent: classification.intent,
+      featureGroup: featureGroup,
+    );
+    final inactivityTimeout = resolveStreamInactivityTimeout(
+      intent: classification.intent,
+      featureGroup: featureGroup,
+    );
+    var generationTimedOut = false;
+    final generationTimeout = Timer(timeoutDuration, () {
+      generationTimedOut = true;
+      _localEngine.cancelGeneration();
+    });
     try {
-      await for (final event in stream) {
+      await for (final event in stream.timeout(inactivityTimeout)) {
         eventCount++;
         final type = event['type'] ?? '';
         final thinking = event['thinking'] ?? '';
@@ -488,6 +588,11 @@ class AiController extends StateNotifier<AiState> {
           target.isThinking = type == 'think';
           state = state.copyWith(chatMessages: currentMsgs);
         }
+      }
+      if (generationTimedOut) {
+        throw TimeoutException(
+          'AI generation exceeded ${timeoutDuration.inMinutes} minutes.',
+        );
       }
       debug.log(
         level: AiDebugLevel.success,
@@ -520,6 +625,7 @@ class AiController extends StateNotifier<AiState> {
         state = state.copyWith(chatMessages: currentMsgs);
       }
     } finally {
+      generationTimeout.cancel();
       stopwatch.stop();
       final currentMsgs = [...state.chatMessages];
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
@@ -537,22 +643,26 @@ class AiController extends StateNotifier<AiState> {
     required String conversationContext,
   }) {
     final buffer = StringBuffer()
-      ..writeln('selectedClipboard: ${activeContext?.id ?? 'none'}');
+      ..writeln('selectedClipboard: ${activeContext?.id ?? 'none'}')
+      ..writeln('clipboardHistoryCount: ${clipboardHistory.length}')
+      ..writeln('conversationLength: ${conversationContext.length}');
     if (activeContext != null) {
+      final preview = activeContext.content.length > 200
+          ? '${activeContext.content.substring(0, 200)}…'
+          : activeContext.content;
       buffer
         ..writeln('selectedType: ${activeContext.contentType.name}')
         ..writeln('selectedSensitive: ${activeContext.isSensitive}')
-        ..writeln('selectedContent:')
-        ..writeln(activeContext.content);
+        ..writeln('selectedPreview: $preview');
     }
-    buffer
-      ..writeln('\nconversationContext:')
-      ..writeln(conversationContext.isEmpty ? '[empty]' : conversationContext)
-      ..writeln('\nclipboardHistoryCount: ${clipboardHistory.length}');
-    for (final item in clipboardHistory) {
-      buffer
-        ..writeln('\n--- clip:${item.id} type:${item.contentType.name} ---')
-        ..writeln(item.content);
+    if (kReleaseMode) return buffer.toString();
+    for (final item in clipboardHistory.take(10)) {
+      final preview = item.content.length > 200
+          ? '${item.content.substring(0, 200)}…'
+          : item.content;
+      buffer.writeln(
+        'clip:${item.id} type:${item.contentType.name} preview:$preview',
+      );
     }
     return buffer.toString();
   }

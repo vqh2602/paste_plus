@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:llamadart/llamadart.dart';
 
 class LlamaConversationTurn {
@@ -12,30 +14,101 @@ class LlamaStreamToken {
   final String? thinking;
 }
 
+class ModelLoadCapabilities {
+  const ModelLoadCapabilities({required this.multimodalReady});
+
+  final bool multimodalReady;
+}
+
 class LlamaInferenceService {
   LlamaEngine? _engine;
   String? _loadedModelPath;
   int? _loadedContextSize;
+  String? _loadedMmprojPath;
 
-  Future<void> _ensureLoaded(String modelPath, int contextSize) async {
-    if (_engine?.isReady == true &&
-        _loadedModelPath == modelPath &&
-        _loadedContextSize == contextSize) {
-      return;
+  int _resolveGpuLayers(String modelPath) {
+    if (Platform.isMacOS) {
+      return 999;
     }
-    await _engine?.dispose();
-    final engine = LlamaEngine(LlamaBackend());
-    await engine.loadModel(
-      modelPath,
-      modelParams: ModelParams(contextSize: contextSize, gpuLayers: 999),
-    );
-    _engine = engine;
-    _loadedModelPath = modelPath;
-    _loadedContextSize = contextSize;
+    final lower = modelPath.toLowerCase();
+    if (lower.contains('12b') || lower.contains('8b') || lower.contains('7b')) {
+      return 33;
+    }
+    return 999;
   }
 
-  Future<void> prepareModel(String modelPath, int contextSize) =>
-      _ensureLoaded(modelPath, contextSize);
+  Future<ModelLoadCapabilities> _ensureLoaded(
+    String modelPath,
+    int contextSize, {
+    String? mmprojPath,
+  }) async {
+    final modelChanged =
+        _engine?.isReady != true ||
+        _loadedModelPath != modelPath ||
+        _loadedContextSize != contextSize;
+
+    if (modelChanged) {
+      await _engine?.dispose();
+
+      final initialLayers = _resolveGpuLayers(modelPath);
+      final candidateGpuLayers = <int>{initialLayers, 33, 16, 0}.toList();
+
+      bool loaded = false;
+      Object? lastError;
+
+      for (final layers in candidateGpuLayers) {
+        try {
+          final engine = LlamaEngine(LlamaBackend());
+          await engine.loadModel(
+            modelPath,
+            modelParams: ModelParams(
+              contextSize: contextSize,
+              gpuLayers: layers,
+            ),
+          );
+          _engine = engine;
+          loaded = true;
+          break;
+        } catch (e) {
+          lastError = e;
+        }
+      }
+
+      if (!loaded) {
+        throw Exception(
+          'Không thể khởi tạo model $modelPath với bất kỳ GPU offload profile nào: $lastError',
+        );
+      }
+
+      _loadedModelPath = modelPath;
+      _loadedContextSize = contextSize;
+      _loadedMmprojPath = null;
+    }
+
+    var multimodalReady = false;
+    if (mmprojPath != null) {
+      if (mmprojPath == _loadedMmprojPath) {
+        multimodalReady = true;
+      } else {
+        try {
+          await _engine!.loadMultimodalProjector(mmprojPath);
+          _loadedMmprojPath = mmprojPath;
+          multimodalReady = true;
+        } catch (_) {
+          _loadedMmprojPath = null;
+          multimodalReady = false;
+        }
+      }
+    }
+
+    return ModelLoadCapabilities(multimodalReady: multimodalReady);
+  }
+
+  Future<ModelLoadCapabilities> prepareModel(
+    String modelPath,
+    int contextSize, {
+    String? mmprojPath,
+  }) => _ensureLoaded(modelPath, contextSize, mmprojPath: mmprojPath);
 
   Future<List<int>> tokenize(String text) async {
     final engine = _engine;
@@ -79,10 +152,18 @@ class LlamaInferenceService {
     double temperature = 0.55,
     int maxTokens = 768,
     bool thinkingModel = false,
+    String? grammar,
+    String? mmprojPath,
+    List<String> imagePaths = const [],
     List<LlamaConversationTurn> conversation = const [],
   }) async* {
-    await _ensureLoaded(modelPath, contextSize);
-    final messages = _messages(systemPrompt, userPrompt, conversation);
+    await _ensureLoaded(modelPath, contextSize, mmprojPath: mmprojPath);
+    final messages = _messages(
+      systemPrompt,
+      userPrompt,
+      conversation,
+      imagePaths: imagePaths,
+    );
     await for (final chunk in _engine!.create(
       messages,
       params: GenerationParams(
@@ -91,6 +172,7 @@ class LlamaInferenceService {
         topP: 0.9,
         topK: 40,
         penalty: 1.08,
+        grammar: grammar,
       ),
       enableThinking: thinkingModel,
     )) {
@@ -105,15 +187,25 @@ class LlamaInferenceService {
   List<LlamaChatMessage> _messages(
     String systemPrompt,
     String userPrompt,
-    List<LlamaConversationTurn> conversation,
-  ) => [
+    List<LlamaConversationTurn> conversation, {
+    List<String> imagePaths = const [],
+  }) => [
     LlamaChatMessage.fromText(role: LlamaChatRole.system, text: systemPrompt),
     for (final turn in conversation)
       LlamaChatMessage.fromText(
         role: turn.isUser ? LlamaChatRole.user : LlamaChatRole.assistant,
         text: turn.text,
       ),
-    LlamaChatMessage.fromText(role: LlamaChatRole.user, text: userPrompt),
+    if (imagePaths.isNotEmpty)
+      LlamaChatMessage.withContent(
+        role: LlamaChatRole.user,
+        content: [
+          for (final path in imagePaths) LlamaImageContent(path: path),
+          LlamaTextContent(userPrompt),
+        ],
+      )
+    else
+      LlamaChatMessage.fromText(role: LlamaChatRole.user, text: userPrompt),
   ];
 
   Future<List<List<double>>> embedBatch({
@@ -132,5 +224,6 @@ class LlamaInferenceService {
     _engine = null;
     _loadedModelPath = null;
     _loadedContextSize = null;
+    _loadedMmprojPath = null;
   }
 }

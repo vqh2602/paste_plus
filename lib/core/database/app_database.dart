@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 2;
+  static const version = 4;
   final Database database;
   final String databasePath;
 
@@ -243,7 +243,50 @@ class AppDatabase {
       'CREATE INDEX idx_item_collections_collection ON clipboard_item_collections(collection_id)',
     );
     await _createSyncStateTable(db);
+    await _createEmbeddingsTable(db);
+    await _createFtsTable(db);
     await _seedCollections(db);
+  }
+
+  static Future<void> _createFtsTable(Database db) async {
+    try {
+      await db.execute('''
+        CREATE VIRTUAL TABLE IF NOT EXISTS clipboard_items_fts USING fts5(
+          clipboard_id UNINDEXED,
+          normalized_content,
+          source_app_name,
+          tokenize = 'unicode61'
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_ai AFTER INSERT ON clipboard_items BEGIN
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+        END;
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_ad AFTER DELETE ON clipboard_items BEGIN
+          DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
+        END;
+      ''');
+
+      await db.execute('''
+        CREATE TRIGGER IF NOT EXISTS clipboard_items_au AFTER UPDATE ON clipboard_items BEGIN
+          DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+        END;
+      ''');
+
+      await db.execute('''
+        INSERT OR IGNORE INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
+        SELECT id, normalized_content, COALESCE(source_app_name, '') FROM clipboard_items;
+      ''');
+    } catch (_) {
+      // Ignore SQLite instances where FTS5 extension module is disabled
+    }
   }
 
   static Future<void> _createSyncStateTable(Database db) async {
@@ -263,6 +306,28 @@ class AppDatabase {
     await db.execute('''
       CREATE INDEX IF NOT EXISTS idx_sync_states_peer_status
       ON item_sync_states(peer_device_id, sync_status)
+    ''');
+  }
+
+  static Future<void> _createEmbeddingsTable(Database db) async {
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS clipboard_embeddings (
+        clipboard_id TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        model_id TEXT NOT NULL,
+        vector BLOB NOT NULL,
+        created_at INTEGER NOT NULL,
+        PRIMARY KEY (clipboard_id, model_id),
+        FOREIGN KEY (clipboard_id) REFERENCES clipboard_items(id) ON DELETE CASCADE
+      )
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_embeddings_hash
+      ON clipboard_embeddings(content_hash)
+    ''');
+    await db.execute('''
+      CREATE INDEX IF NOT EXISTS idx_embeddings_model
+      ON clipboard_embeddings(model_id)
     ''');
   }
 
@@ -295,6 +360,12 @@ class AppDatabase {
   ) async {
     if (oldVersion < 2) {
       await _createSyncStateTable(db);
+    }
+    if (oldVersion < 3) {
+      await _createEmbeddingsTable(db);
+    }
+    if (oldVersion < 4) {
+      await _createFtsTable(db);
     }
   }
 

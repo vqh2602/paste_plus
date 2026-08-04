@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
@@ -5,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
@@ -70,7 +70,7 @@ class SidebarWidget extends ConsumerWidget {
                   key: const Key('sidebar-library-title'),
                   padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
                   child: Text(
-                    'library'.tr,
+                    context.l10n.library,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -83,31 +83,31 @@ class SidebarWidget extends ConsumerWidget {
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.tray_full,
-                  label: 'all'.tr,
+                  label: context.l10n.all,
                   selected: state.section == HistorySection.all,
                   onTap: () => selectSection(HistorySection.all),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.pin,
-                  label: 'pinned'.tr,
+                  label: context.l10n.pinned,
                   selected: state.section == HistorySection.pinned,
                   onTap: () => selectSection(HistorySection.pinned),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.photo,
-                  label: 'images'.tr,
+                  label: context.l10n.images,
                   selected: state.section == HistorySection.images,
                   onTap: () => selectSection(HistorySection.images),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.link,
-                  label: 'links'.tr,
+                  label: context.l10n.links,
                   selected: state.section == HistorySection.links,
                   onTap: () => selectSection(HistorySection.links),
                 ),
                 SidebarTileWidget(
                   icon: CupertinoIcons.chevron_left_slash_chevron_right,
-                  label: 'code'.tr,
+                  label: context.l10n.code,
                   selected: state.section == HistorySection.code,
                   onTap: () => selectSection(HistorySection.code),
                 ),
@@ -118,7 +118,7 @@ class SidebarWidget extends ConsumerWidget {
                       child: Padding(
                         padding: const EdgeInsets.only(left: 10),
                         child: Text(
-                          'collections'.tr,
+                          context.l10n.collections,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -144,7 +144,7 @@ class SidebarWidget extends ConsumerWidget {
                       for (final collection in collections)
                         SidebarTileWidget(
                           icon: CupertinoIcons.folder,
-                          label: _displayCollectionName(collection),
+                          label: _displayCollectionName(context, collection),
                           selected:
                               state.section == HistorySection.collection &&
                               state.collectionId == collection.id,
@@ -164,7 +164,7 @@ class SidebarWidget extends ConsumerWidget {
                 const SizedBox(height: 8),
                 SidebarTileWidget(
                   icon: CupertinoIcons.settings,
-                  label: 'settings'.tr,
+                  label: context.l10n.settings,
                   selected: false,
                   onTap: onOpenSettings,
                 ),
@@ -183,7 +183,7 @@ class SidebarWidget extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'local_data_only'.tr,
+                          context.l10n.local_data_only,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: 11,
@@ -205,11 +205,14 @@ class SidebarWidget extends ConsumerWidget {
     );
   }
 
-  String _displayCollectionName(ClipboardCollection collection) {
+  String _displayCollectionName(
+    BuildContext context,
+    ClipboardCollection collection,
+  ) {
     return switch (collection.id) {
-      'personal' => 'collection_personal'.tr,
-      'link' => 'collection_link'.tr,
-      'reply' => 'collection_reply'.tr,
+      'personal' => context.l10n.collection_personal,
+      'link' => context.l10n.collection_link,
+      'reply' => context.l10n.collection_reply,
       _ => collection.name,
     };
   }
@@ -226,17 +229,17 @@ class SidebarWidget extends ConsumerWidget {
         actions: [
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'rename'),
-            child: Text('rename'.tr),
+            child: Text(context.l10n.rename),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text('delete_collection'.tr),
+            child: Text(context.l10n.delete_collection),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -248,7 +251,7 @@ class SidebarWidget extends ConsumerWidget {
       final name = await showCupertinoDialog<String>(
         context: context,
         builder: (context) => CupertinoAlertDialog(
-          title: Text('rename_collection'.tr),
+          title: Text(context.l10n.rename_collection),
           content: Padding(
             padding: const EdgeInsets.only(top: 12),
             child: CupertinoTextField(controller: controller, autofocus: true),
@@ -256,12 +259,12 @@ class SidebarWidget extends ConsumerWidget {
           actions: [
             CupertinoDialogAction(
               onPressed: () => Navigator.pop(context),
-              child: Text('cancel'.tr),
+              child: Text(context.l10n.cancel),
             ),
             CupertinoDialogAction(
               isDefaultAction: true,
               onPressed: () => Navigator.pop(context, controller.text.trim()),
-              child: Text('rename'.tr),
+              child: Text(context.l10n.rename),
             ),
           ],
         ),

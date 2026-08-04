@@ -11,7 +11,7 @@ import './update_service.dart';
 enum UpdateDownloadStatus {
   idle,
   checking,
-  upToDate,       // no new version
+  upToDate, // no new version
   updateAvailable, // new version found, not yet downloading
   downloading,
   done,
@@ -27,8 +27,8 @@ class UpdateDownloadState {
   });
 
   final UpdateDownloadStatus status;
-  final String? latestVersion;   // e.g. "v1.0.8"
-  final double progress;          // 0.0 – 1.0
+  final String? latestVersion; // e.g. "v1.0.8"
+  final double progress; // 0.0 – 1.0
   final String? errorMessage;
 
   bool get isActive =>

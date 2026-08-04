@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../../clipboard_history/domain/clipboard_item.dart';
@@ -44,7 +44,7 @@ class AiContextPickerSheet extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'ai_choose_context_title'.tr,
+                        context.l10n.ai_choose_context_title,
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w700,
@@ -53,7 +53,7 @@ class AiContextPickerSheet extends StatelessWidget {
                     ),
                     CupertinoIconControl(
                       icon: CupertinoIcons.xmark,
-                      tooltip: 'close'.tr,
+                      tooltip: context.l10n.close,
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -62,7 +62,7 @@ class AiContextPickerSheet extends StatelessWidget {
               const CupertinoDivider(),
               Expanded(
                 child: items.isEmpty
-                    ? Center(child: Text('ai_no_context_items'.tr))
+                    ? Center(child: Text(context.l10n.ai_no_context_items))
                     : ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 6),
                         itemCount: items.length,

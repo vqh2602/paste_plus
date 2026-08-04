@@ -1,6 +1,6 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_content_type.dart';
 
@@ -34,7 +34,7 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
                         Row(
                           children: [
                             Text(
-                              'filter_by_type'.tr,
+                              context.l10n.filter_by_type,
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
@@ -61,7 +61,7 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
                                   ? null
                                   : () => setPopupState(selected.clear),
                               child: Text(
-                                'clear'.tr,
+                                context.l10n.clear,
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ),
@@ -83,7 +83,7 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
                                     width: itemWidth,
                                     child: CupertinoChoicePill(
                                       key: ValueKey('type-filter-${type.name}'),
-                                      label: contentTypeLabel(type),
+                                      label: contentTypeLabel(context, type),
                                       icon: contentTypeIcon(type),
                                       selected: selected.contains(type),
                                       badge: selected.contains(type)
@@ -116,7 +116,7 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
                                   vertical: 10,
                                 ),
                                 onPressed: () => Navigator.pop(popupContext),
-                                child: Text('cancel'.tr),
+                                child: Text(context.l10n.cancel),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -129,7 +129,7 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
                                   popupContext,
                                   Set.unmodifiable(selected),
                                 ),
-                                child: Text('apply_filters'.tr),
+                                child: Text(context.l10n.apply_filters),
                               ),
                             ),
                           ],
@@ -147,17 +147,18 @@ Future<Set<ClipboardContentType>?> showContentTypeFilterSheet(
   );
 }
 
-String contentTypeLabel(ClipboardContentType type) => switch (type) {
-  ClipboardContentType.text => 'text'.tr,
-  ClipboardContentType.url => 'links'.tr,
-  ClipboardContentType.email => 'email'.tr,
-  ClipboardContentType.phone => 'phone'.tr,
-  ClipboardContentType.code => 'code'.tr,
-  ClipboardContentType.color => 'color'.tr,
-  ClipboardContentType.json => 'JSON',
-  ClipboardContentType.file => 'files'.tr,
-  ClipboardContentType.image => 'images'.tr,
-};
+String contentTypeLabel(BuildContext context, ClipboardContentType type) =>
+    switch (type) {
+      ClipboardContentType.text => context.l10n.text,
+      ClipboardContentType.url => context.l10n.links,
+      ClipboardContentType.email => context.l10n.email,
+      ClipboardContentType.phone => context.l10n.phone,
+      ClipboardContentType.code => context.l10n.code,
+      ClipboardContentType.color => context.l10n.color,
+      ClipboardContentType.json => 'JSON',
+      ClipboardContentType.file => context.l10n.files,
+      ClipboardContentType.image => context.l10n.images,
+    };
 
 IconData contentTypeIcon(ClipboardContentType type) => switch (type) {
   ClipboardContentType.text => CupertinoIcons.doc_text,

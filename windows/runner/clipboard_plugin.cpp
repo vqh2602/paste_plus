@@ -172,6 +172,11 @@ void ClipboardPlugin::HandleMethodCall(
   
   if (method_call.method_name().compare("readClipboard") == 0) {
     flutter::EncodableMap map;
+
+    // sequenceNumber increments on every clipboard write, regardless of HOW
+    // the copy was triggered (keyboard shortcut, right-click, app button, etc.)
+    DWORD seqNum = GetClipboardSequenceNumber();
+    map[flutter::EncodableValue("sequenceNumber")] = flutter::EncodableValue(static_cast<int64_t>(seqNum));
     
     HWND owner = GetClipboardOwner();
     if (owner) {

@@ -306,7 +306,7 @@ class AppSettings {
       deviceDisplayName: value('deviceDisplayName', ''),
       themeMode: value('themeMode', 'system'),
       accentColor: value('accentColor', 'indigo'),
-      language: value('language', 'vi'),
+      language: value('language', 'en'),
       targetTranslationLanguage: value('targetTranslationLanguage', 'vi'),
       cloudImageHost: value('cloudImageHost', 'freeimage'),
       freeImageApiKey: value(

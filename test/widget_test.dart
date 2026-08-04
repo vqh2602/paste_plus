@@ -31,7 +31,9 @@ void main() {
       ProviderScope(
         overrides: [
           settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          clipboardRepositoryProvider.overrideWithValue(_FakeClipboardRepository()),
+          clipboardRepositoryProvider.overrideWithValue(
+            _FakeClipboardRepository(),
+          ),
         ],
         child: const ClipFlowApp(),
       ),

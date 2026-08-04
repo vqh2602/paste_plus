@@ -9,12 +9,12 @@ import '../domain/app_settings.dart';
 
 class SettingsBackupResult {
   const SettingsBackupResult.success([this.settings])
-      : isSuccess = true,
-        errorMessage = null;
+    : isSuccess = true,
+      errorMessage = null;
 
   const SettingsBackupResult.failure(this.errorMessage)
-      : isSuccess = false,
-        settings = null;
+    : isSuccess = false,
+      settings = null;
 
   final bool isSuccess;
   final String? errorMessage;
@@ -31,7 +31,9 @@ class SettingsBackupService {
     required String filePath,
   }) async {
     if (password.trim().isEmpty) {
-      return const SettingsBackupResult.failure('Mật khẩu không được để trống.');
+      return const SettingsBackupResult.failure(
+        'Mật khẩu không được để trống.',
+      );
     }
 
     try {
@@ -81,13 +83,17 @@ class SettingsBackupService {
     required String password,
   }) async {
     if (password.trim().isEmpty) {
-      return const SettingsBackupResult.failure('Mật khẩu không được để trống.');
+      return const SettingsBackupResult.failure(
+        'Mật khẩu không được để trống.',
+      );
     }
 
     try {
       final file = File(filePath);
       if (!await file.exists()) {
-        return const SettingsBackupResult.failure('Tệp cấu hình không tồn tại.');
+        return const SettingsBackupResult.failure(
+          'Tệp cấu hình không tồn tại.',
+        );
       }
 
       final zipBytes = await file.readAsBytes();
@@ -110,7 +116,9 @@ class SettingsBackupService {
       final hmacHex = manifestMap['hmac'] as String?;
 
       if (saltHex == null || ivHex == null || hmacHex == null) {
-        return const SettingsBackupResult.failure('Tệp cấu hình thiếu dữ liệu mã hóa.');
+        return const SettingsBackupResult.failure(
+          'Tệp cấu hình thiếu dữ liệu mã hóa.',
+        );
       }
 
       final salt = _fromHex(saltHex);
@@ -129,8 +137,11 @@ class SettingsBackupService {
         );
       }
 
-      final decryptedBytes =
-          _encryptStream(ciphertext, Uint8List.fromList(key), iv);
+      final decryptedBytes = _encryptStream(
+        ciphertext,
+        Uint8List.fromList(key),
+        iv,
+      );
       final jsonString = utf8.decode(decryptedBytes);
       final settings = AppSettings.fromJson(jsonString);
 
@@ -166,8 +177,10 @@ class SettingsBackupService {
 
     while (offset < keyLength) {
       final blockIndexBytes = ByteData(4)..setUint32(0, blockIndex, Endian.big);
-      final buffer =
-          Uint8List.fromList([...salt, ...blockIndexBytes.buffer.asUint8List()]);
+      final buffer = Uint8List.fromList([
+        ...salt,
+        ...blockIndexBytes.buffer.asUint8List(),
+      ]);
       var u = hmac.convert(buffer).bytes;
       final block = Uint8List.fromList(u);
 
@@ -178,8 +191,9 @@ class SettingsBackupService {
         }
       }
 
-      final bytesToCopy =
-          (keyLength - offset < block.length) ? (keyLength - offset) : block.length;
+      final bytesToCopy = (keyLength - offset < block.length)
+          ? (keyLength - offset)
+          : block.length;
       result.setRange(offset, offset + bytesToCopy, block);
       offset += bytesToCopy;
       blockIndex++;
@@ -213,9 +227,7 @@ class SettingsBackupService {
   }
 
   String _toHex(List<int> bytes) {
-    return bytes
-        .map((b) => b.toRadixString(16).padLeft(2, '0'))
-        .join();
+    return bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
   }
 
   Uint8List _fromHex(String hex) {
@@ -312,24 +324,37 @@ class SettingsBackupService {
     var offset = 0;
 
     while (offset + 30 <= bytes.length) {
-      final sig = ByteData.sublistView(bytes, offset, offset + 4)
-          .getUint32(0, Endian.little);
+      final sig = ByteData.sublistView(
+        bytes,
+        offset,
+        offset + 4,
+      ).getUint32(0, Endian.little);
       if (sig != 0x04034b50) break;
 
-      final compSize = ByteData.sublistView(bytes, offset + 18, offset + 22)
-          .getUint32(0, Endian.little);
-      final filenameLen = ByteData.sublistView(bytes, offset + 26, offset + 28)
-          .getUint16(0, Endian.little);
-      final extraLen = ByteData.sublistView(bytes, offset + 28, offset + 30)
-          .getUint16(0, Endian.little);
+      final compSize = ByteData.sublistView(
+        bytes,
+        offset + 18,
+        offset + 22,
+      ).getUint32(0, Endian.little);
+      final filenameLen = ByteData.sublistView(
+        bytes,
+        offset + 26,
+        offset + 28,
+      ).getUint16(0, Endian.little);
+      final extraLen = ByteData.sublistView(
+        bytes,
+        offset + 28,
+        offset + 30,
+      ).getUint16(0, Endian.little);
 
       final filenameStart = offset + 30;
       final dataStart = filenameStart + filenameLen + extraLen;
 
       if (dataStart + compSize > bytes.length) break;
 
-      final filename =
-          utf8.decode(bytes.sublist(filenameStart, filenameStart + filenameLen));
+      final filename = utf8.decode(
+        bytes.sublist(filenameStart, filenameStart + filenameLen),
+      );
       final data = bytes.sublist(dataStart, dataStart + compSize);
 
       result[filename] = Uint8List.fromList(data);

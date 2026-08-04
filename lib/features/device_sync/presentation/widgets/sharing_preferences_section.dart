@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../settings/presentation/widgets/settings_helpers.dart';
 
@@ -21,7 +21,7 @@ class SharingPreferencesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CupertinoSectionLabel('this_device'.tr),
+        CupertinoSectionLabel(context.l10n.this_device),
         SettingsGroupWidget(
           children: [
             _DeviceNameRow(
@@ -34,8 +34,8 @@ class SharingPreferencesSection extends ConsumerWidget {
               ),
             ),
             SwitchRowWidget(
-              title: 'make_device_discoverable'.tr,
-              subtitle: 'make_device_discoverable_sub'.tr,
+              title: context.l10n.make_device_discoverable,
+              subtitle: context.l10n.make_device_discoverable_sub,
               value: settings.deviceDiscoverable,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -45,8 +45,8 @@ class SharingPreferencesSection extends ConsumerWidget {
                   : null,
             ),
             SwitchRowWidget(
-              title: 'pause_all_connections'.tr,
-              subtitle: 'pause_all_connections_sub'.tr,
+              title: context.l10n.pause_all_connections,
+              subtitle: context.l10n.pause_all_connections_sub,
               value: settings.allConnectionsPaused,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -59,12 +59,12 @@ class SharingPreferencesSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('connection_and_sync'.tr),
+        CupertinoSectionLabel(context.l10n.connection_and_sync),
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'auto_connect_trusted'.tr,
-              subtitle: 'auto_connect_trusted_sub'.tr,
+              title: context.l10n.auto_connect_trusted,
+              subtitle: context.l10n.auto_connect_trusted_sub,
               value: settings.autoConnectTrustedDevices,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -75,8 +75,8 @@ class SharingPreferencesSection extends ConsumerWidget {
                   : null,
             ),
             SwitchRowWidget(
-              title: 'auto_sync_new_clipboard'.tr,
-              subtitle: 'auto_sync_new_clipboard_sub'.tr,
+              title: context.l10n.auto_sync_new_clipboard,
+              subtitle: context.l10n.auto_sync_new_clipboard_sub,
               value: settings.autoSyncClipboard,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -86,8 +86,8 @@ class SharingPreferencesSection extends ConsumerWidget {
                   : null,
             ),
             SwitchRowWidget(
-              title: 'sync_pinned_only'.tr,
-              subtitle: 'sync_pinned_only_sub'.tr,
+              title: context.l10n.sync_pinned_only,
+              subtitle: context.l10n.sync_pinned_only_sub,
               value: settings.syncPinnedItemsOnly,
               onChanged: enabled && settings.autoSyncClipboard
                   ? (value) => updateSettings(
@@ -97,7 +97,7 @@ class SharingPreferencesSection extends ConsumerWidget {
                   : null,
             ),
             SwitchRowWidget(
-              title: 'allow_receiving_images'.tr,
+              title: context.l10n.allow_receiving_images,
               value: settings.allowReceivingImages,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -109,7 +109,7 @@ class SharingPreferencesSection extends ConsumerWidget {
             ),
             if (settings.allowReceivingImages)
               NumberRowWidget(
-                title: 'sharing_image_limit'.tr,
+                title: context.l10n.sharing_image_limit,
                 value: settings.sharingMaxImageMb,
                 suffix: 'MB',
                 min: 1,
@@ -122,11 +122,11 @@ class SharingPreferencesSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 22),
-        CupertinoSectionLabel('sharing_notifications'.tr),
+        CupertinoSectionLabel(context.l10n.sharing_notifications),
         SettingsGroupWidget(
           children: [
             SwitchRowWidget(
-              title: 'notify_device_connected'.tr,
+              title: context.l10n.notify_device_connected,
               value: settings.notifyDeviceConnected,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -137,7 +137,7 @@ class SharingPreferencesSection extends ConsumerWidget {
                   : null,
             ),
             SwitchRowWidget(
-              title: 'notify_clipboard_received'.tr,
+              title: context.l10n.notify_clipboard_received,
               value: settings.notifyClipboardReceived,
               onChanged: enabled
                   ? (value) => updateSettings(
@@ -193,8 +193,8 @@ class _DeviceNameRowState extends State<_DeviceNameRow> {
   @override
   Widget build(BuildContext context) {
     return SettingsTileWidget(
-      title: 'device_display_name'.tr,
-      subtitle: 'device_display_name_sub'.tr,
+      title: context.l10n.device_display_name,
+      subtitle: context.l10n.device_display_name_sub,
       trailing: SizedBox(
         width: 210,
         child: CupertinoTextField(

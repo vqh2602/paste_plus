@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -6,11 +7,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_feature_request.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
 import 'widgets/ai_context_banner_widget.dart';
@@ -19,6 +20,7 @@ import 'widgets/ai_conversation_history_action.dart';
 import 'widgets/ai_message_tile_widget.dart';
 import 'widgets/ai_mobile_toolbar.dart';
 import 'widgets/ai_no_model_overlay.dart';
+import 'widgets/ai_performance_mode_picker.dart';
 import 'widgets/ai_preset_pills_widget.dart';
 
 enum _ConversationAction { rename, togglePin, delete }
@@ -71,10 +73,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
   Future<void> _runFeatureAction(AiFeatureGroup group, String option) async {
     final aiState = ref.read(aiControllerProvider);
-    final isEn = AppTranslations.currentLanguage == 'en';
-    final promptText = isEn
-        ? 'Perform "${group.title}" with option "$option".'
-        : 'Thực hiện "${group.title}" với tùy chọn "$option".';
+    final promptText = 'Perform "${group.title}" with option "$option".';
 
     var contextItem = aiState.activeClipboardContext;
 
@@ -85,7 +84,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
           .performOcr(contextItem!);
       if (!mounted) return;
       if (extracted == null || extracted.trim().isEmpty) {
-        showCupertinoNotice(context, 'ocr_empty'.tr);
+        showCupertinoNotice(context, context.l10n.ocr_empty);
         return;
       }
       contextItem = contextItem.copyWith(
@@ -99,6 +98,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         .sendUserMessage(
           promptText,
           featureGroup: group,
+          featureRequest: group == AiFeatureGroup.translate
+              ? AiTranslateRequest(targetLocaleTag: option)
+              : null,
           selectedOption: option,
           contextItem: contextItem,
         );
@@ -116,12 +118,12 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
             onPressed: () {
               Navigator.pop(context, opt);
             },
-            child: Text(opt),
+            child: Text(group.optionLabel(opt)),
           );
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     ).then((selectedOpt) {
@@ -162,21 +164,25 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
               if (selected != null) {
                 return CupertinoActionSheet(
                   title: Text(selected.title),
-                  message: Text('ai_conversation_options'.tr),
+                  message: Text(context.l10n.ai_conversation_options),
                   actions: [
                     CupertinoActionSheetAction(
                       onPressed: () => Navigator.pop(context, (
                         conversation: selected,
                         action: _ConversationAction.rename,
                       )),
-                      child: Text('rename'.tr),
+                      child: Text(context.l10n.rename),
                     ),
                     CupertinoActionSheetAction(
                       onPressed: () => Navigator.pop(context, (
                         conversation: selected,
                         action: _ConversationAction.togglePin,
                       )),
-                      child: Text(selected.isPinned ? 'unpin'.tr : 'pin'.tr),
+                      child: Text(
+                        selected.isPinned
+                            ? context.l10n.unpin
+                            : context.l10n.pin,
+                      ),
                     ),
                     CupertinoActionSheetAction(
                       isDestructiveAction: true,
@@ -184,20 +190,20 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         conversation: selected,
                         action: _ConversationAction.delete,
                       )),
-                      child: Text('delete'.tr),
+                      child: Text(context.l10n.delete),
                     ),
                   ],
                   cancelButton: CupertinoActionSheetAction(
                     onPressed: () =>
                         setModalState(() => actionConversation = null),
-                    child: Text('back'.tr),
+                    child: Text(context.l10n.back),
                   ),
                 );
               }
 
               return CupertinoActionSheet(
-                title: Text('ai_conversation_history'.tr),
-                message: Text('ai_history_subtitle'.tr),
+                title: Text(context.l10n.ai_conversation_history),
+                message: Text(context.l10n.ai_history_subtitle),
                 actions: [
                   CupertinoActionSheetAction(
                     isDefaultAction: true,
@@ -207,7 +213,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                           .read(aiControllerProvider.notifier)
                           .startNewConversation();
                     },
-                    child: Text('ai_new_conversation'.tr),
+                    child: Text(context.l10n.ai_new_conversation),
                   ),
 
                   for (final conversation in conversations)
@@ -226,7 +232,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 ],
                 cancelButton: CupertinoActionSheetAction(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('cancel'.tr),
+                  child: Text(context.l10n.cancel),
                 ),
               );
             },
@@ -247,16 +253,16 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
         final title = await showCupertinoDialog<String>(
           context: context,
           builder: (context) => CupertinoAlertDialog(
-            title: Text('ai_rename_dialog_title'.tr),
+            title: Text(context.l10n.ai_rename_dialog_title),
             content: CupertinoTextField(controller: controller),
             actions: [
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context),
-                child: Text('cancel'.tr),
+                child: Text(context.l10n.cancel),
               ),
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context, controller.text),
-                child: Text('save'.tr),
+                child: Text(context.l10n.save),
               ),
             ],
           ),
@@ -283,13 +289,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
     showCupertinoModalPopup<void>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: Text('ai_gen_settings_title'.tr),
-        message: Text('ai_gen_settings_sub'.tr),
+        title: Text(context.l10n.ai_gen_settings_title),
+        message: Text(context.l10n.ai_gen_settings_sub),
         actions: [
           for (final profile in [
-            ('ai_profile_precise'.tr, 0.2, 2048),
-            ('ai_profile_balanced'.tr, 0.55, 4096),
-            ('ai_profile_creative'.tr, 0.85, 8192),
+            (context.l10n.ai_profile_precise, 0.2, 2048),
+            (context.l10n.ai_profile_balanced, 0.55, 4096),
+            (context.l10n.ai_profile_creative, 0.85, 8192),
           ]) ...[
             () {
               final isSelected =
@@ -336,7 +342,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
 
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -345,6 +351,46 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     ref.listen<AiState>(aiControllerProvider, (previous, next) {
+      if (next.pendingToolCall != null &&
+          previous?.pendingToolCall != next.pendingToolCall) {
+        final pending = next.pendingToolCall!;
+        final toolDisplayName = switch (pending.toolName) {
+          'pin_clipboard' => context.l10n.pin,
+          'delete_clipboard_item' => context.l10n.delete,
+          'add_to_collection' => context.l10n.add_to_collection,
+          _ => pending.toolName,
+        };
+
+        showCupertinoDialog<bool>(
+          context: context,
+          builder: (ctx) => CupertinoAlertDialog(
+            title: Text(context.l10n.aiTitle),
+            content: Text('$toolDisplayName\n${pending.arguments}'),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () {
+                  Navigator.pop(ctx, false);
+                  ref
+                      .read(aiControllerProvider.notifier)
+                      .rejectPendingToolCall();
+                },
+                child: Text(context.l10n.cancel),
+              ),
+              CupertinoDialogAction(
+                isDestructiveAction: pending.toolName.contains('delete'),
+                onPressed: () {
+                  Navigator.pop(ctx, true);
+                  ref
+                      .read(aiControllerProvider.notifier)
+                      .approvePendingToolCall();
+                },
+                child: const Text('Xác nhận'),
+              ),
+            ],
+          ),
+        );
+      }
+
       final prevLen = previous?.chatMessages.length ?? 0;
       final nextLen = next.chatMessages.length;
       final prevLastContent = previous?.chatMessages.lastOrNull?.content;
@@ -442,13 +488,13 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                       CupertinoIconControl(
                         icon: CupertinoIcons.clock,
                         size: 16,
-                        tooltip: 'ai_conversation_history'.tr,
+                        tooltip: context.l10n.ai_conversation_history,
                         onPressed: _showConversations,
                       ),
                       CupertinoIconControl(
                         icon: CupertinoIcons.slider_horizontal_3,
                         size: 16,
-                        tooltip: 'ai_config'.tr,
+                        tooltip: context.l10n.ai_config,
                         onPressed: _showGenerationSettings,
                       ),
                       CupertinoButton(
@@ -459,7 +505,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                             const Icon(CupertinoIcons.sidebar_left, size: 14),
                             const SizedBox(width: 4),
                             Text(
-                              'main_window'.tr,
+                              context.l10n.main_window,
                               style: const TextStyle(fontSize: 12),
                             ),
                           ],
@@ -506,7 +552,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         .read(historyControllerProvider.notifier)
                         .copy(aiState.activeClipboardContext!);
                     if (!context.mounted) return;
-                    showCupertinoNotice(context, 'copied'.tr);
+                    showCupertinoNotice(context, context.l10n.copied);
                   },
                   onClear: () {
                     ref
@@ -563,7 +609,7 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                                 : null,
                             onCopy: (content) {
                               Clipboard.setData(ClipboardData(text: content));
-                              showCupertinoNotice(context, 'copied'.tr);
+                              showCupertinoNotice(context, context.l10n.copied);
                             },
                             onPaste: (content) async {
                               final desktop = ref.read(
@@ -587,22 +633,43 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: CupertinoTextField(
-                        controller: _inputController,
-                        focusNode: _focusNode,
-                        placeholder: 'ai_send_prompt'.tr,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: resolveColor(context, ClipFlowColors.surface),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: resolveColor(context, ClipFlowColors.border),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AiPerformanceModePicker(
+                            value: aiState.performanceMode,
+                            onChanged: ref
+                                .read(aiControllerProvider.notifier)
+                                .setPerformanceMode,
                           ),
-                        ),
-                        onSubmitted: (_) => _submitPrompt(),
+                          CupertinoTextField(
+                            controller: _inputController,
+                            focusNode: _focusNode,
+                            placeholder: context.l10n.ai_send_prompt,
+                            minLines: 1,
+                            maxLines: 3,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: TextInputAction.newline,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.surface,
+                              ),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.border,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 10),

@@ -64,6 +64,7 @@ void main() {
   test('ranks direct image URL items above code snippets and debug logs', () {
     final results = ranker.rank(
       prompt: 'tìm cho tôi các bản ghi về link ảnh',
+      preferImageUrls: true,
       items: [
         _item(
           'log_code',
@@ -95,7 +96,13 @@ void main() {
 
     expect(results.first.id, anyOf('img_url_1', 'img_url_2'));
     expect(results[1].id, anyOf('img_url_1', 'img_url_2'));
-    expect(results.indexWhere((item) => item.id == 'img_url_1'), lessThan(results.indexWhere((item) => item.id == 'curl_code')));
-    expect(results.indexWhere((item) => item.id == 'img_url_1'), lessThan(results.indexWhere((item) => item.id == 'log_code')));
+    expect(
+      results.indexWhere((item) => item.id == 'img_url_1'),
+      lessThan(results.indexWhere((item) => item.id == 'curl_code')),
+    );
+    expect(
+      results.indexWhere((item) => item.id == 'img_url_1'),
+      lessThan(results.indexWhere((item) => item.id == 'log_code')),
+    );
   });
 }

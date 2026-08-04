@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/platform/shortcut_config.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import 'settings_helpers.dart';
@@ -152,12 +152,12 @@ class _ShortcutRecorderDialogState extends State<ShortcutRecorderDialog> {
   Widget build(BuildContext context) {
     final candidate = _candidate;
     return CupertinoAlertDialog(
-      title: Text('record_shortcut_title'.tr),
+      title: Text(context.l10n.record_shortcut_title),
       content: Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Column(
           children: [
-            Text('record_shortcut_msg'.tr),
+            Text(context.l10n.record_shortcut_msg),
             const SizedBox(height: 14),
             Container(
               key: const Key('shortcut-recording-value'),
@@ -169,7 +169,7 @@ class _ShortcutRecorderDialogState extends State<ShortcutRecorderDialog> {
               ),
               child: Text(
                 candidate == null
-                    ? 'press_shortcut'.tr
+                    ? context.l10n.press_shortcut
                     : shortcutLabel(candidate),
                 style: const TextStyle(
                   fontSize: 16,
@@ -180,7 +180,9 @@ class _ShortcutRecorderDialogState extends State<ShortcutRecorderDialog> {
             if (_errorKey != null) ...[
               const SizedBox(height: 8),
               Text(
-                _errorKey!.tr,
+                _errorKey == 'system_hotkey_needs_modifier'
+                    ? context.l10n.system_hotkey_needs_modifier
+                    : context.l10n.choose_non_modifier,
                 style: const TextStyle(
                   fontSize: 12,
                   color: CupertinoColors.systemRed,
@@ -193,7 +195,7 @@ class _ShortcutRecorderDialogState extends State<ShortcutRecorderDialog> {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
         CupertinoDialogAction(
           key: const Key('shortcut-recording-confirm'),
@@ -201,7 +203,7 @@ class _ShortcutRecorderDialogState extends State<ShortcutRecorderDialog> {
           onPressed: candidate != null && _errorKey == null
               ? () => Navigator.pop(context, candidate)
               : null,
-          child: Text('save'.tr),
+          child: Text(context.l10n.save),
         ),
       ],
     );

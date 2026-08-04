@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -6,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
@@ -134,14 +134,14 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     final collections =
         ref.read(collectionsControllerProvider).value ?? const [];
     if (collections.isEmpty) {
-      showCupertinoNotice(context, 'no_collections'.tr);
+      showCupertinoNotice(context, context.l10n.no_collections);
       return;
     }
 
     final collection = await showCupertinoModalPopup<ClipboardCollection>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: Text('add_to_collection'.tr),
+        title: Text(context.l10n.add_to_collection),
         actions: collections.map((col) {
           return CupertinoActionSheetAction(
             onPressed: () => Navigator.of(context).pop(col),
@@ -150,7 +150,7 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -160,7 +160,7 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
       if (!mounted) return;
-      showCupertinoNotice(context, 'added_to_collection'.tr);
+      showCupertinoNotice(context, context.l10n.added_to_collection);
     }
   }
 
@@ -175,39 +175,39 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
           if (isImage) ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'ocr'),
-              child: Text('extract_ocr'.tr),
+              child: Text(context.l10n.extract_ocr),
             ),
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'cloud_upload'),
-              child: Text('upload_cloud'.tr),
+              child: Text(context.l10n.upload_cloud),
             ),
           ] else ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'translate'),
-              child: Text('translate_text'.tr),
+              child: Text(context.l10n.translate_text),
             ),
           ],
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ask_ai'),
-            child: Text('ask_ai'.tr),
+            child: Text(context.l10n.ask_ai),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'copy_paste'),
-            child: Text('copy_and_paste'.tr),
+            child: Text(context.l10n.copy_and_paste),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'collection'),
-            child: Text('add_to_collection'.tr),
+            child: Text(context.l10n.add_to_collection),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text('delete'.tr),
+            child: Text(context.l10n.delete),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -222,7 +222,7 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          text != null ? 'ocr_success'.tr : 'ocr_empty'.tr,
+          text != null ? context.l10n.ocr_success : context.l10n.ocr_empty,
         );
       }
     } else if (action == 'cloud_upload') {
@@ -230,7 +230,9 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          url != null ? 'upload_cloud_success'.tr : 'upload_cloud_failed'.tr,
+          url != null
+              ? context.l10n.upload_cloud_success
+              : context.l10n.upload_cloud_failed,
         );
       }
     } else if (action == 'translate') {
@@ -242,7 +244,9 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          text != null ? 'translate_success'.tr : 'translate_failed'.tr,
+          text != null
+              ? context.l10n.translate_success
+              : context.l10n.translate_failed,
         );
       }
     } else if (action == 'copy_paste') {

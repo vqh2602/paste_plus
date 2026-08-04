@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
+import 'package:flutter/widgets.dart';
 
 import '../core/database/app_database.dart';
 import '../core/platform/desktop_integration_service.dart';
@@ -11,8 +13,14 @@ import '../core/services/ai_debug_service.dart';
 import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
+import '../features/ai/domain/ai_model_info.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
+import '../features/ai/services/ai_utility_classifier.dart';
+import '../features/ai/services/clipboard_embedding_indexer.dart';
+import '../features/ai/services/clipboard_vector_store.dart';
+import '../features/ai/services/hybrid_semantic_search.dart';
 import '../features/ai/services/local_ai_engine.dart';
+import '../features/ai/services/llama_inference_service.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import '../features/clipboard_history/domain/clipboard_item.dart';
 import '../features/clipboard_history/domain/clipboard_payload.dart';
@@ -63,7 +71,12 @@ final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
 });
 
 final desktopIntegrationProvider = Provider<DesktopIntegrationService>((ref) {
-  final service = DesktopIntegrationService(ref.watch(loggingServiceProvider));
+  final service = DesktopIntegrationService(
+    ref.watch(loggingServiceProvider),
+    () => lookupAppLocalizations(
+      Locale(ref.read(settingsControllerProvider).language),
+    ),
+  );
   ref.onDispose(service.dispose);
   return service;
 });
@@ -118,6 +131,7 @@ final historyControllerProvider =
         ref.watch(clipboardWatcherProvider),
         () => ref.read(settingsControllerProvider),
         onItemStored: (item) async {
+          unawaited(ref.read(clipboardEmbeddingIndexerProvider).enqueue(item));
           final settings = ref.read(settingsControllerProvider);
           if (!settings.localSharingEnabled ||
               settings.allConnectionsPaused ||
@@ -247,10 +261,62 @@ final aiModelDownloaderProvider = Provider<AiModelDownloaderService>((ref) {
   return AiModelDownloaderService();
 });
 
+final clipboardVectorStoreProvider = Provider<ClipboardVectorStore>((ref) {
+  return ClipboardVectorStore(ref.watch(appDatabaseProvider));
+});
+
+final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
+  return HybridSemanticSearch(
+    ref.watch(clipboardVectorStoreProvider),
+    ref.watch(appDatabaseProvider),
+  );
+});
+
+final chatInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final utilityInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final embeddingInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final embeddingAiEngineProvider = Provider<LocalAiEngine>((ref) {
+  final engine = LocalAiEngine(
+    ref.watch(aiModelDownloaderProvider),
+    ref.read(aiDebugControllerProvider.notifier),
+    ref.watch(embeddingInferenceProvider),
+  );
+  ref.onDispose(engine.dispose);
+  return engine;
+});
+
+final clipboardEmbeddingIndexerProvider = Provider<ClipboardEmbeddingIndexer>((
+  ref,
+) {
+  final model = AiModelInfo.findById(
+    ref.watch(settingsControllerProvider).selectedAiModel,
+  );
+  return ClipboardEmbeddingIndexer(
+    vectorStore: ref.watch(clipboardVectorStoreProvider),
+    modelId: model.id,
+    embedder: (text) =>
+        ref.read(embeddingAiEngineProvider).embedText(model: model, text: text),
+    isBusy: () => ref.read(aiControllerProvider).isGenerating,
+  );
+});
+
 final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
   final engine = LocalAiEngine(
     ref.watch(aiModelDownloaderProvider),
     ref.read(aiDebugControllerProvider.notifier),
+    ref.watch(chatInferenceProvider),
+    ref.watch(hybridSemanticSearchProvider),
+    ref.watch(clipboardRepositoryProvider),
+    ref.watch(utilityInferenceProvider),
   );
   ref.onDispose(engine.dispose);
   return engine;
@@ -262,6 +328,13 @@ final aiConversationRepositoryProvider = Provider<AiConversationRepository>((
   return const AiConversationRepository();
 });
 
+final aiUtilityClassifierProvider = Provider<AiUtilityClassifier>((ref) {
+  return AiUtilityClassifier(
+    ref.watch(aiModelDownloaderProvider),
+    ref.watch(utilityInferenceProvider),
+  );
+});
+
 final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
   ref,
 ) {
@@ -269,6 +342,7 @@ final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
     ref.watch(aiModelDownloaderProvider),
     ref.watch(localAiEngineProvider),
     ref.watch(aiConversationRepositoryProvider),
+    ref.watch(aiUtilityClassifierProvider),
     ref,
   );
 });

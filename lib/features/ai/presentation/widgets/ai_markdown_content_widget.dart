@@ -1,9 +1,9 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show SelectableText;
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 
 class AiMarkdownContentWidget extends StatelessWidget {
@@ -116,7 +116,7 @@ class _MarkdownBlockWidget extends StatelessWidget {
             icon: CupertinoIcons.doc_on_doc,
             size: 13,
             color: secondary,
-            tooltip: 'copy_part'.tr,
+            tooltip: context.l10n.copy_part,
             onPressed: block.copyText.isEmpty
                 ? null
                 : () => onCopy(block.copyText),
@@ -146,7 +146,8 @@ class _ResultCardWidget extends StatelessWidget {
     final urlMatch = RegExp(r'https?://[^\s<"]+').firstMatch(cleanDisplay);
     final url = urlMatch?.group(0);
     final isImgUrl = url != null && _isImageUrl(url);
-    final isCode = cleanDisplay.contains('curl ') ||
+    final isCode =
+        cleanDisplay.contains('curl ') ||
         cleanDisplay.contains('flutter ') ||
         cleanDisplay.contains('build/macos');
 
@@ -158,16 +159,24 @@ class _ResultCardWidget extends StatelessWidget {
     final borderColor = resolveColor(context, ClipFlowColors.border);
 
     final (badgeIcon, badgeLabel, badgeColor) = isImgUrl
-        ? (CupertinoIcons.photo, 'image_link'.tr, CupertinoColors.systemIndigo)
+        ? (
+            CupertinoIcons.photo,
+            context.l10n.image_link,
+            CupertinoColors.systemIndigo,
+          )
         : url != null
-            ? (CupertinoIcons.link, 'url'.tr, CupertinoColors.activeBlue)
-            : isCode
-                ? (
-                    CupertinoIcons.chevron_left_slash_chevron_right,
-                    'code'.tr,
-                    CupertinoColors.systemOrange,
-                  )
-                : (CupertinoIcons.doc_text, 'text'.tr, CupertinoColors.systemGrey);
+        ? (CupertinoIcons.link, context.l10n.url, CupertinoColors.activeBlue)
+        : isCode
+        ? (
+            CupertinoIcons.chevron_left_slash_chevron_right,
+            context.l10n.code,
+            CupertinoColors.systemOrange,
+          )
+        : (
+            CupertinoIcons.doc_text,
+            context.l10n.text,
+            CupertinoColors.systemGrey,
+          );
 
     final bodyText = _extractBodyText(cleanDisplay, url, appName);
     final cleanCopy = _stripInlineMarkdown(copyText);
@@ -187,8 +196,10 @@ class _ResultCardWidget extends StatelessWidget {
             children: [
               if (listMarker != null && listMarker!.isNotEmpty) ...[
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(6),
@@ -205,8 +216,7 @@ class _ResultCardWidget extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: badgeColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(6),
@@ -243,7 +253,7 @@ class _ResultCardWidget extends StatelessWidget {
                 icon: CupertinoIcons.doc_on_doc,
                 size: 13,
                 color: secondary,
-                tooltip: 'copy_part'.tr,
+                tooltip: context.l10n.copy_part,
                 onPressed: cleanCopy.isEmpty ? null : () => onCopy(cleanCopy),
               ),
               if (url != null) ...[
@@ -276,8 +286,9 @@ class _ResultCardWidget extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: badgeColor.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: badgeColor.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: badgeColor.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -369,7 +380,9 @@ String? _extractAppName(String text) {
       return name;
     }
   }
-  final colonMatch = RegExp(r'^([A-Z][a-zA-Z0-9_\s]{1,20}):\s+').firstMatch(cleaned);
+  final colonMatch = RegExp(
+    r'^([A-Z][a-zA-Z0-9_\s]{1,20}):\s+',
+  ).firstMatch(cleaned);
   if (colonMatch != null) {
     final name = colonMatch.group(1)!.trim();
     if (name != 'LINK ÁNH' &&

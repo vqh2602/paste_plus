@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -6,7 +7,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
 
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/services/update_service.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/domain/clipboard_content_type.dart';
@@ -20,17 +20,18 @@ Future<void> updateSettings(
   await ref.read(settingsControllerProvider.notifier).update(change);
 }
 
-String typeNameHelper(ClipboardContentType type) => switch (type) {
-  ClipboardContentType.text => 'text'.tr,
-  ClipboardContentType.url => 'url'.tr,
-  ClipboardContentType.email => 'email'.tr,
-  ClipboardContentType.phone => 'phone'.tr,
-  ClipboardContentType.code => 'code'.tr,
-  ClipboardContentType.color => 'color'.tr,
-  ClipboardContentType.json => 'json'.tr,
-  ClipboardContentType.file => 'file'.tr,
-  ClipboardContentType.image => 'image'.tr,
-};
+String typeNameHelper(BuildContext context, ClipboardContentType type) =>
+    switch (type) {
+      ClipboardContentType.text => context.l10n.text,
+      ClipboardContentType.url => context.l10n.url,
+      ClipboardContentType.email => context.l10n.email,
+      ClipboardContentType.phone => context.l10n.phone,
+      ClipboardContentType.code => context.l10n.code,
+      ClipboardContentType.color => context.l10n.color,
+      ClipboardContentType.json => context.l10n.json,
+      ClipboardContentType.file => context.l10n.file,
+      ClipboardContentType.image => context.l10n.image,
+    };
 
 class SettingsGroupWidget extends StatelessWidget {
   const SettingsGroupWidget({super.key, required this.children});
@@ -211,7 +212,7 @@ class PickerRowWidget<T> extends StatelessWidget {
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -349,7 +350,7 @@ void showPrivacyPolicyDialog(BuildContext context) {
               size: 20,
             ),
             const SizedBox(width: 8),
-            Text('privacy_policy'.tr),
+            Text(context.l10n.privacy_policy),
           ],
         ),
       ),
@@ -358,7 +359,7 @@ void showPrivacyPolicyDialog(BuildContext context) {
         height: 280,
         child: SingleChildScrollView(
           child: Text(
-            'privacy_policy_text'.tr,
+            context.l10n.privacy_policy_text,
             style: const TextStyle(fontSize: 12, height: 1.4),
           ),
         ),
@@ -367,7 +368,7 @@ void showPrivacyPolicyDialog(BuildContext context) {
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('close'.tr),
+          child: Text(context.l10n.close),
         ),
       ],
     ),
@@ -389,7 +390,7 @@ Future<void> showLicensesDialog(BuildContext context) async {
               size: 20,
             ),
             const SizedBox(width: 8),
-            Text('open_source_licenses'.tr),
+            Text(context.l10n.open_source_licenses),
           ],
         ),
       ),
@@ -431,7 +432,7 @@ Future<void> showLicensesDialog(BuildContext context) async {
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('close'.tr),
+          child: Text(context.l10n.close),
         ),
       ],
     ),
@@ -476,16 +477,16 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
   final result = await showCupertinoDialog<bool>(
     context: context,
     builder: (context) => CupertinoAlertDialog(
-      title: Text('export_backup_title'.tr),
+      title: Text(context.l10n.export_backup_title),
       content: Padding(
         padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
-            Text('export_backup_prompt'.tr),
+            Text(context.l10n.export_backup_prompt),
             const SizedBox(height: 12),
             CupertinoTextField(
               controller: passwordController,
-              placeholder: 'password_placeholder'.tr,
+              placeholder: context.l10n.password_placeholder,
               obscureText: true,
             ),
           ],
@@ -494,12 +495,12 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.pop(context, true),
-          child: Text('export'.tr),
+          child: Text(context.l10n.export),
         ),
       ],
     ),
@@ -520,8 +521,8 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
         showCupertinoNotice(
           context,
           res.isSuccess
-              ? 'backup_exported'.tr
-              : (res.errorMessage ?? 'backup_export_failed'.tr),
+              ? context.l10n.backup_exported
+              : (res.errorMessage ?? context.l10n.backup_export_failed),
         );
       }
     }
@@ -537,16 +538,16 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
   final result = await showCupertinoDialog<bool>(
     context: context,
     builder: (context) => CupertinoAlertDialog(
-      title: Text('import_backup_title'.tr),
+      title: Text(context.l10n.import_backup_title),
       content: Padding(
         padding: const EdgeInsets.only(top: 12),
         child: Column(
           children: [
-            Text('import_backup_prompt'.tr),
+            Text(context.l10n.import_backup_prompt),
             const SizedBox(height: 12),
             CupertinoTextField(
               controller: passwordController,
-              placeholder: 'password_placeholder'.tr,
+              placeholder: context.l10n.password_placeholder,
               obscureText: true,
             ),
           ],
@@ -555,12 +556,12 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
         CupertinoDialogAction(
           isDefaultAction: true,
           onPressed: () => Navigator.pop(context, true),
-          child: Text('import'.tr),
+          child: Text(context.l10n.import),
         ),
       ],
     ),
@@ -581,8 +582,8 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
       showCupertinoNotice(
         context,
         res.isSuccess
-            ? 'backup_imported'.tr
-            : (res.errorMessage ?? 'backup_import_failed'.tr),
+            ? context.l10n.backup_imported
+            : (res.errorMessage ?? context.l10n.backup_import_failed),
       );
     }
   }
@@ -602,12 +603,12 @@ Future<bool?> confirmDeleteDialog(
       actions: [
         CupertinoDialogAction(
           onPressed: () => Navigator.pop(context, false),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
         CupertinoDialogAction(
           isDestructiveAction: true,
           onPressed: () => Navigator.pop(context, true),
-          child: Text('delete'.tr),
+          child: Text(context.l10n.delete),
         ),
       ],
     ),

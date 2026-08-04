@@ -1,10 +1,10 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
@@ -33,7 +33,9 @@ class QuickClipboardCardWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final color = _typeColor(item.contentType);
     final query = ref.watch(historyControllerProvider).query;
-    final parsedColor = item.contentType == ClipboardContentType.color ? ColorParser.parse(item.content) : null;
+    final parsedColor = item.contentType == ClipboardContentType.color
+        ? ColorParser.parse(item.content)
+        : null;
 
     return SizedBox(
       width: 292,
@@ -91,7 +93,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _typeName(item.contentType),
+                        _typeName(context, item.contentType),
                         style: const TextStyle(
                           color: CupertinoColors.white,
                           fontWeight: FontWeight.w700,
@@ -193,7 +195,10 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                   color: parsedColor,
                                   borderRadius: BorderRadius.circular(9),
                                   border: Border.all(
-                                    color: resolveColor(context, ClipFlowColors.border),
+                                    color: resolveColor(
+                                      context,
+                                      ClipFlowColors.border,
+                                    ),
                                     width: 1.0,
                                   ),
                                 ),
@@ -250,7 +255,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        item.sourceAppName ?? 'this_device'.tr,
+                        item.sourceAppName ?? context.l10n.this_device,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 11,
@@ -299,15 +304,16 @@ class QuickClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.image => CupertinoIcons.photo,
   };
 
-  String _typeName(ClipboardContentType type) => switch (type) {
-    ClipboardContentType.text => 'text'.tr,
-    ClipboardContentType.url => 'url'.tr,
-    ClipboardContentType.email => 'email'.tr,
-    ClipboardContentType.phone => 'phone'.tr,
-    ClipboardContentType.code => 'code'.tr,
-    ClipboardContentType.color => 'color'.tr,
-    ClipboardContentType.json => 'json'.tr,
-    ClipboardContentType.file => 'file'.tr,
-    ClipboardContentType.image => 'image'.tr,
-  };
+  String _typeName(BuildContext context, ClipboardContentType type) =>
+      switch (type) {
+        ClipboardContentType.text => context.l10n.text,
+        ClipboardContentType.url => context.l10n.url,
+        ClipboardContentType.email => context.l10n.email,
+        ClipboardContentType.phone => context.l10n.phone,
+        ClipboardContentType.code => context.l10n.code,
+        ClipboardContentType.color => context.l10n.color,
+        ClipboardContentType.json => context.l10n.json,
+        ClipboardContentType.file => context.l10n.file,
+        ClipboardContentType.image => context.l10n.image,
+      };
 }

@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,7 +7,6 @@ import 'package:go_router/go_router.dart';
 import 'dart:io';
 import 'package:window_manager/window_manager.dart';
 
-import '../../../core/localization/app_translations.dart';
 import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import 'widgets/about_settings_section.dart';
@@ -67,7 +67,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     const SizedBox(width: 16),
                     Text(
-                      'settings_title'.tr,
+                      context.l10n.settings_title,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -100,7 +100,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               return Padding(
                                 padding: const EdgeInsets.only(right: 6),
                                 child: CupertinoChoicePill(
-                                  label: _label(page),
+                                  label: _label(context, page),
                                   icon: _icon(page),
                                   selected: _page == page,
                                   onPressed: () => setState(() => _page = page),
@@ -129,7 +129,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                   for (final page in SettingsPage.values)
                                     _SettingsNavTile(
                                       icon: _icon(page),
-                                      label: _label(page),
+                                      label: _label(context, page),
                                       selected: _page == page,
                                       onTap: () => setState(() => _page = page),
                                     ),
@@ -146,7 +146,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                       const SizedBox(width: 7),
                                       Text(
-                                        'local_data_saved'.tr,
+                                        context.l10n.local_data_saved,
                                         style: TextStyle(
                                           fontSize: 11,
                                           color: resolveColor(
@@ -270,7 +270,7 @@ class _SettingsContent extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(28, 22, 28, 16),
           child: Text(
-            _label(page),
+            _label(context, page),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -289,15 +289,15 @@ class _SettingsContent extends StatelessWidget {
   }
 }
 
-String _label(SettingsPage page) => switch (page) {
-  SettingsPage.general => 'tab_general'.tr,
-  SettingsPage.clipboard => 'tab_clipboard'.tr,
-  SettingsPage.sharing => 'tab_sharing_devices'.tr,
-  SettingsPage.privacy => 'tab_privacy'.tr,
-  SettingsPage.storage => 'tab_storage'.tr,
-  SettingsPage.shortcuts => 'tab_shortcuts'.tr,
-  SettingsPage.ai => 'tab_ai'.tr,
-  SettingsPage.about => 'tab_about'.tr,
+String _label(BuildContext context, SettingsPage page) => switch (page) {
+  SettingsPage.general => context.l10n.tab_general,
+  SettingsPage.clipboard => context.l10n.tab_clipboard,
+  SettingsPage.sharing => context.l10n.tab_sharing_devices,
+  SettingsPage.privacy => context.l10n.tab_privacy,
+  SettingsPage.storage => context.l10n.tab_storage,
+  SettingsPage.shortcuts => context.l10n.tab_shortcuts,
+  SettingsPage.ai => context.l10n.tab_ai,
+  SettingsPage.about => context.l10n.tab_about,
 };
 
 IconData _icon(SettingsPage page) => switch (page) {

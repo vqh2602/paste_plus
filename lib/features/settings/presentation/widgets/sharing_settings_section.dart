@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../device_sync/presentation/widgets/device_sections.dart';
 import '../../../device_sync/presentation/widgets/pairing_session_card.dart';
@@ -38,7 +38,7 @@ class SharingSettingsSection extends ConsumerWidget {
         if (state.errorKey != null) ...[
           const SizedBox(height: 10),
           _SharingErrorBanner(
-            message: state.errorKey!.tr,
+            message: context.l10n.sharing_service_error,
             onDismiss: controller.clearError,
           ),
         ],
@@ -88,9 +88,9 @@ class SharingSettingsSection extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'forget_device_title'.tr,
-      message: 'forget_device_message'.tr,
-      actionLabel: 'forget_device'.tr,
+      title: context.l10n.forget_device_title,
+      message: context.l10n.forget_device_message,
+      actionLabel: context.l10n.forget_device,
     );
     if (confirmed) await action(id);
   }
@@ -102,9 +102,9 @@ class SharingSettingsSection extends ConsumerWidget {
   ) async {
     final confirmed = await _confirm(
       context,
-      title: 'block_device_title'.tr,
-      message: 'block_device_message'.tr,
-      actionLabel: 'block_device'.tr,
+      title: context.l10n.block_device_title,
+      message: context.l10n.block_device_message,
+      actionLabel: context.l10n.block_device,
     );
     if (confirmed) await action(id);
   }
@@ -123,7 +123,7 @@ class SharingSettingsSection extends ConsumerWidget {
             actions: [
               CupertinoDialogAction(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('cancel'.tr),
+                child: Text(context.l10n.cancel),
               ),
               CupertinoDialogAction(
                 isDestructiveAction: true,

@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -7,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
-import '../../../core/localization/app_translations.dart';
 import '../../../core/platform/shortcut_config.dart';
 import '../../../core/services/update_service.dart';
 import '../../../core/ui/app_window_controls.dart';
@@ -61,17 +61,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirm = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('delete_item_title'.tr),
-        content: Text('delete_item_confirm'.tr),
+        title: Text(context.l10n.delete_item_title),
+        content: Text(context.l10n.delete_item_confirm),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('cancel'.tr),
+            child: Text(context.l10n.cancel),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: Text('delete'.tr),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -87,24 +87,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final name = await showCupertinoDialog<String>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('new_collection'.tr),
+        title: Text(context.l10n.new_collection),
         content: Padding(
           padding: const EdgeInsets.only(top: 12),
           child: CupertinoTextField(
             controller: controller,
-            placeholder: 'collection_name'.tr,
+            placeholder: context.l10n.collection_name,
             autofocus: true,
           ),
         ),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text('cancel'.tr),
+            child: Text(context.l10n.cancel),
           ),
           CupertinoDialogAction(
             isDefaultAction: true,
             onPressed: () => Navigator.of(context).pop(controller.text.trim()),
-            child: Text('create'.tr),
+            child: Text(context.l10n.create),
           ),
         ],
       ),
@@ -120,17 +120,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final confirm = await showCupertinoDialog<bool>(
       context: context,
       builder: (context) => CupertinoAlertDialog(
-        title: Text('delete_collection'.tr),
-        content: Text('delete_collection_confirm'.tr),
+        title: Text(context.l10n.delete_collection),
+        content: Text(context.l10n.delete_collection_confirm),
         actions: [
           CupertinoDialogAction(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('cancel'.tr),
+            child: Text(context.l10n.cancel),
           ),
           CupertinoDialogAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, true),
-            child: Text('delete'.tr),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -154,7 +154,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final collection = await showCupertinoModalPopup<ClipboardCollection>(
       context: context,
       builder: (context) => CupertinoActionSheet(
-        title: Text('add_to_collection'.tr),
+        title: Text(context.l10n.add_to_collection),
         actions: collections.map((col) {
           return CupertinoActionSheetAction(
             onPressed: () => Navigator.of(context).pop(col),
@@ -163,7 +163,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         }).toList(),
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -173,7 +173,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
       if (!mounted) return;
-      showCupertinoNotice(context, 'added_to_collection'.tr);
+      showCupertinoNotice(context, context.l10n.added_to_collection);
     }
   }
 
@@ -194,39 +194,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (isImage) ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'ocr'),
-              child: Text('extract_ocr'.tr),
+              child: Text(context.l10n.extract_ocr),
             ),
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'cloud_upload'),
-              child: Text('upload_cloud'.tr),
+              child: Text(context.l10n.upload_cloud),
             ),
           ] else ...[
             CupertinoActionSheetAction(
               onPressed: () => Navigator.pop(context, 'translate'),
-              child: Text('translate_text'.tr),
+              child: Text(context.l10n.translate_text),
             ),
           ],
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ask_ai'),
-            child: Text('ask_ai'.tr),
+            child: Text(context.l10n.ask_ai),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'copy'),
-            child: Text('copy'.tr),
+            child: Text(context.l10n.copy),
           ),
           CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'collection'),
-            child: Text('add_to_collection'.tr),
+            child: Text(context.l10n.add_to_collection),
           ),
           CupertinoActionSheetAction(
             isDestructiveAction: true,
             onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text('delete'.tr),
+            child: Text(context.l10n.delete),
           ),
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.pop(context),
-          child: Text('cancel'.tr),
+          child: Text(context.l10n.cancel),
         ),
       ),
     );
@@ -241,7 +241,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          text != null ? 'ocr_success'.tr : 'ocr_empty'.tr,
+          text != null ? context.l10n.ocr_success : context.l10n.ocr_empty,
         );
       }
     } else if (action == 'cloud_upload') {
@@ -249,7 +249,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          url != null ? 'upload_cloud_success'.tr : 'upload_cloud_failed'.tr,
+          url != null
+              ? context.l10n.upload_cloud_success
+              : context.l10n.upload_cloud_failed,
         );
       }
     } else if (action == 'translate') {
@@ -261,7 +263,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (context.mounted) {
         showCupertinoNotice(
           context,
-          text != null ? 'translate_success'.tr : 'translate_failed'.tr,
+          text != null
+              ? context.l10n.translate_success
+              : context.l10n.translate_failed,
         );
       }
     } else if (action == 'copy') {

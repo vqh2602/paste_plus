@@ -12,6 +12,7 @@ import 'package:clipflow/features/clipboard_history/presentation/history_control
 import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -180,7 +181,12 @@ void main() {
       settingsRepositoryProvider.overrideWithValue(settingsRepository),
       if (quickPanel) quickPanelModeProvider.overrideWith((ref) => true),
     ],
-    child: const CupertinoApp(home: HomeScreen()),
+    child: const CupertinoApp(
+      locale: Locale('vi'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: HomeScreen(),
+    ),
   );
 
   testWidgets('renders clipboard item and filters search instantly', (

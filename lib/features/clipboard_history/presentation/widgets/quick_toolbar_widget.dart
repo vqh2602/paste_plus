@@ -1,8 +1,8 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
@@ -35,12 +35,12 @@ class QuickToolbarWidget extends ConsumerWidget {
 
     final systemTabs = [
       (
-        label: 'all_clips'.tr,
+        label: context.l10n.all_clips,
         icon: CupertinoIcons.square_grid_2x2,
         section: HistorySection.all,
       ),
       (
-        label: 'starred_clips'.tr,
+        label: context.l10n.starred_clips,
         icon: CupertinoIcons.star_fill,
         section: HistorySection.pinned,
       ),
@@ -48,17 +48,17 @@ class QuickToolbarWidget extends ConsumerWidget {
 
     final typeTabs = [
       (
-        label: 'link'.tr,
+        label: context.l10n.link,
         icon: CupertinoIcons.link,
         type: ClipboardContentType.url,
       ),
       (
-        label: 'image'.tr,
+        label: context.l10n.image,
         icon: CupertinoIcons.photo,
         type: ClipboardContentType.image,
       ),
       (
-        label: 'code'.tr,
+        label: context.l10n.code,
         icon: CupertinoIcons.chevron_left_slash_chevron_right,
         type: ClipboardContentType.code,
       ),
@@ -150,7 +150,7 @@ class QuickToolbarWidget extends ConsumerWidget {
                   )) ...[
                     CupertinoChoicePill(
                       key: ValueKey('quick-active-type-${type.name}'),
-                      label: contentTypeLabel(type),
+                      label: contentTypeLabel(context, type),
                       icon: contentTypeIcon(type),
                       selected: true,
                       badge: const Icon(
@@ -173,7 +173,7 @@ class QuickToolbarWidget extends ConsumerWidget {
               key: const Key('quick-panel-search'),
               controller: searchController,
               focusNode: searchFocusNode,
-              placeholder: 'search_in_clipboard'.tr,
+              placeholder: context.l10n.search_in_clipboard,
               onChanged: historyNotifier.search,
             ),
           ),

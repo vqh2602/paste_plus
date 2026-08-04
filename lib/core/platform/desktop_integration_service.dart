@@ -3,13 +3,13 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/services.dart';
+import 'package:clipflow/l10n/app_localizations.dart';
 import 'package:hotkey_manager/hotkey_manager.dart';
 import 'package:launch_at_startup/launch_at_startup.dart';
 import 'package:screen_retriever/screen_retriever.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 
-import '../localization/app_translations.dart';
 import '../services/logging_service.dart';
 import 'shortcut_config.dart';
 
@@ -42,9 +42,10 @@ class _MainWindowSnapshot {
 }
 
 class DesktopIntegrationService with TrayListener {
-  DesktopIntegrationService(this._logger);
+  DesktopIntegrationService(this._logger, this._readLocalizations);
 
   final LoggingService _logger;
+  final AppLocalizations Function() _readLocalizations;
   bool _initialized = false;
   final List<HotKey> _hotKeys = [];
   VoidCallback? _onQuickPanelRequested;
@@ -198,17 +199,23 @@ class DesktopIntegrationService with TrayListener {
       await trayManager.setContextMenu(
         Menu(
           items: [
-            MenuItem(label: 'main_window'.tr, onClick: (_) => showMainWindow()),
             MenuItem(
-              label: 'open_quick_panel'.tr,
+              label: _readLocalizations().main_window,
+              onClick: (_) => showMainWindow(),
+            ),
+            MenuItem(
+              label: _readLocalizations().open_quick_panel,
               onClick: (_) => toggleQuickPanel(),
             ),
             MenuItem.separator(),
             MenuItem(
-              label: 'check_updates'.tr,
+              label: _readLocalizations().check_updates,
               onClick: (_) => unawaited(_checkUpdatesFromTray()),
             ),
-            MenuItem(label: 'quit_app'.tr, onClick: (_) => exit(0)),
+            MenuItem(
+              label: _readLocalizations().quit_app,
+              onClick: (_) => exit(0),
+            ),
           ],
         ),
       );

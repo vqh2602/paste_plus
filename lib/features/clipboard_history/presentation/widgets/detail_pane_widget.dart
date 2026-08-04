@@ -1,3 +1,4 @@
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -5,11 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/providers.dart';
-import '../../../../core/localization/app_translations.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../../ai/domain/ai_feature_action.dart';
+import '../../../ai/domain/ai_feature_request.dart';
+import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
@@ -32,9 +34,9 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
           .performOcr(item);
       if (!mounted) return;
       if (result != null) {
-        showCupertinoNotice(context, 'ocr_success'.tr);
+        showCupertinoNotice(context, context.l10n.ocr_success);
       } else {
-        showCupertinoNotice(context, 'ocr_empty'.tr);
+        showCupertinoNotice(context, context.l10n.ocr_empty);
       }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
@@ -45,21 +47,24 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     final settings = ref.read(settingsControllerProvider);
     setState(() => _isProcessing = true);
     try {
-      final option = settings.targetTranslationLanguage == 'en'
-          ? 'Tự động -> Tiếng Anh'
-          : 'Tự động -> Tiếng Việt';
+      final targetLocaleTag = AiLanguageRegistry.normalizeTag(
+        settings.targetTranslationLanguage,
+      );
       ref.read(aiControllerProvider.notifier).setClipboardContext(item);
       await ref.read(desktopIntegrationProvider).showAiWindow();
       await ref
           .read(aiControllerProvider.notifier)
           .sendUserMessage(
-            'Dịch nội dung clipboard sang ${settings.targetTranslationLanguage}.',
+            'Translate the clipboard content to $targetLocaleTag.',
             featureGroup: AiFeatureGroup.translate,
-            selectedOption: option,
+            featureRequest: AiTranslateRequest(
+              targetLocaleTag: targetLocaleTag,
+            ),
+            selectedOption: targetLocaleTag,
             contextItem: item,
           );
       if (!mounted) return;
-      showCupertinoNotice(context, 'translate_success'.tr);
+      showCupertinoNotice(context, context.l10n.translate_success);
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -73,9 +78,9 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
           .uploadImageToCloud(item);
       if (!mounted) return;
       if (url != null) {
-        showCupertinoNotice(context, 'upload_cloud_success'.tr);
+        showCupertinoNotice(context, context.l10n.upload_cloud_success);
       } else {
-        showCupertinoNotice(context, 'upload_cloud_failed'.tr);
+        showCupertinoNotice(context, context.l10n.upload_cloud_failed);
       }
     } finally {
       if (mounted) setState(() => _isUploading = false);
@@ -89,10 +94,12 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     for (final entry in state.visibleItems) {
       if (entry.id == state.selectedItemId) item = entry;
     }
-    final parsedColor = item?.contentType == ClipboardContentType.color ? ColorParser.parse(item!.content) : null;
-    
+    final parsedColor = item?.contentType == ClipboardContentType.color
+        ? ColorParser.parse(item!.content)
+        : null;
+
     if (item == null) {
-      return Center(child: Text('select_item_to_view'.tr));
+      return Center(child: Text(context.l10n.select_item_to_view));
     }
     final isImage = item.contentType == ClipboardContentType.image;
     final isOnlineImage = isImageUrl(item.content);
@@ -174,7 +181,10 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                               color: parsedColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: resolveColor(context, ClipFlowColors.border),
+                                color: resolveColor(
+                                  context,
+                                  ClipFlowColors.border,
+                                ),
                                 width: 1.0,
                               ),
                             ),
@@ -185,7 +195,10 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                             style: TextStyle(
                               fontSize: 14,
                               height: 1.55,
-                              color: resolveColor(context, ClipFlowColors.secondaryText),
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.secondaryText,
+                              ),
                               fontFamily: 'monospace',
                             ),
                           ),
@@ -222,15 +235,15 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
             const CupertinoDivider(),
             const SizedBox(height: 12),
             MetadataRowWidget(
-              label: 'copied_time'.tr,
+              label: context.l10n.copied_time,
               value: DateFormat('dd/MM/yyyy HH:mm').format(item.lastCopiedAt),
             ),
             MetadataRowWidget(
-              label: 'source_app'.tr,
-              value: item.sourceAppName ?? 'unknown'.tr,
+              label: context.l10n.source_app,
+              value: item.sourceAppName ?? context.l10n.unknown,
             ),
             MetadataRowWidget(
-              label: 'usage_count'.tr,
+              label: context.l10n.usage_count,
               value: '${item.copyCount}',
             ),
             const SizedBox(height: 14),
@@ -254,7 +267,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'extract_ocr'.tr,
+                          context.l10n.extract_ocr,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: CupertinoColors.activeBlue,
@@ -293,7 +306,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'upload_cloud'.tr,
+                          context.l10n.upload_cloud,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: CupertinoColors.activeGreen,
@@ -329,7 +342,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          'translate_text'.tr,
+                          context.l10n.translate_text,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             color: CupertinoColors.activeBlue,
@@ -349,7 +362,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
               child: CupertinoButton.filled(
                 onPressed: () =>
                     ref.read(historyControllerProvider.notifier).copy(item!),
-                child: Text('copy_again'.tr),
+                child: Text(context.l10n.copy_again),
               ),
             ),
           ],
@@ -414,7 +427,7 @@ class ClipboardImagePreviewWidget extends StatelessWidget {
                     width: double.infinity,
                     fit: BoxFit.cover,
                   )
-                : Center(child: Text('image_not_found'.tr))),
+                : Center(child: Text(context.l10n.image_not_found))),
     );
   }
 }

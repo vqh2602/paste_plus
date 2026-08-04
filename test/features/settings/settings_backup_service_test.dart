@@ -51,25 +51,28 @@ void main() {
     expect(importResult.settings!.soundEnabled, isFalse);
   });
 
-  test('Import settings with wrong password fails with error message', () async {
-    final filePath = '${tempDir.path}/test_config_wrong_pwd.clipflow';
-    const originalSettings = AppSettings(themeMode: 'light');
+  test(
+    'Import settings with wrong password fails with error message',
+    () async {
+      final filePath = '${tempDir.path}/test_config_wrong_pwd.clipflow';
+      const originalSettings = AppSettings(themeMode: 'light');
 
-    await service.exportSettings(
-      settings: originalSettings,
-      password: 'CorrectPassword123',
-      filePath: filePath,
-    );
+      await service.exportSettings(
+        settings: originalSettings,
+        password: 'CorrectPassword123',
+        filePath: filePath,
+      );
 
-    final importResult = await service.importSettings(
-      filePath: filePath,
-      password: 'WrongPassword999',
-    );
+      final importResult = await service.importSettings(
+        filePath: filePath,
+        password: 'WrongPassword999',
+      );
 
-    expect(importResult.isSuccess, isFalse);
-    expect(importResult.settings, isNull);
-    expect(importResult.errorMessage, contains('Mật khẩu không chính xác'));
-  });
+      expect(importResult.isSuccess, isFalse);
+      expect(importResult.settings, isNull);
+      expect(importResult.errorMessage, contains('Mật khẩu không chính xác'));
+    },
+  );
 
   test('Export with empty password fails', () async {
     final filePath = '${tempDir.path}/empty_pwd.clipflow';

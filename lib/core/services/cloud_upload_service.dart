@@ -49,9 +49,7 @@ class CloudUploadService {
       void addFormField(String name, String value) {
         body.add(utf8.encode('--$boundary\r\n'));
         body.add(
-          utf8.encode(
-            'Content-Disposition: form-data; name="$name"\r\n\r\n',
-          ),
+          utf8.encode('Content-Disposition: form-data; name="$name"\r\n\r\n'),
         );
         body.add(utf8.encode('$value\r\n'));
       }
