@@ -15,1448 +15,1401 @@ class AppLocalizationsKo extends AppLocalizations {
   String get app_name => 'ClipFlow';
 
   @override
-  String get library => 'LIBRARY';
+  String get library => '라이브러리';
 
   @override
-  String get all => 'All';
+  String get all => '전체';
 
   @override
-  String get pinned => 'Pinned';
+  String get pinned => '고정됨';
 
   @override
-  String get images => 'Images';
+  String get images => '이미지';
 
   @override
-  String get links => 'Links';
+  String get links => '링크';
 
   @override
-  String get code => 'Code';
+  String get code => '코드';
 
   @override
-  String get collections => 'COLLECTIONS';
+  String get collections => '컬렉션';
 
   @override
-  String get settings => 'Settings';
+  String get settings => '설정';
 
   @override
-  String get local_data_only => 'Data saved locally';
+  String get local_data_only => '데이터는 로컬에 저장됨';
 
   @override
-  String get search_in_clipboard => 'Search in clipboard';
+  String get search_in_clipboard => '클립보드에서 검색';
 
   @override
-  String get text => 'Text';
+  String get text => '텍스트';
 
   @override
-  String get url => 'Link';
+  String get url => '링크';
 
   @override
-  String get files => 'Files';
+  String get files => '파일';
 
   @override
-  String get file => 'File Path';
+  String get file => '파일 경로';
 
   @override
-  String get email => 'Email';
+  String get email => '이메일';
 
   @override
-  String get phone => 'Phone';
+  String get phone => '전화';
 
   @override
-  String get color => 'HEX Color';
+  String get color => 'HEX 색상';
 
   @override
   String get json => 'JSON';
 
   @override
-  String get image => 'Image';
+  String get image => '이미지';
 
   @override
-  String get image_link => 'Image Link';
+  String get image_link => '이미지 링크';
 
   @override
-  String get collection_personal => 'Personal';
+  String get collection_personal => '개인';
 
   @override
-  String get collection_link => 'Links';
+  String get collection_link => '링크';
 
   @override
-  String get collection_reply => 'Reply Templates';
+  String get collection_reply => '답장 템플릿';
 
   @override
-  String get just_now => 'just now';
+  String get just_now => '방금';
 
   @override
-  String get mins_ago => '@m mins ago';
+  String get mins_ago => '@m분 전';
 
   @override
-  String get hours_ago => '@h hours ago';
+  String get hours_ago => '@h시간 전';
 
   @override
-  String get days_ago => '@d days ago';
+  String get days_ago => '@d일 전';
 
   @override
-  String get copy => 'Copy';
+  String get copy => '복사';
 
   @override
-  String get copy_again => 'Copy again';
+  String get copy_again => '다시 복사';
 
   @override
-  String get copied => 'Copied to clipboard';
+  String get copied => '클립보드에 복사됨';
 
   @override
-  String get pin_item => 'Pin item';
+  String get pin_item => '항목 고정';
 
   @override
-  String get unpin_item => 'Unpin item';
+  String get unpin_item => '항목 고정 해제';
 
   @override
-  String get add_to_collection => 'Add to Collection';
+  String get add_to_collection => '컬렉션에 추가';
 
   @override
-  String get extract_ocr => 'Extract Text (OCR)';
+  String get extract_ocr => '텍스트 추출 (OCR)';
 
   @override
-  String get translate_text => 'Translate Text';
+  String get translate_text => '텍스트 번역';
 
   @override
-  String get upload_cloud => 'Upload to Cloud';
+  String get upload_cloud => '클라우드에 업로드';
 
   @override
-  String get ask_ai => 'Ask AI Assistant';
+  String get ask_ai => 'AI 어시스턴트에 질문';
 
   @override
-  String get delete => 'Delete';
+  String get delete => '삭제';
 
   @override
-  String get delete_item_title => 'Delete item?';
+  String get delete_item_title => '항목을 삭제하시겠습니까?';
 
   @override
-  String get delete_item_confirm =>
-      'Are you sure you want to delete this clipboard item?';
+  String get delete_item_confirm => '이 클립보드 항목을 삭제하시겠습니까?';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => '취소';
 
   @override
-  String get clipboard_empty => 'Clipboard is currently empty.';
+  String get clipboard_empty => '클립보드가 현재 비어 있습니다.';
 
   @override
-  String get copied_time => 'Copied';
+  String get copied_time => '복사됨';
 
   @override
-  String get source_app => 'Source';
+  String get source_app => '소스';
 
   @override
-  String get usage_count => 'Usage count';
+  String get usage_count => '사용 횟수';
 
   @override
-  String get characters => 'characters';
+  String get characters => '자';
 
   @override
-  String get words => 'words';
+  String get words => '단어';
 
   @override
-  String get lines => 'lines';
+  String get lines => '줄';
 
   @override
-  String get ai_conversation_options => 'Conversation Options';
+  String get ai_conversation_options => '대화 옵션';
 
   @override
-  String get rename => 'Rename';
+  String get rename => '이름 변경';
 
   @override
-  String get pin => 'Pin';
+  String get pin => '고정';
 
   @override
-  String get unpin => 'Unpin';
+  String get unpin => '고정 해제';
 
   @override
-  String get back => 'Back';
+  String get back => '뒤로';
 
   @override
-  String get ai_conversation_history => 'Conversation History';
+  String get ai_conversation_history => '대화 기록';
 
   @override
-  String get ai_choose_context => 'Choose clipboard context';
+  String get ai_choose_context => '클립보드 컨텍스트 선택';
 
   @override
-  String get ai_choose_context_title => 'Choose clipboard context';
+  String get ai_choose_context_title => '클립보드 컨텍스트 선택';
 
   @override
-  String get ai_no_context_items => 'No clipboard items available';
+  String get ai_no_context_items => '사용 가능한 클립보드 항목이 없습니다';
 
   @override
-  String get ai_history_subtitle => 'Up to 20 recent sessions, stored locally';
+  String get ai_history_subtitle => '최대 20개의 최근 세션, 로컬 저장';
 
   @override
-  String get ai_new_conversation => '＋ New Conversation';
+  String get ai_new_conversation => '＋ 새 대화';
 
   @override
-  String get ai_rename_dialog_title => 'Rename Conversation';
+  String get ai_rename_dialog_title => '대화 이름 변경';
 
   @override
-  String get save => 'Save';
+  String get save => '저장';
 
   @override
-  String get ai_gen_settings_title => 'Generation Settings';
+  String get ai_gen_settings_title => '생성 설정';
 
   @override
-  String get ai_gen_settings_sub => 'Applies to subsequent AI responses';
+  String get ai_gen_settings_sub => '이후 AI 응답에 적용됩니다';
 
   @override
-  String get main_window => 'Main Window';
+  String get main_window => '메인 창';
 
   @override
-  String get ai_config => 'AI Configuration';
+  String get ai_config => 'AI 설정';
 
   @override
-  String get ai_profile_precise => 'Precise · 2K';
+  String get ai_profile_precise => '정밀 · 2K';
 
   @override
-  String get ai_profile_balanced => 'Balanced · 4K';
+  String get ai_profile_balanced => '균형 · 4K';
 
   @override
-  String get ai_profile_creative => 'Creative · 8K';
+  String get ai_profile_creative => '창의적 · 8K';
 
   @override
-  String get ai_processing => 'Processing...';
+  String get ai_processing => '처리 중...';
 
   @override
-  String get ai_regenerate => 'Regenerate';
+  String get ai_regenerate => '재생성';
 
   @override
-  String get ai_continue => 'Continue';
+  String get ai_continue => '계속';
 
   @override
-  String get ai_recent_conversation => 'Recent Conversation';
+  String get ai_recent_conversation => '최근 대화';
 
   @override
-  String get ai_privacy_title => '100% Private & Offline';
+  String get ai_privacy_title => '100% 개인 & 오프라인';
 
   @override
-  String get ai_cancel_download => 'Cancel download';
+  String get ai_cancel_download => '다운로드 취소';
 
   @override
-  String get ai_size_label => 'Size';
+  String get ai_size_label => '크기';
 
   @override
-  String get settings_title => 'ClipFlow Settings';
+  String get settings_title => 'ClipFlow 설정';
 
   @override
-  String get tab_general => 'General';
+  String get tab_general => '일반';
 
   @override
-  String get tab_clipboard => 'Clipboard';
+  String get tab_clipboard => '클립보드';
 
   @override
-  String get tab_privacy => 'Privacy';
+  String get tab_privacy => '개인 정보';
 
   @override
-  String get tab_storage => 'Storage';
+  String get tab_storage => '저장소';
 
   @override
-  String get tab_shortcuts => 'Shortcuts';
+  String get tab_shortcuts => '단축키';
 
   @override
-  String get tab_about => 'About';
+  String get tab_about => '정보';
 
   @override
-  String get appearance_and_theme => 'Appearance & Theme';
+  String get appearance_and_theme => '외관 및 테마';
 
   @override
-  String get theme_mode => 'Theme Mode';
+  String get theme_mode => '테마 모드';
 
   @override
-  String get theme_system => 'System';
+  String get theme_system => '시스템';
 
   @override
-  String get theme_light => 'Light';
+  String get theme_light => '라이트';
 
   @override
-  String get theme_dark => 'Dark';
+  String get theme_dark => '다크';
 
   @override
-  String get app_language => 'App Language';
+  String get app_language => '앱 언어';
 
   @override
-  String get translation_language => 'Translation Language';
+  String get translation_language => '번역 언어';
 
   @override
-  String get translation_language_sub =>
-      'Default language when using Translate action';
+  String get translation_language_sub => '번역 기능 사용 시 기본 언어';
 
   @override
-  String get system_permissions => 'System Permissions';
+  String get system_permissions => '시스템 권한';
 
   @override
-  String get accessibility_permission => 'Accessibility Permission';
+  String get accessibility_permission => '손쉬운 사용 권한';
 
   @override
-  String get accessibility_granted =>
-      'Granted. ClipFlow automatically pastes when item is selected.';
+  String get accessibility_granted => '허용됨. 항목 선택 시 ClipFlow가 자동으로 붙여넣습니다.';
 
   @override
   String get accessibility_required =>
-      'Required for ClipFlow to automatically paste text into active apps.';
+      'ClipFlow가 활성 앱에 텍스트를 자동으로 붙여넣으려면 필요합니다.';
 
   @override
-  String get granted => 'Granted';
+  String get granted => '허용됨';
 
   @override
-  String get grant_permission => 'Grant Permission';
+  String get grant_permission => '권한 허용';
 
   @override
-  String get restart_app => 'Restart Application';
+  String get restart_app => '앱 재시작';
 
   @override
-  String get restart_app_sub =>
-      'Restart ClipFlow to apply newly granted permissions.';
+  String get restart_app_sub => '새로 부여된 권한을 적용하려면 ClipFlow를 재시작하세요.';
 
   @override
-  String get restart => 'Restart';
+  String get restart => '재시작';
 
   @override
-  String get reset_permission => 'Reset & Re-grant Permission';
+  String get reset_permission => '권한 재설정 및 재허용';
 
   @override
-  String get reset_permission_sub =>
-      'Use if app update invalidates system Accessibility permission.';
+  String get reset_permission_sub => '앱 업데이트로 손쉬운 사용 권한이 무효화된 경우 사용하세요.';
 
   @override
-  String get reset => 'Reset';
+  String get reset => '재설정';
 
   @override
-  String get startup_options => 'Startup & Behavior';
+  String get startup_options => '시작 및 동작';
 
   @override
-  String get launch_at_login => 'Launch at Login';
+  String get launch_at_login => '로그인 시 실행';
 
   @override
-  String get launch_at_login_sub =>
-      'Automatically launch ClipFlow when logging in to macOS.';
+  String get launch_at_login_sub => 'macOS에 로그인할 때 ClipFlow를 자동으로 시작합니다.';
 
   @override
-  String get run_in_tray => 'Run in Menu Bar';
+  String get run_in_tray => '메뉴 막대에서 실행';
 
   @override
-  String get run_in_tray_sub => 'Keep ClipFlow active in the macOS Menu Bar.';
+  String get run_in_tray_sub => 'macOS 메뉴 막대에서 ClipFlow를 활성 상태로 유지합니다.';
 
   @override
-  String get show_in_dock => 'Show in Dock';
+  String get show_in_dock => '독에 표시';
 
   @override
-  String get show_in_dock_sub => 'Show ClipFlow app icon in macOS Dock.';
+  String get show_in_dock_sub => 'macOS 독에 ClipFlow 앱 아이콘을 표시합니다.';
 
   @override
-  String get close_after_copy => 'Auto-hide Quick Panel after copy';
+  String get close_after_copy => '복사 후 빠른 패널 자동 숨기기';
 
   @override
-  String get close_after_copy_sub =>
-      'Automatically hide panel and paste content into previous active app.';
+  String get close_after_copy_sub => '패널을 자동으로 숨기고 이전 활성 앱에 내용을 붙여넣습니다.';
 
   @override
-  String get sound_enabled => 'Sound Effects';
+  String get sound_enabled => '사운드 효과';
 
   @override
-  String get sound_enabled_sub => 'Play subtle sound effect on copy or action.';
+  String get sound_enabled_sub => '복사하거나 동작 실행 시 은은한 효과음을 재생합니다.';
 
   @override
-  String get backup_restore_section => 'Backup & Restore Settings';
+  String get backup_restore_section => '설정 백업 및 복원';
 
   @override
-  String get export_config => 'Export Personal Settings (.clipflow)';
+  String get export_config => '개인 설정 내보내기 (.clipflow)';
 
   @override
-  String get export_config_sub =>
-      'Package all settings & theme into an encrypted .clipflow file.';
+  String get export_config_sub => '모든 설정 및 테마를 암호화된 .clipflow 파일로 패키지합니다.';
 
   @override
-  String get export_button => 'Export';
+  String get export_button => '내보내기';
 
   @override
-  String get import_config => 'Import Settings (.clipflow)';
+  String get import_config => '설정 가져오기 (.clipflow)';
 
   @override
-  String get import_config_sub =>
-      'Restore settings from an encrypted .clipflow backup file.';
+  String get import_config_sub => '암호화된 .clipflow 백업 파일에서 설정을 복원합니다.';
 
   @override
-  String get import_button => 'Import';
+  String get import_button => '가져오기';
 
   @override
-  String get export_dialog_title => 'Export Personal Settings';
+  String get export_dialog_title => '개인 설정 내보내기';
 
   @override
-  String get export_dialog_msg =>
-      'Enter a password to encrypt your .clipflow backup file:';
+  String get export_dialog_msg => '.clipflow 백업 파일을 암호화할 비밀번호를 입력하세요:';
 
   @override
-  String get password => 'Password';
+  String get password => '비밀번호';
 
   @override
-  String get confirm_password => 'Confirm Password';
+  String get confirm_password => '비밀번호 확인';
 
   @override
-  String get password_empty => 'Password cannot be empty.';
+  String get password_empty => '비밀번호를 입력해야 합니다.';
 
   @override
-  String get password_mismatch => 'Passwords do not match.';
+  String get password_mismatch => '비밀번호가 일치하지 않습니다.';
 
   @override
-  String get export_success => 'Settings exported successfully!';
+  String get export_success => '설정을 성공적으로 내보냈습니다!';
 
   @override
-  String get export_failed => 'Export failed.';
+  String get export_failed => '내보내기에 실패했습니다.';
 
   @override
-  String get import_dialog_title => 'Import Personal Settings';
+  String get import_dialog_title => '개인 설정 가져오기';
 
   @override
-  String get import_dialog_msg => 'Enter password to decrypt .clipflow file:';
+  String get import_dialog_msg => '.clipflow 파일 복호화를 위한 비밀번호를 입력하세요:';
 
   @override
-  String get decrypt_password => 'Decryption Password';
+  String get decrypt_password => '복호화 비밀번호';
 
   @override
-  String get import_success => 'Settings imported and applied successfully!';
+  String get import_success => '설정을 성공적으로 가져오고 적용했습니다!';
 
   @override
-  String get import_failed => 'Import failed.';
+  String get import_failed => '가져오기에 실패했습니다.';
 
   @override
-  String get current_storage_usage => 'Current Storage Usage';
+  String get current_storage_usage => '현재 저장소 사용량';
 
   @override
-  String get clear_history => 'Clear History…';
+  String get clear_history => '기록 지우기…';
 
   @override
-  String get clear_history_title => 'Clear clipboard history?';
+  String get clear_history_title => '클립보드 기록을 지우시겠습니까?';
 
   @override
-  String get clear_history_msg => 'Pinned items will be preserved.';
+  String get clear_history_msg => '고정된 항목은 유지됩니다.';
 
   @override
-  String get app_description =>
-      'A private, local-first clipboard manager designed for macOS.';
+  String get app_description => 'macOS를 위한 개인용 로컬 우선 클립보드 관리자.';
 
   @override
-  String get version => 'Version';
+  String get version => '버전';
 
   @override
-  String get github_source => 'Source Code on GitHub';
+  String get github_source => 'GitHub의 소스 코드';
 
   @override
-  String get check_updates => 'Check for Updates';
+  String get check_updates => '업데이트 확인';
 
   @override
-  String get quit_app => 'Quit';
+  String get quit_app => '종료';
 
   @override
-  String get visit => 'Visit';
+  String get visit => '방문';
 
   @override
-  String get check => 'Check';
+  String get check => '확인';
 
   @override
-  String get latest_version => 'You are using the latest version';
+  String get latest_version => '최신 버전을 사용하고 있습니다';
 
   @override
-  String get update_available => 'New version available';
+  String get update_available => '새 버전을 사용할 수 있습니다';
 
   @override
-  String get add_to_collection_title => 'Add to collection';
+  String get add_to_collection_title => '컬렉션에 추가';
 
   @override
-  String get no_collections => 'No collections available.';
+  String get no_collections => '사용 가능한 컬렉션이 없습니다.';
 
   @override
-  String get new_collection => 'New collection';
+  String get new_collection => '새 컬렉션';
 
   @override
-  String get new_collection_btn => '+ New Collection';
+  String get new_collection_btn => '+ 새 컬렉션';
 
   @override
-  String get rename_collection => 'Rename collection';
+  String get rename_collection => '컬렉션 이름 변경';
 
   @override
-  String get delete_collection => 'Delete collection';
+  String get delete_collection => '컬렉션 삭제';
 
   @override
-  String get collection_name_placeholder => 'Collection name';
+  String get collection_name_placeholder => '컬렉션 이름';
 
   @override
-  String get this_device => 'This device';
+  String get this_device => '이 기기';
 
   @override
-  String get unknown => 'Unknown';
+  String get unknown => '알 수 없음';
 
   @override
-  String get ocr_success => 'Text extracted & copy created';
+  String get ocr_success => '텍스트 추출 및 복사본 생성됨';
 
   @override
-  String get ocr_empty => 'No text found in image';
+  String get ocr_empty => '이미지에서 텍스트를 찾을 수 없습니다';
 
   @override
-  String get translate_success => 'Text translated & copy created';
+  String get translate_success => '텍스트 번역 및 복사본 생성됨';
 
   @override
-  String get translate_failed => 'Unable to translate text';
+  String get translate_failed => '텍스트를 번역할 수 없습니다';
 
   @override
-  String get upload_cloud_success => 'Uploaded to cloud & link copied';
+  String get upload_cloud_success => '클라우드에 업로드됨 & 링크 복사됨';
 
   @override
-  String get upload_cloud_failed => 'Unable to upload image to cloud';
+  String get upload_cloud_failed => '이미지를 클라우드에 업로드할 수 없습니다';
 
   @override
-  String get select_item_to_view => 'Select an item to view details';
+  String get select_item_to_view => '항목을 선택하여 세부 정보 보기';
 
   @override
-  String get image_file_not_found => 'Image file no longer exists';
+  String get image_file_not_found => '이미지 파일이 더 이상 존재하지 않습니다';
 
   @override
-  String get cannot_display_image => 'Unable to display image';
+  String get cannot_display_image => '이미지를 표시할 수 없습니다';
 
   @override
-  String get no_results_found => 'No results found';
+  String get no_results_found => '결과를 찾을 수 없습니다';
 
   @override
-  String get clipboard_empty_title => 'Your clipboard is empty';
+  String get clipboard_empty_title => '클립보드가 비어 있습니다';
 
   @override
-  String get try_different_keyword => 'Try different keywords or filters.';
+  String get try_different_keyword => '다른 키워드나 필터를 사용해 보세요.';
 
   @override
   String get clipboard_empty_subtitle =>
-      'Copy something. ClipFlow will keep it safe on this device.';
+      '무언가를 복사하세요. ClipFlow가 이 기기에 안전하게 보관합니다.';
 
   @override
-  String get try_again => 'Try Again';
+  String get try_again => '다시 시도';
 
   @override
-  String get delete_cannot_undo => 'This action cannot be undone.';
+  String get delete_cannot_undo => '이 작업은 취소할 수 없습니다.';
 
   @override
-  String get onboarding_title_1 =>
-      'Everything you copy, right where you need it';
+  String get onboarding_title_1 => '복사한 모든 것이 필요한 곳에';
 
   @override
   String get onboarding_desc_1 =>
-      'ClipFlow saves your clipboard history so you can find text, links, code, and more in seconds.';
+      'ClipFlow는 클립보드 기록을 저장하여 텍스트, 링크, 코드 등을 빠르게 찾을 수 있게 합니다.';
 
   @override
-  String get onboarding_title_2 => 'Private by design';
+  String get onboarding_title_2 => '설계부터 프라이버시 보호';
 
   @override
   String get onboarding_desc_2 =>
-      'Data stays on this device only. ClipFlow does not upload your clipboard content to any server.';
+      '데이터는 이 기기에만 저장됩니다. ClipFlow는 클립보드 내용을 어떤 서버에도 업로드하지 않습니다.';
 
   @override
-  String get onboarding_title_3 => 'You are always in control';
+  String get onboarding_title_3 => '언제나 당신이 통제합니다';
 
   @override
   String get onboarding_desc_3 =>
-      'Pause monitoring anytime, exclude sensitive apps, and clear data with one click.';
+      '언제든지 모니터링을 일시 중지하고, 민감한 앱을 제외하고, 한 번의 클릭으로 데이터를 지울 수 있습니다.';
 
   @override
-  String get onboarding_title_4 => 'How long do you want to keep history?';
+  String get onboarding_title_4 => '기록을 얼마나 오래 유지하시겠습니까?';
 
   @override
-  String get onboarding_desc_4 => 'You can change this anytime in Settings.';
+  String get onboarding_desc_4 => '설정에서 언제든지 변경할 수 있습니다.';
 
   @override
-  String get onboarding_title_5 => 'Ready to work faster';
+  String get onboarding_title_5 => '더 빠르게 작업할 준비가 되었습니다';
 
   @override
   String get onboarding_desc_5 =>
-      'Press Control + V on macOS or Control + Shift + V on Windows/Linux to open ClipFlow.';
+      'macOS에서는 Control + V, Windows/Linux에서는 Control + Shift + V를 눌러 ClipFlow를 엽니다.';
 
   @override
-  String get unlimited => 'Unlimited';
+  String get unlimited => '무제한';
 
   @override
-  String get start_btn => 'Get Started';
+  String get start_btn => '시작하기';
 
   @override
-  String get continue_btn => 'Continue';
+  String get continue_btn => '계속';
 
   @override
-  String get cloud_hosting_section => 'Cloud Image Hosting';
+  String get cloud_hosting_section => '클라우드 이미지 호스팅';
 
   @override
-  String get cloud_provider => 'Cloud Provider';
+  String get cloud_provider => '클라우드 공급자';
 
   @override
-  String get cloud_provider_sub =>
-      'Enable a single host option to upload images';
+  String get cloud_provider_sub => '이미지 업로드를 위한 호스트 옵션을 하나 활성화하세요';
 
   @override
-  String get cloud_in_use => 'FreeImage.host (Active)';
+  String get cloud_in_use => 'FreeImage.host (활성)';
 
   @override
-  String get cloud_coming_soon => 'Google Drive (Coming soon)';
+  String get cloud_coming_soon => 'Google Drive (출시 예정)';
 
   @override
-  String get api_key_placeholder => 'Enter API key...';
+  String get api_key_placeholder => 'API 키 입력...';
 
   @override
-  String get accent_color => 'Theme Accent Color';
+  String get accent_color => '테마 강조 색상';
 
   @override
-  String get clipboard_monitoring => 'Clipboard Monitoring';
+  String get clipboard_monitoring => '클립보드 모니터링';
 
   @override
-  String get monitoring_active =>
-      'ClipFlow is recording new clipboard entries.';
+  String get monitoring_active => 'ClipFlow가 새 클립보드 항목을 기록하고 있습니다.';
 
   @override
-  String get monitoring_paused => 'Clipboard history recording is paused.';
+  String get monitoring_paused => '클립보드 기록 녹화가 일시 중지되었습니다.';
 
   @override
-  String get ignore_duplicates => 'Ignore Duplicates';
+  String get ignore_duplicates => '중복 무시';
 
   @override
-  String get duplicate_behavior => 'When item already exists';
+  String get duplicate_behavior => '항목이 이미 존재할 때';
 
   @override
-  String get bring_to_top => 'Bring to top';
+  String get bring_to_top => '맨 위로 이동';
 
   @override
-  String get create_new => 'Create new item';
+  String get create_new => '새 항목 만들기';
 
   @override
-  String get keep_position => 'Keep position';
+  String get keep_position => '위치 유지';
 
   @override
-  String get allowed_content_types => 'Allowed Content Types';
+  String get allowed_content_types => '허용된 콘텐츠 유형';
 
   @override
-  String get content_limits => 'Content Limits';
+  String get content_limits => '콘텐츠 제한';
 
   @override
-  String get min_length => 'Minimum length';
+  String get min_length => '최소 길이';
 
   @override
-  String get max_length => 'Maximum length';
+  String get max_length => '최대 길이';
 
   @override
-  String get max_image_size => 'Maximum image size';
+  String get max_image_size => '최대 이미지 크기';
 
   @override
-  String get chars_unit => 'characters';
+  String get chars_unit => '자';
 
   @override
-  String get ignore_sensitive => 'Ignore Sensitive Content';
+  String get ignore_sensitive => '민감한 콘텐츠 무시';
 
   @override
-  String get ignore_otp => 'Ignore OTP Codes';
+  String get ignore_otp => 'OTP 코드 무시';
 
   @override
-  String get ignore_otp_sub => 'Numeric strings of 4-8 digits.';
+  String get ignore_otp_sub => '4~8자리 숫자 문자열.';
 
   @override
-  String get ignore_long_tokens => 'Ignore Long Tokens';
+  String get ignore_long_tokens => '긴 토큰 무시';
 
   @override
-  String get excluded_apps => 'Excluded Applications';
+  String get excluded_apps => '제외된 애플리케이션';
 
   @override
-  String get add_app => 'Add';
+  String get add_app => '추가';
 
   @override
-  String get no_excluded_apps => 'No applications excluded yet.';
+  String get no_excluded_apps => '아직 제외된 애플리케이션이 없습니다.';
 
   @override
-  String get add_excluded_app_title => 'Add Excluded Application';
+  String get add_excluded_app_title => '제외 애플리케이션 추가';
 
   @override
-  String get add_excluded_app_msg =>
-      'Copied content from excluded apps will not be saved to history.';
+  String get add_excluded_app_msg => '제외된 앱에서 복사된 내용은 기록에 저장되지 않습니다.';
 
   @override
-  String get select_running_app => 'Select from running applications';
+  String get select_running_app => '실행 중인 애플리케이션에서 선택';
 
   @override
-  String get select_app_finder => 'Select application (.app) from Finder';
+  String get select_app_finder => 'Finder에서 애플리케이션(.app) 선택';
 
   @override
-  String get enter_app_manual => 'Enter application name manually';
+  String get enter_app_manual => '애플리케이션 이름 수동 입력';
 
   @override
-  String get enter_app_name => 'Enter application name';
+  String get enter_app_name => '애플리케이션 이름 입력';
 
   @override
-  String get app_name_placeholder => 'Example: Safari, Xcode';
+  String get app_name_placeholder => '예: Safari, Xcode';
 
   @override
-  String get running_apps_title => 'Running Applications';
+  String get running_apps_title => '실행 중인 애플리케이션';
 
   @override
-  String get history_retention => 'History Retention';
+  String get history_retention => '기록 보존';
 
   @override
-  String get max_storage => 'Maximum Storage Size';
+  String get max_storage => '최대 저장소 크기';
 
   @override
-  String get delete_images_first => 'Delete images first when cleaning up';
+  String get delete_images_first => '정리할 때 이미지를 먼저 삭제';
 
   @override
-  String get data_protection => 'Data Protection';
+  String get data_protection => '데이터 보호';
 
   @override
-  String get protect_pinned => 'Do not auto-delete pinned items';
+  String get protect_pinned => '고정된 항목을 자동으로 삭제하지 않음';
 
   @override
-  String get protect_collections => 'Do not auto-delete collection items';
+  String get protect_collections => '컬렉션 항목을 자동으로 삭제하지 않음';
 
   @override
-  String get auto_cleanup => 'Auto Cleanup';
+  String get auto_cleanup => '자동 정리';
 
   @override
-  String get retention_period => 'History Retention Period';
+  String get retention_period => '기록 보존 기간';
 
   @override
-  String get max_items => 'Maximum Items';
+  String get max_items => '최대 항목 수';
 
   @override
-  String get items_unit => 'items';
+  String get items_unit => '항목';
 
   @override
-  String get shortcuts_title => 'System Global Shortcuts';
+  String get shortcuts_title => '시스템 전역 단축키';
 
   @override
-  String get open_quick_panel => 'Open Quick Panel';
+  String get open_quick_panel => '빠른 패널 열기';
 
   @override
-  String get open_main_window => 'Open Main Window';
+  String get open_main_window => '메인 창 열기';
 
   @override
-  String get toggle_monitoring => 'Pause/Resume Monitoring';
+  String get toggle_monitoring => '모니터링 일시 중지/재개';
 
   @override
-  String get focus_search => 'Focus Search Bar';
+  String get focus_search => '검색 막대에 포커스';
 
   @override
-  String get toggle_pin => 'Pin / Unpin Item';
+  String get toggle_pin => '항목 고정 / 해제';
 
   @override
-  String get select_and_copy => 'Select and Copy';
+  String get select_and_copy => '선택 및 복사';
 
   @override
-  String get delete_item => 'Delete Item';
+  String get delete_item => '항목 삭제';
 
   @override
-  String get restore_defaults => 'Restore Defaults';
+  String get restore_defaults => '기본값 복원';
 
   @override
-  String get shortcut_hint =>
-      'Click a row to record a new shortcut. Global hotkey takes effect immediately after saving.';
+  String get shortcut_hint => '행을 클릭하여 새 단축키를 기록하세요. 전역 단축키는 저장 후 즉시 적용됩니다.';
 
   @override
-  String get record_shortcut_title => 'Record New Shortcut';
+  String get record_shortcut_title => '새 단축키 기록';
 
   @override
-  String get record_shortcut_msg =>
-      'Press the shortcut key combination you want to use.';
+  String get record_shortcut_msg => '사용할 단축키 조합을 눌러주세요.';
 
   @override
   String get system_hotkey_needs_modifier =>
-      'Global shortcuts require a modifier key (Cmd/Ctrl/Option/Shift).';
+      '전역 단축키는 수식어 키(Cmd/Ctrl/Option/Shift)가 필요합니다.';
 
   @override
-  String get choose_non_modifier => 'Please select a non-modifier key.';
+  String get choose_non_modifier => '수식어 키가 아닌 키를 선택해 주세요.';
 
   @override
-  String get shortcut_conflict =>
-      'Shortcut is already used for another action.';
+  String get shortcut_conflict => '단축키가 이미 다른 동작에 사용되고 있습니다.';
 
   @override
-  String get shortcut_used_by_other_app =>
-      'Shortcut is used by another application.';
+  String get shortcut_used_by_other_app => '단축키가 다른 애플리케이션에서 사용되고 있습니다.';
 
   @override
-  String get saved_shortcut => 'Saved @s.';
+  String get saved_shortcut => '@s이(가) 저장되었습니다.';
 
   @override
-  String get reset_shortcuts_success => 'Restored default shortcuts.';
+  String get reset_shortcuts_success => '기본 단축키가 복원되었습니다.';
 
   @override
-  String get press_keys_to_change => 'Click shortcut key to record changes';
+  String get press_keys_to_change => '단축키를 클릭하여 변경 사항 기록';
 
   @override
-  String get click_to_record => 'Click here then press your shortcut keys';
+  String get click_to_record => '여기를 클릭한 후 단축키를 누르세요';
 
   @override
-  String get local_data_saved => 'Data saved locally';
+  String get local_data_saved => '데이터는 로컬에 저장됩니다';
 
   @override
-  String get login_items_hint => 'Please enable ClipFlow in Login Items.';
+  String get login_items_hint => '로그인 항목에서 ClipFlow를 활성화해 주세요.';
 
   @override
-  String get open_at_login_failed => 'Unable to toggle \"Launch at Login\".';
+  String get open_at_login_failed => '\"로그인 시 실행\" 을 전환할 수 없습니다.';
 
   @override
-  String get open_at_login_on => 'ClipFlow will launch at login.';
+  String get open_at_login_on => 'ClipFlow가 로그인 시 실행됩니다.';
 
   @override
-  String get open_at_login_off => 'Disabled launch at login.';
+  String get open_at_login_off => '로그인 시 실행이 비활성화되었습니다.';
 
   @override
-  String get tray_on => 'ClipFlow icon is visible in menu bar.';
+  String get tray_on => 'ClipFlow 아이콘이 메뉴 막대에 표시됩니다.';
 
   @override
-  String get tray_off => 'Hidden menu bar icon.';
+  String get tray_off => '메뉴 막대 아이콘이 숨겨졌습니다.';
 
   @override
-  String get tray_failed => 'Unable to update menu bar.';
+  String get tray_failed => '메뉴 막대를 업데이트할 수 없습니다.';
 
   @override
-  String get running_apps_empty => 'No running applications found.';
+  String get running_apps_empty => '실행 중인 애플리케이션을 찾을 수 없습니다.';
 
   @override
-  String get select_running_app_title => 'Select Running Application';
+  String get select_running_app_title => '실행 중인 애플리케이션 선택';
 
   @override
-  String get exclude_app_title => 'Exclude Application';
+  String get exclude_app_title => '애플리케이션 제외';
 
   @override
-  String get exclude_app_placeholder => 'Example: Bitwarden, Safari';
+  String get exclude_app_placeholder => '예: Bitwarden, Safari';
 
   @override
-  String get privacy_db_notice =>
-      'Clipboard content is saved exclusively in the local database on this device.';
+  String get privacy_db_notice => '클립보드 내용은 이 기기의 로컬 데이터베이스에만 저장됩니다.';
 
   @override
-  String get version_label => 'Version @v';
+  String get version_label => '버전 @v';
 
   @override
-  String get update_check_failed =>
-      'Unable to check for updates. Please try again later.';
+  String get update_check_failed => '업데이트를 확인할 수 없습니다. 나중에 다시 시도해 주세요.';
 
   @override
-  String get update_available_version => 'New version available (@v)!';
+  String get update_available_version => '새 버전을 사용할 수 있습니다 (@v)!';
 
   @override
-  String get latest_version_msg => 'You are on the latest version (@v).';
+  String get latest_version_msg => '최신 버전 (@v)을 사용하고 있습니다.';
 
   @override
-  String get downloading_update => 'Downloading update... (@p%)';
+  String get downloading_update => '업데이트 다운로드 중... (@p%)';
 
   @override
-  String get cannot_auto_install =>
-      'Unable to auto-install. Opening release page...';
+  String get cannot_auto_install => '자동 설치를 할 수 없습니다. 릴리스 페이지를 열고 있습니다...';
 
   @override
-  String get license => 'License (MIT)';
+  String get license => '라이선스 (MIT)';
 
   @override
-  String get license_sub => 'Open-Source MIT Software License';
+  String get license_sub => '오픈 소스 MIT 소프트웨어 라이선스';
 
   @override
-  String get privacy_policy => 'Privacy Policy';
+  String get privacy_policy => '개인 정보 처리 방침';
 
   @override
-  String get privacy_policy_sub =>
-      '100% Local-First, data stays strictly on device';
+  String get privacy_policy_sub => '100% 로컬 우선, 데이터는 기기에만 저장';
 
   @override
-  String get view_policy => 'View Policy';
+  String get view_policy => '정책 보기';
 
   @override
-  String get view_license => 'View License';
+  String get view_license => '라이선스 보기';
 
   @override
-  String get about_tagline => 'A private, fast, local clipboard manager';
+  String get about_tagline => '개인적이고 빠른 로컬 클립보드 관리자';
 
   @override
-  String get added_to_collection => 'Added to collection';
+  String get added_to_collection => '컬렉션에 추가되었습니다';
 
   @override
-  String get all_cleared => 'Clipboard history cleared';
+  String get all_cleared => '클립보드 기록이 지워졌습니다';
 
   @override
-  String get all_clips => 'All Clips';
+  String get all_clips => '모든 클립';
 
   @override
-  String get all_types => 'All Types';
+  String get all_types => '모든 유형';
 
   @override
-  String get backup_export_failed => 'Could not export backup';
+  String get backup_export_failed => '백업을 내보낼 수 없습니다';
 
   @override
-  String get backup_exported => 'Backup exported';
+  String get backup_exported => '백업이 내보내기되었습니다';
 
   @override
-  String get backup_import_failed => 'Could not import backup';
+  String get backup_import_failed => '백업을 가져올 수 없습니다';
 
   @override
-  String get backup_imported => 'Backup imported';
+  String get backup_imported => '백업이 가져오기되었습니다';
 
   @override
-  String get check_update => 'Check for Updates';
+  String get check_update => '업데이트 확인';
 
   @override
-  String get cleanup_rules => 'Cleanup Rules';
+  String get cleanup_rules => '정리 규칙';
 
   @override
-  String get clear => 'Clear';
+  String get clear => '지우기';
 
   @override
-  String get clear_all => 'Clear All';
+  String get clear_all => '모두 지우기';
 
   @override
-  String get clear_all_confirm_msg =>
-      'All clipboard items will be deleted. This cannot be undone.';
+  String get clear_all_confirm_msg => '모든 클립보드 항목이 삭제됩니다. 이 작업은 취소할 수 없습니다.';
 
   @override
-  String get clear_all_confirm_title => 'Clear all history?';
+  String get clear_all_confirm_title => '모든 기록을 지우시겠습니까?';
 
   @override
-  String get clear_all_history => 'Clear All History';
+  String get clear_all_history => '모든 기록 지우기';
 
   @override
-  String get clear_all_sub => 'Delete every item, including pinned items';
+  String get clear_all_sub => '고정된 항목을 포함한 모든 항목 삭제';
 
   @override
-  String get clear_unpinned => 'Clear Unpinned';
+  String get clear_unpinned => '고정되지 않은 항목 지우기';
 
   @override
-  String get clear_unpinned_sub => 'Keep pinned items';
+  String get clear_unpinned_sub => '고정된 항목 유지';
 
   @override
-  String get collection_name => 'Collection name';
+  String get collection_name => '컬렉션 이름';
 
   @override
-  String get copy_and_paste => 'Copy & Paste';
+  String get copy_and_paste => '복사 및 붙여넣기';
 
   @override
-  String get copy_text_hint => 'Copy something to get started';
+  String get copy_text_hint => '시작하려면 무언가를 복사하세요';
 
   @override
-  String get create => 'Create';
+  String get create => '만들기';
 
   @override
-  String get database_cleanup => 'Database Cleanup';
+  String get database_cleanup => '데이터베이스 정리';
 
   @override
-  String get days_unit => 'days';
+  String get days_unit => '일';
 
   @override
-  String get delete_collection_msg =>
-      'Items in this collection will remain in clipboard history.';
+  String get delete_collection_msg => '이 컬렉션의 항목은 클립보드 기록에 남습니다.';
 
   @override
-  String get delete_collection_title => 'Delete this collection?';
+  String get delete_collection_title => '이 컬렉션을 삭제하시겠습니까?';
 
   @override
-  String get delete_images_first_sub =>
-      'Prioritize images when storage is over limit';
+  String get delete_images_first_sub => '저장소가 한도를 초과하면 이미지를 우선 삭제';
 
   @override
-  String get delete_item_shortcut => 'Delete Selected Item';
+  String get delete_item_shortcut => '선택한 항목 삭제';
 
   @override
-  String get delete_item_sub => 'Remove this item from clipboard history';
+  String get delete_item_sub => '이 항목을 클립보드 기록에서 제거';
 
   @override
-  String get export => 'Export';
+  String get export => '내보내기';
 
   @override
-  String get export_backup => 'Export Backup';
+  String get export_backup => '백업 내보내기';
 
   @override
-  String get export_backup_prompt =>
-      'Enter a password to protect the backup file.';
+  String get export_backup_prompt => '백업 파일을 보호할 비밀번호를 입력하세요.';
 
   @override
-  String get export_backup_sub =>
-      'Save settings to an encrypted .clipflow file';
+  String get export_backup_sub => '설정을 암호화된 .clipflow 파일로 저장';
 
   @override
-  String get export_backup_title => 'Export Settings';
+  String get export_backup_title => '설정 내보내기';
 
   @override
-  String get filter_by_type => 'Filter by content type';
+  String get filter_by_type => '콘텐츠 유형별 필터';
 
   @override
-  String get apply_filters => 'Apply filters';
+  String get apply_filters => '필터 적용';
 
   @override
-  String get focus_search_shortcut => 'Focus Search';
+  String get focus_search_shortcut => '검색에 포커스';
 
   @override
-  String get focus_search_sub => 'Move focus to the search field';
+  String get focus_search_sub => '검색 필드로 포커스 이동';
 
   @override
-  String get global_shortcut_section => 'Global Shortcut';
+  String get global_shortcut_section => '전역 단축키';
 
   @override
-  String get ignore_long_token => 'Ignore Long Tokens';
+  String get ignore_long_token => '긴 토큰 무시';
 
   @override
-  String get ignore_long_token_sub =>
-      'Do not save long secrets or token-like text';
+  String get ignore_long_token_sub => '긴 시크릿이나 토큰 같은 텍스트를 저장하지 않음';
 
   @override
-  String get ignore_sensitive_sub =>
-      'Do not save content that appears sensitive';
+  String get ignore_sensitive_sub => '민감해 보이는 콘텐츠를 저장하지 않음';
 
   @override
-  String get image_not_found => 'Image not found';
+  String get image_not_found => '이미지를 찾을 수 없습니다';
 
   @override
-  String get import => 'Import';
+  String get import => '가져오기';
 
   @override
-  String get import_backup => 'Import Backup';
+  String get import_backup => '백업 가져오기';
 
   @override
-  String get import_backup_prompt =>
-      'Enter the password to decrypt the backup file.';
+  String get import_backup_prompt => '백업 파일 복호화를 위한 비밀번호를 입력하세요.';
 
   @override
-  String get import_backup_sub => 'Restore settings from a .clipflow file';
+  String get import_backup_sub => '설정을 .clipflow 파일에서 복원';
 
   @override
-  String get import_backup_title => 'Import Settings';
+  String get import_backup_title => '설정 가져오기';
 
   @override
-  String get in_app_shortcuts => 'In-App Shortcuts';
+  String get in_app_shortcuts => '인앱 단축키';
 
   @override
-  String get item_deleted => 'Item deleted';
+  String get item_deleted => '항목이 삭제되었습니다';
 
   @override
-  String get licenses_sub => 'Licenses for Flutter and open-source packages';
+  String get licenses_sub => 'Flutter 및 오픈 소스 패키지 라이선스';
 
   @override
-  String get link => 'Link';
+  String get link => '링크';
 
   @override
-  String get max_database_size => 'Maximum Database Size';
+  String get max_database_size => '최대 데이터베이스 크기';
 
   @override
-  String get no_matching_clips => 'No matching clips';
+  String get no_matching_clips => '일치하는 클립이 없습니다';
 
   @override
-  String get open_source_licenses => 'Open-Source Licenses';
+  String get open_source_licenses => '오픈 소스 라이선스';
 
   @override
-  String get password_placeholder => 'Enter password';
+  String get password_placeholder => '비밀번호 입력';
 
   @override
-  String get press_shortcut => 'Press shortcut';
+  String get press_shortcut => '단축키 누르기';
 
   @override
   String get privacy_policy_text =>
-      'Clipboard data is processed and stored locally on your device. ClipFlow does not track or send clipboard history to a server.';
+      '클립보드 데이터는 기기에서 로컬로 처리되고 저장됩니다. ClipFlow는 클립보드 기록을 추적하거나 서버로 전송하지 않습니다.';
 
   @override
-  String get retention_and_limits => 'Retention & Limits';
+  String get retention_and_limits => '보존 및 제한';
 
   @override
-  String get search_history_placeholder => 'Search clipboard history';
+  String get search_history_placeholder => '클립보드 기록 검색';
 
   @override
-  String get starred_clips => 'Starred Clips';
+  String get starred_clips => '즐겨찾기 클립';
 
   @override
   String get tab_ai => 'AI';
 
   @override
-  String get toggle_panel_shortcut => 'Toggle Quick Panel';
+  String get toggle_panel_shortcut => '빠른 패널 전환';
 
   @override
-  String get toggle_panel_shortcut_sub => 'Show ClipFlow from any application';
+  String get toggle_panel_shortcut_sub => '모든 애플리케이션에서 ClipFlow 표시';
 
   @override
-  String get toggle_pin_shortcut => 'Toggle Pin';
+  String get toggle_pin_shortcut => '고정 전환';
 
   @override
-  String get toggle_pin_sub => 'Pin or unpin the selected item';
+  String get toggle_pin_sub => '선택한 항목을 고정하거나 해제';
 
   @override
-  String get try_different_search => 'Try another keyword or filter.';
+  String get try_different_search => '다른 키워드나 필터를 사용해 보세요.';
 
   @override
-  String get unpinned_cleared => 'Unpinned items cleared';
+  String get unpinned_cleared => '고정되지 않은 항목이 지워졌습니다';
 
   @override
-  String get view_licenses => 'View Licenses';
+  String get view_licenses => '라이선스 보기';
 
   @override
-  String get ai_settings_title => 'Local AI Features (Offline)';
+  String get ai_settings_title => '로컬 AI 기능 (오프라인)';
 
   @override
-  String get ai_enabled => 'Enable Local AI';
+  String get ai_enabled => '로컬 AI 활성화';
 
   @override
-  String get ai_enabled_sub =>
-      'Allow using AI models that run directly on your device.';
+  String get ai_enabled_sub => '기기에서 직접 실행되는 AI 모델 사용을 허용합니다.';
 
   @override
   String get ai_privacy_notice =>
-      'ClipFlow integrates AI running entirely on your device, processing clipboard content without sending data to external servers. No account, API key or Internet required.';
+      'ClipFlow는 기기에서 완전히 실행되는 AI를 통합하여, 외부 서버로 데이터를 전송하지 않고 클립보드 내용을 처리합니다. 계정, API 키 또는 인터넷이 필요하지 않습니다.';
 
   @override
-  String get ai_model_selection => 'AI Thinking Models (Reasoning Models)';
+  String get ai_model_selection => 'AI 사고 모델 (추론 모델)';
 
   @override
-  String get ai_model_selection_sub =>
-      'Only models with deep reasoning (Thinking capabilities) are listed.';
+  String get ai_model_selection_sub => '심층 추론(사고 능력)을 갖춘 모델만 나열됩니다.';
 
   @override
-  String get ai_download_model => 'Download model';
+  String get ai_download_model => '모델 다운로드';
 
   @override
-  String get ai_delete_model => 'Delete model';
+  String get ai_delete_model => '모델 삭제';
 
   @override
-  String get ai_downloaded => 'Downloaded';
+  String get ai_downloaded => '다운로드됨';
 
   @override
-  String get ai_not_downloaded => 'Not downloaded';
+  String get ai_not_downloaded => '다운로드되지 않음';
 
   @override
-  String get ai_downloading => 'Downloading...';
+  String get ai_downloading => '다운로드 중...';
 
   @override
-  String get ai_active_model => 'Active model';
+  String get ai_active_model => '활성 모델';
 
   @override
-  String get ai_chat_assistant => 'ClipFlow Local AI Assistant';
+  String get ai_chat_assistant => 'ClipFlow 로컬 AI 어시스턴트';
 
   @override
-  String get ai_thinking_process => 'Thinking process';
+  String get ai_thinking_process => '사고 과정';
 
   @override
-  String get ai_context_clip => 'Selected clip — used only when relevant:';
+  String get ai_context_clip => '선택된 클립 — 관련될 때만 사용:';
 
   @override
-  String get ai_clear_context => 'Remove clipboard';
+  String get ai_clear_context => '클립보드 제거';
 
   @override
-  String get ai_send_prompt => 'Ask AI...';
+  String get ai_send_prompt => 'AI에게 질문...';
 
   @override
-  String get ai_no_model_title => 'AI Model Required';
+  String get ai_no_model_title => 'AI 모델이 필요합니다';
 
   @override
   String get ai_no_model_desc =>
-      'Please download at least 1 AI model to use AI features. Models run entirely on your device, no Internet needed after download.';
+      'AI 기능을 사용하려면 최소 1개의 AI 모델을 다운로드하세요. 모델은 기기에서 완전히 실행되며, 다운로드 후에는 인터넷이 필요하지 않습니다.';
 
   @override
-  String get ai_recommend_model => 'Recommended for you';
+  String get ai_recommend_model => '추천 모델';
 
   @override
-  String get ai_resume_download => 'Resume download';
+  String get ai_resume_download => '다운로드 재개';
 
   @override
-  String get ai_partial_downloaded => 'Partially downloaded';
+  String get ai_partial_downloaded => '부분적으로 다운로드됨';
 
   @override
-  String get ai_download_paused => 'Paused';
+  String get ai_download_paused => '일시 중지됨';
 
   @override
-  String get ai_delete_partial => 'Delete temp file';
+  String get ai_delete_partial => '임시 파일 삭제';
 
   @override
-  String get ai_all_clipboard_context =>
-      'Ready to search Clipboard when requested (@count items)';
+  String get ai_all_clipboard_context => '요청 시 클립보드 검색 준비됨 (@count 항목)';
 
   @override
-  String get ai_select_clip_hint => 'Normal chat does not read Clipboard';
+  String get ai_select_clip_hint => '일반 채팅은 클립보드를 읽지 않습니다';
 
   @override
-  String get copy_part => 'Copy this section';
+  String get copy_part => '이 섹션 복사';
 
   @override
-  String get copy_all => 'Copy all';
+  String get copy_all => '모두 복사';
 
   @override
-  String get paste_all => 'Paste all';
+  String get paste_all => '모두 붙여넣기';
 
   @override
-  String get copy_clipboard_content => 'Copy clipboard content';
+  String get copy_clipboard_content => '클립보드 내용 복사';
 
   @override
-  String get tab_sharing_devices => 'Sharing & Devices';
+  String get tab_sharing_devices => '공유 및 기기';
 
   @override
-  String get local_network_sharing => 'Local network sharing';
+  String get local_network_sharing => '로컬 네트워크 공유';
 
   @override
-  String get sharing_private_note =>
-      'Connect directly on the same Wi-Fi without an account or intermediary server.';
+  String get sharing_private_note => '계정이나 중간 서버 없이 같은 Wi-Fi에서 직접 연결합니다.';
 
   @override
-  String get sharing_disabled => 'Off';
+  String get sharing_disabled => '꺼짐';
 
   @override
-  String get sharing_paused => 'All connections are paused';
+  String get sharing_paused => '모든 연결이 일시 중지되었습니다';
 
   @override
-  String get devices_connected_count => '@count devices connected';
+  String get devices_connected_count => '@count 기기 연결됨';
 
   @override
-  String get searching_devices => 'Searching for devices';
+  String get searching_devices => '기기 검색 중';
 
   @override
-  String get no_connected_devices => 'No connected devices';
+  String get no_connected_devices => '연결된 기기가 없습니다';
 
   @override
-  String get refresh => 'Refresh';
+  String get refresh => '새로고침';
 
   @override
-  String get available_devices => 'Available devices';
+  String get available_devices => '사용 가능한 기기';
 
   @override
-  String get paired_devices => 'Paired devices';
+  String get paired_devices => '페어링된 기기';
 
   @override
-  String get blocked_devices => 'Blocked devices';
+  String get blocked_devices => '차단된 기기';
 
   @override
-  String get manage_devices => 'Manage devices';
+  String get manage_devices => '기기 관리';
 
   @override
-  String get searching_nearby_devices => 'Searching for nearby devices…';
+  String get searching_nearby_devices => '주변 기기 검색 중…';
 
   @override
   String get searching_nearby_devices_sub =>
-      'Keep ClipFlow open on devices connected to the same Wi-Fi network.';
+      '같은 Wi-Fi 네트워크에 연결된 기기에서 ClipFlow를 열어 두세요.';
 
   @override
-  String get sharing_discovery_off => 'Device discovery is off';
+  String get sharing_discovery_off => '기기 검색이 꺼져 있습니다';
 
   @override
-  String get sharing_discovery_off_sub =>
-      'Enable local network sharing to discover devices.';
+  String get sharing_discovery_off_sub => '기기를 검색하려면 로컬 네트워크 공유를 활성화하세요.';
 
   @override
-  String get no_paired_devices => 'No paired devices';
+  String get no_paired_devices => '페어링된 기기가 없습니다';
 
   @override
-  String get no_paired_devices_sub =>
-      'Devices that verify the security code will appear here.';
+  String get no_paired_devices_sub => '보안 코드를 확인한 기기가 여기에 표시됩니다.';
 
   @override
-  String get connect => 'Connect';
+  String get connect => '연결';
 
   @override
-  String get reconnect_manually => 'Reconnect';
+  String get reconnect_manually => '다시 연결';
 
   @override
-  String get disconnect => 'Disconnect';
+  String get disconnect => '연결 해제';
 
   @override
-  String get forget_device => 'Forget device';
+  String get forget_device => '기기 잊어버리기';
 
   @override
-  String get block_device => 'Block device';
+  String get block_device => '기기 차단';
 
   @override
-  String get unblock_device => 'Unblock';
+  String get unblock_device => '차단 해제';
 
   @override
-  String get details => 'Details';
+  String get details => '세부 정보';
 
   @override
-  String get platform => 'Platform';
+  String get platform => '플랫폼';
 
   @override
-  String get local_ip => 'Local IP address';
+  String get local_ip => '로컬 IP 주소';
 
   @override
-  String get service_port => 'Service port';
+  String get service_port => '서비스 포트';
 
   @override
-  String get clipflow_version => 'ClipFlow version';
+  String get clipflow_version => 'ClipFlow 버전';
 
   @override
-  String get protocol_version => 'Protocol version';
+  String get protocol_version => '프로토콜 버전';
 
   @override
-  String get connection_quality => 'Connection quality';
+  String get connection_quality => '연결 품질';
 
   @override
-  String get latency => 'Latency';
+  String get latency => '지연 시간';
 
   @override
-  String get not_available => 'Not available';
+  String get not_available => '사용 불가';
 
   @override
-  String get never => 'Never';
+  String get never => '없음';
 
   @override
-  String get close => 'Close';
+  String get close => '닫기';
 
   @override
-  String get last_sync_value => 'Last synced: @time';
+  String get last_sync_value => '마지막 동기화: @time';
 
   @override
-  String get pending_items_value => '@count items pending';
+  String get pending_items_value => '@count 항목 대기 중';
 
   @override
-  String get peer_status_available => 'Available';
+  String get peer_status_available => '사용 가능';
 
   @override
-  String get peer_status_pairing => 'Awaiting confirmation';
+  String get peer_status_pairing => '확인 대기 중';
 
   @override
-  String get peer_status_connecting => 'Connecting';
+  String get peer_status_connecting => '연결 중';
 
   @override
-  String get peer_status_authenticating => 'Authenticating';
+  String get peer_status_authenticating => '인증 중';
 
   @override
-  String get peer_status_syncing => 'Syncing';
+  String get peer_status_syncing => '동기화 중';
 
   @override
-  String get peer_status_reconnecting => 'Reconnecting';
+  String get peer_status_reconnecting => '다시 연결 중';
 
   @override
-  String get peer_status_connected => 'Connected';
+  String get peer_status_connected => '연결됨';
 
   @override
-  String get peer_status_disconnected => 'Disconnected';
+  String get peer_status_disconnected => '연결 해제됨';
 
   @override
-  String get peer_status_rejected => 'Rejected';
+  String get peer_status_rejected => '거부됨';
 
   @override
-  String get peer_status_incompatible => 'Incompatible';
+  String get peer_status_incompatible => '호환되지 않음';
 
   @override
-  String get peer_status_blocked => 'Blocked';
+  String get peer_status_blocked => '차단됨';
 
   @override
-  String get quality_excellent => 'Excellent';
+  String get quality_excellent => '훌륭함';
 
   @override
-  String get quality_good => 'Good';
+  String get quality_good => '좋음';
 
   @override
-  String get quality_fair => 'Fair';
+  String get quality_fair => '보통';
 
   @override
-  String get quality_poor => 'Poor';
+  String get quality_poor => '나쁨';
 
   @override
-  String get quality_offline => 'Offline';
+  String get quality_offline => '오프라인';
 
   @override
-  String get pairing_request_title => '@device wants to connect';
+  String get pairing_request_title => '@device이(가) 연결을 원합니다';
 
   @override
-  String get pairing_code_help =>
-      'Verify that this code matches on both devices. It expires after 60 seconds.';
+  String get pairing_code_help => '이 코드가 두 기기 모두에서 일치하는지 확인하세요. 60초 후에 만료됩니다.';
 
   @override
-  String get codes_match => 'Codes match';
+  String get codes_match => '코드가 일치합니다';
 
   @override
-  String get waiting_other_device => 'Waiting for the other device…';
+  String get waiting_other_device => '다른 기기를 기다리는 중…';
 
   @override
-  String get reconnect_attempt_value => 'Reconnecting (@count/5)';
+  String get reconnect_attempt_value => '재연결 중 (@count/5)';
 
   @override
-  String get reconnect_manual_required =>
-      'Automatic reconnection failed 5 times. Reconnect manually.';
+  String get reconnect_manual_required => '자동 재연결이 5번 실패했습니다. 수동으로 다시 연결하세요.';
 
   @override
-  String get device_display_name => 'Device display name';
+  String get device_display_name => '기기 표시 이름';
 
   @override
-  String get device_display_name_sub =>
-      'The name shown to other devices on the network';
+  String get device_display_name_sub => '네트워크의 다른 기기에 표시되는 이름';
 
   @override
-  String get make_device_discoverable => 'Make this device discoverable';
+  String get make_device_discoverable => '이 기기를 검색 가능하게 만들기';
 
   @override
   String get make_device_discoverable_sub =>
-      'Allow other devices to find ClipFlow on the same network';
+      '같은 네트워크의 다른 기기가 ClipFlow를 찾을 수 있도록 합니다';
 
   @override
-  String get pause_all_connections => 'Pause all connections';
+  String get pause_all_connections => '모든 연결 일시 중지';
 
   @override
-  String get pause_all_connections_sub =>
-      'Keep pairing data while pausing connections and synchronization';
+  String get pause_all_connections_sub => '페어링 데이터를 유지하면서 연결 및 동기화를 일시 중지합니다';
 
   @override
-  String get connection_and_sync => 'Connection & synchronization';
+  String get connection_and_sync => '연결 및 동기화';
 
   @override
-  String get auto_connect_trusted => 'Auto-connect trusted devices';
+  String get auto_connect_trusted => '신뢰할 수 있는 기기에 자동 연결';
 
   @override
-  String get auto_connect_trusted_sub =>
-      'Reconnect after authenticating the stored device key';
+  String get auto_connect_trusted_sub => '저장된 기기 키를 인증한 후 다시 연결합니다';
 
   @override
-  String get auto_sync_new_clipboard =>
-      'Automatically sync new clipboard items';
+  String get auto_sync_new_clipboard => '새 클립보드 항목 자동 동기화';
 
   @override
-  String get auto_sync_new_clipboard_sub =>
-      'Send new items to each connected device';
+  String get auto_sync_new_clipboard_sub => '새 항목을 각 연결된 기기에 전송합니다';
 
   @override
-  String get sync_pinned_only => 'Only sync pinned items';
+  String get sync_pinned_only => '고정된 항목만 동기화';
 
   @override
-  String get sync_pinned_only_sub => 'Do not automatically send unpinned items';
+  String get sync_pinned_only_sub => '고정되지 않은 항목을 자동으로 전송하지 않음';
 
   @override
-  String get allow_receiving_images => 'Allow receiving images';
+  String get allow_receiving_images => '이미지 수신 허용';
 
   @override
-  String get sharing_image_limit => 'Image size limit';
+  String get sharing_image_limit => '이미지 크기 제한';
 
   @override
-  String get sharing_notifications => 'Notifications';
+  String get sharing_notifications => '알림';
 
   @override
-  String get notify_device_connected => 'Notify when a device connects';
+  String get notify_device_connected => '기기가 연결될 때 알림';
 
   @override
-  String get notify_clipboard_received =>
-      'Notify when a clipboard item arrives';
+  String get notify_clipboard_received => '클립보드 항목이 도착할 때 알림';
 
   @override
-  String get sharing_service_error =>
-      'Could not update the sharing service. Please try again.';
+  String get sharing_service_error => '공유 서비스를 업데이트할 수 없습니다. 다시 시도해 주세요.';
 
   @override
-  String get forget_device_title => 'Forget this device?';
+  String get forget_device_title => '이 기기를 잊어버리시겠습니까?';
 
   @override
   String get forget_device_message =>
-      'The trusted key will be removed. Connecting again requires a new 6-digit pairing code.';
+      '신뢰할 수 있는 키가 제거됩니다. 다시 연결하려면 새 6자리 페어링 코드가 필요합니다.';
 
   @override
-  String get block_device_title => 'Block this device?';
+  String get block_device_title => '이 기기를 차단하시겠습니까?';
 
   @override
-  String get block_device_message =>
-      'The device will be disconnected and all new requests will be rejected.';
+  String get block_device_message => '기기가 연결 해제되고 모든 새 요청이 거부됩니다.';
 
   @override
-  String get delete_collection_confirm => 'Delete Collection Confirm';
+  String get delete_collection_confirm => '컬렉션을 삭제하시겠습니까?';
 
   @override
-  String get ai_performance_mode => 'AI intelligence level';
+  String get ai_performance_mode => 'AI 지능 수준';
 
   @override
-  String get ai_performance_fast => 'Fast';
+  String get ai_performance_fast => '빠름';
 
   @override
-  String get ai_performance_balanced => 'Balanced';
+  String get ai_performance_balanced => '균형';
 
   @override
-  String get ai_performance_smart => 'Smart';
+  String get ai_performance_smart => '스마트';
 }

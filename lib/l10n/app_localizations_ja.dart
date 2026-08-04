@@ -15,1448 +15,1403 @@ class AppLocalizationsJa extends AppLocalizations {
   String get app_name => 'ClipFlow';
 
   @override
-  String get library => 'LIBRARY';
+  String get library => 'ライブラリ';
 
   @override
-  String get all => 'All';
+  String get all => 'すべて';
 
   @override
-  String get pinned => 'Pinned';
+  String get pinned => 'ピン留め';
 
   @override
-  String get images => 'Images';
+  String get images => '画像';
 
   @override
-  String get links => 'Links';
+  String get links => 'リンク';
 
   @override
-  String get code => 'Code';
+  String get code => 'コード';
 
   @override
-  String get collections => 'COLLECTIONS';
+  String get collections => 'コレクション';
 
   @override
-  String get settings => 'Settings';
+  String get settings => '設定';
 
   @override
-  String get local_data_only => 'Data saved locally';
+  String get local_data_only => 'データはローカルに保存';
 
   @override
-  String get search_in_clipboard => 'Search in clipboard';
+  String get search_in_clipboard => 'クリップボードで検索';
 
   @override
-  String get text => 'Text';
+  String get text => 'テキスト';
 
   @override
-  String get url => 'Link';
+  String get url => 'リンク';
 
   @override
-  String get files => 'Files';
+  String get files => 'ファイル';
 
   @override
-  String get file => 'File Path';
+  String get file => 'ファイルパス';
 
   @override
-  String get email => 'Email';
+  String get email => 'メール';
 
   @override
-  String get phone => 'Phone';
+  String get phone => '電話';
 
   @override
-  String get color => 'HEX Color';
+  String get color => 'HEXカラー';
 
   @override
   String get json => 'JSON';
 
   @override
-  String get image => 'Image';
+  String get image => '画像';
 
   @override
-  String get image_link => 'Image Link';
+  String get image_link => '画像リンク';
 
   @override
-  String get collection_personal => 'Personal';
+  String get collection_personal => '個人用';
 
   @override
-  String get collection_link => 'Links';
+  String get collection_link => 'リンク';
 
   @override
-  String get collection_reply => 'Reply Templates';
+  String get collection_reply => '返信テンプレート';
 
   @override
-  String get just_now => 'just now';
+  String get just_now => 'たった今';
 
   @override
-  String get mins_ago => '@m mins ago';
+  String get mins_ago => '@m分前';
 
   @override
-  String get hours_ago => '@h hours ago';
+  String get hours_ago => '@h時間前';
 
   @override
-  String get days_ago => '@d days ago';
+  String get days_ago => '@d日前';
 
   @override
-  String get copy => 'Copy';
+  String get copy => 'コピー';
 
   @override
-  String get copy_again => 'Copy again';
+  String get copy_again => '再コピー';
 
   @override
-  String get copied => 'Copied to clipboard';
+  String get copied => 'クリップボードにコピーしました';
 
   @override
-  String get pin_item => 'Pin item';
+  String get pin_item => 'アイテムをピン留め';
 
   @override
-  String get unpin_item => 'Unpin item';
+  String get unpin_item => 'アイテムのピン留めを解除';
 
   @override
-  String get add_to_collection => 'Add to Collection';
+  String get add_to_collection => 'コレクションに追加';
 
   @override
-  String get extract_ocr => 'Extract Text (OCR)';
+  String get extract_ocr => 'テキスト抽出 (OCR)';
 
   @override
-  String get translate_text => 'Translate Text';
+  String get translate_text => 'テキストを翻訳';
 
   @override
-  String get upload_cloud => 'Upload to Cloud';
+  String get upload_cloud => 'クラウドにアップロード';
 
   @override
-  String get ask_ai => 'Ask AI Assistant';
+  String get ask_ai => 'AIアシスタントに質問';
 
   @override
-  String get delete => 'Delete';
+  String get delete => '削除';
 
   @override
-  String get delete_item_title => 'Delete item?';
+  String get delete_item_title => 'アイテムを削除しますか？';
 
   @override
-  String get delete_item_confirm =>
-      'Are you sure you want to delete this clipboard item?';
+  String get delete_item_confirm => 'このクリップボードアイテムを削除しますか？';
 
   @override
-  String get cancel => 'Cancel';
+  String get cancel => 'キャンセル';
 
   @override
-  String get clipboard_empty => 'Clipboard is currently empty.';
+  String get clipboard_empty => 'クリップボードは現在空です。';
 
   @override
-  String get copied_time => 'Copied';
+  String get copied_time => 'コピー済み';
 
   @override
-  String get source_app => 'Source';
+  String get source_app => 'ソース';
 
   @override
-  String get usage_count => 'Usage count';
+  String get usage_count => '使用回数';
 
   @override
-  String get characters => 'characters';
+  String get characters => '文字';
 
   @override
-  String get words => 'words';
+  String get words => '単語';
 
   @override
-  String get lines => 'lines';
+  String get lines => '行';
 
   @override
-  String get ai_conversation_options => 'Conversation Options';
+  String get ai_conversation_options => '会話オプション';
 
   @override
-  String get rename => 'Rename';
+  String get rename => '名前を変更';
 
   @override
-  String get pin => 'Pin';
+  String get pin => 'ピン留め';
 
   @override
-  String get unpin => 'Unpin';
+  String get unpin => 'ピン留め解除';
 
   @override
-  String get back => 'Back';
+  String get back => '戻る';
 
   @override
-  String get ai_conversation_history => 'Conversation History';
+  String get ai_conversation_history => '会話履歴';
 
   @override
-  String get ai_choose_context => 'Choose clipboard context';
+  String get ai_choose_context => 'クリップボードのコンテキストを選択';
 
   @override
-  String get ai_choose_context_title => 'Choose clipboard context';
+  String get ai_choose_context_title => 'クリップボードのコンテキストを選択';
 
   @override
-  String get ai_no_context_items => 'No clipboard items available';
+  String get ai_no_context_items => 'クリップボードアイテムがありません';
 
   @override
-  String get ai_history_subtitle => 'Up to 20 recent sessions, stored locally';
+  String get ai_history_subtitle => '最大20件の最近のセッション（ローカル保存）';
 
   @override
-  String get ai_new_conversation => '＋ New Conversation';
+  String get ai_new_conversation => '＋ 新しい会話';
 
   @override
-  String get ai_rename_dialog_title => 'Rename Conversation';
+  String get ai_rename_dialog_title => '会話の名前を変更';
 
   @override
-  String get save => 'Save';
+  String get save => '保存';
 
   @override
-  String get ai_gen_settings_title => 'Generation Settings';
+  String get ai_gen_settings_title => '生成設定';
 
   @override
-  String get ai_gen_settings_sub => 'Applies to subsequent AI responses';
+  String get ai_gen_settings_sub => '以降のAI応答に適用されます';
 
   @override
-  String get main_window => 'Main Window';
+  String get main_window => 'メインウィンドウ';
 
   @override
-  String get ai_config => 'AI Configuration';
+  String get ai_config => 'AI設定';
 
   @override
-  String get ai_profile_precise => 'Precise · 2K';
+  String get ai_profile_precise => '精確 · 2K';
 
   @override
-  String get ai_profile_balanced => 'Balanced · 4K';
+  String get ai_profile_balanced => 'バランス · 4K';
 
   @override
-  String get ai_profile_creative => 'Creative · 8K';
+  String get ai_profile_creative => 'クリエイティブ · 8K';
 
   @override
-  String get ai_processing => 'Processing...';
+  String get ai_processing => '処理中...';
 
   @override
-  String get ai_regenerate => 'Regenerate';
+  String get ai_regenerate => '再生成';
 
   @override
-  String get ai_continue => 'Continue';
+  String get ai_continue => '続ける';
 
   @override
-  String get ai_recent_conversation => 'Recent Conversation';
+  String get ai_recent_conversation => '最近の会話';
 
   @override
-  String get ai_privacy_title => '100% Private & Offline';
+  String get ai_privacy_title => '100% プライベート & オフライン';
 
   @override
-  String get ai_cancel_download => 'Cancel download';
+  String get ai_cancel_download => 'ダウンロードをキャンセル';
 
   @override
-  String get ai_size_label => 'Size';
+  String get ai_size_label => 'サイズ';
 
   @override
-  String get settings_title => 'ClipFlow Settings';
+  String get settings_title => 'ClipFlow設定';
 
   @override
-  String get tab_general => 'General';
+  String get tab_general => '一般';
 
   @override
-  String get tab_clipboard => 'Clipboard';
+  String get tab_clipboard => 'クリップボード';
 
   @override
-  String get tab_privacy => 'Privacy';
+  String get tab_privacy => 'プライバシー';
 
   @override
-  String get tab_storage => 'Storage';
+  String get tab_storage => 'ストレージ';
 
   @override
-  String get tab_shortcuts => 'Shortcuts';
+  String get tab_shortcuts => 'ショートカット';
 
   @override
-  String get tab_about => 'About';
+  String get tab_about => '情報';
 
   @override
-  String get appearance_and_theme => 'Appearance & Theme';
+  String get appearance_and_theme => '外観とテーマ';
 
   @override
-  String get theme_mode => 'Theme Mode';
+  String get theme_mode => 'テーマモード';
 
   @override
-  String get theme_system => 'System';
+  String get theme_system => 'システム';
 
   @override
-  String get theme_light => 'Light';
+  String get theme_light => 'ライト';
 
   @override
-  String get theme_dark => 'Dark';
+  String get theme_dark => 'ダーク';
 
   @override
-  String get app_language => 'App Language';
+  String get app_language => 'アプリ言語';
 
   @override
-  String get translation_language => 'Translation Language';
+  String get translation_language => '翻訳言語';
 
   @override
-  String get translation_language_sub =>
-      'Default language when using Translate action';
+  String get translation_language_sub => '翻訳アクション使用時のデフォルト言語';
 
   @override
-  String get system_permissions => 'System Permissions';
+  String get system_permissions => 'システム権限';
 
   @override
-  String get accessibility_permission => 'Accessibility Permission';
+  String get accessibility_permission => 'アクセシビリティ権限';
 
   @override
-  String get accessibility_granted =>
-      'Granted. ClipFlow automatically pastes when item is selected.';
+  String get accessibility_granted => '付与済み。アイテムを選択すると ClipFlow が自動貼り付けします。';
 
   @override
   String get accessibility_required =>
-      'Required for ClipFlow to automatically paste text into active apps.';
+      'ClipFlow がアクティブなアプリにテキストを自動貼り付けするために必要です。';
 
   @override
-  String get granted => 'Granted';
+  String get granted => '付与済み';
 
   @override
-  String get grant_permission => 'Grant Permission';
+  String get grant_permission => '権限を付与';
 
   @override
-  String get restart_app => 'Restart Application';
+  String get restart_app => 'アプリを再起動';
 
   @override
-  String get restart_app_sub =>
-      'Restart ClipFlow to apply newly granted permissions.';
+  String get restart_app_sub => '新しく付与された権限を適用するため ClipFlow を再起動してください。';
 
   @override
-  String get restart => 'Restart';
+  String get restart => '再起動';
 
   @override
-  String get reset_permission => 'Reset & Re-grant Permission';
+  String get reset_permission => '権限をリセットして再付与';
 
   @override
-  String get reset_permission_sub =>
-      'Use if app update invalidates system Accessibility permission.';
+  String get reset_permission_sub => 'アプリ更新によりアクセシビリティ権限が無効になった場合に使用してください。';
 
   @override
-  String get reset => 'Reset';
+  String get reset => 'リセット';
 
   @override
-  String get startup_options => 'Startup & Behavior';
+  String get startup_options => '起動と動作';
 
   @override
-  String get launch_at_login => 'Launch at Login';
+  String get launch_at_login => 'ログイン時に起動';
 
   @override
-  String get launch_at_login_sub =>
-      'Automatically launch ClipFlow when logging in to macOS.';
+  String get launch_at_login_sub => 'macOS にログイン時に ClipFlow を自動起動します。';
 
   @override
-  String get run_in_tray => 'Run in Menu Bar';
+  String get run_in_tray => 'メニューバーで実行';
 
   @override
-  String get run_in_tray_sub => 'Keep ClipFlow active in the macOS Menu Bar.';
+  String get run_in_tray_sub => 'macOS のメニューバーで ClipFlow をアクティブに保ちます。';
 
   @override
-  String get show_in_dock => 'Show in Dock';
+  String get show_in_dock => 'Dock に表示';
 
   @override
-  String get show_in_dock_sub => 'Show ClipFlow app icon in macOS Dock.';
+  String get show_in_dock_sub => 'macOS の Dock に ClipFlow アプリアイコンを表示します。';
 
   @override
-  String get close_after_copy => 'Auto-hide Quick Panel after copy';
+  String get close_after_copy => 'コピー後にクイックパネルを自動非表示';
 
   @override
-  String get close_after_copy_sub =>
-      'Automatically hide panel and paste content into previous active app.';
+  String get close_after_copy_sub => 'パネルを自動的に非表示にして、前のアクティブアプリにコンテンツを貼り付けます。';
 
   @override
-  String get sound_enabled => 'Sound Effects';
+  String get sound_enabled => 'サウンドエフェクト';
 
   @override
-  String get sound_enabled_sub => 'Play subtle sound effect on copy or action.';
+  String get sound_enabled_sub => 'コピーやアクション時に控えめなサウンドを再生します。';
 
   @override
-  String get backup_restore_section => 'Backup & Restore Settings';
+  String get backup_restore_section => '設定のバックアップと復元';
 
   @override
-  String get export_config => 'Export Personal Settings (.clipflow)';
+  String get export_config => '個人設定をエクスポート (.clipflow)';
 
   @override
-  String get export_config_sub =>
-      'Package all settings & theme into an encrypted .clipflow file.';
+  String get export_config_sub => 'すべての設定とテーマを暗号化した .clipflow ファイルにパッケージします。';
 
   @override
-  String get export_button => 'Export';
+  String get export_button => 'エクスポート';
 
   @override
-  String get import_config => 'Import Settings (.clipflow)';
+  String get import_config => '設定をインポート (.clipflow)';
 
   @override
-  String get import_config_sub =>
-      'Restore settings from an encrypted .clipflow backup file.';
+  String get import_config_sub => '暗号化された .clipflow バックアップファイルから設定を復元します。';
 
   @override
-  String get import_button => 'Import';
+  String get import_button => 'インポート';
 
   @override
-  String get export_dialog_title => 'Export Personal Settings';
+  String get export_dialog_title => '個人設定のエクスポート';
 
   @override
-  String get export_dialog_msg =>
-      'Enter a password to encrypt your .clipflow backup file:';
+  String get export_dialog_msg => 'バックアップファイルを暗号化するパスワードを入力してください：';
 
   @override
-  String get password => 'Password';
+  String get password => 'パスワード';
 
   @override
-  String get confirm_password => 'Confirm Password';
+  String get confirm_password => 'パスワードを確認';
 
   @override
-  String get password_empty => 'Password cannot be empty.';
+  String get password_empty => 'パスワードを入力してください。';
 
   @override
-  String get password_mismatch => 'Passwords do not match.';
+  String get password_mismatch => 'パスワードが一致しません。';
 
   @override
-  String get export_success => 'Settings exported successfully!';
+  String get export_success => '設定のエクスポートが完了しました！';
 
   @override
-  String get export_failed => 'Export failed.';
+  String get export_failed => 'エクスポートに失敗しました。';
 
   @override
-  String get import_dialog_title => 'Import Personal Settings';
+  String get import_dialog_title => '個人設定のインポート';
 
   @override
-  String get import_dialog_msg => 'Enter password to decrypt .clipflow file:';
+  String get import_dialog_msg => '.clipflow ファイルを復号化するパスワードを入力してください：';
 
   @override
-  String get decrypt_password => 'Decryption Password';
+  String get decrypt_password => '復号化パスワード';
 
   @override
-  String get import_success => 'Settings imported and applied successfully!';
+  String get import_success => '設定のインポートと適用が完了しました！';
 
   @override
-  String get import_failed => 'Import failed.';
+  String get import_failed => 'インポートに失敗しました。';
 
   @override
-  String get current_storage_usage => 'Current Storage Usage';
+  String get current_storage_usage => '現在のストレージ使用量';
 
   @override
-  String get clear_history => 'Clear History…';
+  String get clear_history => '履歴をクリア…';
 
   @override
-  String get clear_history_title => 'Clear clipboard history?';
+  String get clear_history_title => 'クリップボード履歴をクリアしますか？';
 
   @override
-  String get clear_history_msg => 'Pinned items will be preserved.';
+  String get clear_history_msg => 'ピン留めしたアイテムは保持されます。';
 
   @override
-  String get app_description =>
-      'A private, local-first clipboard manager designed for macOS.';
+  String get app_description => 'macOS 向けのプライベートでローカルファーストなクリップボードマネージャー。';
 
   @override
-  String get version => 'Version';
+  String get version => 'バージョン';
 
   @override
-  String get github_source => 'Source Code on GitHub';
+  String get github_source => 'GitHub のソースコード';
 
   @override
-  String get check_updates => 'Check for Updates';
+  String get check_updates => 'アップデートを確認';
 
   @override
-  String get quit_app => 'Quit';
+  String get quit_app => '終了';
 
   @override
-  String get visit => 'Visit';
+  String get visit => '訪問';
 
   @override
-  String get check => 'Check';
+  String get check => '確認';
 
   @override
-  String get latest_version => 'You are using the latest version';
+  String get latest_version => '最新バージョンをお使いです';
 
   @override
-  String get update_available => 'New version available';
+  String get update_available => '新しいバージョンが利用可能です';
 
   @override
-  String get add_to_collection_title => 'Add to collection';
+  String get add_to_collection_title => 'コレクションに追加';
 
   @override
-  String get no_collections => 'No collections available.';
+  String get no_collections => 'コレクションがありません。';
 
   @override
-  String get new_collection => 'New collection';
+  String get new_collection => '新しいコレクション';
 
   @override
-  String get new_collection_btn => '+ New Collection';
+  String get new_collection_btn => '+ 新しいコレクション';
 
   @override
-  String get rename_collection => 'Rename collection';
+  String get rename_collection => 'コレクション名を変更';
 
   @override
-  String get delete_collection => 'Delete collection';
+  String get delete_collection => 'コレクションを削除';
 
   @override
-  String get collection_name_placeholder => 'Collection name';
+  String get collection_name_placeholder => 'コレクション名';
 
   @override
-  String get this_device => 'This device';
+  String get this_device => 'このデバイス';
 
   @override
-  String get unknown => 'Unknown';
+  String get unknown => '不明';
 
   @override
-  String get ocr_success => 'Text extracted & copy created';
+  String get ocr_success => 'テキスト抽出 & コピー作成完了';
 
   @override
-  String get ocr_empty => 'No text found in image';
+  String get ocr_empty => '画像にテキストが見つかりません';
 
   @override
-  String get translate_success => 'Text translated & copy created';
+  String get translate_success => 'テキスト翻訳 & コピー作成完了';
 
   @override
-  String get translate_failed => 'Unable to translate text';
+  String get translate_failed => 'テキストを翻訳できませんでした';
 
   @override
-  String get upload_cloud_success => 'Uploaded to cloud & link copied';
+  String get upload_cloud_success => 'クラウドにアップロード & リンクをコピーしました';
 
   @override
-  String get upload_cloud_failed => 'Unable to upload image to cloud';
+  String get upload_cloud_failed => '画像をクラウドにアップロードできませんでした';
 
   @override
-  String get select_item_to_view => 'Select an item to view details';
+  String get select_item_to_view => 'アイテムを選択して詳細を表示';
 
   @override
-  String get image_file_not_found => 'Image file no longer exists';
+  String get image_file_not_found => '画像ファイルが存在しません';
 
   @override
-  String get cannot_display_image => 'Unable to display image';
+  String get cannot_display_image => '画像を表示できません';
 
   @override
-  String get no_results_found => 'No results found';
+  String get no_results_found => '結果が見つかりません';
 
   @override
-  String get clipboard_empty_title => 'Your clipboard is empty';
+  String get clipboard_empty_title => 'クリップボードが空です';
 
   @override
-  String get try_different_keyword => 'Try different keywords or filters.';
+  String get try_different_keyword => '別のキーワードやフィルターをお試しください。';
 
   @override
   String get clipboard_empty_subtitle =>
-      'Copy something. ClipFlow will keep it safe on this device.';
+      '何かをコピーしてください。ClipFlow がこのデバイスで安全に保管します。';
 
   @override
-  String get try_again => 'Try Again';
+  String get try_again => '再試行';
 
   @override
-  String get delete_cannot_undo => 'This action cannot be undone.';
+  String get delete_cannot_undo => 'この操作は元に戻せません。';
 
   @override
-  String get onboarding_title_1 =>
-      'Everything you copy, right where you need it';
+  String get onboarding_title_1 => 'コピーしたすべてのものが、必要な場所に';
 
   @override
   String get onboarding_desc_1 =>
-      'ClipFlow saves your clipboard history so you can find text, links, code, and more in seconds.';
+      'ClipFlow がクリップボード履歴を保存するので、テキスト、リンク、コードなどを瞬時に見つけられます。';
 
   @override
-  String get onboarding_title_2 => 'Private by design';
+  String get onboarding_title_2 => 'プライバシーを重視した設計';
 
   @override
   String get onboarding_desc_2 =>
-      'Data stays on this device only. ClipFlow does not upload your clipboard content to any server.';
+      'データはこのデバイスのみに保存されます。ClipFlow はクリップボードの内容をサーバーにアップロードしません。';
 
   @override
-  String get onboarding_title_3 => 'You are always in control';
+  String get onboarding_title_3 => '常にあなたがコントロール';
 
   @override
   String get onboarding_desc_3 =>
-      'Pause monitoring anytime, exclude sensitive apps, and clear data with one click.';
+      'いつでも監視を一時停止し、センシティブなアプリを除外し、ワンクリックでデータを消去できます。';
 
   @override
-  String get onboarding_title_4 => 'How long do you want to keep history?';
+  String get onboarding_title_4 => '履歴をどのくらい保持しますか？';
 
   @override
-  String get onboarding_desc_4 => 'You can change this anytime in Settings.';
+  String get onboarding_desc_4 => 'これはいつでも設定で変更できます。';
 
   @override
-  String get onboarding_title_5 => 'Ready to work faster';
+  String get onboarding_title_5 => 'より速く作業する準備ができました';
 
   @override
   String get onboarding_desc_5 =>
-      'Press Control + V on macOS or Control + Shift + V on Windows/Linux to open ClipFlow.';
+      'macOS では Control + V、Windows/Linux では Control + Shift + V を押して ClipFlow を開きます。';
 
   @override
-  String get unlimited => 'Unlimited';
+  String get unlimited => '無制限';
 
   @override
-  String get start_btn => 'Get Started';
+  String get start_btn => 'はじめる';
 
   @override
-  String get continue_btn => 'Continue';
+  String get continue_btn => '続ける';
 
   @override
-  String get cloud_hosting_section => 'Cloud Image Hosting';
+  String get cloud_hosting_section => 'クラウド画像ホスティング';
 
   @override
-  String get cloud_provider => 'Cloud Provider';
+  String get cloud_provider => 'クラウドプロバイダー';
 
   @override
-  String get cloud_provider_sub =>
-      'Enable a single host option to upload images';
+  String get cloud_provider_sub => '画像をアップロードするホストオプションを1つ有効にしてください';
 
   @override
-  String get cloud_in_use => 'FreeImage.host (Active)';
+  String get cloud_in_use => 'FreeImage.host（アクティブ）';
 
   @override
-  String get cloud_coming_soon => 'Google Drive (Coming soon)';
+  String get cloud_coming_soon => 'Google Drive（近日公開）';
 
   @override
-  String get api_key_placeholder => 'Enter API key...';
+  String get api_key_placeholder => 'APIキーを入力...';
 
   @override
-  String get accent_color => 'Theme Accent Color';
+  String get accent_color => 'テーマのアクセントカラー';
 
   @override
-  String get clipboard_monitoring => 'Clipboard Monitoring';
+  String get clipboard_monitoring => 'クリップボード監視';
 
   @override
-  String get monitoring_active =>
-      'ClipFlow is recording new clipboard entries.';
+  String get monitoring_active => 'ClipFlow が新しいクリップボードエントリを記録しています。';
 
   @override
-  String get monitoring_paused => 'Clipboard history recording is paused.';
+  String get monitoring_paused => 'クリップボード履歴の記録が一時停止されています。';
 
   @override
-  String get ignore_duplicates => 'Ignore Duplicates';
+  String get ignore_duplicates => '重複を無視';
 
   @override
-  String get duplicate_behavior => 'When item already exists';
+  String get duplicate_behavior => 'アイテムが既に存在する場合';
 
   @override
-  String get bring_to_top => 'Bring to top';
+  String get bring_to_top => '先頭に移動';
 
   @override
-  String get create_new => 'Create new item';
+  String get create_new => '新しいアイテムを作成';
 
   @override
-  String get keep_position => 'Keep position';
+  String get keep_position => '位置を保持';
 
   @override
-  String get allowed_content_types => 'Allowed Content Types';
+  String get allowed_content_types => '許可されたコンテンツタイプ';
 
   @override
-  String get content_limits => 'Content Limits';
+  String get content_limits => 'コンテンツ制限';
 
   @override
-  String get min_length => 'Minimum length';
+  String get min_length => '最小長';
 
   @override
-  String get max_length => 'Maximum length';
+  String get max_length => '最大長';
 
   @override
-  String get max_image_size => 'Maximum image size';
+  String get max_image_size => '最大画像サイズ';
 
   @override
-  String get chars_unit => 'characters';
+  String get chars_unit => '文字';
 
   @override
-  String get ignore_sensitive => 'Ignore Sensitive Content';
+  String get ignore_sensitive => '機密コンテンツを無視';
 
   @override
-  String get ignore_otp => 'Ignore OTP Codes';
+  String get ignore_otp => 'OTPコードを無視';
 
   @override
-  String get ignore_otp_sub => 'Numeric strings of 4-8 digits.';
+  String get ignore_otp_sub => '4〜8桁の数値文字列。';
 
   @override
-  String get ignore_long_tokens => 'Ignore Long Tokens';
+  String get ignore_long_tokens => '長いトークンを無視';
 
   @override
-  String get excluded_apps => 'Excluded Applications';
+  String get excluded_apps => '除外されたアプリケーション';
 
   @override
-  String get add_app => 'Add';
+  String get add_app => '追加';
 
   @override
-  String get no_excluded_apps => 'No applications excluded yet.';
+  String get no_excluded_apps => '除外されたアプリケーションはまだありません。';
 
   @override
-  String get add_excluded_app_title => 'Add Excluded Application';
+  String get add_excluded_app_title => '除外アプリケーションを追加';
 
   @override
-  String get add_excluded_app_msg =>
-      'Copied content from excluded apps will not be saved to history.';
+  String get add_excluded_app_msg => '除外されたアプリからコピーされたコンテンツは履歴に保存されません。';
 
   @override
-  String get select_running_app => 'Select from running applications';
+  String get select_running_app => '実行中のアプリケーションから選択';
 
   @override
-  String get select_app_finder => 'Select application (.app) from Finder';
+  String get select_app_finder => 'Finder からアプリケーション (.app) を選択';
 
   @override
-  String get enter_app_manual => 'Enter application name manually';
+  String get enter_app_manual => 'アプリケーション名を手動で入力';
 
   @override
-  String get enter_app_name => 'Enter application name';
+  String get enter_app_name => 'アプリケーション名を入力';
 
   @override
-  String get app_name_placeholder => 'Example: Safari, Xcode';
+  String get app_name_placeholder => '例：Safari、Xcode';
 
   @override
-  String get running_apps_title => 'Running Applications';
+  String get running_apps_title => '実行中のアプリケーション';
 
   @override
-  String get history_retention => 'History Retention';
+  String get history_retention => '履歴保持';
 
   @override
-  String get max_storage => 'Maximum Storage Size';
+  String get max_storage => '最大ストレージサイズ';
 
   @override
-  String get delete_images_first => 'Delete images first when cleaning up';
+  String get delete_images_first => 'クリーンアップ時に最初に画像を削除';
 
   @override
-  String get data_protection => 'Data Protection';
+  String get data_protection => 'データ保護';
 
   @override
-  String get protect_pinned => 'Do not auto-delete pinned items';
+  String get protect_pinned => 'ピン留めしたアイテムを自動削除しない';
 
   @override
-  String get protect_collections => 'Do not auto-delete collection items';
+  String get protect_collections => 'コレクションアイテムを自動削除しない';
 
   @override
-  String get auto_cleanup => 'Auto Cleanup';
+  String get auto_cleanup => '自動クリーンアップ';
 
   @override
-  String get retention_period => 'History Retention Period';
+  String get retention_period => '履歴保持期間';
 
   @override
-  String get max_items => 'Maximum Items';
+  String get max_items => '最大アイテム数';
 
   @override
-  String get items_unit => 'items';
+  String get items_unit => 'アイテム';
 
   @override
-  String get shortcuts_title => 'System Global Shortcuts';
+  String get shortcuts_title => 'システムグローバルショートカット';
 
   @override
-  String get open_quick_panel => 'Open Quick Panel';
+  String get open_quick_panel => 'クイックパネルを開く';
 
   @override
-  String get open_main_window => 'Open Main Window';
+  String get open_main_window => 'メインウィンドウを開く';
 
   @override
-  String get toggle_monitoring => 'Pause/Resume Monitoring';
+  String get toggle_monitoring => '監視を一時停止/再開';
 
   @override
-  String get focus_search => 'Focus Search Bar';
+  String get focus_search => '検索バーにフォーカス';
 
   @override
-  String get toggle_pin => 'Pin / Unpin Item';
+  String get toggle_pin => 'アイテムをピン留め / 解除';
 
   @override
-  String get select_and_copy => 'Select and Copy';
+  String get select_and_copy => '選択してコピー';
 
   @override
-  String get delete_item => 'Delete Item';
+  String get delete_item => 'アイテムを削除';
 
   @override
-  String get restore_defaults => 'Restore Defaults';
+  String get restore_defaults => 'デフォルトに戻す';
 
   @override
   String get shortcut_hint =>
-      'Click a row to record a new shortcut. Global hotkey takes effect immediately after saving.';
+      '行をクリックして新しいショートカットを記録します。グローバルホットキーは保存直後に有効になります。';
 
   @override
-  String get record_shortcut_title => 'Record New Shortcut';
+  String get record_shortcut_title => '新しいショートカットを記録';
 
   @override
-  String get record_shortcut_msg =>
-      'Press the shortcut key combination you want to use.';
+  String get record_shortcut_msg => '使用したいショートカットキーの組み合わせを押してください。';
 
   @override
   String get system_hotkey_needs_modifier =>
-      'Global shortcuts require a modifier key (Cmd/Ctrl/Option/Shift).';
+      'グローバルショートカットには修飾キー（Cmd/Ctrl/Option/Shift）が必要です。';
 
   @override
-  String get choose_non_modifier => 'Please select a non-modifier key.';
+  String get choose_non_modifier => '修飾キー以外のキーを選択してください。';
 
   @override
-  String get shortcut_conflict =>
-      'Shortcut is already used for another action.';
+  String get shortcut_conflict => 'ショートカットは既に別のアクションに使用されています。';
 
   @override
-  String get shortcut_used_by_other_app =>
-      'Shortcut is used by another application.';
+  String get shortcut_used_by_other_app => 'ショートカットは別のアプリケーションで使用されています。';
 
   @override
-  String get saved_shortcut => 'Saved @s.';
+  String get saved_shortcut => '@s を保存しました。';
 
   @override
-  String get reset_shortcuts_success => 'Restored default shortcuts.';
+  String get reset_shortcuts_success => 'デフォルトのショートカットを復元しました。';
 
   @override
-  String get press_keys_to_change => 'Click shortcut key to record changes';
+  String get press_keys_to_change => 'ショートカットキーをクリックして変更を記録';
 
   @override
-  String get click_to_record => 'Click here then press your shortcut keys';
+  String get click_to_record => 'ここをクリックしてからショートカットキーを押してください';
 
   @override
-  String get local_data_saved => 'Data saved locally';
+  String get local_data_saved => 'データはローカルに保存されています';
 
   @override
-  String get login_items_hint => 'Please enable ClipFlow in Login Items.';
+  String get login_items_hint => 'ログイン項目で ClipFlow を有効にしてください。';
 
   @override
-  String get open_at_login_failed => 'Unable to toggle \"Launch at Login\".';
+  String get open_at_login_failed => '\"ログイン時に起動\" を切り替えられませんでした。';
 
   @override
-  String get open_at_login_on => 'ClipFlow will launch at login.';
+  String get open_at_login_on => 'ClipFlow はログイン時に起動します。';
 
   @override
-  String get open_at_login_off => 'Disabled launch at login.';
+  String get open_at_login_off => 'ログイン時の起動を無効にしました。';
 
   @override
-  String get tray_on => 'ClipFlow icon is visible in menu bar.';
+  String get tray_on => 'ClipFlow アイコンがメニューバーに表示されています。';
 
   @override
-  String get tray_off => 'Hidden menu bar icon.';
+  String get tray_off => 'メニューバーアイコンが非表示になりました。';
 
   @override
-  String get tray_failed => 'Unable to update menu bar.';
+  String get tray_failed => 'メニューバーを更新できませんでした。';
 
   @override
-  String get running_apps_empty => 'No running applications found.';
+  String get running_apps_empty => '実行中のアプリケーションが見つかりません。';
 
   @override
-  String get select_running_app_title => 'Select Running Application';
+  String get select_running_app_title => '実行中のアプリケーションを選択';
 
   @override
-  String get exclude_app_title => 'Exclude Application';
+  String get exclude_app_title => 'アプリケーションを除外';
 
   @override
-  String get exclude_app_placeholder => 'Example: Bitwarden, Safari';
+  String get exclude_app_placeholder => '例：Bitwarden、Safari';
 
   @override
-  String get privacy_db_notice =>
-      'Clipboard content is saved exclusively in the local database on this device.';
+  String get privacy_db_notice => 'クリップボードの内容はこのデバイスのローカルデータベースにのみ保存されます。';
 
   @override
-  String get version_label => 'Version @v';
+  String get version_label => 'バージョン @v';
 
   @override
-  String get update_check_failed =>
-      'Unable to check for updates. Please try again later.';
+  String get update_check_failed => 'アップデートを確認できませんでした。後でもう一度お試しください。';
 
   @override
-  String get update_available_version => 'New version available (@v)!';
+  String get update_available_version => '新しいバージョンが利用可能です（@v）！';
 
   @override
-  String get latest_version_msg => 'You are on the latest version (@v).';
+  String get latest_version_msg => '最新バージョン (@v) をお使いです。';
 
   @override
-  String get downloading_update => 'Downloading update... (@p%)';
+  String get downloading_update => 'アップデートをダウンロード中... (@p%)';
 
   @override
-  String get cannot_auto_install =>
-      'Unable to auto-install. Opening release page...';
+  String get cannot_auto_install => '自動インストールができません。リリースページを開いています...';
 
   @override
-  String get license => 'License (MIT)';
+  String get license => 'ライセンス (MIT)';
 
   @override
-  String get license_sub => 'Open-Source MIT Software License';
+  String get license_sub => 'オープンソース MIT ソフトウェアライセンス';
 
   @override
-  String get privacy_policy => 'Privacy Policy';
+  String get privacy_policy => 'プライバシーポリシー';
 
   @override
-  String get privacy_policy_sub =>
-      '100% Local-First, data stays strictly on device';
+  String get privacy_policy_sub => '100% ローカルファースト、データはデバイスに厳密に保存';
 
   @override
-  String get view_policy => 'View Policy';
+  String get view_policy => 'ポリシーを表示';
 
   @override
-  String get view_license => 'View License';
+  String get view_license => 'ライセンスを表示';
 
   @override
-  String get about_tagline => 'A private, fast, local clipboard manager';
+  String get about_tagline => 'プライベートで高速なローカルクリップボードマネージャー';
 
   @override
-  String get added_to_collection => 'Added to collection';
+  String get added_to_collection => 'コレクションに追加しました';
 
   @override
-  String get all_cleared => 'Clipboard history cleared';
+  String get all_cleared => 'クリップボード履歴をクリアしました';
 
   @override
-  String get all_clips => 'All Clips';
+  String get all_clips => 'すべてのクリップ';
 
   @override
-  String get all_types => 'All Types';
+  String get all_types => 'すべてのタイプ';
 
   @override
-  String get backup_export_failed => 'Could not export backup';
+  String get backup_export_failed => 'バックアップをエクスポートできませんでした';
 
   @override
-  String get backup_exported => 'Backup exported';
+  String get backup_exported => 'バックアップをエクスポートしました';
 
   @override
-  String get backup_import_failed => 'Could not import backup';
+  String get backup_import_failed => 'バックアップをインポートできませんでした';
 
   @override
-  String get backup_imported => 'Backup imported';
+  String get backup_imported => 'バックアップをインポートしました';
 
   @override
-  String get check_update => 'Check for Updates';
+  String get check_update => 'アップデートを確認';
 
   @override
-  String get cleanup_rules => 'Cleanup Rules';
+  String get cleanup_rules => 'クリーンアップルール';
 
   @override
-  String get clear => 'Clear';
+  String get clear => 'クリア';
 
   @override
-  String get clear_all => 'Clear All';
+  String get clear_all => 'すべてクリア';
 
   @override
-  String get clear_all_confirm_msg =>
-      'All clipboard items will be deleted. This cannot be undone.';
+  String get clear_all_confirm_msg => 'すべてのクリップボードアイテムが削除されます。元に戻すことはできません。';
 
   @override
-  String get clear_all_confirm_title => 'Clear all history?';
+  String get clear_all_confirm_title => 'すべての履歴をクリアしますか？';
 
   @override
-  String get clear_all_history => 'Clear All History';
+  String get clear_all_history => 'すべての履歴をクリア';
 
   @override
-  String get clear_all_sub => 'Delete every item, including pinned items';
+  String get clear_all_sub => 'ピン留めアイテムを含むすべてのアイテムを削除';
 
   @override
-  String get clear_unpinned => 'Clear Unpinned';
+  String get clear_unpinned => 'ピン留めなしをクリア';
 
   @override
-  String get clear_unpinned_sub => 'Keep pinned items';
+  String get clear_unpinned_sub => 'ピン留めしたアイテムを保持';
 
   @override
-  String get collection_name => 'Collection name';
+  String get collection_name => 'コレクション名';
 
   @override
-  String get copy_and_paste => 'Copy & Paste';
+  String get copy_and_paste => 'コピー & 貼り付け';
 
   @override
-  String get copy_text_hint => 'Copy something to get started';
+  String get copy_text_hint => 'はじめに何かをコピーしてください';
 
   @override
-  String get create => 'Create';
+  String get create => '作成';
 
   @override
-  String get database_cleanup => 'Database Cleanup';
+  String get database_cleanup => 'データベースクリーンアップ';
 
   @override
-  String get days_unit => 'days';
+  String get days_unit => '日';
 
   @override
-  String get delete_collection_msg =>
-      'Items in this collection will remain in clipboard history.';
+  String get delete_collection_msg => 'このコレクションのアイテムはクリップボード履歴に残ります。';
 
   @override
-  String get delete_collection_title => 'Delete this collection?';
+  String get delete_collection_title => 'このコレクションを削除しますか？';
 
   @override
-  String get delete_images_first_sub =>
-      'Prioritize images when storage is over limit';
+  String get delete_images_first_sub => 'ストレージが制限を超えた場合は画像を優先的に削除';
 
   @override
-  String get delete_item_shortcut => 'Delete Selected Item';
+  String get delete_item_shortcut => '選択したアイテムを削除';
 
   @override
-  String get delete_item_sub => 'Remove this item from clipboard history';
+  String get delete_item_sub => 'このアイテムをクリップボード履歴から削除';
 
   @override
-  String get export => 'Export';
+  String get export => 'エクスポート';
 
   @override
-  String get export_backup => 'Export Backup';
+  String get export_backup => 'バックアップをエクスポート';
 
   @override
-  String get export_backup_prompt =>
-      'Enter a password to protect the backup file.';
+  String get export_backup_prompt => 'バックアップファイルを保護するパスワードを入力してください。';
 
   @override
-  String get export_backup_sub =>
-      'Save settings to an encrypted .clipflow file';
+  String get export_backup_sub => '設定を暗号化した .clipflow ファイルに保存';
 
   @override
-  String get export_backup_title => 'Export Settings';
+  String get export_backup_title => '設定をエクスポート';
 
   @override
-  String get filter_by_type => 'Filter by content type';
+  String get filter_by_type => 'コンテンツタイプでフィルター';
 
   @override
-  String get apply_filters => 'Apply filters';
+  String get apply_filters => 'フィルターを適用';
 
   @override
-  String get focus_search_shortcut => 'Focus Search';
+  String get focus_search_shortcut => '検索にフォーカス';
 
   @override
-  String get focus_search_sub => 'Move focus to the search field';
+  String get focus_search_sub => '検索フィールドにフォーカスを移動';
 
   @override
-  String get global_shortcut_section => 'Global Shortcut';
+  String get global_shortcut_section => 'グローバルショートカット';
 
   @override
-  String get ignore_long_token => 'Ignore Long Tokens';
+  String get ignore_long_token => '長いトークンを無視';
 
   @override
-  String get ignore_long_token_sub =>
-      'Do not save long secrets or token-like text';
+  String get ignore_long_token_sub => '長いシークレットやトークン的なテキストを保存しない';
 
   @override
-  String get ignore_sensitive_sub =>
-      'Do not save content that appears sensitive';
+  String get ignore_sensitive_sub => '機密と思われるコンテンツを保存しない';
 
   @override
-  String get image_not_found => 'Image not found';
+  String get image_not_found => '画像が見つかりません';
 
   @override
-  String get import => 'Import';
+  String get import => 'インポート';
 
   @override
-  String get import_backup => 'Import Backup';
+  String get import_backup => 'バックアップをインポート';
 
   @override
-  String get import_backup_prompt =>
-      'Enter the password to decrypt the backup file.';
+  String get import_backup_prompt => 'バックアップファイルを復号化するパスワードを入力してください。';
 
   @override
-  String get import_backup_sub => 'Restore settings from a .clipflow file';
+  String get import_backup_sub => '設定を .clipflow ファイルから復元';
 
   @override
-  String get import_backup_title => 'Import Settings';
+  String get import_backup_title => '設定をインポート';
 
   @override
-  String get in_app_shortcuts => 'In-App Shortcuts';
+  String get in_app_shortcuts => 'アプリ内ショートカット';
 
   @override
-  String get item_deleted => 'Item deleted';
+  String get item_deleted => 'アイテムが削除されました';
 
   @override
-  String get licenses_sub => 'Licenses for Flutter and open-source packages';
+  String get licenses_sub => 'Flutter およびオープンソースパッケージのライセンス';
 
   @override
-  String get link => 'Link';
+  String get link => 'リンク';
 
   @override
-  String get max_database_size => 'Maximum Database Size';
+  String get max_database_size => '最大データベースサイズ';
 
   @override
-  String get no_matching_clips => 'No matching clips';
+  String get no_matching_clips => '一致するクリップがありません';
 
   @override
-  String get open_source_licenses => 'Open-Source Licenses';
+  String get open_source_licenses => 'オープンソースライセンス';
 
   @override
-  String get password_placeholder => 'Enter password';
+  String get password_placeholder => 'パスワードを入力';
 
   @override
-  String get press_shortcut => 'Press shortcut';
+  String get press_shortcut => 'ショートカットを押す';
 
   @override
   String get privacy_policy_text =>
-      'Clipboard data is processed and stored locally on your device. ClipFlow does not track or send clipboard history to a server.';
+      'クリップボードデータはデバイス上でローカルに処理・保存されます。ClipFlow はクリップボード履歴をトラッキングしたりサーバーに送信したりしません。';
 
   @override
-  String get retention_and_limits => 'Retention & Limits';
+  String get retention_and_limits => '保持と制限';
 
   @override
-  String get search_history_placeholder => 'Search clipboard history';
+  String get search_history_placeholder => 'クリップボード履歴を検索';
 
   @override
-  String get starred_clips => 'Starred Clips';
+  String get starred_clips => 'スター付きクリップ';
 
   @override
   String get tab_ai => 'AI';
 
   @override
-  String get toggle_panel_shortcut => 'Toggle Quick Panel';
+  String get toggle_panel_shortcut => 'クイックパネルを切り替え';
 
   @override
-  String get toggle_panel_shortcut_sub => 'Show ClipFlow from any application';
+  String get toggle_panel_shortcut_sub => 'どのアプリケーションからでも ClipFlow を表示';
 
   @override
-  String get toggle_pin_shortcut => 'Toggle Pin';
+  String get toggle_pin_shortcut => 'ピン留めを切り替え';
 
   @override
-  String get toggle_pin_sub => 'Pin or unpin the selected item';
+  String get toggle_pin_sub => '選択したアイテムをピン留めまたは解除';
 
   @override
-  String get try_different_search => 'Try another keyword or filter.';
+  String get try_different_search => '別のキーワードやフィルターをお試しください。';
 
   @override
-  String get unpinned_cleared => 'Unpinned items cleared';
+  String get unpinned_cleared => 'ピン留めなしのアイテムをクリアしました';
 
   @override
-  String get view_licenses => 'View Licenses';
+  String get view_licenses => 'ライセンスを表示';
 
   @override
-  String get ai_settings_title => 'Local AI Features (Offline)';
+  String get ai_settings_title => 'ローカルAI機能（オフライン）';
 
   @override
-  String get ai_enabled => 'Enable Local AI';
+  String get ai_enabled => 'ローカルAIを有効にする';
 
   @override
-  String get ai_enabled_sub =>
-      'Allow using AI models that run directly on your device.';
+  String get ai_enabled_sub => 'デバイスで直接実行される AI モデルの使用を許可します。';
 
   @override
   String get ai_privacy_notice =>
-      'ClipFlow integrates AI running entirely on your device, processing clipboard content without sending data to external servers. No account, API key or Internet required.';
+      'ClipFlow はデバイス上で完全に動作する AI を統合し、外部サーバーにデータを送信せずにクリップボードの内容を処理します。アカウント、API キー、インターネット接続は不要です。';
 
   @override
-  String get ai_model_selection => 'AI Thinking Models (Reasoning Models)';
+  String get ai_model_selection => 'AI思考モデル（推論モデル）';
 
   @override
-  String get ai_model_selection_sub =>
-      'Only models with deep reasoning (Thinking capabilities) are listed.';
+  String get ai_model_selection_sub => '深い推論（思考機能）を持つモデルのみがリストされています。';
 
   @override
-  String get ai_download_model => 'Download model';
+  String get ai_download_model => 'モデルをダウンロード';
 
   @override
-  String get ai_delete_model => 'Delete model';
+  String get ai_delete_model => 'モデルを削除';
 
   @override
-  String get ai_downloaded => 'Downloaded';
+  String get ai_downloaded => 'ダウンロード済み';
 
   @override
-  String get ai_not_downloaded => 'Not downloaded';
+  String get ai_not_downloaded => '未ダウンロード';
 
   @override
-  String get ai_downloading => 'Downloading...';
+  String get ai_downloading => 'ダウンロード中...';
 
   @override
-  String get ai_active_model => 'Active model';
+  String get ai_active_model => 'アクティブモデル';
 
   @override
-  String get ai_chat_assistant => 'ClipFlow Local AI Assistant';
+  String get ai_chat_assistant => 'ClipFlow ローカルAIアシスタント';
 
   @override
-  String get ai_thinking_process => 'Thinking process';
+  String get ai_thinking_process => '思考プロセス';
 
   @override
-  String get ai_context_clip => 'Selected clip — used only when relevant:';
+  String get ai_context_clip => '選択されたクリップ — 関連する場合のみ使用：';
 
   @override
-  String get ai_clear_context => 'Remove clipboard';
+  String get ai_clear_context => 'クリップボードを削除';
 
   @override
-  String get ai_send_prompt => 'Ask AI...';
+  String get ai_send_prompt => 'AIに質問...';
 
   @override
-  String get ai_no_model_title => 'AI Model Required';
+  String get ai_no_model_title => 'AIモデルが必要です';
 
   @override
   String get ai_no_model_desc =>
-      'Please download at least 1 AI model to use AI features. Models run entirely on your device, no Internet needed after download.';
+      'AI機能を使用するには、少なくとも1つのAIモデルをダウンロードしてください。モデルはデバイス上で完全に動作し、ダウンロード後はインターネットが不要です。';
 
   @override
-  String get ai_recommend_model => 'Recommended for you';
+  String get ai_recommend_model => 'あなたへのおすすめ';
 
   @override
-  String get ai_resume_download => 'Resume download';
+  String get ai_resume_download => 'ダウンロードを再開';
 
   @override
-  String get ai_partial_downloaded => 'Partially downloaded';
+  String get ai_partial_downloaded => '部分的にダウンロード済み';
 
   @override
-  String get ai_download_paused => 'Paused';
+  String get ai_download_paused => '一時停止中';
 
   @override
-  String get ai_delete_partial => 'Delete temp file';
+  String get ai_delete_partial => '一時ファイルを削除';
 
   @override
   String get ai_all_clipboard_context =>
-      'Ready to search Clipboard when requested (@count items)';
+      'リクエスト時にクリップボードを検索する準備ができています（@count アイテム）';
 
   @override
-  String get ai_select_clip_hint => 'Normal chat does not read Clipboard';
+  String get ai_select_clip_hint => '通常のチャットはクリップボードを読みません';
 
   @override
-  String get copy_part => 'Copy this section';
+  String get copy_part => 'このセクションをコピー';
 
   @override
-  String get copy_all => 'Copy all';
+  String get copy_all => 'すべてコピー';
 
   @override
-  String get paste_all => 'Paste all';
+  String get paste_all => 'すべて貼り付け';
 
   @override
-  String get copy_clipboard_content => 'Copy clipboard content';
+  String get copy_clipboard_content => 'クリップボードの内容をコピー';
 
   @override
-  String get tab_sharing_devices => 'Sharing & Devices';
+  String get tab_sharing_devices => '共有とデバイス';
 
   @override
-  String get local_network_sharing => 'Local network sharing';
+  String get local_network_sharing => 'ローカルネットワーク共有';
 
   @override
-  String get sharing_private_note =>
-      'Connect directly on the same Wi-Fi without an account or intermediary server.';
+  String get sharing_private_note => 'アカウントや中間サーバーなしで同じ Wi-Fi 上で直接接続します。';
 
   @override
-  String get sharing_disabled => 'Off';
+  String get sharing_disabled => 'オフ';
 
   @override
-  String get sharing_paused => 'All connections are paused';
+  String get sharing_paused => 'すべての接続が一時停止されています';
 
   @override
-  String get devices_connected_count => '@count devices connected';
+  String get devices_connected_count => '@count 台のデバイスが接続中';
 
   @override
-  String get searching_devices => 'Searching for devices';
+  String get searching_devices => 'デバイスを検索中';
 
   @override
-  String get no_connected_devices => 'No connected devices';
+  String get no_connected_devices => '接続されているデバイスがありません';
 
   @override
-  String get refresh => 'Refresh';
+  String get refresh => '更新';
 
   @override
-  String get available_devices => 'Available devices';
+  String get available_devices => '利用可能なデバイス';
 
   @override
-  String get paired_devices => 'Paired devices';
+  String get paired_devices => 'ペアリングされたデバイス';
 
   @override
-  String get blocked_devices => 'Blocked devices';
+  String get blocked_devices => 'ブロックされたデバイス';
 
   @override
-  String get manage_devices => 'Manage devices';
+  String get manage_devices => 'デバイスを管理';
 
   @override
-  String get searching_nearby_devices => 'Searching for nearby devices…';
+  String get searching_nearby_devices => '近くのデバイスを検索中…';
 
   @override
   String get searching_nearby_devices_sub =>
-      'Keep ClipFlow open on devices connected to the same Wi-Fi network.';
+      '同じ Wi-Fi ネットワークに接続されたデバイスで ClipFlow を開いたままにしてください。';
 
   @override
-  String get sharing_discovery_off => 'Device discovery is off';
+  String get sharing_discovery_off => 'デバイス検出がオフです';
 
   @override
-  String get sharing_discovery_off_sub =>
-      'Enable local network sharing to discover devices.';
+  String get sharing_discovery_off_sub => 'デバイスを検出するためにローカルネットワーク共有を有効にしてください。';
 
   @override
-  String get no_paired_devices => 'No paired devices';
+  String get no_paired_devices => 'ペアリングされたデバイスがありません';
 
   @override
-  String get no_paired_devices_sub =>
-      'Devices that verify the security code will appear here.';
+  String get no_paired_devices_sub => 'セキュリティコードを確認したデバイスがここに表示されます。';
 
   @override
-  String get connect => 'Connect';
+  String get connect => '接続';
 
   @override
-  String get reconnect_manually => 'Reconnect';
+  String get reconnect_manually => '再接続';
 
   @override
-  String get disconnect => 'Disconnect';
+  String get disconnect => '切断';
 
   @override
-  String get forget_device => 'Forget device';
+  String get forget_device => 'デバイスを忘れる';
 
   @override
-  String get block_device => 'Block device';
+  String get block_device => 'デバイスをブロック';
 
   @override
-  String get unblock_device => 'Unblock';
+  String get unblock_device => 'ブロックを解除';
 
   @override
-  String get details => 'Details';
+  String get details => '詳細';
 
   @override
-  String get platform => 'Platform';
+  String get platform => 'プラットフォーム';
 
   @override
-  String get local_ip => 'Local IP address';
+  String get local_ip => 'ローカル IP アドレス';
 
   @override
-  String get service_port => 'Service port';
+  String get service_port => 'サービスポート';
 
   @override
-  String get clipflow_version => 'ClipFlow version';
+  String get clipflow_version => 'ClipFlow バージョン';
 
   @override
-  String get protocol_version => 'Protocol version';
+  String get protocol_version => 'プロトコルバージョン';
 
   @override
-  String get connection_quality => 'Connection quality';
+  String get connection_quality => '接続品質';
 
   @override
-  String get latency => 'Latency';
+  String get latency => 'レイテンシ';
 
   @override
-  String get not_available => 'Not available';
+  String get not_available => '利用不可';
 
   @override
-  String get never => 'Never';
+  String get never => 'なし';
 
   @override
-  String get close => 'Close';
+  String get close => '閉じる';
 
   @override
-  String get last_sync_value => 'Last synced: @time';
+  String get last_sync_value => '最終同期: @time';
 
   @override
-  String get pending_items_value => '@count items pending';
+  String get pending_items_value => '@count アイテム保留中';
 
   @override
-  String get peer_status_available => 'Available';
+  String get peer_status_available => '利用可能';
 
   @override
-  String get peer_status_pairing => 'Awaiting confirmation';
+  String get peer_status_pairing => '確認待ち';
 
   @override
-  String get peer_status_connecting => 'Connecting';
+  String get peer_status_connecting => '接続中';
 
   @override
-  String get peer_status_authenticating => 'Authenticating';
+  String get peer_status_authenticating => '認証中';
 
   @override
-  String get peer_status_syncing => 'Syncing';
+  String get peer_status_syncing => '同期中';
 
   @override
-  String get peer_status_reconnecting => 'Reconnecting';
+  String get peer_status_reconnecting => '再接続中';
 
   @override
-  String get peer_status_connected => 'Connected';
+  String get peer_status_connected => '接続済み';
 
   @override
-  String get peer_status_disconnected => 'Disconnected';
+  String get peer_status_disconnected => '切断済み';
 
   @override
-  String get peer_status_rejected => 'Rejected';
+  String get peer_status_rejected => '拒否済み';
 
   @override
-  String get peer_status_incompatible => 'Incompatible';
+  String get peer_status_incompatible => '非互換';
 
   @override
-  String get peer_status_blocked => 'Blocked';
+  String get peer_status_blocked => 'ブロック済み';
 
   @override
-  String get quality_excellent => 'Excellent';
+  String get quality_excellent => '優秀';
 
   @override
-  String get quality_good => 'Good';
+  String get quality_good => '良好';
 
   @override
-  String get quality_fair => 'Fair';
+  String get quality_fair => '普通';
 
   @override
-  String get quality_poor => 'Poor';
+  String get quality_poor => '不良';
 
   @override
-  String get quality_offline => 'Offline';
+  String get quality_offline => 'オフライン';
 
   @override
-  String get pairing_request_title => '@device wants to connect';
+  String get pairing_request_title => '@device が接続を要求しています';
 
   @override
   String get pairing_code_help =>
-      'Verify that this code matches on both devices. It expires after 60 seconds.';
+      'このコードが両方のデバイスで一致することを確認してください。60秒後に期限切れになります。';
 
   @override
-  String get codes_match => 'Codes match';
+  String get codes_match => 'コードが一致しました';
 
   @override
-  String get waiting_other_device => 'Waiting for the other device…';
+  String get waiting_other_device => '他のデバイスを待っています…';
 
   @override
-  String get reconnect_attempt_value => 'Reconnecting (@count/5)';
+  String get reconnect_attempt_value => '再接続中 (@count/5)';
 
   @override
-  String get reconnect_manual_required =>
-      'Automatic reconnection failed 5 times. Reconnect manually.';
+  String get reconnect_manual_required => '自動再接続が5回失敗しました。手動で再接続してください。';
 
   @override
-  String get device_display_name => 'Device display name';
+  String get device_display_name => 'デバイス表示名';
 
   @override
-  String get device_display_name_sub =>
-      'The name shown to other devices on the network';
+  String get device_display_name_sub => 'ネットワーク上の他のデバイスに表示される名前';
 
   @override
-  String get make_device_discoverable => 'Make this device discoverable';
+  String get make_device_discoverable => 'このデバイスを検出可能にする';
 
   @override
   String get make_device_discoverable_sub =>
-      'Allow other devices to find ClipFlow on the same network';
+      '同じネットワーク上の他のデバイスが ClipFlow を見つけられるようにします';
 
   @override
-  String get pause_all_connections => 'Pause all connections';
+  String get pause_all_connections => 'すべての接続を一時停止';
 
   @override
-  String get pause_all_connections_sub =>
-      'Keep pairing data while pausing connections and synchronization';
+  String get pause_all_connections_sub => 'ペアリングデータを保持しながら接続と同期を一時停止します';
 
   @override
-  String get connection_and_sync => 'Connection & synchronization';
+  String get connection_and_sync => '接続と同期';
 
   @override
-  String get auto_connect_trusted => 'Auto-connect trusted devices';
+  String get auto_connect_trusted => '信頼済みデバイスに自動接続';
 
   @override
-  String get auto_connect_trusted_sub =>
-      'Reconnect after authenticating the stored device key';
+  String get auto_connect_trusted_sub => '保存されたデバイスキーを認証後に再接続します';
 
   @override
-  String get auto_sync_new_clipboard =>
-      'Automatically sync new clipboard items';
+  String get auto_sync_new_clipboard => '新しいクリップボードアイテムを自動同期';
 
   @override
-  String get auto_sync_new_clipboard_sub =>
-      'Send new items to each connected device';
+  String get auto_sync_new_clipboard_sub => '新しいアイテムを各接続デバイスに送信します';
 
   @override
-  String get sync_pinned_only => 'Only sync pinned items';
+  String get sync_pinned_only => 'ピン留めしたアイテムのみ同期';
 
   @override
-  String get sync_pinned_only_sub => 'Do not automatically send unpinned items';
+  String get sync_pinned_only_sub => 'ピン留めされていないアイテムを自動的に送信しない';
 
   @override
-  String get allow_receiving_images => 'Allow receiving images';
+  String get allow_receiving_images => '画像の受信を許可';
 
   @override
-  String get sharing_image_limit => 'Image size limit';
+  String get sharing_image_limit => '画像サイズ制限';
 
   @override
-  String get sharing_notifications => 'Notifications';
+  String get sharing_notifications => '通知';
 
   @override
-  String get notify_device_connected => 'Notify when a device connects';
+  String get notify_device_connected => 'デバイスが接続したときに通知';
 
   @override
-  String get notify_clipboard_received =>
-      'Notify when a clipboard item arrives';
+  String get notify_clipboard_received => 'クリップボードアイテムが届いたときに通知';
 
   @override
-  String get sharing_service_error =>
-      'Could not update the sharing service. Please try again.';
+  String get sharing_service_error => '共有サービスを更新できませんでした。もう一度お試しください。';
 
   @override
-  String get forget_device_title => 'Forget this device?';
+  String get forget_device_title => 'このデバイスを忘れますか？';
 
   @override
-  String get forget_device_message =>
-      'The trusted key will be removed. Connecting again requires a new 6-digit pairing code.';
+  String get forget_device_message => '信頼済みキーが削除されます。再接続には新しい6桁のペアリングコードが必要です。';
 
   @override
-  String get block_device_title => 'Block this device?';
+  String get block_device_title => 'このデバイスをブロックしますか？';
 
   @override
-  String get block_device_message =>
-      'The device will be disconnected and all new requests will be rejected.';
+  String get block_device_message => 'デバイスは切断され、すべての新しいリクエストが拒否されます。';
 
   @override
-  String get delete_collection_confirm => 'Delete Collection Confirm';
+  String get delete_collection_confirm => 'コレクションを削除しますか？';
 
   @override
-  String get ai_performance_mode => 'AI intelligence level';
+  String get ai_performance_mode => 'AIインテリジェンスレベル';
 
   @override
-  String get ai_performance_fast => 'Fast';
+  String get ai_performance_fast => '高速';
 
   @override
-  String get ai_performance_balanced => 'Balanced';
+  String get ai_performance_balanced => 'バランス';
 
   @override
-  String get ai_performance_smart => 'Smart';
+  String get ai_performance_smart => 'スマート';
 }

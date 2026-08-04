@@ -16,10 +16,12 @@ import '../domain/ai_feature_request.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_performance_mode.dart';
 import '../domain/ai_request_plan.dart';
+import '../domain/ai_request_classification.dart';
 import '../localization/ai_language_context.dart';
 import '../localization/ai_language_detector.dart';
 import '../localization/ai_response_locale_resolver.dart';
 import '../services/ai_model_downloader_service.dart';
+import '../services/ai_utility_classifier.dart';
 import '../services/local_ai_engine.dart';
 
 class PendingToolCall {
@@ -107,7 +109,7 @@ class AiController extends StateNotifier<AiState> {
     this._downloaderService,
     this._localEngine,
     this._conversationRepository,
-    this._languageDetector,
+    this._utilityClassifier,
     this._ref,
   ) : super(
         AiState(
@@ -123,7 +125,7 @@ class AiController extends StateNotifier<AiState> {
   final AiModelDownloaderService _downloaderService;
   final LocalAiEngine _localEngine;
   final AiConversationRepository _conversationRepository;
-  final AiLanguageDetector _languageDetector;
+  final AiUtilityClassifier _utilityClassifier;
   final Ref _ref;
   late final Future<void> _restoreFuture;
   bool _restoreCompleted = false;
@@ -430,20 +432,24 @@ class AiController extends StateNotifier<AiState> {
         .toList(growable: false);
     final settings = _ref.read(settingsControllerProvider);
     final appLanguageTag = settings.language;
-    final scriptedLanguageTag = detectLanguageByScript(userText);
-    final shouldUseModelDetector =
-        scriptedLanguageTag == null &&
-        (featureGroup == AiFeatureGroup.translate || userText.length >= 80);
-    final detectedInputTag =
-        scriptedLanguageTag ??
-        (shouldUseModelDetector
-            ? await _languageDetector
-                  .detect(userText)
-                  .timeout(
-                    const Duration(seconds: 2),
-                    onTimeout: () => appLanguageTag,
-                  )
-            : appLanguageTag);
+    final requestModel = _modelForRequest();
+    final fallback = fallbackClassification(
+      prompt: userText,
+      appLanguageTag: detectLanguageByScript(userText) ?? appLanguageTag,
+      featureGroup: featureGroup,
+      hasSelectedClipboard: activeContext != null,
+    );
+    final classification = canSkipUtilityClassifier(
+      prompt: userText,
+      featureGroup: featureGroup,
+    )
+        ? fallback
+        : await _utilityClassifier.classify(
+            prompt: userText,
+            appLanguageTag: appLanguageTag,
+            fallbackModel: requestModel,
+            hasSelectedClipboard: activeContext != null,
+          );
     final translationTargetTag = switch (featureRequest) {
       AiTranslateRequest(:final targetLocaleTag) => targetLocaleTag,
       _ when featureGroup == AiFeatureGroup.translate => selectedOption,
@@ -452,7 +458,7 @@ class AiController extends StateNotifier<AiState> {
     final languageContext = AiLanguageContext(
       appLocale: Locale(settings.language),
       responseMode: AiResponseLanguageMode.matchUser,
-      detectedInputTag: detectedInputTag,
+      detectedInputTag: classification.languageTag,
       translationTargetTag: translationTargetTag,
     );
     final responseLanguageTag = const AiResponseLocaleResolver().resolve(
@@ -504,7 +510,6 @@ class AiController extends StateNotifier<AiState> {
     final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
     state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
-    final requestModel = _modelForRequest();
     debug.log(
       level: AiDebugLevel.info,
       stage: 'model',
@@ -530,6 +535,7 @@ class AiController extends StateNotifier<AiState> {
       appLanguageTag: _ref.read(settingsControllerProvider).language,
       responseLanguageTag: responseLanguageTag,
       performanceMode: state.performanceMode,
+      classification: classification,
       temperature: state.temperature,
       contextSize: state.contextSize.clamp(2048, requestModel.contextWindow),
       debugRequestId: requestId,
@@ -540,20 +546,12 @@ class AiController extends StateNotifier<AiState> {
     var firstEventLogged = false;
     var finalThinking = '';
     var finalOutput = '';
-    final timeoutPlan = const AiRequestPlanner().plan(
-      prompt: userText,
-      hasSelectedClipboard: activeContext != null,
-      hasConversation: conversationContext.isNotEmpty,
-      featureGroup: featureGroup,
-      appLanguageTag: settings.language,
-      resolvedResponseLanguageTag: responseLanguageTag,
-    );
     final timeoutDuration = resolveGenerationTimeout(
-      intent: timeoutPlan.intent,
+      intent: classification.intent,
       featureGroup: featureGroup,
     );
     final inactivityTimeout = resolveStreamInactivityTimeout(
-      intent: timeoutPlan.intent,
+      intent: classification.intent,
       featureGroup: featureGroup,
     );
     var generationTimedOut = false;

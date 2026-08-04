@@ -1,13 +1,10 @@
 import 'ai_execution_plan.dart';
 import 'ai_feature_action.dart';
+import 'ai_request_classification.dart';
+import 'ai_request_intent.dart';
 import '../localization/ai_locale_spec.dart';
 
-enum AiRequestIntent {
-  conversation,
-  followUp,
-  clipboardSearch,
-  clipboardAction,
-}
+export 'ai_request_intent.dart';
 
 int resolveOutputTokens({
   required AiRequestIntent intent,
@@ -22,6 +19,33 @@ int resolveOutputTokens({
     AiRequestIntent.followUp => 640,
     AiRequestIntent.clipboardSearch => 384,
     AiRequestIntent.clipboardAction => 768,
+  };
+}
+
+int resolveClassifiedOutputTokens({
+  required AiRequestClassification classification,
+  required String prompt,
+  required AiFeatureGroup? featureGroup,
+}) {
+  if (featureGroup == AiFeatureGroup.translate) return 1536;
+  if (featureGroup == AiFeatureGroup.codeExplain ||
+      prompt.contains('```') ||
+      prompt.length > 800) {
+    return 1024;
+  }
+  return switch (classification.reasoningLevel) {
+    AiReasoningLevel.low => 384,
+    AiReasoningLevel.medium => 768,
+    AiReasoningLevel.high => 1536,
+  };
+}
+
+int resolveClassifiedContextSize(AiRequestClassification classification) {
+  if (classification.needsClipboard) return 8192;
+  return switch (classification.reasoningLevel) {
+    AiReasoningLevel.low => 4096,
+    AiReasoningLevel.medium => 8192,
+    AiReasoningLevel.high => 16384,
   };
 }
 

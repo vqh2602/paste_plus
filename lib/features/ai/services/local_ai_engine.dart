@@ -12,6 +12,7 @@ import '../../clipboard_history/domain/clipboard_repository.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_performance_mode.dart';
+import '../domain/ai_request_classification.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
 import '../localization/ai_language_detector.dart';
@@ -77,11 +78,12 @@ class LocalAiEngine {
     String appLanguageTag = 'vi-VN',
     String? responseLanguageTag,
     AiPerformanceMode performanceMode = AiPerformanceMode.balanced,
+    AiRequestClassification? classification,
     String? debugRequestId,
     Future<bool> Function(String toolName, Map<String, dynamic> arguments)?
     onConfirmationRequested,
   }) async* {
-    final initialPlan =
+    final legacyPlan =
         requestPlan ??
         _plannerService.createPlan(
           prompt: prompt,
@@ -92,15 +94,32 @@ class LocalAiEngine {
           appLanguageTag: appLanguageTag,
           resolvedResponseLanguageTag: responseLanguageTag,
         );
+    final initialPlan = classification == null || requestPlan != null
+        ? legacyPlan
+        : AiRequestPlan(
+            intent: classification.intent,
+            useClipboardHistory:
+                classification.needsClipboard && clipboardContext == null,
+            useSelectedClipboard:
+                classification.needsClipboard && clipboardContext != null,
+            maxOutputTokens: resolveClassifiedOutputTokens(
+              classification: classification,
+              prompt: prompt,
+              featureGroup: featureGroup,
+            ),
+            responseLanguageTag: responseLanguageTag ??
+                classification.languageTag,
+          );
 
     var effectivePlan = initialPlan;
 
     if (requestPlan == null &&
-        _plannerService.shouldUseModelPlanner(
+        (classification?.needsPlanner ??
+            _plannerService.shouldUseModelPlanner(
           prompt: prompt,
           hasSelectedClipboard: clipboardContext != null,
           featureGroup: featureGroup,
-        )) {
+        ))) {
       final rawPlanJson = await _generatePlannerJson(
         model: model,
         prompt: prompt,
@@ -230,7 +249,13 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
         details: 'path: ${modelFile.path}\nsizeBytes: $fileSize',
       );
       if (fileExists && fileSize > 10 * 1024 * 1024) {
-        final effectiveContextSize = contextSize ?? model.contextWindow;
+        final classifiedContextSize = classification == null
+            ? null
+            : resolveClassifiedContextSize(classification);
+        final effectiveContextSize = min(
+          model.contextWindow,
+          classifiedContextSize ?? contextSize ?? model.contextWindow,
+        );
         final caps = await _inferenceService.prepareModel(
           modelFile.path,
           effectiveContextSize,
@@ -294,7 +319,8 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           maxOutputTokens: effectivePlan.maxOutputTokens,
           thinkingModel: performanceMode.enablesThinking(
             modelSupportsThinking: model.isThinkingModel,
-            intent: effectivePlan.intent,
+            reasoningLevel:
+                classification?.reasoningLevel ?? AiReasoningLevel.medium,
           ),
           conversationMessages: conversationMessages,
           debugRequestId: debugRequestId,

@@ -16,6 +16,7 @@ import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/domain/ai_model_info.dart';
 import '../features/ai/localization/ai_language_detector.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
+import '../features/ai/services/ai_utility_classifier.dart';
 import '../features/ai/services/clipboard_embedding_indexer.dart';
 import '../features/ai/services/clipboard_vector_store.dart';
 import '../features/ai/services/hybrid_semantic_search.dart';
@@ -328,13 +329,11 @@ final aiConversationRepositoryProvider = Provider<AiConversationRepository>((
   return const AiConversationRepository();
 });
 
-final aiLanguageDetectorProvider = Provider<AiLanguageDetector>((ref) {
-  return CallbackAiLanguageDetector((text) {
-    final modelId = ref.read(settingsControllerProvider).selectedAiModel;
-    return ref
-        .read(localAiEngineProvider)
-        .detectLanguageTag(model: AiModelInfo.findById(modelId), text: text);
-  });
+final aiUtilityClassifierProvider = Provider<AiUtilityClassifier>((ref) {
+  return AiUtilityClassifier(
+    ref.watch(aiModelDownloaderProvider),
+    ref.watch(utilityInferenceProvider),
+  );
 });
 
 final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
@@ -344,7 +343,7 @@ final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
     ref.watch(aiModelDownloaderProvider),
     ref.watch(localAiEngineProvider),
     ref.watch(aiConversationRepositoryProvider),
-    ref.watch(aiLanguageDetectorProvider),
+    ref.watch(aiUtilityClassifierProvider),
     ref,
   );
 });
