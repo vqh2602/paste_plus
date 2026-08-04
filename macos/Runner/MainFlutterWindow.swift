@@ -44,13 +44,17 @@ class MainFlutterWindow: NSWindow {
       case "readClipboard":
         let pasteboard = NSPasteboard.general
         var response: [String: Any] = [:]
+        // changeCount is the most reliable signal for any clipboard change
+        // (covers Cmd+C, right-click Copy, app copy buttons, etc.)
+        response["changeCount"] = pasteboard.changeCount
         if let text = pasteboard.string(forType: .string) {
           response["text"] = text
         }
         if let pngData = pasteboard.data(forType: .png) ?? Self.pngDataFromTiff(pasteboard) {
           response["imageBase64"] = pngData.base64EncodedString()
         }
-        if let app = NSWorkspace.shared.frontmostApplication {
+        // Use lastActiveApplication (cached before we take focus) for accurate source tracking
+        if let app = self.lastActiveApplication ?? NSWorkspace.shared.frontmostApplication {
           response["sourceAppName"] = app.localizedName
           response["sourceAppIdentifier"] = app.bundleIdentifier
         }

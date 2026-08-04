@@ -1,5 +1,6 @@
 import 'package:clipflow/features/ai/domain/ai_feature_action.dart';
 import 'package:clipflow/features/ai/domain/ai_performance_mode.dart';
+import 'package:clipflow/features/ai/domain/ai_request_classification.dart';
 import 'package:clipflow/features/ai/domain/ai_request_plan.dart';
 import 'package:clipflow/features/ai/services/ai_prompts.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -54,25 +55,25 @@ void main() {
     );
   });
 
-  test('performance mode controls thinking by intent', () {
+  test('performance mode controls thinking by reasoning level', () {
     expect(
       AiPerformanceMode.fast.enablesThinking(
         modelSupportsThinking: true,
-        intent: AiRequestIntent.clipboardAction,
+        reasoningLevel: AiReasoningLevel.high,
       ),
       isFalse,
     );
     expect(
       AiPerformanceMode.balanced.enablesThinking(
         modelSupportsThinking: true,
-        intent: AiRequestIntent.conversation,
+        reasoningLevel: AiReasoningLevel.medium,
       ),
       isFalse,
     );
     expect(
       AiPerformanceMode.smart.enablesThinking(
         modelSupportsThinking: true,
-        intent: AiRequestIntent.conversation,
+        reasoningLevel: AiReasoningLevel.medium,
       ),
       isTrue,
     );

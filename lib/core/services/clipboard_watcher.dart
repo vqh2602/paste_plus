@@ -40,10 +40,10 @@ class FlutterClipboardWatcher implements ClipboardWatcher {
     if (_timer != null) return;
     final current = await readCurrent();
     _lastObserved = _signature(current);
-    _timer = Timer.periodic(pollInterval, (_) => _poll());
+    _timer = Timer.periodic(pollInterval, (_) => poll());
   }
 
-  Future<void> _poll() async {
+  Future<void> poll() async {
     if (_reading) return;
     _reading = true;
     try {
@@ -97,6 +97,59 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
   MacOSClipboardWatcher({super.pollInterval});
 
   static const _channel = MethodChannel('clipflow/clipboard');
+  int? _lastChangeCount;
+
+  @override
+  Future<void> start() async {
+    if (_timer != null) return;
+    // Read initial changeCount without emitting
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      _lastChangeCount = result?['changeCount'] as int?;
+    } on Object catch (_) {}
+    _lastObserved = _signature(await readCurrent());
+    _timer = Timer.periodic(pollInterval, (_) => poll());
+  }
+
+  @override
+  Future<void> poll() async {
+    if (_reading) return;
+    _reading = true;
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      if (result == null) return;
+
+      final changeCount = result['changeCount'] as int?;
+      // changeCount is the most reliable detector: it increments for every
+      // clipboard write regardless of HOW the copy was triggered
+      // (keyboard shortcut, right-click menu, in-app copy button, etc.)
+      final changed = changeCount != null && changeCount != _lastChangeCount;
+      if (!changed) return;
+      _lastChangeCount = changeCount;
+
+      final imageSource = result['imageBase64'] as String?;
+      final payload = ClipboardPayload(
+        text: result['text'] as String?,
+        imageBytes: imageSource == null ? null : base64Decode(imageSource),
+        sourceAppName: result['sourceAppName'] as String?,
+        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
+      );
+      if (payload.isEmpty) return;
+
+      final signature = _signature(payload);
+      if (signature == _lastObserved) return;
+      _lastObserved = signature;
+      _controller.add(payload);
+    } on Object catch (error, stackTrace) {
+      _controller.addError(error, stackTrace);
+    } finally {
+      _reading = false;
+    }
+  }
 
   @override
   Future<ClipboardPayload?> readCurrent() async {
@@ -123,13 +176,36 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
   @override
   Future<void> write(ClipboardPayload payload) async {
     if (payload.imageBytes == null) {
-      await super.write(payload);
+      if (payload.text == null) return;
+      // Text write — suppress and sync changeCount
+      suppress(payload);
+      await Clipboard.setData(ClipboardData(text: payload.text!));
+      try {
+        final result = await _channel.invokeMapMethod<String, dynamic>(
+          'readClipboard',
+        );
+        _lastChangeCount = result?['changeCount'] as int?;
+      } on Object catch (_) {}
       return;
     }
     suppress(payload);
+    // Sync changeCount before image write
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      _lastChangeCount = result?['changeCount'] as int?;
+    } on Object catch (_) {}
     await _channel.invokeMethod<void>('writeImage', {
       'imageBase64': base64Encode(payload.imageBytes!),
     });
+    // Update changeCount again after the image write
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      _lastChangeCount = result?['changeCount'] as int?;
+    } on Object catch (_) {}
   }
 }
 
@@ -137,6 +213,56 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
   WindowsClipboardWatcher({super.pollInterval});
 
   static const _channel = MethodChannel('clipflow/clipboard');
+  int? _lastSequenceNumber;
+
+  @override
+  Future<void> start() async {
+    if (_timer != null) return;
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      _lastSequenceNumber = result?['sequenceNumber'] as int?;
+    } on Object catch (_) {}
+    _lastObserved = _signature(await readCurrent());
+    _timer = Timer.periodic(pollInterval, (_) => poll());
+  }
+
+  @override
+  Future<void> poll() async {
+    if (_reading) return;
+    _reading = true;
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      if (result == null) return;
+
+      final seqNum = result['sequenceNumber'] as int?;
+      // sequenceNumber increments on every clipboard write (Windows API)
+      final changed = seqNum != null && seqNum != _lastSequenceNumber;
+      if (!changed) return;
+      _lastSequenceNumber = seqNum;
+
+      final imageSource = result['imageBase64'] as String?;
+      final payload = ClipboardPayload(
+        text: result['text'] as String?,
+        imageBytes: imageSource == null ? null : base64Decode(imageSource),
+        sourceAppName: result['sourceAppName'] as String?,
+        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
+      );
+      if (payload.isEmpty) return;
+
+      final signature = _signature(payload);
+      if (signature == _lastObserved) return;
+      _lastObserved = signature;
+      _controller.add(payload);
+    } on Object catch (error, stackTrace) {
+      _controller.addError(error, stackTrace);
+    } finally {
+      _reading = false;
+    }
+  }
 
   @override
   Future<ClipboardPayload?> readCurrent() async {
@@ -163,12 +289,26 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
   @override
   Future<void> write(ClipboardPayload payload) async {
     if (payload.imageBytes == null) {
-      await super.write(payload);
+      if (payload.text == null) return;
+      suppress(payload);
+      await Clipboard.setData(ClipboardData(text: payload.text!));
+      try {
+        final result = await _channel.invokeMapMethod<String, dynamic>(
+          'readClipboard',
+        );
+        _lastSequenceNumber = result?['sequenceNumber'] as int?;
+      } on Object catch (_) {}
       return;
     }
     suppress(payload);
     await _channel.invokeMethod<void>('writeImage', {
       'imageBase64': base64Encode(payload.imageBytes!),
     });
+    try {
+      final result = await _channel.invokeMapMethod<String, dynamic>(
+        'readClipboard',
+      );
+      _lastSequenceNumber = result?['sequenceNumber'] as int?;
+    } on Object catch (_) {}
   }
 }

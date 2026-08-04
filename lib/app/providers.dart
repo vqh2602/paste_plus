@@ -14,7 +14,6 @@ import '../core/services/logging_service.dart';
 import '../features/ai/presentation/ai_controller.dart';
 import '../features/ai/data/ai_conversation_repository.dart';
 import '../features/ai/domain/ai_model_info.dart';
-import '../features/ai/localization/ai_language_detector.dart';
 import '../features/ai/services/ai_model_downloader_service.dart';
 import '../features/ai/services/ai_utility_classifier.dart';
 import '../features/ai/services/clipboard_embedding_indexer.dart';
