@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -418,7 +419,21 @@ class AiController extends StateNotifier<AiState> {
         .where((item) => !item.isSensitive)
         .toList(growable: false);
     final settings = _ref.read(settingsControllerProvider);
-    final detectedInputTag = await _languageDetector.detect(userText);
+    final appLanguageTag = settings.language;
+    final scriptedLanguageTag = detectLanguageByScript(userText);
+    final shouldUseModelDetector =
+        scriptedLanguageTag == null &&
+        (featureGroup == AiFeatureGroup.translate || userText.length >= 80);
+    final detectedInputTag =
+        scriptedLanguageTag ??
+        (shouldUseModelDetector
+            ? await _languageDetector
+                  .detect(userText)
+                  .timeout(
+                    const Duration(seconds: 2),
+                    onTimeout: () => appLanguageTag,
+                  )
+            : appLanguageTag);
     final translationTargetTag = switch (featureRequest) {
       AiTranslateRequest(:final targetLocaleTag) => targetLocaleTag,
       _ when featureGroup == AiFeatureGroup.translate => selectedOption,
@@ -514,8 +529,13 @@ class AiController extends StateNotifier<AiState> {
     var firstEventLogged = false;
     var finalThinking = '';
     var finalOutput = '';
+    var generationTimedOut = false;
+    final generationTimeout = Timer(const Duration(minutes: 2), () {
+      generationTimedOut = true;
+      _localEngine.cancelGeneration();
+    });
     try {
-      await for (final event in stream) {
+      await for (final event in stream.timeout(const Duration(seconds: 45))) {
         eventCount++;
         final type = event['type'] ?? '';
         final thinking = event['thinking'] ?? '';
@@ -543,6 +563,9 @@ class AiController extends StateNotifier<AiState> {
           target.isThinking = type == 'think';
           state = state.copyWith(chatMessages: currentMsgs);
         }
+      }
+      if (generationTimedOut) {
+        throw TimeoutException('AI generation exceeded two minutes.');
       }
       debug.log(
         level: AiDebugLevel.success,
@@ -575,6 +598,7 @@ class AiController extends StateNotifier<AiState> {
         state = state.copyWith(chatMessages: currentMsgs);
       }
     } finally {
+      generationTimeout.cancel();
       stopwatch.stop();
       final currentMsgs = [...state.chatMessages];
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
@@ -592,22 +616,26 @@ class AiController extends StateNotifier<AiState> {
     required String conversationContext,
   }) {
     final buffer = StringBuffer()
-      ..writeln('selectedClipboard: ${activeContext?.id ?? 'none'}');
+      ..writeln('selectedClipboard: ${activeContext?.id ?? 'none'}')
+      ..writeln('clipboardHistoryCount: ${clipboardHistory.length}')
+      ..writeln('conversationLength: ${conversationContext.length}');
     if (activeContext != null) {
+      final preview = activeContext.content.length > 200
+          ? '${activeContext.content.substring(0, 200)}…'
+          : activeContext.content;
       buffer
         ..writeln('selectedType: ${activeContext.contentType.name}')
         ..writeln('selectedSensitive: ${activeContext.isSensitive}')
-        ..writeln('selectedContent:')
-        ..writeln(activeContext.content);
+        ..writeln('selectedPreview: $preview');
     }
-    buffer
-      ..writeln('\nconversationContext:')
-      ..writeln(conversationContext.isEmpty ? '[empty]' : conversationContext)
-      ..writeln('\nclipboardHistoryCount: ${clipboardHistory.length}');
-    for (final item in clipboardHistory) {
-      buffer
-        ..writeln('\n--- clip:${item.id} type:${item.contentType.name} ---')
-        ..writeln(item.content);
+    if (kReleaseMode) return buffer.toString();
+    for (final item in clipboardHistory.take(10)) {
+      final preview = item.content.length > 200
+          ? '${item.content.substring(0, 200)}…'
+          : item.content;
+      buffer.writeln(
+        'clip:${item.id} type:${item.contentType.name} preview:$preview',
+      );
     }
     return buffer.toString();
   }

@@ -9,15 +9,21 @@ class ClipboardEmbeddingIndexer {
     required ClipboardVectorStore vectorStore,
     required Future<List<double>> Function(String text) embedder,
     required String modelId,
+    bool Function()? isBusy,
   }) : _vectorStore = vectorStore,
        _embedder = embedder,
-       _modelId = modelId;
+       _modelId = modelId,
+       _isBusy = isBusy ?? _neverBusy;
 
   final ClipboardVectorStore _vectorStore;
   final Future<List<double>> Function(String text) _embedder;
   final String _modelId;
+  final bool Function() _isBusy;
   final List<ClipboardItem> _queue = [];
   bool _isProcessing = false;
+  Timer? _retryTimer;
+
+  static bool _neverBusy() => false;
 
   /// Enqueues a newly stored or updated [ClipboardItem] for vector indexing.
   Future<void> enqueue(ClipboardItem item) async {
@@ -45,10 +51,18 @@ class ClipboardEmbeddingIndexer {
 
   Future<void> _processQueue() async {
     if (_isProcessing || _queue.isEmpty) return;
+    if (_isBusy()) {
+      _retryTimer ??= Timer(const Duration(seconds: 2), () {
+        _retryTimer = null;
+        unawaited(_processQueue());
+      });
+      return;
+    }
     _isProcessing = true;
 
     try {
       while (_queue.isNotEmpty) {
+        if (_isBusy()) break;
         final item = _queue.removeAt(0);
         await _vectorStore.indexClipboardItem(
           item: item,
@@ -60,6 +74,7 @@ class ClipboardEmbeddingIndexer {
       // Background indexing non-blocking error handler
     } finally {
       _isProcessing = false;
+      if (_queue.isNotEmpty) unawaited(_processQueue());
     }
   }
 }

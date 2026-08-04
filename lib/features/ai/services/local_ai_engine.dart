@@ -13,10 +13,10 @@ import '../domain/ai_feature_action.dart';
 import '../domain/ai_model_info.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_chat_message.dart';
+import '../localization/ai_language_detector.dart';
 import 'ai_agent_orchestrator.dart';
 import 'ai_clipboard_relevance_ranker.dart';
 import 'ai_model_downloader_service.dart';
-import 'ai_plan_validator.dart';
 import 'ai_planner_service.dart';
 import 'ai_prompts.dart';
 import 'ai_token_budget_manager.dart';
@@ -39,15 +39,19 @@ class LocalAiEngine {
     LlamaInferenceService? inferenceService,
     HybridSemanticSearch? hybridSearch,
     ClipboardRepository? repository,
+    LlamaInferenceService? utilityInferenceService,
   ]) : _inferenceService =
            inferenceService ??
            (_modelDownloader == null ? null : LlamaInferenceService()),
        _hybridSearch = hybridSearch ?? const HybridSemanticSearch(),
-       _agentOrchestrator = AiAgentOrchestrator(repository);
+       _agentOrchestrator = AiAgentOrchestrator(repository) {
+    _utilityInferenceService = utilityInferenceService ?? _inferenceService;
+  }
 
   final AiModelDownloaderService? _modelDownloader;
   final AiDebugController? _debug;
   final LlamaInferenceService? _inferenceService;
+  late final LlamaInferenceService? _utilityInferenceService;
   final HybridSemanticSearch _hybridSearch;
   final AiAgentOrchestrator _agentOrchestrator;
   static const _clipboardRanker = AiClipboardRelevanceRanker();
@@ -99,7 +103,7 @@ class LocalAiEngine {
         model: model,
         prompt: prompt,
         responseLanguage: initialPlan.responseLanguageTag,
-        contextSize: contextSize ?? model.contextWindow,
+        contextSize: min(contextSize ?? model.contextWindow, 2048),
         debugRequestId: debugRequestId,
       );
 
@@ -286,7 +290,10 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           budgetManager: budgetManager,
           temperature: temperature,
           maxOutputTokens: effectivePlan.maxOutputTokens,
-          thinkingModel: model.isThinkingModel,
+          thinkingModel:
+              model.isThinkingModel &&
+              effectivePlan.intent != AiRequestIntent.conversation &&
+              effectivePlan.intent != AiRequestIntent.followUp,
           conversationMessages: conversationMessages,
           debugRequestId: debugRequestId,
           imagePaths: imagePaths,
@@ -1141,8 +1148,8 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     if (!await modelFile.exists()) return const [];
     final vectors = await _inferenceService.embedBatch(
       modelPath: modelFile.path,
-      contextSize: model.contextWindow,
-      texts: [text],
+      contextSize: 1024,
+      texts: [text.length > 2000 ? text.substring(0, 2000) : text],
     );
     return vectors.isEmpty ? const [] : vectors.first;
   }
@@ -1153,15 +1160,17 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
   }) async {
     final trimmed = text.trim();
     if (trimmed.isEmpty) return null;
-    final scripted = _detectScriptLanguage(trimmed);
+    final scripted = detectLanguageByScript(trimmed);
     if (scripted != null) return scripted;
-    if (_modelDownloader == null || _inferenceService == null) return null;
+    if (_modelDownloader == null || _utilityInferenceService == null) {
+      return null;
+    }
     final modelFile = await _modelDownloader.getModelFile(model.id);
     if (!await modelFile.exists()) return null;
 
     final output = StringBuffer();
     try {
-      await for (final token in _inferenceService.generate(
+      await for (final token in _utilityInferenceService.generate(
         modelPath: modelFile.path,
         contextSize: min(model.contextWindow, 2048),
         systemPrompt:
@@ -1184,15 +1193,12 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     }
   }
 
-  String? _detectScriptLanguage(String text) {
-    if (RegExp(r'[\u3040-\u30ff]').hasMatch(text)) return 'ja-JP';
-    if (RegExp(r'[\uac00-\ud7af]').hasMatch(text)) return 'ko-KR';
-    if (RegExp(r'[\u0600-\u06ff]').hasMatch(text)) return 'ar-SA';
-    if (RegExp(r'[\u4e00-\u9fff]').hasMatch(text)) return 'zh-Hans-CN';
-    return null;
+  Future<void> dispose() async {
+    await _inferenceService?.dispose();
+    if (!identical(_utilityInferenceService, _inferenceService)) {
+      await _utilityInferenceService?.dispose();
+    }
   }
-
-  Future<void> dispose() async => _inferenceService?.dispose();
 
   Future<List<ClipboardItem>> _semanticRank({
     required String prompt,
@@ -1365,7 +1371,9 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     int contextSize = 2048,
     String? debugRequestId,
   }) async {
-    if (_modelDownloader == null || _inferenceService == null) return null;
+    if (_modelDownloader == null || _utilityInferenceService == null) {
+      return null;
+    }
 
     try {
       final modelFile = await _modelDownloader.getModelFile(model.id);
@@ -1385,16 +1393,19 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
       );
 
       final buffer = StringBuffer();
-      await for (final token in _inferenceService.generate(
-        modelPath: modelFile.path,
-        contextSize: contextSize,
-        systemPrompt: systemPrompt,
-        userPrompt: prompt,
-        temperature: 0.0,
-        maxTokens: 512,
-        thinkingModel: false,
-        grammar: StructuredOutputValidator.executionPlanGrammar,
-      )) {
+      await for (final token
+          in _utilityInferenceService
+              .generate(
+                modelPath: modelFile.path,
+                contextSize: contextSize,
+                systemPrompt: systemPrompt,
+                userPrompt: prompt,
+                temperature: 0.0,
+                maxTokens: 192,
+                thinkingModel: false,
+                grammar: StructuredOutputValidator.executionPlanGrammar,
+              )
+              .timeout(const Duration(seconds: 8))) {
         if (token.content != null) {
           buffer.write(token.content);
         }

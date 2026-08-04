@@ -20,6 +20,7 @@ import '../features/ai/services/clipboard_embedding_indexer.dart';
 import '../features/ai/services/clipboard_vector_store.dart';
 import '../features/ai/services/hybrid_semantic_search.dart';
 import '../features/ai/services/local_ai_engine.dart';
+import '../features/ai/services/llama_inference_service.dart';
 import '../features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import '../features/clipboard_history/domain/clipboard_item.dart';
 import '../features/clipboard_history/domain/clipboard_payload.dart';
@@ -271,6 +272,28 @@ final hybridSemanticSearchProvider = Provider<HybridSemanticSearch>((ref) {
   );
 });
 
+final chatInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final utilityInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final embeddingInferenceProvider = Provider<LlamaInferenceService>((ref) {
+  return LlamaInferenceService();
+});
+
+final embeddingAiEngineProvider = Provider<LocalAiEngine>((ref) {
+  final engine = LocalAiEngine(
+    ref.watch(aiModelDownloaderProvider),
+    ref.read(aiDebugControllerProvider.notifier),
+    ref.watch(embeddingInferenceProvider),
+  );
+  ref.onDispose(engine.dispose);
+  return engine;
+});
+
 final clipboardEmbeddingIndexerProvider = Provider<ClipboardEmbeddingIndexer>((
   ref,
 ) {
@@ -281,7 +304,8 @@ final clipboardEmbeddingIndexerProvider = Provider<ClipboardEmbeddingIndexer>((
     vectorStore: ref.watch(clipboardVectorStoreProvider),
     modelId: model.id,
     embedder: (text) =>
-        ref.read(localAiEngineProvider).embedText(model: model, text: text),
+        ref.read(embeddingAiEngineProvider).embedText(model: model, text: text),
+    isBusy: () => ref.read(aiControllerProvider).isGenerating,
   );
 });
 
@@ -289,9 +313,10 @@ final localAiEngineProvider = Provider<LocalAiEngine>((ref) {
   final engine = LocalAiEngine(
     ref.watch(aiModelDownloaderProvider),
     ref.read(aiDebugControllerProvider.notifier),
-    null,
+    ref.watch(chatInferenceProvider),
     ref.watch(hybridSemanticSearchProvider),
     ref.watch(clipboardRepositoryProvider),
+    ref.watch(utilityInferenceProvider),
   );
   ref.onDispose(engine.dispose);
   return engine;

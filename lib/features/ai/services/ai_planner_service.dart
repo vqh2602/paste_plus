@@ -21,9 +21,17 @@ class AiPlannerService {
     AiFeatureGroup? featureGroup,
   }) {
     if (featureGroup != null || prompt.trim().isEmpty) return false;
-    // Tool intent and response locale are classified by the model planner.
-    // No locale-specific keyword dictionary belongs in this service.
-    return true;
+    final lower = prompt.toLowerCase();
+    final referencesClipboard = RegExp(
+      r'\b(clipboard|clip|đã copy|đã sao chép|lịch sử)\b',
+    ).hasMatch(lower);
+    final requestsTool = RegExp(
+      r'\b(tìm|search|find|xóa|delete|ghim|pin|collection|bộ sưu tập)\b',
+    ).hasMatch(lower);
+    final multiStep = RegExp(
+      r'\b(sau đó|rồi|tiếp theo|then|after that|and then)\b',
+    ).hasMatch(lower);
+    return referencesClipboard || requestsTool || multiStep;
   }
 
   /// Creates an [AiRequestPlan] containing a validated [AiExecutionPlan].

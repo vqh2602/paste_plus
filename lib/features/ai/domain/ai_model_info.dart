@@ -119,7 +119,7 @@ class AiModelInfo {
       recommendedFor:
           'Chat hằng ngày, hỏi đáp Clipboard, tóm tắt và dịch thuật',
       isThinkingModel: true,
-      supportedModalities: {AiModality.text, AiModality.image},
+      supportedModalities: {AiModality.text},
       contextWindow: 32768,
     ),
     AiModelInfo(
@@ -135,7 +135,7 @@ class AiModelInfo {
       recommendedFor:
           'Hỏi đáp chuyên sâu, phân tích nội dung dài và tác vụ phức tạp',
       isThinkingModel: true,
-      supportedModalities: {AiModality.text, AiModality.image},
+      supportedModalities: {AiModality.text},
       contextWindow: 32768,
     ),
     AiModelInfo(

@@ -68,7 +68,7 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardAction,
         useClipboardHistory: searchesHistory,
         useSelectedClipboard: hasSelectedClipboard,
-        maxOutputTokens: 1536,
+        maxOutputTokens: 512,
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -78,7 +78,7 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardSearch,
         useClipboardHistory: true,
         useSelectedClipboard: false,
-        maxOutputTokens: 1536,
+        maxOutputTokens: 384,
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -88,7 +88,7 @@ class AiRequestPlanner {
         intent: AiRequestIntent.clipboardAction,
         useClipboardHistory: false,
         useSelectedClipboard: true,
-        maxOutputTokens: 1200,
+        maxOutputTokens: 512,
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -98,7 +98,7 @@ class AiRequestPlanner {
         intent: AiRequestIntent.followUp,
         useClipboardHistory: false,
         useSelectedClipboard: false,
-        maxOutputTokens: 900,
+        maxOutputTokens: 384,
         responseLanguageTag: responseLanguageTag,
       );
     }
@@ -107,7 +107,7 @@ class AiRequestPlanner {
       intent: AiRequestIntent.conversation,
       useClipboardHistory: false,
       useSelectedClipboard: false,
-      maxOutputTokens: 768,
+      maxOutputTokens: 256,
       responseLanguageTag: responseLanguageTag,
     );
   }

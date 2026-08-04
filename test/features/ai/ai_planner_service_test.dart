@@ -8,14 +8,14 @@ void main() {
 
   group('AiPlannerService - Model Planner Trigger', () {
     test(
-      'shouldUseModelPlanner delegates every non-feature request to the model',
+      'shouldUseModelPlanner skips ordinary chat and selected-text transforms',
       () {
         expect(
           service.shouldUseModelPlanner(
             prompt: 'dịch đoạn này sang tiếng Anh',
             hasSelectedClipboard: true,
           ),
-          isTrue,
+          isFalse,
         );
 
         expect(
@@ -23,7 +23,7 @@ void main() {
             prompt: 'tóm tắt văn bản',
             hasSelectedClipboard: true,
           ),
-          isTrue,
+          isFalse,
         );
 
         expect(
@@ -31,7 +31,7 @@ void main() {
             prompt: 'sửa lỗi chính tả',
             hasSelectedClipboard: true,
           ),
-          isTrue,
+          isFalse,
         );
       },
     );
