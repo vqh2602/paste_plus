@@ -11,14 +11,14 @@ int resolveOutputTokens({
   required String prompt,
   required AiFeatureGroup? featureGroup,
 }) {
-  if (featureGroup == AiFeatureGroup.translate) return 1536;
-  if (featureGroup == AiFeatureGroup.codeExplain) return 1024;
-  if (prompt.contains('```') || prompt.length > 800) return 1024;
+  if (featureGroup == AiFeatureGroup.translate) return 2048;
+  if (featureGroup == AiFeatureGroup.codeExplain) return 2048;
+  if (prompt.contains('```') || prompt.length > 800) return 2048;
   return switch (intent) {
-    AiRequestIntent.conversation => 512,
-    AiRequestIntent.followUp => 640,
-    AiRequestIntent.clipboardSearch => 384,
-    AiRequestIntent.clipboardAction => 768,
+    AiRequestIntent.conversation => 1024,
+    AiRequestIntent.followUp => 1024,
+    AiRequestIntent.clipboardSearch => 1536,
+    AiRequestIntent.clipboardAction => 1536,
   };
 }
 
@@ -27,16 +27,16 @@ int resolveClassifiedOutputTokens({
   required String prompt,
   required AiFeatureGroup? featureGroup,
 }) {
-  if (featureGroup == AiFeatureGroup.translate) return 1536;
+  if (featureGroup == AiFeatureGroup.translate) return 2048;
   if (featureGroup == AiFeatureGroup.codeExplain ||
       prompt.contains('```') ||
       prompt.length > 800) {
-    return 1024;
+    return 2048;
   }
   return switch (classification.reasoningLevel) {
-    AiReasoningLevel.low => 384,
-    AiReasoningLevel.medium => 768,
-    AiReasoningLevel.high => 1536,
+    AiReasoningLevel.low => 1024,
+    AiReasoningLevel.medium => 1536,
+    AiReasoningLevel.high => 2048,
   };
 }
 

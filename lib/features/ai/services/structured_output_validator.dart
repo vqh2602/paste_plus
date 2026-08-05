@@ -126,6 +126,7 @@ ws ::= [ \\t\\n\\r]*
   }) {
     final jsonStr = extractJson(rawOutput);
     Map<String, dynamic> decoded;
+    List<ClipboardSearchMatch> matchesList = [];
 
     try {
       final parsed = jsonDecode(jsonStr);
@@ -134,15 +135,35 @@ ws ::= [ \\t\\n\\r]*
           : (parsed is Map
                 ? Map<String, dynamic>.from(parsed)
                 : {'matches': []});
+      matchesList = ClipboardSearchResponse.fromJson(decoded).matches;
     } on Object {
-      decoded = {'matches': []};
+      matchesList = [];
     }
 
-    final parsedResponse = ClipboardSearchResponse.fromJson(decoded);
+    // Fallback: If JSON decoding failed or returned empty because of a truncated stream cut-off,
+    // recover all completed {"clip_id": "...", ...} objects using RegExp.
+    if (matchesList.isEmpty) {
+      final objectRegex = RegExp(
+        r'\{\s*"clip_id"\s*:\s*"([^"]+)"(?:\s*,\s*"value"\s*:\s*"([^"]*)")?(?:\s*,\s*"reason"\s*:\s*"([^"]*)")?\s*\}',
+      );
+      for (final m in objectRegex.allMatches(rawOutput)) {
+        final clipId = m.group(1);
+        if (clipId != null && clipId.isNotEmpty) {
+          matchesList.add(
+            ClipboardSearchMatch(
+              clipId: clipId,
+              value: m.group(2) ?? '',
+              reason: m.group(3) ?? '',
+            ),
+          );
+        }
+      }
+    }
+
     final itemById = {for (final item in databaseCandidates) item.id: item};
     final verifiedMatches = <ClipboardSearchMatch>[];
 
-    for (final match in parsedResponse.matches) {
+    for (final match in matchesList) {
       // 1. Business Check: Reject unknown / hallucinated clipboard IDs
       if (!itemById.containsKey(match.clipId)) {
         continue;

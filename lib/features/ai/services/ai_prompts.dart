@@ -80,7 +80,7 @@ RULES
 - Never fabricate a record.
 - Never include a record that only approximately matches a strict constraint.
 - A record repeating the user's search query is not a valid result.
-- Preserve clip_id and exact original value.
+- Preserve exact clip_id. Keep value concise (short snippet, max 50 chars).
 - Return at most 12 records.
 - If there are no valid matches, return an empty matches array.
 - For length constraints: count the actual character length of "value" and compare numerically.
@@ -94,7 +94,7 @@ Return valid JSON only:
   "matches": [
     {
       "clip_id": "string",
-      "value": "exact original value",
+      "value": "concise snippet (max 50 chars)",
       "reason": "brief reason"
     }
   ]
