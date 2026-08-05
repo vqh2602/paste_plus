@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/ui/image_zoom_viewer.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
@@ -138,23 +139,44 @@ class ClipboardCardWidget extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             if (isImage) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child:
-                    (item.imagePath != null &&
-                        File(item.imagePath!).existsSync())
-                    ? Image.file(
-                        File(item.imagePath!),
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    : CachedNetworkImage(
-                        url: item.content,
-                        height: 120,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
+              GestureDetector(
+                onTap: () => showImageZoomDialog(
+                  context,
+                  path: item.imagePath ?? item.content,
+                  title: item.sourceAppName != null
+                      ? 'Ảnh từ ${item.sourceAppName}'
+                      : 'Xem hình ảnh',
+                  onCopy: () => onCopy(item),
+                ),
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: resolveColor(context, ClipFlowColors.surface),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: resolveColor(context, ClipFlowColors.border),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child:
+                        (item.imagePath != null &&
+                            File(item.imagePath!).existsSync())
+                        ? Image.file(
+                            File(item.imagePath!),
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          )
+                        : CachedNetworkImage(
+                            url: item.content,
+                            height: 120,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          ),
+                  ),
+                ),
               ),
               if (item.content.isNotEmpty) ...[
                 const SizedBox(height: 6),
@@ -170,13 +192,32 @@ class ClipboardCardWidget extends ConsumerWidget {
                 ),
               ],
             ] else if (isOnlineImage) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: CachedNetworkImage(
-                  url: item.content,
+              GestureDetector(
+                onTap: () => showImageZoomDialog(
+                  context,
+                  path: item.content,
+                  title: 'Xem hình ảnh',
+                  onCopy: () => onCopy(item),
+                ),
+                child: Container(
                   height: 120,
                   width: double.infinity,
-                  fit: BoxFit.cover,
+                  decoration: BoxDecoration(
+                    color: resolveColor(context, ClipFlowColors.surface),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: resolveColor(context, ClipFlowColors.border),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: CachedNetworkImage(
+                      url: item.content,
+                      height: 120,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 6),

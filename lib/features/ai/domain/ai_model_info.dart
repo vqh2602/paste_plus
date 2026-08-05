@@ -56,7 +56,7 @@ class AiModelInfo {
   String get description {
     return switch (id) {
       'gemma-4-e2b' =>
-        "Google's next-gen natively multimodal model, optimized for conversation, local processing, and image analysis.",
+        "Google's next-gen multilingual model (natively multimodal), optimized for conversation, local processing, and image analysis.",
       'gemma-4-e4b' =>
         'Stronger Gemma 4 natively multimodal model for complex reasoning, image understanding, and higher precision.',
       'qwen3-0.6b' =>

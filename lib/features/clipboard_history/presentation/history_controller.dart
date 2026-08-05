@@ -343,6 +343,20 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     await reload();
   }
 
+  Future<void> updateNote(ClipboardItem item, String? note) async {
+    final trimmed = note?.trim();
+    final value = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    final updated = item.copyWith(note: value, clearNote: value == null);
+    await _repository.updateNote(item.id, value);
+    state = state.copyWith(
+      items: [
+        for (final current in state.items)
+          if (current.id == item.id) updated else current,
+      ],
+    );
+    await onItemMetadataChanged?.call(updated);
+  }
+
   Future<void> delete(ClipboardItem item) async {
     await _repository.deleteItem(item.id);
     await reload();

@@ -114,6 +114,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get add_to_collection => 'Zur Sammlung hinzufügen';
 
   @override
+  String get add_note => 'Notiz hinzufügen';
+
+  @override
+  String get edit_note => 'Notiz bearbeiten';
+
+  @override
+  String get note => 'Notiz';
+
+  @override
+  String get no_note_yet => 'Noch keine Notiz...';
+
+  @override
+  String get type_note_placeholder =>
+      'Notiz eingeben (automatisch gespeichert)...';
+
+  @override
   String get extract_ocr => 'Text extrahieren (OCR)';
 
   @override

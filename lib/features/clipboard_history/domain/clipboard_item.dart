@@ -17,6 +17,7 @@ class ClipboardItem {
     this.sourceAppIdentifier,
     this.imagePath,
     this.metadataJson,
+    this.note,
   });
 
   final String id;
@@ -33,6 +34,7 @@ class ClipboardItem {
   final bool isSensitive;
   final String? imagePath;
   final String? metadataJson;
+  final String? note;
   final int copyCount;
 
   ClipboardItem copyWith({
@@ -42,6 +44,8 @@ class ClipboardItem {
     bool? isPinned,
     DateTime? lastCopiedAt,
     int? copyCount,
+    String? note,
+    bool clearNote = false,
   }) {
     return ClipboardItem(
       id: id,
@@ -58,6 +62,7 @@ class ClipboardItem {
       isSensitive: isSensitive,
       imagePath: imagePath,
       metadataJson: metadataJson,
+      note: clearNote ? null : (note ?? this.note),
       copyCount: copyCount ?? this.copyCount,
     );
   }
@@ -82,6 +87,7 @@ class ClipboardItem {
       isSensitive: (map['is_sensitive'] as int? ?? 0) == 1,
       imagePath: map['image_path'] as String?,
       metadataJson: map['metadata_json'] as String?,
+      note: map['note'] as String?,
       copyCount: map['copy_count'] as int? ?? 1,
     );
   }
@@ -101,6 +107,7 @@ class ClipboardItem {
     'is_sensitive': isSensitive ? 1 : 0,
     'image_path': imagePath,
     'metadata_json': metadataJson,
+    'note': note,
     'copy_count': copyCount,
   };
 }

@@ -267,6 +267,21 @@ class SqliteClipboardRepository implements ClipboardRepository {
   }
 
   @override
+  Future<void> updateNote(String id, String? note) async {
+    final trimmed = note?.trim();
+    final value = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    await _db.update(
+      'clipboard_items',
+      {
+        'note': value,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
   Future<void> deleteItem(String id) async {
     final rows = await _db.query(
       'clipboard_items',

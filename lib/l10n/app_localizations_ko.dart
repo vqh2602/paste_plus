@@ -114,6 +114,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get add_to_collection => '컬렉션에 추가';
 
   @override
+  String get add_note => '메모 추가';
+
+  @override
+  String get edit_note => '메모 편집';
+
+  @override
+  String get note => '메모';
+
+  @override
+  String get no_note_yet => '메모 없음...';
+
+  @override
+  String get type_note_placeholder => '메모 입력 (자동 저장)...';
+
+  @override
   String get extract_ocr => '텍스트 추출 (OCR)';
 
   @override

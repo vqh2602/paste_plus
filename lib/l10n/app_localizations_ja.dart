@@ -114,6 +114,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get add_to_collection => 'コレクションに追加';
 
   @override
+  String get add_note => 'メモを追加';
+
+  @override
+  String get edit_note => 'メモを編集';
+
+  @override
+  String get note => 'メモ';
+
+  @override
+  String get no_note_yet => 'メモはありません...';
+
+  @override
+  String get type_note_placeholder => 'メモを入力（自動保存）...';
+
+  @override
   String get extract_ocr => 'テキスト抽出 (OCR)';
 
   @override

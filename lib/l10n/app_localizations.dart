@@ -314,6 +314,36 @@ abstract class AppLocalizations {
   /// **'Add to Collection'**
   String get add_to_collection;
 
+  /// No description provided for @add_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get add_note;
+
+  /// No description provided for @edit_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit note'**
+  String get edit_note;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @no_note_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No note yet...'**
+  String get no_note_yet;
+
+  /// No description provided for @type_note_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Type note (auto-saves)...'**
+  String get type_note_placeholder;
+
   /// No description provided for @extract_ocr.
   ///
   /// In en, this message translates to:

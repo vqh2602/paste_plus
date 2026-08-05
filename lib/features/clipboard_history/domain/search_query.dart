@@ -8,6 +8,7 @@ class ClipboardSearchQuery {
     this.pinnedOnly = false,
     this.sourceApp,
     this.after,
+    this.noteQuery,
   });
 
   final List<String> terms;
@@ -15,15 +16,33 @@ class ClipboardSearchQuery {
   final bool pinnedOnly;
   final String? sourceApp;
   final DateTime? after;
+  final String? noteQuery;
 
   factory ClipboardSearchQuery.parse(String raw) {
     ClipboardContentType? type;
     var pinnedOnly = false;
     String? sourceApp;
     DateTime? after;
+    String? noteQuery;
     final terms = <String>[];
 
-    for (final token in raw.trim().split(RegExp(r'\s+'))) {
+    final trimmed = raw.trim();
+    final noteMatch = RegExp(
+      r'\bnote:\s*(?:"([^"]*)"|(\S+))',
+      caseSensitive: false,
+    ).firstMatch(trimmed);
+    if (noteMatch != null) {
+      noteQuery = (noteMatch.group(1) ?? noteMatch.group(2) ?? '').toLowerCase();
+    } else if (RegExp(r'\bnote:\s*$', caseSensitive: false).hasMatch(trimmed)) {
+      noteQuery = '';
+    }
+
+    final sanitizedRaw = trimmed.replaceAll(
+      RegExp(r'\bnote:\s*(?:"[^"]*"|\S+)?', caseSensitive: false),
+      '',
+    );
+
+    for (final token in sanitizedRaw.trim().split(RegExp(r'\s+'))) {
       if (token.isEmpty) continue;
       final parts = token.split(':');
       if (parts.length == 2) {
@@ -51,6 +70,7 @@ class ClipboardSearchQuery {
       pinnedOnly: pinnedOnly,
       sourceApp: sourceApp,
       after: after,
+      noteQuery: noteQuery,
     );
   }
 
@@ -62,8 +82,19 @@ class ClipboardSearchQuery {
       return false;
     }
     if (after != null && item.lastCopiedAt.isBefore(after!)) return false;
-    final haystack = '${item.content} ${item.sourceAppName ?? ''}'
-        .toLowerCase();
+    if (noteQuery != null) {
+      if (noteQuery!.isEmpty) {
+        if (item.note == null || item.note!.trim().isEmpty) return false;
+      } else {
+        if (item.note == null ||
+            !item.note!.toLowerCase().contains(noteQuery!)) {
+          return false;
+        }
+      }
+    }
+    final haystack =
+        '${item.content} ${item.sourceAppName ?? ''} ${item.note ?? ''}'
+            .toLowerCase();
     return terms.every(haystack.contains);
   }
 }

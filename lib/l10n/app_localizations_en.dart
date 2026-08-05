@@ -114,6 +114,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get add_to_collection => 'Add to Collection';
 
   @override
+  String get add_note => 'Add note';
+
+  @override
+  String get edit_note => 'Edit note';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get no_note_yet => 'No note yet...';
+
+  @override
+  String get type_note_placeholder => 'Type note (auto-saves)...';
+
+  @override
   String get extract_ocr => 'Extract Text (OCR)';
 
   @override

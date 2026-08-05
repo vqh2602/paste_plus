@@ -10,6 +10,7 @@ import '../../../app/providers.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
+import 'widgets/note_edit_dialog.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
 import 'widgets/quick_empty_state_widget.dart';
 import 'widgets/quick_toolbar_widget.dart';
@@ -188,6 +189,14 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
             ),
           ],
           CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'note'),
+            child: Text(
+              item.note?.isNotEmpty == true
+                  ? context.l10n.edit_note
+                  : context.l10n.add_note,
+            ),
+          ),
+          CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ask_ai'),
             child: Text(context.l10n.ask_ai),
           ),
@@ -214,7 +223,9 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
 
     if (!context.mounted || action == null) return;
 
-    if (action == 'ask_ai') {
+    if (action == 'note') {
+      await showNoteEditDialog(context, ref, item);
+    } else if (action == 'ask_ai') {
       ref.read(aiControllerProvider.notifier).setClipboardContext(item);
       await ref.read(desktopIntegrationProvider).showAiWindow();
     } else if (action == 'ocr') {

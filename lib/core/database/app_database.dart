@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 4;
+  static const version = 5;
   final Database database;
   final String databasePath;
 
@@ -202,6 +202,7 @@ class AppDatabase {
         is_sensitive INTEGER NOT NULL DEFAULT 0,
         image_path TEXT,
         metadata_json TEXT,
+        note TEXT,
         copy_count INTEGER NOT NULL DEFAULT 1
       )
     ''');
@@ -255,14 +256,15 @@ class AppDatabase {
           clipboard_id UNINDEXED,
           normalized_content,
           source_app_name,
+          note,
           tokenize = 'unicode61'
         )
       ''');
 
       await db.execute('''
         CREATE TRIGGER IF NOT EXISTS clipboard_items_ai AFTER INSERT ON clipboard_items BEGIN
-          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
-          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name, note)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''), COALESCE(new.note, ''));
         END;
       ''');
 
@@ -275,14 +277,14 @@ class AppDatabase {
       await db.execute('''
         CREATE TRIGGER IF NOT EXISTS clipboard_items_au AFTER UPDATE ON clipboard_items BEGIN
           DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
-          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
-          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''));
+          INSERT INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name, note)
+          VALUES (new.id, new.normalized_content, COALESCE(new.source_app_name, ''), COALESCE(new.note, ''));
         END;
       ''');
 
       await db.execute('''
-        INSERT OR IGNORE INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name)
-        SELECT id, normalized_content, COALESCE(source_app_name, '') FROM clipboard_items;
+        INSERT OR IGNORE INTO clipboard_items_fts(clipboard_id, normalized_content, source_app_name, note)
+        SELECT id, normalized_content, COALESCE(source_app_name, ''), COALESCE(note, '') FROM clipboard_items;
       ''');
     } catch (_) {
       // Ignore SQLite instances where FTS5 extension module is disabled
@@ -365,6 +367,11 @@ class AppDatabase {
       await _createEmbeddingsTable(db);
     }
     if (oldVersion < 4) {
+      await _createFtsTable(db);
+    }
+    if (oldVersion < 5) {
+      await db.execute('ALTER TABLE clipboard_items ADD COLUMN note TEXT');
+      await db.execute('DROP TABLE IF EXISTS clipboard_items_fts');
       await _createFtsTable(db);
     }
   }

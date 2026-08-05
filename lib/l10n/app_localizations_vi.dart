@@ -114,6 +114,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get add_to_collection => 'Thêm vào Collection';
 
   @override
+  String get add_note => 'Thêm ghi chú';
+
+  @override
+  String get edit_note => 'Sửa ghi chú';
+
+  @override
+  String get note => 'Ghi chú';
+
+  @override
+  String get no_note_yet => 'Chưa có ghi chú nào...';
+
+  @override
+  String get type_note_placeholder => 'Nhập ghi chú (tự động lưu)...';
+
+  @override
   String get extract_ocr => 'Trích xuất văn bản (OCR)';
 
   @override

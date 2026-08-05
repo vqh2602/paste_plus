@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/ui/image_zoom_viewer.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
@@ -125,21 +126,49 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(9),
-                                child:
-                                    (item.imagePath != null &&
-                                        File(item.imagePath!).existsSync())
-                                    ? Image.file(
-                                        File(item.imagePath!),
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : CachedNetworkImage(
-                                        url: item.content,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
+                              child: GestureDetector(
+                                onTap: () => showImageZoomDialog(
+                                  context,
+                                  path: item.imagePath ?? item.content,
+                                  title: item.sourceAppName != null
+                                      ? 'Ảnh từ ${item.sourceAppName}'
+                                      : 'Xem hình ảnh',
+                                  onCopy: () => ref
+                                      .read(historyControllerProvider.notifier)
+                                      .copy(item),
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: resolveColor(
+                                      context,
+                                      ClipFlowColors.surface,
+                                    ),
+                                    borderRadius: BorderRadius.circular(9),
+                                    border: Border.all(
+                                      color: resolveColor(
+                                        context,
+                                        ClipFlowColors.border,
                                       ),
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child:
+                                        (item.imagePath != null &&
+                                            File(item.imagePath!).existsSync())
+                                        ? Image.file(
+                                            File(item.imagePath!),
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                          )
+                                        : CachedNetworkImage(
+                                            url: item.content,
+                                            width: double.infinity,
+                                            fit: BoxFit.contain,
+                                          ),
+                                  ),
+                                ),
                               ),
                             ),
                             if (item.content.isNotEmpty) ...[
@@ -162,12 +191,38 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(9),
-                                child: CachedNetworkImage(
-                                  url: item.content,
+                              child: GestureDetector(
+                                onTap: () => showImageZoomDialog(
+                                  context,
+                                  path: item.content,
+                                  title: 'Xem hình ảnh',
+                                  onCopy: () => ref
+                                      .read(historyControllerProvider.notifier)
+                                      .copy(item),
+                                ),
+                                child: Container(
                                   width: double.infinity,
-                                  fit: BoxFit.cover,
+                                  decoration: BoxDecoration(
+                                    color: resolveColor(
+                                      context,
+                                      ClipFlowColors.surface,
+                                    ),
+                                    borderRadius: BorderRadius.circular(9),
+                                    border: Border.all(
+                                      color: resolveColor(
+                                        context,
+                                        ClipFlowColors.border,
+                                      ),
+                                    ),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: CachedNetworkImage(
+                                      url: item.content,
+                                      width: double.infinity,
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
