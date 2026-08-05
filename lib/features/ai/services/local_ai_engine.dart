@@ -283,6 +283,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           tokenize: _inferenceService.tokenize,
           detokenize: _inferenceService.detokenize,
         );
+        var candidateItems = effectiveHistory;
         if (effectiveClipboardContext == null && effectiveHistory.isNotEmpty) {
           final semanticItems = await _semanticRank(
             prompt: prompt,
@@ -292,16 +293,19 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
             modelId: model.id,
             preferImageUrls: classification?.preferImageUrls ?? false,
           );
-          contextText = _buildHistoryContext(semanticItems);
+          if (semanticItems.isNotEmpty) {
+            candidateItems = semanticItems;
+          }
+          contextText = _buildHistoryContext(candidateItems);
           _debug?.log(
             level: AiDebugLevel.info,
             stage: 'retrieval',
             requestId: debugRequestId,
             message: 'Clipboard history semantically ranked',
             details: kReleaseMode
-                ? 'inputItems: ${effectiveHistory.length}\nselectedItems: ${semanticItems.length}'
+                ? 'inputItems: ${effectiveHistory.length}\nselectedItems: ${candidateItems.length}'
                 : 'inputItems: ${effectiveHistory.length}\n'
-                      'selectedItems: ${semanticItems.length}\n'
+                      'selectedItems: ${candidateItems.length}\n'
                       'effectiveContext:\n$contextText',
           );
         }
@@ -327,7 +331,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           debugRequestId: debugRequestId,
           imagePaths: imagePaths,
           mmprojPath: mmprojPath,
-          candidates: effectiveHistory,
+          candidates: candidateItems,
           onConfirmationRequested: onConfirmationRequested,
         );
         return;

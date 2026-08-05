@@ -1,3 +1,4 @@
+import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import 'structured_output_validator.dart';
 
@@ -82,13 +83,11 @@ class AiResponseVerifier {
         rawOutput: text,
         databaseCandidates: candidates,
       );
-      final isVietnamese = responseLanguage.toLowerCase().startsWith('vi');
-      if (jsonResponse.matches.isEmpty) {
-        issues.add('Model sinh JSON chưa đúng schema hoặc không tìm thấy kết quả.');
-        text = isVietnamese
-            ? 'Không tìm thấy mục clipboard nào phù hợp với yêu cầu của bạn trong lịch sử.'
-            : 'No matching clipboard items were found in history for your query.';
-      } else {
+      final isVietnamese =
+          responseLanguage.isEmpty ||
+          responseLanguage.toLowerCase().startsWith('vi');
+
+      if (jsonResponse.matches.isNotEmpty) {
         final buffer = StringBuffer()
           ..writeln(
             isVietnamese
@@ -101,13 +100,66 @@ class AiResponseVerifier {
           final val = m.value.length > 300
               ? '${m.value.substring(0, 300)}…'
               : m.value;
-          buffer.writeln('${i + 1}. [clip:${m.clipId}] $val');
+          final displayVal = val.trim().isEmpty ? '[${m.clipId}]' : val;
+          final singleLineVal = displayVal
+              .replaceAll('\r\n', ' ')
+              .replaceAll('\n', ' ')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          buffer.writeln('${i + 1}. [clip:${m.clipId}] $singleLineVal');
           if (m.reason.isNotEmpty) {
-            buffer.writeln('   Lý do: ${m.reason}');
+            final sanitizedReason = m.reason
+                .replaceAll('\r\n', ' ')
+                .replaceAll('\n', ' ')
+                .trim();
+            buffer.writeln('   Lý do: $sanitizedReason');
           }
           buffer.writeln();
         }
         text = buffer.toString().trim();
+      } else if (citations.isNotEmpty) {
+        // Model generated a natural text response containing valid [clip:id] citations.
+        // Keep the model's natural text response intact.
+      } else if (candidates.isNotEmpty) {
+        // Model didn't output JSON or citations, but database candidates exist.
+        // Format the candidate items directly so the user gets the requested clipboard UI cards!
+        final buffer = StringBuffer()
+          ..writeln(
+            isVietnamese
+                ? 'Dưới đây là các mục clipboard trong lịch sử phù hợp với yêu cầu:'
+                : 'Here are the matching clipboard items from history:',
+          )
+          ..writeln();
+        final displayItems = candidates.take(8).toList();
+        for (var i = 0; i < displayItems.length; i++) {
+          final item = displayItems[i];
+          var contentStr = item.content.trim();
+          if (item.contentType == ClipboardContentType.image) {
+            final fileName = item.imagePath?.split('/').last ?? 'image.png';
+            contentStr = '[Hình ảnh: $fileName]';
+          }
+          if (contentStr.isEmpty) contentStr = '[${item.contentType.name}]';
+          final val = contentStr.length > 300
+              ? '${contentStr.substring(0, 300)}…'
+              : contentStr;
+          final singleLineVal = val
+              .replaceAll('\r\n', ' ')
+              .replaceAll('\n', ' ')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
+          final appInfo =
+              item.sourceAppName != null && item.sourceAppName!.isNotEmpty
+                  ? '${item.sourceAppName}: '
+                  : '';
+          buffer.writeln('${i + 1}. [clip:${item.id}] $appInfo$singleLineVal');
+          buffer.writeln();
+        }
+        text = buffer.toString().trim();
+      } else {
+        issues.add('Model sinh JSON chưa đúng schema hoặc không tìm thấy kết quả.');
+        text = isVietnamese
+            ? 'Không tìm thấy mục clipboard nào phù hợp với yêu cầu của bạn trong lịch sử.'
+            : 'No matching clipboard items were found in history for your query.';
       }
     }
 

@@ -156,9 +156,6 @@ class AiController extends StateNotifier<AiState> {
       }
     }
     state = state.copyWith(downloadStates: newStates);
-
-    // Auto-download Qwen 0.6B classifier if missing
-    ensureClassifierModel();
   }
 
   void selectModel(String modelId) {
@@ -174,13 +171,6 @@ class AiController extends StateNotifier<AiState> {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
     newStates[model.id] = DownloadState.downloading;
     state = state.copyWith(downloadStates: newStates);
-
-    const classifierId = AiUtilityClassifier.utilityModelId;
-    if (model.id != classifierId &&
-        (state.downloadStates[classifierId] == null ||
-            state.downloadStates[classifierId] == DownloadState.notDownloaded)) {
-      downloadClassifierModel();
-    }
 
     final stream = _downloaderService.downloadModel(model);
     final sub = stream.listen(
@@ -233,18 +223,7 @@ class AiController extends StateNotifier<AiState> {
     state = state.copyWith(downloadStates: states);
   }
 
-  /// Ensures the dedicated classifier model (Qwen 0.6B) is downloaded or downloading.
-  void ensureClassifierModel() {
-    const classifierId = AiUtilityClassifier.utilityModelId;
-    final classifierState = state.downloadStates[classifierId];
-    if (classifierState == null ||
-        classifierState == DownloadState.notDownloaded) {
-      downloadClassifierModel();
-    }
-  }
-
-  /// Downloads the dedicated classifier model (Qwen 0.6B) without affecting
-  /// the user's currently selected answer model.
+  /// Downloads the classifier model (Qwen 0.6B) using the unified model downloader.
   void downloadClassifierModel() {
     final classifierModel = AiModelInfo.findById(
       AiUtilityClassifier.utilityModelId,

@@ -39,14 +39,6 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
   final _focusNode = FocusNode();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(aiControllerProvider.notifier).ensureClassifierModel();
-    });
-  }
-
-  @override
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();

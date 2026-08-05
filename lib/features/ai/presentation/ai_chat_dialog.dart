@@ -51,7 +51,6 @@ class _AiChatDialogState extends ConsumerState<AiChatDialog> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(aiControllerProvider.notifier).ensureClassifierModel();
       if (widget.initialContextItem != null) {
         ref
             .read(aiControllerProvider.notifier)
