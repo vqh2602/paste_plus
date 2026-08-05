@@ -97,16 +97,25 @@ class AiResponseVerifier {
           ..writeln();
         for (var i = 0; i < jsonResponse.matches.length; i++) {
           final m = jsonResponse.matches[i];
-          final val = m.value.length > 300
-              ? '${m.value.substring(0, 300)}…'
-              : m.value;
-          final displayVal = val.trim().isEmpty ? '[${m.clipId}]' : val;
-          final singleLineVal = displayVal
+          final originalItem = candidates
+              .where((c) => c.id == m.clipId)
+              .firstOrNull;
+          var val = originalItem?.content.trim() ?? m.value.trim();
+          if (originalItem?.contentType == ClipboardContentType.image) {
+            final fileName = originalItem?.imagePath?.split('/').last ?? 'image.png';
+            val = '[Hình ảnh: $fileName]';
+          }
+          if (val.length > 300) val = '${val.substring(0, 300)}…';
+          final appInfo = originalItem?.sourceAppName != null &&
+                  originalItem!.sourceAppName!.isNotEmpty
+              ? '${originalItem.sourceAppName}: '
+              : '';
+          final singleLineVal = val
               .replaceAll('\r\n', ' ')
               .replaceAll('\n', ' ')
               .replaceAll(RegExp(r'\s+'), ' ')
               .trim();
-          buffer.writeln('${i + 1}. [clip:${m.clipId}] $singleLineVal');
+          buffer.writeln('${i + 1}. [clip:${m.clipId}] $appInfo$singleLineVal');
           if (m.reason.isNotEmpty) {
             final sanitizedReason = m.reason
                 .replaceAll('\r\n', ' ')
@@ -172,5 +181,51 @@ class AiResponseVerifier {
       issues: issues,
       citations: citations,
     );
+  }
+
+  /// Directly formats [items] returned by a tool into a numbered [clip:id] list.
+  /// Use this to bypass LLM for simple search/filter tasks.
+  String formatToolResults({
+    required List<ClipboardItem> items,
+    required String responseLanguage,
+    int maxItems = 20,
+  }) {
+    if (items.isEmpty) {
+      return responseLanguage.toLowerCase().startsWith('vi')
+          ? 'Không tìm thấy mục clipboard nào phù hợp với yêu cầu của bạn.'
+          : 'No matching clipboard items were found for your query.';
+    }
+
+    final isVietnamese = responseLanguage.toLowerCase().startsWith('vi');
+    final buffer = StringBuffer()
+      ..writeln(
+        isVietnamese
+            ? 'Đã tìm thấy ${items.length} kết quả phù hợp trong lịch sử clipboard:'
+            : 'Found ${items.length} matching item(s) in clipboard history:',
+      )
+      ..writeln();
+
+    final displayItems = items.take(maxItems).toList();
+    for (var i = 0; i < displayItems.length; i++) {
+      final item = displayItems[i];
+      var content = item.content.trim();
+      if (item.contentType == ClipboardContentType.image) {
+        final fileName = item.imagePath?.split('/').last ?? 'image.png';
+        content = '[Hình ảnh: $fileName]';
+      }
+      if (content.isEmpty) content = '[${item.contentType.name}]';
+      final val = content.length > 300 ? '${content.substring(0, 300)}…' : content;
+      final singleLineVal = val
+          .replaceAll('\r\n', ' ')
+          .replaceAll('\n', ' ')
+          .replaceAll(RegExp(r'\s+'), ' ')
+          .trim();
+      final appInfo = item.sourceAppName != null && item.sourceAppName!.isNotEmpty
+          ? '${item.sourceAppName}: '
+          : '';
+      buffer.writeln('${i + 1}. [clip:${item.id}] $appInfo$singleLineVal');
+      buffer.writeln();
+    }
+    return buffer.toString().trim();
   }
 }

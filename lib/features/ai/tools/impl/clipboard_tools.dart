@@ -53,10 +53,36 @@ class SearchClipboardTool implements AiTool {
       items = await _repository.getItems(limit: 50);
     }
 
+    const stopWords = <String>{
+      'tìm',
+      'kiếm',
+      'danh',
+      'sách',
+      'clipbroad',
+      'clipboard',
+      'có',
+      'chứa',
+      'cho',
+      'tôi',
+      'các',
+      'những',
+      'mục',
+      'link',
+      'url',
+      'ảnh',
+      'hình',
+      'bằng',
+      'vào',
+      'ngày',
+      'hôm',
+      'nay',
+      'hôm qua',
+    };
+
     final queryTokens = query
         .split(RegExp(r'\s+'))
         .map((w) => w.trim().toLowerCase())
-        .where((w) => w.isNotEmpty)
+        .where((w) => w.isNotEmpty && !stopWords.contains(w))
         .toList();
 
     final now = DateTime.now();
@@ -69,7 +95,9 @@ class SearchClipboardTool implements AiTool {
           return false;
         }
         if (contentType == 'url' &&
-            item.contentType != ClipboardContentType.url) {
+            item.contentType != ClipboardContentType.url &&
+            !RegExp(r'https?://|www\.', caseSensitive: false)
+                .hasMatch(item.content)) {
           return false;
         }
         if (contentType == 'code' &&
@@ -77,7 +105,8 @@ class SearchClipboardTool implements AiTool {
           return false;
         }
         if (contentType == 'image' &&
-            item.contentType != ClipboardContentType.image) {
+            item.contentType != ClipboardContentType.image &&
+            (item.imagePath == null || item.imagePath!.isEmpty)) {
           return false;
         }
         if (contentType == 'text' &&

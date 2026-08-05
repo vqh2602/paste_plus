@@ -54,38 +54,30 @@ class AiClipboardRelevanceRanker {
 
       final isUrlType = item.contentType == ClipboardContentType.url;
       final containsHttpUrl = RegExp(
-        r'https?://',
+        r'https?://|www\.',
         caseSensitive: false,
       ).hasMatch(content);
       final imageLink = isImageUrl(content);
 
-      if (asksForLink) {
-        if (isUrlType) {
-          lexicalScore += 15.0;
-        } else if (containsHttpUrl) {
-          lexicalScore += 3.0;
-        }
-      }
-
-      if (asksForImage) {
-        if (item.contentType == ClipboardContentType.image) {
-          lexicalScore += 12.0;
-        }
-      }
-
       if (asksForLink && asksForImage) {
-        if (imageLink || (isUrlType && containsHttpUrl)) {
-          lexicalScore += 30.0;
+        if (imageLink) {
+          lexicalScore += 50.0;
+        } else if (isUrlType || containsHttpUrl) {
+          lexicalScore += 35.0;
         } else if (item.contentType == ClipboardContentType.image) {
-          lexicalScore += 20.0;
+          lexicalScore += 25.0;
         }
-      } else if (asksForImage && imageLink) {
-        lexicalScore += 15.0;
-      }
-
-      for (final extension in requestedExtensions) {
-        if (normalizedContent.contains(extension.substring(1))) {
-          lexicalScore += 10.0;
+      } else if (asksForLink) {
+        if (isUrlType || containsHttpUrl) {
+          lexicalScore += 40.0;
+        } else {
+          lexicalScore -= 20.0;
+        }
+      } else if (asksForImage) {
+        if (item.contentType == ClipboardContentType.image || imageLink) {
+          lexicalScore += 40.0;
+        } else {
+          lexicalScore -= 20.0;
         }
       }
 

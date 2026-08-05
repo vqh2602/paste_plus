@@ -1,5 +1,6 @@
 import '../domain/ai_execution_plan.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_request_classification.dart';
 import '../domain/ai_request_plan.dart';
 import '../localization/ai_locale_spec.dart';
 import 'ai_plan_validator.dart';
@@ -84,6 +85,7 @@ class AiPlannerService {
     String? rawModelPlanJson,
     String appLanguageTag = 'vi-VN',
     String? resolvedResponseLanguageTag,
+    AiRequestClassification? classification,
   }) {
     final legacyPlan = _requestPlanner.plan(
       prompt: prompt,
@@ -94,15 +96,26 @@ class AiPlannerService {
       resolvedResponseLanguageTag: resolvedResponseLanguageTag,
     );
 
+    final intent = classification?.intent ?? legacyPlan.intent;
+    final useHistory = classification != null
+        ? (classification.needsClipboard && !hasSelectedClipboard)
+        : legacyPlan.useClipboardHistory;
+    final useSelected = classification != null
+        ? (classification.needsClipboard && hasSelectedClipboard)
+        : legacyPlan.useSelectedClipboard;
+    final responseLang = resolvedResponseLanguageTag ??
+        classification?.languageTag ??
+        legacyPlan.responseLanguageTag;
+
     // 1. Try parsing model-generated JSON plan if available
     if (rawModelPlanJson != null && rawModelPlanJson.trim().isNotEmpty) {
       final parsedPlan = AiExecutionPlan.tryParseJson(rawModelPlanJson);
       if (parsedPlan != null && _validator.isValid(parsedPlan)) {
         return AiRequestPlan(
-          intent: legacyPlan.intent,
+          intent: intent,
           useClipboardHistory:
-              parsedPlan.needsClipboard || legacyPlan.useClipboardHistory,
-          useSelectedClipboard: legacyPlan.useSelectedClipboard,
+              parsedPlan.needsClipboard || useHistory,
+          useSelectedClipboard: useSelected,
           maxOutputTokens: legacyPlan.maxOutputTokens,
           responseLanguageTag: AiLanguageRegistry.normalizeTag(
             parsedPlan.language,
@@ -114,27 +127,41 @@ class AiPlannerService {
 
     // 2. Fast-path single-step execution plan fallback
     final defaultTool = _resolveDefaultTool(
-      intent: legacyPlan.intent,
+      intent: intent,
       featureGroup: featureGroup,
       hasSelectedClipboard: hasSelectedClipboard,
+      prompt: prompt,
     );
 
-    // Text transformations and conversational tasks are handled by the final
-    // inference. They must not be represented as tools that the registry cannot run.
-    if (defaultTool == null) return legacyPlan;
+    if (defaultTool == null) {
+      return AiRequestPlan(
+        intent: intent,
+        useClipboardHistory: useHistory,
+        useSelectedClipboard: useSelected,
+        maxOutputTokens: legacyPlan.maxOutputTokens,
+        responseLanguageTag: responseLang,
+      );
+    }
+
+    final toolArgs = <String, dynamic>{'query': prompt};
+    if (classification?.preferImageUrls == true ||
+        prompt.toLowerCase().contains('link') ||
+        prompt.toLowerCase().contains('url')) {
+      toolArgs['content_type'] = 'url';
+    }
 
     final fallbackExecutionPlan = AiExecutionPlan.singleStepFallback(
       tool: defaultTool,
-      language: legacyPlan.responseLanguageTag,
-      arguments: {'query': prompt},
+      language: responseLang,
+      arguments: toolArgs,
     );
 
     return AiRequestPlan(
-      intent: legacyPlan.intent,
-      useClipboardHistory: legacyPlan.useClipboardHistory,
-      useSelectedClipboard: legacyPlan.useSelectedClipboard,
+      intent: intent,
+      useClipboardHistory: useHistory,
+      useSelectedClipboard: useSelected,
       maxOutputTokens: legacyPlan.maxOutputTokens,
-      responseLanguageTag: legacyPlan.responseLanguageTag,
+      responseLanguageTag: responseLang,
       executionPlan: fallbackExecutionPlan,
     );
   }
@@ -143,12 +170,27 @@ class AiPlannerService {
     required AiRequestIntent intent,
     required AiFeatureGroup? featureGroup,
     required bool hasSelectedClipboard,
+    required String prompt,
   }) {
     if (featureGroup != null) return null;
 
+    final lower = prompt.toLowerCase();
+    if (RegExp(r'\b(ghim|pin|unpin)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'pin_clipboard';
+    }
+    if (RegExp(r'\b(xóa|delete|remove)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'delete_clipboard_item';
+    }
+    if (RegExp(r'\b(bộ sưu tập|collection)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'list_collections';
+    }
+    if (RegExp(r'\b(trích xuất url|extract url|trích xuất link)\b', caseSensitive: false).hasMatch(lower)) {
+      return 'extract_urls';
+    }
+
     return switch (intent) {
       AiRequestIntent.clipboardSearch => 'search_clipboard',
-      AiRequestIntent.clipboardAction => null,
+      AiRequestIntent.clipboardAction => hasSelectedClipboard ? null : 'search_clipboard',
       AiRequestIntent.followUp => null,
       AiRequestIntent.conversation => null,
     };

@@ -96,19 +96,15 @@ class LocalAiEngine {
         );
     final initialPlan = classification == null || requestPlan != null
         ? legacyPlan
-        : AiRequestPlan(
-            intent: classification.intent,
-            useClipboardHistory:
-                classification.needsClipboard && clipboardContext == null,
-            useSelectedClipboard:
-                classification.needsClipboard && clipboardContext != null,
-            maxOutputTokens: resolveClassifiedOutputTokens(
-              classification: classification,
-              prompt: prompt,
-              featureGroup: featureGroup,
-            ),
-            responseLanguageTag: responseLanguageTag ??
-                classification.languageTag,
+        : _plannerService.createPlan(
+            prompt: prompt,
+            hasSelectedClipboard: clipboardContext != null,
+            hasConversation:
+                conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
+            featureGroup: featureGroup,
+            appLanguageTag: appLanguageTag,
+            resolvedResponseLanguageTag: responseLanguageTag,
+            classification: classification,
           );
 
     var effectivePlan = initialPlan;
@@ -202,6 +198,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     }
 
     final executionPlan = effectivePlan.executionPlan;
+    var toolResultItems = <ClipboardItem>[];
     if (executionPlan != null && executionPlan.hasExecutableTools) {
       final stepResults = await _agentOrchestrator.executePlan(
         plan: executionPlan,
@@ -210,10 +207,58 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
         clipboardHistory: effectiveHistory,
         onConfirmationRequested: onConfirmationRequested,
       );
+      // Collect items returned by tools (e.g. search_clipboard results)
+      for (final r in stepResults) {
+        toolResultItems.addAll(r.items);
+      }
+      // Synthesize tool output into contextText — preserve this, do NOT overwrite later
       contextText = _agentOrchestrator.synthesizeContext(
         stepResults,
         contextText,
+        toolResultItems,
       );
+      _debug?.log(
+        level: AiDebugLevel.info,
+        stage: 'agent',
+        requestId: debugRequestId,
+        message: 'Agent tool execution complete',
+        details:
+            'steps: ${stepResults.length}\n'
+            'toolResultItems: ${toolResultItems.length}\n'
+            'contextLength: ${contextText.length}',
+      );
+
+      // ── SHORTCUT: For pure search tasks, stream results directly without LLM ──
+      // This makes search instant and 100% accurate — no JSON hallucination possible.
+      final isSearchIntent =
+          effectivePlan.intent == AiRequestIntent.clipboardSearch;
+      final hasNoConversation = conversationMessages.isEmpty &&
+          conversationContext.isEmpty;
+
+      if (isSearchIntent && hasNoConversation) {
+        final responseLanguage =
+            effectivePlan.responseLanguageTag.isNotEmpty
+                ? effectivePlan.responseLanguageTag
+                : 'vi';
+        final output = _responseVerifier.formatToolResults(
+          items: toolResultItems,
+          responseLanguage: responseLanguage,
+        );
+        _debug?.log(
+          level: AiDebugLevel.success,
+          stage: 'shortcut',
+          requestId: debugRequestId,
+          message: 'Direct tool result streamed (no LLM needed)',
+          details: 'items: ${toolResultItems.length}\noutputLength: ${output.length}',
+        );
+        yield {
+          'type': 'output',
+          'chunk': output,
+          'thinking': '',
+          'output': output,
+        };
+        return;
+      }
     }
 
     final systemPrompt = _buildSystemPrompt(
@@ -283,8 +328,17 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           tokenize: _inferenceService.tokenize,
           detokenize: _inferenceService.detokenize,
         );
-        var candidateItems = effectiveHistory;
-        if (effectiveClipboardContext == null && effectiveHistory.isNotEmpty) {
+
+        // Use tool result items as candidates when a tool already ran.
+        // Otherwise fall back to semantic ranking over the full history.
+        var candidateItems = toolResultItems.isNotEmpty
+            ? toolResultItems
+            : effectiveHistory;
+
+        if (toolResultItems.isEmpty &&
+            effectiveClipboardContext == null &&
+            effectiveHistory.isNotEmpty) {
+          // No tool ran: run semantic rank and rebuild contextText from ranked history
           final semanticItems = await _semanticRank(
             prompt: prompt,
             items: effectiveHistory,
