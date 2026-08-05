@@ -16,7 +16,9 @@ class AiUtilityClassifier {
   final LlamaInferenceService _inference;
   final Map<String, _CachedClassification> _cache = {};
 
-  static const _utilityModelId = 'qwen3-0.6b';
+  /// The dedicated lightweight model used exclusively for request classification.
+  /// Kept separate from the user's chosen answer model.
+  static const utilityModelId = 'qwen3-0.6b';
   static const _cacheLifetime = Duration(minutes: 10);
 
   Future<AiRequestClassification> classify({
@@ -41,7 +43,7 @@ class AiUtilityClassifier {
       appLanguageTag: appLanguageTag,
       hasSelectedClipboard: hasSelectedClipboard,
     );
-    final utilityModel = AiModelInfo.findById(_utilityModelId);
+    final utilityModel = AiModelInfo.findById(utilityModelId);
     final model = await _downloader.isModelDownloaded(utilityModel.id)
         ? utilityModel
         : fallbackModel;
@@ -101,7 +103,12 @@ class AiUtilityClassifier {
 
   static const _systemPrompt = '''Classify the user request. Return JSON only.
 Fields: language (BCP-47), intent (conversation, follow_up, clipboard_search, clipboard_action), reasoning_level (low, medium, high), needs_planner, needs_clipboard.
-needs_planner is true only for tools, dependent multi-step work, or clipboard operations. Do not answer the user.''';
+needs_planner is true only for tools, dependent multi-step work, or clipboard operations.
+needs_clipboard is true when the user wants to find, filter, list, count, or analyse clipboard items — even if no specific clipboard item is currently selected.
+Use intent=clipboard_search when user asks to filter/find across all clipboard history. Examples: "find clips with image links", "which clipboard has an API key", "clipboard longer than 10 chars", "list all image clipboards", "tìm clipboard có link ảnh", "clipboard nào dài hơn 10 ký tự", "clipboard chứa api key".
+Use intent=clipboard_action when user wants to transform a selected clipboard item.
+Use intent=conversation for general questions not related to clipboard history.
+Do not answer the user.''';
 
   static const _grammar = r'''
 root ::= "{" ws "\"language\"" ws ":" ws string ws "," ws "\"intent\"" ws ":" ws intent ws "," ws "\"reasoning_level\"" ws ":" ws reasoning ws "," ws "\"needs_planner\"" ws ":" ws boolean ws "," ws "\"needs_clipboard\"" ws ":" ws boolean ws "}"

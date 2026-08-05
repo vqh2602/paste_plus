@@ -19,15 +19,18 @@ class AiRequestClassification {
   final bool needsClipboard;
 }
 
+/// Returns true only when the utility classifier (small LLM) can safely be
+/// skipped — i.e. the feature group already determines intent unambiguously.
+/// We intentionally do NOT skip based on prompt length: a short prompt like
+/// "tìm clipboard có link" must still go through the LLM classifier so it can
+/// correctly resolve intent, needsClipboard, and routing.
 bool canSkipUtilityClassifier({
   required String prompt,
   required AiFeatureGroup? featureGroup,
 }) {
-  if (featureGroup != null) return true;
-  final trimmed = prompt.trim();
-  return trimmed.length < 30 &&
-      !trimmed.contains('\n') &&
-      !trimmed.contains('```');
+  // When a feature group is explicitly set (Translate, Summarize, etc.),
+  // the intent is already known — no need to classify.
+  return featureGroup != null;
 }
 
 AiRequestClassification fallbackClassification({
@@ -36,6 +39,8 @@ AiRequestClassification fallbackClassification({
   AiFeatureGroup? featureGroup,
   bool hasSelectedClipboard = false,
 }) {
+  // This is only reached when the LLM utility classifier is unavailable
+  // (model not downloaded). Keep it simple and conservative.
   final hasLargeCode = prompt.contains('```') && prompt.length > 500;
   final level = featureGroup == AiFeatureGroup.codeExplain ||
           hasLargeCode ||

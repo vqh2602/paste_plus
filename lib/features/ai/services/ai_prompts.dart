@@ -63,14 +63,16 @@ RULES
             .trim(),
       AiRequestIntent.clipboardSearch =>
         '''
-TASK: Search clipboard records.
+TASK: Search and filter clipboard records.
 
-Apply every explicit constraint strictly:
-- content type
-- keyword
-- file extension
-- application
-- date or time
+Apply every explicit constraint strictly. Supported filter types:
+- content type: json, url, code, text, file, image
+- keyword or phrase: text that must appear in the content
+- URL / link detection: content containing http(s) links or image URLs
+- length constraint: e.g. "longer than 10 characters" — check character count of value
+- pattern detection: API key, secret, token, password, phone number, email, etc.
+- file extension or source application
+- date or time range
 - pinned or collection status
 
 RULES
@@ -81,6 +83,9 @@ RULES
 - Preserve clip_id and exact original value.
 - Return at most 12 records.
 - If there are no valid matches, return an empty matches array.
+- For length constraints: count the actual character length of "value" and compare numerically.
+- For pattern detection (API key, token, secret): look for long alphanumeric strings, keys starting with common prefixes (sk-, pk-, AIza, ghp_, etc.), or key=value pairs.
+- For image link detection: look for URLs ending in .jpg, .jpeg, .png, .gif, .webp, .svg, or containing image hosting domains.
 
 OUTPUT
 Return valid JSON only:

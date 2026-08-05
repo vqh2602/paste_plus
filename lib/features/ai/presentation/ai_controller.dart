@@ -69,6 +69,21 @@ class AiState {
   bool get hasAnyDownloadedModel =>
       downloadStates.values.any((s) => s == DownloadState.downloaded);
 
+  /// True when the dedicated classifier model (Qwen 0.6B) is not available
+  /// AND no other downloaded model can serve as fallback classifier.
+  /// Used to show a non-blocking download prompt in the UI.
+  bool get isClassifierModelMissing {
+    const classifierId = AiUtilityClassifier.utilityModelId;
+    final classifierReady =
+        downloadStates[classifierId] == DownloadState.downloaded;
+    if (classifierReady) return false;
+    // Any other downloaded model can act as fallback classifier.
+    final anyFallback = downloadStates.entries.any(
+      (e) => e.key != classifierId && e.value == DownloadState.downloaded,
+    );
+    return !anyFallback;
+  }
+
   AiState copyWith({
     String? selectedModelId,
     Map<String, DownloadState>? downloadStates,
@@ -215,6 +230,15 @@ class AiController extends StateNotifier<AiState> {
     final states = Map<String, DownloadState>.from(state.downloadStates);
     states[modelId] = DownloadState.notDownloaded;
     state = state.copyWith(downloadStates: states);
+  }
+
+  /// Downloads the dedicated classifier model (Qwen 0.6B) without affecting
+  /// the user's currently selected answer model.
+  void downloadClassifierModel() {
+    final classifierModel = AiModelInfo.findById(
+      AiUtilityClassifier.utilityModelId,
+    );
+    startDownload(classifierModel);
   }
 
   void setClipboardContext(ClipboardItem? item) {

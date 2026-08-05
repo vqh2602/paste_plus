@@ -56,9 +56,9 @@ class AiModelInfo {
   String get description {
     return switch (id) {
       'gemma-4-e2b' =>
-        "Google's next-gen multilingual model, optimized for conversation and local processing.",
+        "Google's next-gen natively multimodal model, optimized for conversation, local processing, and image analysis.",
       'gemma-4-e4b' =>
-        'Stronger Gemma 4 model for complex questions, longer reasoning, and higher precision.',
+        'Stronger Gemma 4 natively multimodal model for complex reasoning, image understanding, and higher precision.',
       'qwen3-0.6b' =>
         'Ultra-lightweight model with fast response and good multilingual support on low-RAM devices.',
       'deepseek-r1-1.5b' =>
@@ -79,8 +79,8 @@ class AiModelInfo {
 
   String get recommendedFor {
     return switch (id) {
-      'gemma-4-e2b' => 'Daily chat, Clipboard Q&A, summary and translation',
-      'gemma-4-e4b' => 'Deep Q&A, long text analysis and complex tasks',
+      'gemma-4-e2b' => 'Daily chat, image Q&A, Clipboard search, summary and translation',
+      'gemma-4-e4b' => 'Deep Q&A, visual document parsing, long text analysis and complex tasks',
       'qwen3-0.6b' => 'Quick chat, classification, titles and short tasks',
       'deepseek-r1-1.5b' =>
         'Quick summary, rewrite, grammar check, Smart Reply',
@@ -108,34 +108,36 @@ class AiModelInfo {
   static const List<AiModelInfo> thinkingModels = [
     AiModelInfo(
       id: 'gemma-4-e2b',
-      name: 'Gemma 4 E2B Instruct (Thinking)',
+      name: 'Gemma 4 E2B Instruct (Thinking & Vision)',
       description:
-          'Model đa ngôn ngữ thế hệ mới của Google, tối ưu cho hội thoại và xử lý cục bộ trên thiết bị.',
+          'Model đa ngôn ngữ thế hệ mới của Google, hỗ trợ cả văn bản và hình ảnh, tối ưu cho hội thoại và xử lý cục bộ trên thiết bị.',
       parameterSize: 'E2B',
       fileSizeMb: 3195,
       downloadUrl:
           'https://huggingface.co/google/gemma-4-E2B-it-qat-q4_0-gguf/resolve/main/gemma-4-E2B_q4_0-it.gguf',
       sha256: null,
       recommendedFor:
-          'Chat hằng ngày, hỏi đáp Clipboard, tóm tắt và dịch thuật',
+          'Chat hằng ngày, phân tích hình ảnh, hỏi đáp Clipboard, tóm tắt và dịch thuật',
       isThinkingModel: true,
-      supportedModalities: {AiModality.text},
+      isMultimodal: true,
+      supportedModalities: {AiModality.text, AiModality.image},
       contextWindow: 32768,
     ),
     AiModelInfo(
       id: 'gemma-4-e4b',
-      name: 'Gemma 4 E4B Instruct (Thinking)',
+      name: 'Gemma 4 E4B Instruct (Thinking & Vision)',
       description:
-          'Bản Gemma 4 mạnh hơn dành cho câu hỏi phức tạp, lập luận dài và độ chính xác cao hơn.',
+          'Bản Gemma 4 mạnh hơn hỗ trợ văn bản và hình ảnh dành cho câu hỏi phức tạp, lập luận dài và độ chính xác cao hơn.',
       parameterSize: 'E4B',
       fileSizeMb: 4917,
       downloadUrl:
           'https://huggingface.co/google/gemma-4-E4B-it-qat-q4_0-gguf/resolve/main/gemma-4-E4B_q4_0-it.gguf',
       sha256: null,
       recommendedFor:
-          'Hỏi đáp chuyên sâu, phân tích nội dung dài và tác vụ phức tạp',
+          'Hỏi đáp chuyên sâu, phân tích hình ảnh, tài liệu dài và tác vụ phức tạp',
       isThinkingModel: true,
-      supportedModalities: {AiModality.text},
+      isMultimodal: true,
+      supportedModalities: {AiModality.text, AiModality.image},
       contextWindow: 32768,
     ),
     AiModelInfo(

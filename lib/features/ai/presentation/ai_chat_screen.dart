@@ -14,6 +14,7 @@ import '../domain/ai_feature_action.dart';
 import '../domain/ai_feature_request.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
+import 'widgets/ai_classifier_banner.dart';
 import 'widgets/ai_context_banner_widget.dart';
 import 'widgets/ai_context_picker_sheet.dart';
 import 'widgets/ai_conversation_history_action.dart';
@@ -565,6 +566,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 AiHistoryContextBannerWidget(itemCount: historyItemCount),
 
               const CupertinoDivider(),
+
+              // Non-blocking classifier model download prompt
+              const AiClassifierBanner(),
 
               // Horizontal Preset Action Pills Bar
               AiPresetPillsWidget(
