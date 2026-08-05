@@ -30,6 +30,7 @@ class AiChatMessage {
     String? content,
     String? thinkingContent,
     bool? isThinking,
+    ClipboardItem? clipboardContext,
   }) {
     return AiChatMessage(
       id: id,
@@ -39,7 +40,7 @@ class AiChatMessage {
       isThinking: isThinking ?? this.isThinking,
       featureGroup: featureGroup,
       selectedOption: selectedOption,
-      clipboardContext: clipboardContext,
+      clipboardContext: clipboardContext ?? this.clipboardContext,
       timestamp: timestamp,
     );
   }

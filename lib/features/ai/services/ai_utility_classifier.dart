@@ -44,12 +44,19 @@ class AiUtilityClassifier {
       hasSelectedClipboard: hasSelectedClipboard,
     );
     final utilityModel = AiModelInfo.findById(utilityModelId);
-    final model = await _downloader.isModelDownloaded(utilityModel.id)
+    final isUtilityDownloaded = await _downloader.isModelDownloaded(
+      utilityModel.id,
+    );
+    final isFallbackDownloaded = await _downloader.isModelDownloaded(
+      fallbackModel.id,
+    );
+    final model = isUtilityDownloaded
         ? utilityModel
-        : fallbackModel;
-    if (!await _downloader.isModelDownloaded(model.id)) return fallback;
+        : (isFallbackDownloaded ? fallbackModel : null);
+    if (model == null) return fallback;
 
     final modelFile = await _downloader.getModelFile(model.id);
+    if (!await modelFile.exists()) return fallback;
     final buffer = StringBuffer();
     try {
       await for (final token in _inference
@@ -98,20 +105,22 @@ class AiUtilityClassifier {
       reasoningLevel: reasoning,
       needsPlanner: decoded['needs_planner'] == true,
       needsClipboard: decoded['needs_clipboard'] == true,
+      preferImageUrls: decoded['prefer_image_urls'] == true,
     );
   }
 
   static const _systemPrompt = '''Classify the user request. Return JSON only.
-Fields: language (BCP-47), intent (conversation, follow_up, clipboard_search, clipboard_action), reasoning_level (low, medium, high), needs_planner, needs_clipboard.
-needs_planner is true only for tools, dependent multi-step work, or clipboard operations.
+Fields: language (BCP-47), intent (conversation, follow_up, clipboard_search, clipboard_action), reasoning_level (low, medium, high), needs_planner, needs_clipboard, prefer_image_urls.
+needs_planner is true for tools, dependent multi-step work, or clipboard operations.
 needs_clipboard is true when the user wants to find, filter, list, count, or analyse clipboard items — even if no specific clipboard item is currently selected.
+prefer_image_urls is true when user asks for image links, image URLs, or clipboards containing images/photos (e.g. "tìm clipboard có link ảnh", "find clips with image links").
 Use intent=clipboard_search when user asks to filter/find across all clipboard history. Examples: "find clips with image links", "which clipboard has an API key", "clipboard longer than 10 chars", "list all image clipboards", "tìm clipboard có link ảnh", "clipboard nào dài hơn 10 ký tự", "clipboard chứa api key".
 Use intent=clipboard_action when user wants to transform a selected clipboard item.
 Use intent=conversation for general questions not related to clipboard history.
 Do not answer the user.''';
 
   static const _grammar = r'''
-root ::= "{" ws "\"language\"" ws ":" ws string ws "," ws "\"intent\"" ws ":" ws intent ws "," ws "\"reasoning_level\"" ws ":" ws reasoning ws "," ws "\"needs_planner\"" ws ":" ws boolean ws "," ws "\"needs_clipboard\"" ws ":" ws boolean ws "}"
+root ::= "{" ws "\"language\"" ws ":" ws string ws "," ws "\"intent\"" ws ":" ws intent ws "," ws "\"reasoning_level\"" ws ":" ws reasoning ws "," ws "\"needs_planner\"" ws ":" ws boolean ws "," ws "\"needs_clipboard\"" ws ":" ws boolean ws "," ws "\"prefer_image_urls\"" ws ":" ws boolean ws "}"
 intent ::= "\"conversation\"" | "\"follow_up\"" | "\"clipboard_search\"" | "\"clipboard_action\""
 reasoning ::= "\"low\"" | "\"medium\"" | "\"high\""
 boolean ::= "true" | "false"

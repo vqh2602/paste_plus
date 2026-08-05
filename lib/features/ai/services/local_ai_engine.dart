@@ -290,6 +290,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
             modelPath: modelFile.path,
             contextSize: effectiveContextSize,
             modelId: model.id,
+            preferImageUrls: classification?.preferImageUrls ?? false,
           );
           contextText = _buildHistoryContext(semanticItems);
           _debug?.log(
@@ -1234,6 +1235,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     required String modelPath,
     required int contextSize,
     String modelId = 'gemma-4-e2b',
+    bool preferImageUrls = false,
   }) async {
     if (items.isEmpty || prompt.trim().isEmpty) return items.take(8).toList();
     if (_clipboardRanker.hasExactFileConstraint(prompt)) {
@@ -1260,10 +1262,19 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
         maxFinalItems: 8,
       );
 
-      return results.isNotEmpty ? results : items.take(8).toList();
+      return results.isNotEmpty
+          ? results
+          : _clipboardRanker
+                .rank(
+                  prompt: prompt,
+                  items: items,
+                  preferImageUrls: preferImageUrls,
+                )
+                .take(8)
+                .toList();
     } catch (_) {
       return _clipboardRanker
-          .rank(prompt: prompt, items: items)
+          .rank(prompt: prompt, items: items, preferImageUrls: preferImageUrls)
           .take(8)
           .toList();
     }

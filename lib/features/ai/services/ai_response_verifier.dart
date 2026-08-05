@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import '../../clipboard_history/domain/clipboard_item.dart';
 import 'structured_output_validator.dart';
 
@@ -78,24 +76,39 @@ class AiResponseVerifier {
       }
     }
 
-    // 3. JSON schema check if requested
+    // 3. JSON schema check & human-readable formatting for search responses
     if (requiresJson) {
       final jsonResponse = _jsonValidator.validateSearchOutput(
         rawOutput: text,
         databaseCandidates: candidates,
       );
-      if (jsonResponse.matches.isEmpty && candidates.isNotEmpty) {
-        issues.add('Model sinh JSON chưa đúng schema.');
+      final isVietnamese = responseLanguage.toLowerCase().startsWith('vi');
+      if (jsonResponse.matches.isEmpty) {
+        issues.add('Model sinh JSON chưa đúng schema hoặc không tìm thấy kết quả.');
+        text = isVietnamese
+            ? 'Không tìm thấy mục clipboard nào phù hợp với yêu cầu của bạn trong lịch sử.'
+            : 'No matching clipboard items were found in history for your query.';
+      } else {
+        final buffer = StringBuffer()
+          ..writeln(
+            isVietnamese
+                ? 'Đã tìm thấy ${jsonResponse.matches.length} kết quả phù hợp trong lịch sử clipboard:'
+                : 'Found ${jsonResponse.matches.length} matching item(s) in clipboard history:',
+          )
+          ..writeln();
+        for (var i = 0; i < jsonResponse.matches.length; i++) {
+          final m = jsonResponse.matches[i];
+          final val = m.value.length > 300
+              ? '${m.value.substring(0, 300)}…'
+              : m.value;
+          buffer.writeln('${i + 1}. [clip:${m.clipId}] $val');
+          if (m.reason.isNotEmpty) {
+            buffer.writeln('   Lý do: ${m.reason}');
+          }
+          buffer.writeln();
+        }
+        text = buffer.toString().trim();
       }
-      text = jsonEncode({
-        'matches': jsonResponse.matches.map((match) {
-          return {
-            'clip_id': match.clipId,
-            'value': match.value,
-            'reason': match.reason,
-          };
-        }).toList(),
-      });
     }
 
     // Clean up double spaces or trailing empty lines resulting from ID stripping

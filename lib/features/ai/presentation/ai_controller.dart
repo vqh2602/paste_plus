@@ -69,19 +69,10 @@ class AiState {
   bool get hasAnyDownloadedModel =>
       downloadStates.values.any((s) => s == DownloadState.downloaded);
 
-  /// True when the dedicated classifier model (Qwen 0.6B) is not available
-  /// AND no other downloaded model can serve as fallback classifier.
-  /// Used to show a non-blocking download prompt in the UI.
+  /// True when the dedicated classifier model (Qwen 0.6B) is not fully downloaded.
   bool get isClassifierModelMissing {
     const classifierId = AiUtilityClassifier.utilityModelId;
-    final classifierReady =
-        downloadStates[classifierId] == DownloadState.downloaded;
-    if (classifierReady) return false;
-    // Any other downloaded model can act as fallback classifier.
-    final anyFallback = downloadStates.entries.any(
-      (e) => e.key != classifierId && e.value == DownloadState.downloaded,
-    );
-    return !anyFallback;
+    return downloadStates[classifierId] != DownloadState.downloaded;
   }
 
   AiState copyWith({
@@ -165,6 +156,9 @@ class AiController extends StateNotifier<AiState> {
       }
     }
     state = state.copyWith(downloadStates: newStates);
+
+    // Auto-download Qwen 0.6B classifier if missing
+    ensureClassifierModel();
   }
 
   void selectModel(String modelId) {
@@ -180,6 +174,13 @@ class AiController extends StateNotifier<AiState> {
     final newStates = Map<String, DownloadState>.from(state.downloadStates);
     newStates[model.id] = DownloadState.downloading;
     state = state.copyWith(downloadStates: newStates);
+
+    const classifierId = AiUtilityClassifier.utilityModelId;
+    if (model.id != classifierId &&
+        (state.downloadStates[classifierId] == null ||
+            state.downloadStates[classifierId] == DownloadState.notDownloaded)) {
+      downloadClassifierModel();
+    }
 
     final stream = _downloaderService.downloadModel(model);
     final sub = stream.listen(
@@ -230,6 +231,16 @@ class AiController extends StateNotifier<AiState> {
     final states = Map<String, DownloadState>.from(state.downloadStates);
     states[modelId] = DownloadState.notDownloaded;
     state = state.copyWith(downloadStates: states);
+  }
+
+  /// Ensures the dedicated classifier model (Qwen 0.6B) is downloaded or downloading.
+  void ensureClassifierModel() {
+    const classifierId = AiUtilityClassifier.utilityModelId;
+    final classifierState = state.downloadStates[classifierId];
+    if (classifierState == null ||
+        classifierState == DownloadState.notDownloaded) {
+      downloadClassifierModel();
+    }
   }
 
   /// Downloads the dedicated classifier model (Qwen 0.6B) without affecting
@@ -404,6 +415,29 @@ class AiController extends StateNotifier<AiState> {
     );
     var activeContext = selectedContext;
 
+    final userMsg = AiChatMessage(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      role: AiMessageRole.user,
+      content: userText,
+      featureGroup: featureGroup,
+      selectedOption: selectedOption,
+      clipboardContext: activeContext,
+    );
+
+    final assistantMsgId = '${DateTime.now().microsecondsSinceEpoch}_ai';
+    final assistantMsg = AiChatMessage(
+      id: assistantMsgId,
+      role: AiMessageRole.assistant,
+      content: '',
+      isThinking: true,
+      featureGroup: featureGroup,
+      selectedOption: selectedOption,
+      clipboardContext: activeContext,
+    );
+
+    final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
+    state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
+
     final targetContext = activeContext;
     if (targetContext != null &&
         targetContext.contentType == ClipboardContentType.image) {
@@ -448,6 +482,21 @@ class AiController extends StateNotifier<AiState> {
         content: imageInfoBuffer.toString(),
         normalizedContent: imageInfoBuffer.toString(),
       );
+
+      final currentMsgs = [...state.chatMessages];
+      final userIdx = currentMsgs.indexWhere((m) => m.id == userMsg.id);
+      if (userIdx != -1) {
+        currentMsgs[userIdx] = currentMsgs[userIdx].copyWith(
+          clipboardContext: activeContext,
+        );
+      }
+      final aiIdx = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
+      if (aiIdx != -1) {
+        currentMsgs[aiIdx] = currentMsgs[aiIdx].copyWith(
+          clipboardContext: activeContext,
+        );
+      }
+      state = state.copyWith(chatMessages: currentMsgs);
     }
     final clipboardHistory = _ref
         .read(historyControllerProvider)
@@ -511,28 +560,6 @@ class AiController extends StateNotifier<AiState> {
         conversationContext: conversationContext,
       ),
     );
-    final userMsg = AiChatMessage(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      role: AiMessageRole.user,
-      content: userText,
-      featureGroup: featureGroup,
-      selectedOption: selectedOption,
-      clipboardContext: activeContext,
-    );
-
-    final assistantMsgId = '${DateTime.now().microsecondsSinceEpoch}_ai';
-    final assistantMsg = AiChatMessage(
-      id: assistantMsgId,
-      role: AiMessageRole.assistant,
-      content: '',
-      isThinking: true,
-      featureGroup: featureGroup,
-      selectedOption: selectedOption,
-      clipboardContext: activeContext,
-    );
-
-    final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
-    state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
     debug.log(
       level: AiDebugLevel.info,
