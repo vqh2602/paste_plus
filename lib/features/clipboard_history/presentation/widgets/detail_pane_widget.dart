@@ -239,59 +239,79 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
             ),
             if (item.note != null && item.note!.trim().isNotEmpty) ...[
               const SizedBox(height: 12),
-              CupertinoPressable(
-                onPressed: () => showNoteEditDialog(context, ref, item!),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: resolveColor(context, ClipFlowColors.surface),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: resolveColor(context, ClipFlowColors.border),
-                    ),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: resolveColor(context, ClipFlowColors.surface),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: resolveColor(context, ClipFlowColors.border),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            CupertinoIcons.pencil,
-                            size: 13,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.pencil,
+                          size: 13,
+                          color: resolveColor(
+                            context,
+                            ClipFlowColors.secondaryText,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          context.l10n.note,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
                             color: resolveColor(
                               context,
                               ClipFlowColors.secondaryText,
                             ),
                           ),
-                          const SizedBox(width: 5),
-                          Text(
-                            context.l10n.note,
-                            style: TextStyle(
+                        ),
+                        const Spacer(),
+                        CupertinoPressable(
+                          onPressed: () =>
+                              showNoteEditDialog(context, ref, item!),
+                          child: Text(
+                            context.l10n.edit_note,
+                            style: const TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                              fontWeight: FontWeight.w500,
+                              color: CupertinoColors.activeBlue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 60,
+                      ),
+                      child: CupertinoScrollbar(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Text(
+                            item.note!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
                               color: resolveColor(
                                 context,
                                 ClipFlowColors.secondaryText,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.note!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          height: 1.4,
-                          color: resolveColor(
-                            context,
-                            ClipFlowColors.secondaryText,
-                          ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 12),
