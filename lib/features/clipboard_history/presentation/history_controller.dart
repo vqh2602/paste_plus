@@ -337,9 +337,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   }
 
   Future<void> togglePinned(ClipboardItem item) async {
-    final changed = item.copyWith(isPinned: !item.isPinned);
-    await _repository.setPinned(item.id, changed.isPinned);
-    await onItemMetadataChanged?.call(changed);
+    final newPinState = !item.isPinned;
+    await _repository.setPinned(item.id, newPinState);
+    await onItemMetadataChanged?.call(item.copyWith(isPinned: newPinState));
     await reload();
   }
 
@@ -381,6 +381,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
         .where((current) => current.id == itemId)
         .firstOrNull;
     if (item != null) await onItemMetadataChanged?.call(item);
+    await reload();
   }
 
   Future<Set<String>> collectionIdsForItem(String itemId) {

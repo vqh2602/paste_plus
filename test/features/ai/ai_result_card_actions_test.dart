@@ -47,6 +47,9 @@ class RecordingRepository implements ClipboardRepository {
   @override
   Future<void> setPinned(String id, bool pinned) async {
     calls.add('setPinned');
+    items = items
+        .map((item) => item.id == id ? item.copyWith(isPinned: pinned) : item)
+        .toList();
   }
 
   @override
@@ -311,6 +314,35 @@ void main() {
       expect(find.text('Đã xóa mục'), findsOneWidget);
 
       // Flush remaining toast timer (1.8s)
+      await tester.pump(const Duration(seconds: 2));
+    },
+  );
+
+  testWidgets(
+    'tapping pin icon toggles state immediately and displays notice',
+    (tester) async {
+      final item = buildItem(id: 'pin-toggle-item', pinned: false);
+      final repository = RecordingRepository();
+      repository.items = [item];
+
+      await pumpBlock(
+        tester,
+        AiClipboardListBlock(resultSetId: 'set-pin', items: [item]),
+        repository: repository,
+      );
+
+      expect(find.byIcon(CupertinoIcons.pin), findsOneWidget);
+      expect(find.byIcon(CupertinoIcons.pin_fill), findsNothing);
+
+      // Tap pin
+      await tester.tap(find.byIcon(CupertinoIcons.pin));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // Pin icon should update immediately
+      expect(find.byIcon(CupertinoIcons.pin_fill), findsOneWidget);
+      expect(find.text('Đã ghim'), findsOneWidget);
+
       await tester.pump(const Duration(seconds: 2));
     },
   );

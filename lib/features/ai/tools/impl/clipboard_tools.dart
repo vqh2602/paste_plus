@@ -4,6 +4,7 @@ import '../../../clipboard_history/domain/clipboard_repository.dart';
 import '../../../clipboard_history/domain/search_query.dart';
 import '../../../clipboard_history/domain/clipboard_feature_extractor.dart';
 import '../../domain/ai_agent_protocol.dart';
+import '../../services/clipboard_semantic_query_compiler.dart';
 import '../ai_tool.dart';
 
 bool isSameDate(DateTime a, DateTime b) {
@@ -100,9 +101,16 @@ class SearchClipboardTool implements AiTool {
         .where((kind) => kind.name == urlKindName ||
             (kind == ClipboardUrlKind.webPage && urlKindName == 'web_page'))
         .firstOrNull;
+    final explicitText = arguments['text_query']?.toString().trim();
+    final rawQuery = arguments['query']?.toString().trim();
+    final cleanTextQuery = explicitText ??
+        (rawQuery?.isNotEmpty == true
+            ? ClipboardSemanticQueryCompiler().compile(rawQuery!).textQuery
+            : null);
+
     return ClipboardSearchQuery(
       contentTypes: types,
-      textQuery: (arguments['text_query'] ?? arguments['query'])?.toString().trim(),
+      textQuery: cleanTextQuery,
       containsUrl: arguments['contains_url'] as bool? ??
           (types.contains(ClipboardContentType.url) ? true : null),
       urlHosts: strings(arguments['url_hosts']).toSet(),

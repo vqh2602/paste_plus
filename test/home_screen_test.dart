@@ -220,6 +220,7 @@ void main() {
     await tester.pumpAndSettle();
     final pinned = await repository.getItems(pinnedOnly: true);
     expect(pinned, hasLength(1));
+    await tester.pump(const Duration(seconds: 2));
   });
 
   testWidgets('main history header shows AI button when AI is enabled', (

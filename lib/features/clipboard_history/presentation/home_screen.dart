@@ -282,7 +282,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else if (action == 'copy') {
       historyNotifier.copy(item);
     } else if (action == 'pin') {
-      historyNotifier.togglePinned(item);
+      final wasPinned = item.isPinned;
+      await historyNotifier.togglePinned(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          wasPinned ? context.l10n.unpin : context.l10n.pinned,
+        );
+      }
     } else if (action == 'collection') {
       onAddToCollection(item);
     } else if (action == 'delete') {
@@ -369,11 +376,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _searchFocusNode.requestFocus(),
       shortcutActivator(
         decodeShortcut(settings.togglePinShortcut, ShortcutAction.togglePin),
-      ): () {
+      ): () async {
         final selected = state.selectedItemId;
         if (selected != null) {
           final item = state.visibleItems.firstWhere((it) => it.id == selected);
-          ref.read(historyControllerProvider.notifier).togglePinned(item);
+          final wasPinned = item.isPinned;
+          await ref.read(historyControllerProvider.notifier).togglePinned(item);
+          if (mounted) {
+            showCupertinoNotice(
+              context,
+              wasPinned ? context.l10n.unpin : context.l10n.pinned,
+            );
+          }
         }
       },
       shortcutActivator(

@@ -263,7 +263,14 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     } else if (action == 'copy_paste') {
       _pasteItem(item);
     } else if (action == 'pin') {
-      historyNotifier.togglePinned(item);
+      final wasPinned = item.isPinned;
+      await historyNotifier.togglePinned(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          wasPinned ? context.l10n.unpin : context.l10n.pinned,
+        );
+      }
     } else if (action == 'collection') {
       _handleAddToCollection(item);
     } else if (action == 'delete') {
@@ -371,12 +378,23 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
                                           );
                                           _pasteItem(item);
                                         },
-                                        onPin: () => ref
-                                            .read(
-                                              historyControllerProvider
-                                                  .notifier,
-                                            )
-                                            .togglePinned(item),
+                                         onPin: () async {
+                                           final wasPinned = item.isPinned;
+                                           await ref
+                                               .read(
+                                                 historyControllerProvider
+                                                     .notifier,
+                                               )
+                                               .togglePinned(item);
+                                           if (mounted) {
+                                             showCupertinoNotice(
+                                               context,
+                                               wasPinned
+                                                   ? context.l10n.unpin
+                                                   : context.l10n.pinned,
+                                             );
+                                           }
+                                         },
                                         onActions: (ctx) =>
                                             _showItemActions(ctx, item),
                                       ),

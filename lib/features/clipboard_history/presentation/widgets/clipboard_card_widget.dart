@@ -50,73 +50,108 @@ class ClipboardCardWidget extends ConsumerWidget {
         ? ColorParser.parse(item.content)
         : null;
 
-    return CupertinoPressable(
-      onPressed: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      decoration: BoxDecoration(
+        color: selected
+            ? CupertinoTheme.of(context).primaryColor.withValues(alpha: 0.12)
+            : resolveColor(context, ClipFlowColors.surface),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
           color: selected
-              ? CupertinoTheme.of(context).primaryColor.withValues(alpha: 0.12)
-              : resolveColor(context, ClipFlowColors.surface),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected
-                ? CupertinoTheme.of(context).primaryColor
-                : resolveColor(context, ClipFlowColors.border),
-            width: selected ? 1.5 : 1.0,
-          ),
+              ? CupertinoTheme.of(context).primaryColor
+              : resolveColor(context, ClipFlowColors.border),
+          width: selected ? 1.5 : 1.0,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 10, 8, 4),
+            child: Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _typeIcon(item.contentType),
-                        size: 11,
-                        color: CupertinoColors.white,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _typeLabel(item.contentType),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: CupertinoColors.white,
+                Expanded(
+                  child: CupertinoPressable(
+                    onPressed: onTap,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _typeIcon(item.contentType),
+                                size: 11,
+                                color: CupertinoColors.white,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _typeLabel(item.contentType),
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: CupertinoColors.white,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            item.sourceAppName ?? context.l10n.unknown,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  item.sourceAppName ?? context.l10n.unknown,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: resolveColor(context, ClipFlowColors.secondaryText),
-                  ),
-                ),
-                const Spacer(),
                 CupertinoIconControl(
                   key: const Key('pin-button'),
-                  icon: item.isPinned
-                      ? CupertinoIcons.pin_fill
-                      : CupertinoIcons.pin,
+                  icon:
+                      (ref.watch(pinnedStateOverrideProvider)[item.id] ??
+                              item.isPinned)
+                          ? CupertinoIcons.pin_fill
+                          : CupertinoIcons.pin,
                   size: 15,
-                  onPressed: () => historyNotifier.togglePinned(item),
+                  onPressed: () async {
+                    final isCurrentlyPinned =
+                        ref.read(pinnedStateOverrideProvider)[item.id] ??
+                        item.isPinned;
+                    final nextPinned = !isCurrentlyPinned;
+                    ref
+                        .read(pinnedStateOverrideProvider.notifier)
+                        .setPinned(item.id, nextPinned);
+                    await historyNotifier.togglePinned(item);
+                    // Clear optimistic override so DB value drives the UI
+                    ref
+                        .read(pinnedStateOverrideProvider.notifier)
+                        .clearPinned(item.id);
+                    if (context.mounted) {
+                      showCupertinoNotice(
+                        context,
+                        nextPinned ? context.l10n.pinned : context.l10n.unpin,
+                      );
+                    }
+                  },
                 ),
                 CupertinoIconControl(
                   icon: CupertinoIcons.doc_on_doc,
@@ -137,150 +172,152 @@ class ClipboardCardWidget extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            if (isImage) ...[
-              GestureDetector(
-                onTap: () => showImageZoomDialog(
-                  context,
-                  path: item.imagePath ?? item.content,
-                  title: item.sourceAppName != null
-                      ? 'Ảnh từ ${item.sourceAppName}'
-                      : 'Xem hình ảnh',
-                  onCopy: () => onCopy(item),
-                ),
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: resolveColor(context, ClipFlowColors.surface),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: resolveColor(context, ClipFlowColors.border),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child:
-                        (item.imagePath != null &&
-                            File(item.imagePath!).existsSync())
-                        ? Image.file(
-                            File(item.imagePath!),
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                          )
-                        : CachedNetworkImage(
-                            url: item.content,
-                            height: 120,
-                            width: double.infinity,
-                            fit: BoxFit.contain,
-                          ),
-                  ),
-                ),
-              ),
-              if (item.content.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                HighlightedText(
-                  text: item.content,
-                  query: state.query,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: resolveColor(context, ClipFlowColors.secondaryText),
-                  ),
-                ),
-              ],
-            ] else if (isOnlineImage) ...[
-              GestureDetector(
-                onTap: () => showImageZoomDialog(
-                  context,
-                  path: item.content,
-                  title: 'Xem hình ảnh',
-                  onCopy: () => onCopy(item),
-                ),
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: resolveColor(context, ClipFlowColors.surface),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: resolveColor(context, ClipFlowColors.border),
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child: CachedNetworkImage(
-                      url: item.content,
+          ),
+          CupertinoPressable(
+            onPressed: onTap,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isImage) ...[
+                    Container(
                       height: 120,
                       width: double.infinity,
-                      fit: BoxFit.contain,
+                      decoration: BoxDecoration(
+                        color: resolveColor(context, ClipFlowColors.surface),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: resolveColor(context, ClipFlowColors.border),
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child:
+                            (item.imagePath != null &&
+                                File(item.imagePath!).existsSync())
+                            ? Image.file(
+                                File(item.imagePath!),
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              )
+                            : CachedNetworkImage(
+                                url: item.content,
+                                height: 120,
+                                width: double.infinity,
+                                fit: BoxFit.contain,
+                              ),
+                      ),
                     ),
-                  ),
-                ),
+                    if (item.content.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      HighlightedText(
+                        text: item.content,
+                        query: state.query,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: resolveColor(
+                            context,
+                            ClipFlowColors.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ] else if (isOnlineImage) ...[
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: resolveColor(context, ClipFlowColors.surface),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: resolveColor(context, ClipFlowColors.border),
+                        ),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(7),
+                        child: CachedNetworkImage(
+                          url: item.content,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    HighlightedText(
+                      text: item.content,
+                      query: state.query,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: resolveColor(
+                          context,
+                          ClipFlowColors.secondaryText,
+                        ),
+                      ),
+                    ),
+                  ] else if (parsedColor != null) ...[
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: parsedColor,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: resolveColor(context, ClipFlowColors.border),
+                          width: 1.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    HighlightedText(
+                      text: item.content,
+                      query: state.query,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: resolveColor(
+                          context,
+                          ClipFlowColors.secondaryText,
+                        ),
+                        fontFamily: 'monospace',
+                      ),
+                    ),
+                  ] else ...[
+                    HighlightedText(
+                      text: item.content,
+                      query: state.query,
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 1.4,
+                        color: item.contentType == ClipboardContentType.url
+                            ? CupertinoColors.activeBlue
+                            : null,
+                        decoration:
+                            item.contentType == ClipboardContentType.url
+                            ? TextDecoration.underline
+                            : TextDecoration.none,
+                        fontFamily:
+                            item.contentType == ClipboardContentType.code ||
+                                item.contentType == ClipboardContentType.json
+                            ? 'monospace'
+                            : null,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-              const SizedBox(height: 6),
-              HighlightedText(
-                text: item.content,
-                query: state.query,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: resolveColor(context, ClipFlowColors.secondaryText),
-                ),
-              ),
-            ] else if (parsedColor != null) ...[
-              Container(
-                height: 120,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: parsedColor,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: resolveColor(context, ClipFlowColors.border),
-                    width: 1.0,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              HighlightedText(
-                text: item.content,
-                query: state.query,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: resolveColor(context, ClipFlowColors.secondaryText),
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ] else ...[
-              HighlightedText(
-                text: item.content,
-                query: state.query,
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.4,
-                  color: item.contentType == ClipboardContentType.url
-                      ? CupertinoColors.activeBlue
-                      : null,
-                  decoration: item.contentType == ClipboardContentType.url
-                      ? TextDecoration.underline
-                      : TextDecoration.none,
-                  fontFamily:
-                      item.contentType == ClipboardContentType.code ||
-                          item.contentType == ClipboardContentType.json
-                      ? 'monospace'
-                      : null,
-                ),
-              ),
-            ],
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

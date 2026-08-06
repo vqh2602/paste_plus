@@ -364,3 +364,25 @@ class DeletedItemIdsNotifier extends StateNotifier<Set<String>> {
   }
 }
 
+final pinnedStateOverrideProvider =
+    StateNotifierProvider<PinnedStateOverrideNotifier, Map<String, bool>>(
+      (ref) => PinnedStateOverrideNotifier(),
+    );
+
+class PinnedStateOverrideNotifier extends StateNotifier<Map<String, bool>> {
+  PinnedStateOverrideNotifier() : super(const {});
+
+  void setPinned(String id, bool isPinned) {
+    state = {...state, id: isPinned};
+  }
+
+  void clearPinned(String id) {
+    if (state.containsKey(id)) {
+      final next = Map<String, bool>.from(state);
+      next.remove(id);
+      state = next;
+    }
+  }
+}
+
+

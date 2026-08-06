@@ -59,11 +59,18 @@ class AiClipboardRelevanceRanker {
       ).hasMatch(content);
       final imageLink = isImageUrl(content);
 
+      final isDirectUrl =
+          isUrlType ||
+          content.startsWith('http://') ||
+          content.startsWith('https://');
+
       if (asksForLink && asksForImage) {
-        if (imageLink) {
+        if (imageLink && isDirectUrl) {
           lexicalScore += 50.0;
-        } else if (isUrlType || containsHttpUrl) {
+        } else if (imageLink) {
           lexicalScore += 35.0;
+        } else if (isUrlType || containsHttpUrl) {
+          lexicalScore += 30.0;
         } else if (item.contentType == ClipboardContentType.image) {
           lexicalScore += 25.0;
         }

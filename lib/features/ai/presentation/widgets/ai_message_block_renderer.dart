@@ -350,14 +350,16 @@ class _AiClipboardResultCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // The block holds an immutable snapshot from when the agent answered.
-    // Watch live history so pin/delete are reflected here instead of looking
-    // like the button did nothing.
+    // Watch live history and pinned overrides so actions take effect immediately.
     final live = ref
         .watch(historyControllerProvider)
         .items
         .where((candidate) => candidate.id == this.item.id)
         .firstOrNull;
-    final item = live ?? this.item;
+    final baseItem = live ?? this.item;
+    final pinnedOverrides = ref.watch(pinnedStateOverrideProvider);
+    final isPinned = pinnedOverrides[this.item.id] ?? baseItem.isPinned;
+    final item = baseItem.copyWith(isPinned: isPinned);
     final imageFile = item.imagePath == null ? null : File(item.imagePath!);
     return Container(
       padding: const EdgeInsets.all(10),
@@ -425,6 +427,11 @@ class _AiClipboardResultCard extends ConsumerWidget {
                   size: 14,
                   tooltip: context.l10n.copy,
                   onPressed: () async {
+                    if (item.content.isNotEmpty) {
+                      await Clipboard.setData(
+                        ClipboardData(text: item.content),
+                      );
+                    }
                     await ref
                         .read(historyControllerProvider.notifier)
                         .copy(item);
@@ -438,27 +445,41 @@ class _AiClipboardResultCard extends ConsumerWidget {
                   size: 14,
                   tooltip: context.l10n.paste_all,
                   onPressed: () async {
+                    if (item.content.isNotEmpty) {
+                      await Clipboard.setData(
+                        ClipboardData(text: item.content),
+                      );
+                    }
                     await ref
                         .read(historyControllerProvider.notifier)
                         .copy(item);
-                    await ref
-                        .read(desktopIntegrationProvider)
-                        .pasteToPreviousApplication();
+                    final desktop = ref.read(desktopIntegrationProvider);
+                    await desktop.hideQuickPanel();
+                    await desktop.pasteToPreviousApplication();
                     if (context.mounted) {
                       showCupertinoNotice(context, context.l10n.copied);
                     }
                   },
                 ),
                 CupertinoIconControl(
-                  icon: item.isPinned
+                  icon: (ref.watch(pinnedStateOverrideProvider)[item.id] ??
+                          item.isPinned)
                       ? CupertinoIcons.pin_fill
                       : CupertinoIcons.pin,
                   size: 14,
                   onPressed: () async {
                     final wasPinned = item.isPinned;
+                    final nextPinned = !wasPinned;
+                    ref
+                        .read(pinnedStateOverrideProvider.notifier)
+                        .setPinned(item.id, nextPinned);
                     await ref
                         .read(historyControllerProvider.notifier)
                         .togglePinned(item);
+                    // Clear optimistic override so DB value drives the UI
+                    ref
+                        .read(pinnedStateOverrideProvider.notifier)
+                        .clearPinned(item.id);
                     if (context.mounted) {
                       showCupertinoNotice(
                         context,
@@ -504,6 +525,12 @@ class _AiClipboardResultCard extends ConsumerWidget {
   Future<void> _addToCollection(BuildContext context, WidgetRef ref) async {
     final collections =
         ref.read(collectionsControllerProvider).value ?? const [];
+    if (collections.isEmpty) {
+      if (context.mounted) {
+        showCupertinoNotice(context, context.l10n.no_collections);
+      }
+      return;
+    }
     final selected = await showCupertinoModalPopup<ClipboardCollection>(
       context: context,
       builder: (context) => CupertinoActionSheet(
