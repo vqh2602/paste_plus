@@ -3,7 +3,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/ai_chat_message.dart';
-import 'ai_markdown_content_widget.dart';
+import 'ai_message_block_renderer.dart';
 
 class AiMessageTileWidget extends StatefulWidget {
   const AiMessageTileWidget({
@@ -177,12 +177,23 @@ class _AiMessageTileWidgetState extends State<AiMessageTileWidget> {
             ],
 
             const SizedBox(height: 10),
-            if (widget.message.content.isEmpty)
+            if (widget.message.blocks.isEmpty)
               Text(widget.message.isThinking ? context.l10n.ai_processing : '')
             else
-              AiMarkdownContentWidget(
-                content: widget.message.content,
-                onCopy: widget.onCopy,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var index = 0;
+                      index < widget.message.blocks.length;
+                      index++) ...[
+                    AiMessageBlockRenderer(
+                      block: widget.message.blocks[index],
+                      onCopy: widget.onCopy,
+                    ),
+                    if (index != widget.message.blocks.length - 1)
+                      const SizedBox(height: 10),
+                  ],
+                ],
               ),
 
             if (widget.message.content.isNotEmpty) ...[

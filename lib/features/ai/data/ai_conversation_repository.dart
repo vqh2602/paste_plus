@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../domain/ai_chat_message.dart';
 import '../domain/ai_feature_action.dart';
+import '../domain/ai_agent_protocol.dart';
 
 class SavedAiConversation {
   const SavedAiConversation({
@@ -43,7 +44,7 @@ class AiConversationRepository {
           .map((entry) => _messageFromJson(entry as Map<String, dynamic>))
           .where(
             (message) =>
-                message.content.trim().isNotEmpty &&
+                message.blocks.isNotEmpty &&
                 message.timestamp.isAfter(DateTime.now().subtract(retention)),
           )
           .toList(growable: false);
@@ -70,7 +71,7 @@ class AiConversationRepository {
         .where(
           (message) =>
               !message.isThinking &&
-              message.content.isNotEmpty &&
+              message.blocks.isNotEmpty &&
               message.clipboardContext?.isSensitive != true,
         )
         .toList(growable: false);
@@ -186,7 +187,7 @@ class AiConversationRepository {
         .where(
           (message) =>
               !message.isThinking &&
-              message.content.isNotEmpty &&
+              message.blocks.isNotEmpty &&
               message.clipboardContext?.isSensitive != true,
         )
         .map(_messageToJson)
@@ -204,7 +205,7 @@ class AiConversationRepository {
       isPinned: json['isPinned'] as bool? ?? false,
       messages: (json['messages'] as List<dynamic>? ?? const [])
           .map((entry) => _messageFromJson(entry as Map<String, dynamic>))
-          .where((message) => message.content.isNotEmpty)
+          .where((message) => message.blocks.isNotEmpty)
           .toList(growable: false),
       clipboardContext: contextJson is Map<String, dynamic>
           ? ClipboardItem.fromMap(contextJson)
@@ -216,6 +217,8 @@ class AiConversationRepository {
     'id': message.id,
     'role': message.role.name,
     'content': message.content,
+    'blocks': message.blocks.map(_blockToJson).toList(growable: false),
+    'resultSetIds': message.resultSetIds,
     'featureGroup': message.featureGroup?.name,
     'selectedOption': message.selectedOption,
     'clipboardContext': message.clipboardContext?.toMap(),
@@ -224,13 +227,21 @@ class AiConversationRepository {
 
   AiChatMessage _messageFromJson(Map<String, dynamic> json) {
     final contextJson = json['clipboardContext'];
+    final blockJson = json['blocks'];
     return AiChatMessage(
       id: json['id'] as String? ?? '',
       role: AiMessageRole.values.firstWhere(
         (role) => role.name == json['role'],
         orElse: () => AiMessageRole.assistant,
       ),
-      content: json['content'] as String? ?? '',
+      blocks: blockJson is List
+          ? blockJson
+              .whereType<Map>()
+              .map((entry) => _blockFromJson(Map<String, dynamic>.from(entry)))
+              .whereType<AiMessageBlock>()
+              .toList(growable: false)
+          : null,
+      content: blockJson is List ? null : json['content'] as String? ?? '',
       featureGroup: AiFeatureGroup.values.cast<AiFeatureGroup?>().firstWhere(
         (group) => group?.name == json['featureGroup'],
         orElse: () => null,
@@ -242,6 +253,84 @@ class AiConversationRepository {
       timestamp: DateTime.fromMillisecondsSinceEpoch(
         json['timestamp'] as int? ?? DateTime.now().millisecondsSinceEpoch,
       ),
+      resultSetIds: (json['resultSetIds'] as List<dynamic>? ?? const [])
+          .map((value) => value.toString())
+          .toList(growable: false),
     );
   }
+
+  Map<String, Object?> _blockToJson(AiMessageBlock block) => switch (block) {
+    AiTextBlock(:final text) => {'type': 'text', 'text': text},
+    AiLocalizedTitleBlock(:final title) => {
+        'type': 'localized_title',
+        'kind': title.kind.name,
+        'count': title.count,
+      },
+    AiClipboardListBlock(:final resultSetId, :final items) ||
+    AiClipboardGridBlock(:final resultSetId, :final items) ||
+    AiUrlListBlock(:final resultSetId, :final items) => {
+        'type': 'clipboard_result_reference',
+        'resultSetId': resultSetId,
+        'itemIds': items.map((item) => item.id).toList(growable: false),
+        'previews': [
+          for (final item in items.take(5))
+            {'id': item.id, 'type': item.contentType.name, 'preview': redactClipboardPreview(item)},
+        ],
+      },
+    AiActionReceiptBlock(:final receipt) => {
+        'type': 'receipt',
+        'code': receipt.code,
+        'itemIds': receipt.affectedItemIds,
+        'count': receipt.affectedCount,
+        'collectionId': receipt.collectionId,
+      },
+    AiErrorBlock(:final code, :final localizedMessageKey) => {
+        'type': 'error',
+        'code': code,
+        'messageKey': localizedMessageKey,
+      },
+    AiCollectionListBlock(:final collections) => {
+        'type': 'collections',
+        'collections': [
+          for (final collection in collections)
+            {'id': collection.id, 'name': collection.name},
+        ],
+      },
+  };
+
+  AiMessageBlock? _blockFromJson(Map<String, dynamic> json) => switch (json['type']) {
+    'text' => AiTextBlock(json['text']?.toString() ?? ''),
+    'localized_title' => AiLocalizedTitleBlock(
+        AiMessageTitle(
+          kind: AiMessageTitleKind.values.firstWhere(
+            (kind) => kind.name == json['kind'],
+            orElse: () => AiMessageTitleKind.resultCount,
+          ),
+          count: (json['count'] as num?)?.toInt() ?? 0,
+        ),
+      ),
+    'receipt' => AiActionReceiptBlock(
+        AiActionReceipt(
+          code: json['code']?.toString() ?? 'clipboard.action.success',
+          affectedItemIds: (json['itemIds'] as List<dynamic>? ?? const [])
+              .map((value) => value.toString())
+              .toList(growable: false),
+          affectedCount: (json['count'] as num?)?.toInt() ?? 0,
+          collectionId: json['collectionId']?.toString(),
+        ),
+      ),
+    'error' => AiErrorBlock(
+        code: json['code']?.toString() ?? 'agent.error',
+        localizedMessageKey: json['messageKey']?.toString() ?? 'agent.error',
+      ),
+    // Restored conversations keep only IDs/previews, so the live clipboard
+    // items are no longer available: show a localized summary instead.
+    'clipboard_result_reference' => AiLocalizedTitleBlock(
+        AiMessageTitle(
+          kind: AiMessageTitleKind.savedResultSet,
+          count: (json['itemIds'] as List<dynamic>? ?? const []).length,
+        ),
+      ),
+    _ => null,
+  };
 }

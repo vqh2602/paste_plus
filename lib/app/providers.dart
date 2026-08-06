@@ -346,3 +346,21 @@ final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
     ref,
   );
 });
+
+final deletedItemIdsProvider =
+    StateNotifierProvider<DeletedItemIdsNotifier, Set<String>>(
+      (ref) => DeletedItemIdsNotifier(),
+    );
+
+class DeletedItemIdsNotifier extends StateNotifier<Set<String>> {
+  DeletedItemIdsNotifier() : super(const {});
+
+  void markDeleted(String id) {
+    state = {...state, id};
+  }
+
+  void markAllDeleted(Iterable<String> ids) {
+    state = {...state, ...ids};
+  }
+}
+

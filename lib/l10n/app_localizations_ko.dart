@@ -1427,4 +1427,75 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ai_performance_smart => '스마트';
+
+  @override
+  String get ai_result_count => '@count개 항목을 찾았습니다.';
+
+  @override
+  String get ai_result_url_count => '링크가 포함된 항목 @count개를 찾았습니다.';
+
+  @override
+  String get ai_result_image_count => '이미지 @count개를 찾았습니다.';
+
+  @override
+  String get ai_result_empty => '일치하는 클립보드 항목이 없습니다.';
+
+  @override
+  String get ai_result_show_more => '결과가 더 있습니다';
+
+  @override
+  String get ai_confirm_action_title => '작업 확인';
+
+  @override
+  String get ai_confirm_pin => '이 @count개 항목을 고정할까요?';
+
+  @override
+  String get ai_confirm_unpin => '이 @count개 항목의 고정을 해제할까요?';
+
+  @override
+  String get ai_confirm_delete => '이 @count개 항목을 삭제할까요?';
+
+  @override
+  String get ai_confirm_add_collection => '이 @count개 항목을 컬렉션 \"@name\"에 추가할까요?';
+
+  @override
+  String get ai_confirm_generic => '이 작업을 @count개 항목에 적용할까요?';
+
+  @override
+  String get ai_receipt_pin => '@count개 항목을 고정했습니다.';
+
+  @override
+  String get ai_receipt_unpin => '@count개 항목의 고정을 해제했습니다.';
+
+  @override
+  String get ai_receipt_delete => '@count개 항목을 삭제했습니다.';
+
+  @override
+  String get ai_receipt_collection => '@count개 항목을 컬렉션에 추가했습니다.';
+
+  @override
+  String get ai_receipt_generic => '@count개 항목을 업데이트했습니다.';
+
+  @override
+  String get ai_error_reference_not_found =>
+      '어떤 항목을 말하는지 알 수 없습니다. 먼저 검색해 주세요.';
+
+  @override
+  String get ai_error_collection_not_found => '해당 컬렉션이 없습니다.';
+
+  @override
+  String get ai_error_collection_name_required => '컬렉션 이름을 알려주세요.';
+
+  @override
+  String get ai_error_generic => '작업을 완료할 수 없습니다.';
+
+  @override
+  String get ai_saved_result_set => '저장된 클립보드 결과(@count개).';
+
+  @override
+  String get confirm => '확인';
+
+  @override
+  String get ai_image_needs_vision_model =>
+      '현재 모델은 이미지를 읽을 수 없습니다. OCR 텍스트와 파일 정보만으로 답변했습니다. 이미지를 직접 분석하려면 비전 모델(Gemma 4 12B Vision 또는 Qwen2.5-VL 7B)을 다운로드하세요.';
 }

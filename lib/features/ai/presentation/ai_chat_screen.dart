@@ -12,6 +12,7 @@ import '../../../core/ui/cupertino_components.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../domain/ai_feature_action.dart';
 import '../domain/ai_feature_request.dart';
+import '../domain/ai_agent_protocol.dart';
 import '../data/ai_conversation_repository.dart';
 import 'ai_controller.dart';
 import 'widgets/ai_classifier_banner.dart';
@@ -355,18 +356,17 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
       if (next.pendingToolCall != null &&
           previous?.pendingToolCall != next.pendingToolCall) {
         final pending = next.pendingToolCall!;
-        final toolDisplayName = switch (pending.toolName) {
-          'pin_clipboard' => context.l10n.pin,
-          'delete_clipboard_item' => context.l10n.delete,
-          'add_to_collection' => context.l10n.add_to_collection,
-          _ => pending.toolName,
-        };
-
+        final confirmation = pending.confirmationRequest;
+        final isDestructive =
+            pending.toolName.contains('delete') ||
+            confirmation?.actionCode.contains('delete') == true;
         showCupertinoDialog<bool>(
           context: context,
           builder: (ctx) => CupertinoAlertDialog(
-            title: Text(context.l10n.aiTitle),
-            content: Text('$toolDisplayName\n${pending.arguments}'),
+            title: Text(context.l10n.ai_confirm_action_title),
+            content: confirmation == null
+                ? Text(_legacyToolLabel(context, pending.toolName))
+                : AiConfirmationContent(request: confirmation),
             actions: [
               CupertinoDialogAction(
                 onPressed: () {
@@ -378,14 +378,14 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                 child: Text(context.l10n.cancel),
               ),
               CupertinoDialogAction(
-                isDestructiveAction: pending.toolName.contains('delete'),
+                isDestructiveAction: isDestructive,
                 onPressed: () {
                   Navigator.pop(ctx, true);
                   ref
                       .read(aiControllerProvider.notifier)
                       .approvePendingToolCall();
                 },
-                child: const Text('Xác nhận'),
+                child: Text(context.l10n.confirm),
               ),
             ],
           ),
@@ -804,6 +804,59 @@ class _AiScreenWelcomeState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Fallback label for legacy tool confirmations that carry no typed request.
+String _legacyToolLabel(BuildContext context, String toolName) =>
+    switch (toolName) {
+      'pin_clipboard' => context.l10n.pin,
+      'delete_clipboard_item' => context.l10n.delete,
+      'add_to_collection' => context.l10n.add_to_collection,
+      _ => context.l10n.ai_confirm_action_title,
+    };
+
+/// Localized confirmation body showing exactly which clipboard items the
+/// agent resolved, so the user approves real data instead of raw arguments.
+class AiConfirmationContent extends StatelessWidget {
+  const AiConfirmationContent({required this.request, super.key});
+
+  final AiConfirmationRequest request;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = request.itemIds.length;
+    final template = switch (request.actionCode) {
+      final String code when code.contains('delete') =>
+        context.l10n.ai_confirm_delete,
+      final String code when code.contains('unpin') =>
+        context.l10n.ai_confirm_unpin,
+      final String code when code.contains('addToCollection') =>
+        context.l10n.ai_confirm_add_collection,
+      final String code when code.contains('pin') => context.l10n.ai_confirm_pin,
+      _ => context.l10n.ai_confirm_generic,
+    };
+    final message = template
+        .replaceAll('@count', '$count')
+        .replaceAll('@name', request.collectionName ?? '');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 6),
+        Text(message),
+        const SizedBox(height: 8),
+        for (final item in request.previewItems.take(5))
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(
+              redactClipboardPreview(item, maxLength: 60),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+      ],
     );
   }
 }

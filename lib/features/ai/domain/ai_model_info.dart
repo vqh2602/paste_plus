@@ -49,9 +49,14 @@ class AiModelInfo {
   final int contextWindow;
 
   /// True if this model supports visual inputs (requires a mmproj projector file).
+  ///
+  /// llama.cpp cannot read image pixels without a projector, so a model that
+  /// merely declares the image modality is text-only in practice. Claiming
+  /// vision here made image questions silently fall back to OCR-only answers.
   bool get isMultimodalVision =>
       isMultimodal &&
-      (mmprojUrl != null || supportedModalities.contains(AiModality.image));
+      mmprojUrl != null &&
+      supportedModalities.contains(AiModality.image);
 
   String get description {
     return switch (id) {

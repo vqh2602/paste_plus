@@ -1474,4 +1474,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ai_performance_smart => 'Smart';
+
+  @override
+  String get ai_result_count => 'Found @count items.';
+
+  @override
+  String get ai_result_url_count => 'Found @count items with links.';
+
+  @override
+  String get ai_result_image_count => 'Found @count images.';
+
+  @override
+  String get ai_result_empty => 'No matching clipboard items found.';
+
+  @override
+  String get ai_result_show_more => 'More results available';
+
+  @override
+  String get ai_confirm_action_title => 'Confirm action';
+
+  @override
+  String get ai_confirm_pin => 'Pin these @count clipboard items?';
+
+  @override
+  String get ai_confirm_unpin => 'Unpin these @count clipboard items?';
+
+  @override
+  String get ai_confirm_delete => 'Delete these @count clipboard items?';
+
+  @override
+  String get ai_confirm_add_collection =>
+      'Add these @count items to collection \"@name\"?';
+
+  @override
+  String get ai_confirm_generic => 'Apply this action to @count items?';
+
+  @override
+  String get ai_receipt_pin => 'Pinned @count items.';
+
+  @override
+  String get ai_receipt_unpin => 'Unpinned @count items.';
+
+  @override
+  String get ai_receipt_delete => 'Deleted @count items.';
+
+  @override
+  String get ai_receipt_collection => 'Added @count items to the collection.';
+
+  @override
+  String get ai_receipt_generic => 'Updated @count items.';
+
+  @override
+  String get ai_error_reference_not_found =>
+      'I could not tell which clipboard items you meant. Please search first.';
+
+  @override
+  String get ai_error_collection_not_found => 'That collection does not exist.';
+
+  @override
+  String get ai_error_collection_name_required =>
+      'Please tell me the collection name.';
+
+  @override
+  String get ai_error_generic => 'The action could not be completed.';
+
+  @override
+  String get ai_saved_result_set => 'Saved clipboard result (@count items).';
+
+  @override
+  String get confirm => 'Confirm';
+
+  @override
+  String get ai_image_needs_vision_model =>
+      'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.';
 }

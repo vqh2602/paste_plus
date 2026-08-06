@@ -1471,4 +1471,77 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ai_performance_smart => 'Thông minh';
+
+  @override
+  String get ai_result_count => 'Tìm thấy @count mục.';
+
+  @override
+  String get ai_result_url_count => 'Tìm thấy @count mục có đường dẫn.';
+
+  @override
+  String get ai_result_image_count => 'Tìm thấy @count ảnh.';
+
+  @override
+  String get ai_result_empty => 'Không tìm thấy mục clipboard phù hợp.';
+
+  @override
+  String get ai_result_show_more => 'Còn thêm kết quả';
+
+  @override
+  String get ai_confirm_action_title => 'Xác nhận hành động';
+
+  @override
+  String get ai_confirm_pin => 'Ghim @count mục clipboard này?';
+
+  @override
+  String get ai_confirm_unpin => 'Bỏ ghim @count mục clipboard này?';
+
+  @override
+  String get ai_confirm_delete => 'Xóa @count mục clipboard này?';
+
+  @override
+  String get ai_confirm_add_collection =>
+      'Thêm @count mục này vào collection \"@name\"?';
+
+  @override
+  String get ai_confirm_generic => 'Áp dụng hành động này cho @count mục?';
+
+  @override
+  String get ai_receipt_pin => 'Đã ghim @count mục.';
+
+  @override
+  String get ai_receipt_unpin => 'Đã bỏ ghim @count mục.';
+
+  @override
+  String get ai_receipt_delete => 'Đã xóa @count mục.';
+
+  @override
+  String get ai_receipt_collection => 'Đã thêm @count mục vào collection.';
+
+  @override
+  String get ai_receipt_generic => 'Đã cập nhật @count mục.';
+
+  @override
+  String get ai_error_reference_not_found =>
+      'Tôi chưa xác định được bạn muốn thao tác trên mục nào. Hãy tìm kiếm trước.';
+
+  @override
+  String get ai_error_collection_not_found => 'Collection này không tồn tại.';
+
+  @override
+  String get ai_error_collection_name_required =>
+      'Bạn hãy cho tôi biết tên collection.';
+
+  @override
+  String get ai_error_generic => 'Không thể hoàn tất hành động.';
+
+  @override
+  String get ai_saved_result_set => 'Kết quả clipboard đã lưu (@count mục).';
+
+  @override
+  String get confirm => 'Xác nhận';
+
+  @override
+  String get ai_image_needs_vision_model =>
+      'Model hiện tại không đọc được hình ảnh. Câu trả lời chỉ dựa trên văn bản OCR và thông tin tệp. Hãy tải model hỗ trợ ảnh (Gemma 4 12B Vision hoặc Qwen2.5-VL 7B) để phân tích chính hình ảnh.';
 }

@@ -1,6 +1,9 @@
 import '../../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../../clipboard_history/domain/clipboard_item.dart';
 import '../../../clipboard_history/domain/clipboard_repository.dart';
+import '../../../clipboard_history/domain/search_query.dart';
+import '../../../clipboard_history/domain/clipboard_feature_extractor.dart';
+import '../../domain/ai_agent_protocol.dart';
 import '../ai_tool.dart';
 
 bool isSameDate(DateTime a, DateTime b) {
@@ -33,6 +36,13 @@ class SearchClipboardTool implements AiTool {
         'enum': ['json', 'url', 'code', 'text', 'image', 'file'],
       },
       'query': {'type': 'string'},
+      'content_types': {'type': 'array'},
+      'contains_url': {'type': ['boolean', 'null']},
+      'url_hosts': {'type': 'array'},
+      'url_kind': {'type': ['string', 'null']},
+      'text_query': {'type': ['string', 'null']},
+      'source_apps': {'type': 'array'},
+      'file_extensions': {'type': 'array'},
       'date_range': {
         'type': 'string',
         'enum': ['today', 'yesterday', 'recent'],
@@ -42,113 +52,113 @@ class SearchClipboardTool implements AiTool {
 
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
-    final contentType = (arguments['content_type'] ?? '')
-        .toString()
-        .toLowerCase();
-    final query = (arguments['query'] ?? '').toString().toLowerCase();
-    final dateRange = (arguments['date_range'] ?? '').toString().toLowerCase();
-
-    List<ClipboardItem> items = _clipboardHistory;
-    if (_repository != null && _clipboardHistory.isEmpty) {
-      items = await _repository.getItems(limit: 50);
-    }
-
-    const stopWords = <String>{
-      'tìm',
-      'kiếm',
-      'danh',
-      'sách',
-      'clipbroad',
-      'clipboard',
-      'có',
-      'chứa',
-      'cho',
-      'tôi',
-      'các',
-      'những',
-      'mục',
-      'link',
-      'url',
-      'ảnh',
-      'hình',
-      'bằng',
-      'vào',
-      'ngày',
-      'hôm',
-      'nay',
-      'hôm qua',
-    };
-
-    final queryTokens = query
-        .split(RegExp(r'\s+'))
-        .map((w) => w.trim().toLowerCase())
-        .where((w) => w.isNotEmpty && !stopWords.contains(w))
-        .toList();
-
-    final now = DateTime.now();
-    final yesterday = now.subtract(const Duration(days: 1));
-
-    final filtered = items.where((item) {
-      if (contentType.isNotEmpty) {
-        if (contentType == 'json' &&
-            item.contentType != ClipboardContentType.json) {
-          return false;
-        }
-        if (contentType == 'url' &&
-            item.contentType != ClipboardContentType.url &&
-            !RegExp(r'https?://|www\.', caseSensitive: false)
-                .hasMatch(item.content)) {
-          return false;
-        }
-        if (contentType == 'code' &&
-            item.contentType != ClipboardContentType.code) {
-          return false;
-        }
-        if (contentType == 'image' &&
-            item.contentType != ClipboardContentType.image &&
-            (item.imagePath == null || item.imagePath!.isEmpty)) {
-          return false;
-        }
-        if (contentType == 'text' &&
-            item.contentType != ClipboardContentType.text) {
-          return false;
-        }
-        if (contentType == 'file' &&
-            item.contentType != ClipboardContentType.file) {
-          return false;
-        }
-      }
-      if (queryTokens.isNotEmpty) {
-        final contentLower = item.content.toLowerCase();
-        final appNameLower = item.sourceAppName?.toLowerCase() ?? '';
-        final matches = queryTokens.any(
-          (token) =>
-              contentLower.contains(token) || appNameLower.contains(token),
-        );
-        if (!matches) return false;
-      }
-      if (dateRange == 'today') {
-        if (!isSameDate(item.createdAt, now)) return false;
-      } else if (dateRange == 'yesterday') {
-        if (!isSameDate(item.createdAt, yesterday)) return false;
-      } else if (dateRange == 'recent') {
-        if (now.difference(item.createdAt).inDays > 7) return false;
-      }
-      return true;
-    }).toList();
-
+    final query = _queryFromArguments(arguments);
+    final page = _repository == null
+        ? await _searchHistory(query)
+        : await _repository.searchStructured(query);
+    final filtered = page.items;
+    final resultSetId = 'result-${DateTime.now().microsecondsSinceEpoch}';
+    final displayMode = resolveDisplayMode(query: query, items: filtered);
     final formatted = filtered
         .take(10)
         .map((i) => '[clip:${i.id}] (${i.contentType.name}): ${i.content}')
         .join('\n---\n');
-
-    return AiToolResult.ok(
-      filtered.isNotEmpty
-          ? 'Đã tìm thấy ${filtered.length} mục clipboard khớp:\n$formatted'
+    return AiToolResult<ClipboardSearchPayload>(
+      status: filtered.isEmpty ? AiToolStatus.empty : AiToolStatus.success,
+      code: filtered.isEmpty
+          ? 'clipboard.search.empty'
+          : 'clipboard.search.success',
+      payload: ClipboardSearchPayload(
+        query: query,
+        items: filtered,
+        total: page.total,
+        hasMore: page.hasMore,
+        resultSetId: resultSetId,
+        displayMode: displayMode,
+      ),
+      legacyOutput: filtered.isNotEmpty
+          ? 'Đã tìm thấy ${page.total} mục clipboard khớp:\n$formatted'
           : 'Không tìm thấy mục clipboard nào phù hợp.',
-      filtered,
     );
   }
+
+  ClipboardSearchQuery _queryFromArguments(Map<String, dynamic> arguments) {
+    List<String> strings(Object? value) => value is List
+        ? value.map((item) => item.toString().toLowerCase()).toList()
+        : <String>[];
+    final rawTypes = strings(arguments['content_types']);
+    final legacyType = arguments['content_type']?.toString().toLowerCase();
+    if (legacyType?.isNotEmpty == true) rawTypes.add(legacyType!);
+    final types = {
+      for (final value in rawTypes)
+        for (final type in ClipboardContentType.values)
+          if (type.name == value) type,
+    };
+    final date = (arguments['date_preset'] ?? arguments['date_range'])?.toString();
+    final urlKindName = arguments['url_kind']?.toString();
+    final urlKind = ClipboardUrlKind.values
+        .where((kind) => kind.name == urlKindName ||
+            (kind == ClipboardUrlKind.webPage && urlKindName == 'web_page'))
+        .firstOrNull;
+    return ClipboardSearchQuery(
+      contentTypes: types,
+      textQuery: (arguments['text_query'] ?? arguments['query'])?.toString().trim(),
+      containsUrl: arguments['contains_url'] as bool? ??
+          (types.contains(ClipboardContentType.url) ? true : null),
+      urlHosts: strings(arguments['url_hosts']).toSet(),
+      urlKind: urlKind,
+      sourceApps: strings(arguments['source_apps']).toSet(),
+      fileExtensions: strings(arguments['file_extensions']).toSet(),
+      pinned: arguments['pinned'] as bool?,
+      dateRange: date == null || date.isEmpty
+          ? null
+          : ClipboardDateRange(
+              preset: date == 'recent' ? 'last_7_days' : date,
+            ),
+      limit: ((arguments['limit'] as num?)?.toInt() ?? 30).clamp(1, 100),
+    );
+  }
+
+  Future<ClipboardSearchPage> _searchHistory(ClipboardSearchQuery query) async {
+    final repository = _MemoryClipboardRepository(_clipboardHistory);
+    return repository.searchStructured(query);
+  }
+}
+
+ClipboardResultDisplayMode resolveDisplayMode({
+  required ClipboardSearchQuery query,
+  required List<ClipboardItem> items,
+}) {
+  if (query.contentTypes.length == 1 &&
+      query.contentTypes.contains(ClipboardContentType.image)) {
+    return ClipboardResultDisplayMode.imageGrid;
+  }
+  if (query.containsUrl == true) return ClipboardResultDisplayMode.urlList;
+  if (query.contentTypes.length == 1 &&
+      query.contentTypes.contains(ClipboardContentType.code)) {
+    return ClipboardResultDisplayMode.codeList;
+  }
+  if (query.contentTypes.length == 1 &&
+      query.contentTypes.contains(ClipboardContentType.file)) {
+    return ClipboardResultDisplayMode.fileList;
+  }
+  return ClipboardResultDisplayMode.list;
+}
+
+class _MemoryClipboardRepository implements ClipboardRepository {
+  const _MemoryClipboardRepository(this.items);
+  final List<ClipboardItem> items;
+
+  @override
+  Future<List<ClipboardItem>> getItems({
+    bool pinnedOnly = false,
+    ClipboardContentType? type,
+    String? collectionId,
+    int limit = 2000,
+  }) async => items.take(limit).toList();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 Future<ClipboardItem?> _findItemInRepoOrHistory(
@@ -244,19 +254,25 @@ class ExtractUrlsTool implements AiTool {
   @override
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     final text = arguments['text']?.toString() ?? '';
-    final urlRegex = RegExp(
-      r'https?://[^\s<>"]+|www\.[^\s<>"]+',
-      caseSensitive: false,
+    final features = const ClipboardFeatureExtractor().extract(
+      content: text,
+      contentType: ClipboardContentType.text,
     );
-    final matches = urlRegex.allMatches(text).map((m) => m.group(0)!).toList();
-
-    return AiToolResult.ok(
+    final matches = features.urls;
+    return AiToolResult<UrlExtractionPayload>(
+      status: matches.isEmpty ? AiToolStatus.empty : AiToolStatus.success,
+      code: matches.isEmpty ? 'url.extract.empty' : 'url.extract.success',
+      payload: UrlExtractionPayload(matches),
+      legacyOutput:
       matches.isNotEmpty
           ? 'Đã trích xuất ${matches.length} URL:\n${matches.join('\n')}'
           : 'Không tìm thấy URL nào trong văn bản.',
-      matches,
     );
   }
+}
+
+extension _FirstOrNull<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }
 
 /// Read-only tool: Lists collections.
