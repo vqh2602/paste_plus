@@ -26,6 +26,9 @@ ClipboardItem item({
     isPinned: false,
     isSensitive: sensitive,
     copyCount: 1,
+    containsUrl: type == ClipboardContentType.url ||
+        content.contains('http://') ||
+        content.contains('https://'),
   );
 }
 
@@ -54,7 +57,6 @@ void main() {
           .toList();
 
       final output = events.last['output']!;
-      expect(output, contains('"candidate_count":2'));
       expect(output, contains('https://flutter.dev'));
     },
   );

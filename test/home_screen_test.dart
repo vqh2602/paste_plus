@@ -143,6 +143,14 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   Future<void> updateMetadata(String id, String metadataJson) async {}
 
   @override
+  Future<void> updateNote(String id, String? note) async {
+    final index = items.indexWhere((item) => item.id == id);
+    if (index != -1) {
+      items[index] = items[index].copyWith(note: note, clearNote: note == null);
+    }
+  }
+
+  @override
   Future<ClipboardItem?> store(
     ClipboardPayload payload,
     AppSettings settings,
@@ -212,6 +220,7 @@ void main() {
     await tester.pumpAndSettle();
     final pinned = await repository.getItems(pinnedOnly: true);
     expect(pinned, hasLength(1));
+    await tester.pump(const Duration(seconds: 2));
   });
 
   testWidgets('main history header shows AI button when AI is enabled', (

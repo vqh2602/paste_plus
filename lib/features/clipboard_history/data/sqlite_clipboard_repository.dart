@@ -11,12 +11,15 @@ import 'package:sqflite/sqflite.dart';
 import '../../../core/database/app_database.dart';
 import '../../settings/domain/app_settings.dart';
 import '../domain/clipboard_content_type.dart';
+import '../domain/clipboard_feature_extractor.dart';
 import '../domain/clipboard_item.dart';
 import '../domain/clipboard_payload.dart';
 import '../domain/clipboard_repository.dart';
 import '../domain/content_classifier.dart';
+import '../domain/search_query.dart';
 
-class SqliteClipboardRepository implements ClipboardRepository {
+class SqliteClipboardRepository
+    implements ClipboardRepository, StructuredClipboardRepository {
   SqliteClipboardRepository(this._appDatabase);
 
   final AppDatabase _appDatabase;
@@ -185,6 +188,12 @@ class SqliteClipboardRepository implements ClipboardRepository {
     final imagePath = payload.imageBytes == null
         ? null
         : await _saveImage(hash, payload.imageBytes!);
+    final features = const ClipboardFeatureExtractor().extract(
+      content: payload.text ?? '',
+      contentType: contentType,
+      imagePath: imagePath,
+      sourceAppName: payload.sourceAppName,
+    );
     final id = '${now.microsecondsSinceEpoch}-${hash.substring(0, 8)}';
     final item = ClipboardItem(
       id: id,
@@ -201,6 +210,14 @@ class SqliteClipboardRepository implements ClipboardRepository {
       isSensitive: false,
       imagePath: imagePath,
       copyCount: 1,
+      containsUrl: features.containsUrl,
+      primaryUrl: features.primaryUrl,
+      urlHost: features.urlHost,
+      urlKind: features.urlKind?.name,
+      mimeType: features.mimeType,
+      fileExtension: features.fileExtension,
+      hasOcrText: features.hasOcrText,
+      searchableText: features.searchableText,
     );
     await _db.insert('clipboard_items', item.toMap());
     return item;
@@ -255,12 +272,65 @@ class SqliteClipboardRepository implements ClipboardRepository {
 
   @override
   Future<void> updateMetadata(String id, String metadataJson) async {
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final values = <String, Object?>{
+      'metadata_json': metadataJson,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (rows.isNotEmpty) {
+      final item = ClipboardItem.fromMap(rows.first);
+      final features = const ClipboardFeatureExtractor().extract(
+        content: item.content,
+        contentType: item.contentType,
+        imagePath: item.imagePath,
+        metadataJson: metadataJson,
+        note: item.note,
+        sourceAppName: item.sourceAppName,
+      );
+      values.addAll(_featureValues(features));
+    }
     await _db.update(
       'clipboard_items',
-      {
-        'metadata_json': metadataJson,
-        'updated_at': DateTime.now().millisecondsSinceEpoch,
-      },
+      values,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  @override
+  Future<void> updateNote(String id, String? note) async {
+    final trimmed = note?.trim();
+    final value = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    final values = <String, Object?>{
+      'note': value,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    if (rows.isNotEmpty) {
+      final item = ClipboardItem.fromMap(rows.first);
+      final features = const ClipboardFeatureExtractor().extract(
+        content: item.content,
+        contentType: item.contentType,
+        imagePath: item.imagePath,
+        metadataJson: item.metadataJson,
+        note: value,
+        sourceAppName: item.sourceAppName,
+      );
+      values.addAll(_featureValues(features));
+    }
+    await _db.update(
+      'clipboard_items',
+      values,
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -522,4 +592,206 @@ class SqliteClipboardRepository implements ClipboardRepository {
     }
     return total;
   }
+
+  Map<String, Object?> _featureValues(ClipboardFeatures features) => {
+    'contains_url': features.containsUrl ? 1 : 0,
+    'primary_url': features.primaryUrl,
+    'url_host': features.urlHost,
+    'url_kind': features.urlKind?.name,
+    'mime_type': features.mimeType,
+    'file_extension': features.fileExtension,
+    'has_ocr_text': features.hasOcrText ? 1 : 0,
+    'searchable_text': features.searchableText,
+  };
+
+  @override
+  Future<ClipboardSearchPage> search(ClipboardSearchQuery query) async {
+    final where = <String>[];
+    final args = <Object?>[];
+    var join = '';
+    if (!query.includeSensitive) where.add('i.is_sensitive = 0');
+    if (query.contentTypes.isNotEmpty) {
+      where.add(
+        'i.content_type IN (${List.filled(query.contentTypes.length, '?').join(',')})',
+      );
+      args.addAll(query.contentTypes.map((type) => type.name));
+    }
+    if (query.containsUrl != null) {
+      where.add('i.contains_url = ?');
+      args.add(query.containsUrl! ? 1 : 0);
+    }
+    if (query.urlHosts.isNotEmpty) {
+      where.add(
+        '(${query.urlHosts.map((_) => '(i.url_host = ? OR i.url_host LIKE ?)').join(' OR ')})',
+      );
+      for (final host in query.urlHosts) {
+        args..add(host)..add('%.$host');
+      }
+    }
+    if (query.urlKind != null && query.urlKind != ClipboardUrlKind.any) {
+      where.add('i.url_kind = ?');
+      args.add(query.urlKind!.name);
+    }
+    if (query.sourceApps.isNotEmpty) {
+      where.add(
+        '(${query.sourceApps.map((_) => 'LOWER(COALESCE(i.source_app_name, \'\')) LIKE ?').join(' OR ')})',
+      );
+      args.addAll(query.sourceApps.map((app) => '%${app.toLowerCase()}%'));
+    }
+    if (query.fileExtensions.isNotEmpty) {
+      where.add(
+        'i.file_extension IN (${List.filled(query.fileExtensions.length, '?').join(',')})',
+      );
+      args.addAll(query.fileExtensions);
+    }
+    if (query.pinned != null) {
+      where.add('i.is_pinned = ?');
+      args.add(query.pinned! ? 1 : 0);
+    }
+    if (query.collectionIds.isNotEmpty) {
+      join = 'INNER JOIN clipboard_item_collections ic ON ic.clipboard_item_id = i.id';
+      where.add(
+        'ic.collection_id IN (${List.filled(query.collectionIds.length, '?').join(',')})',
+      );
+      args.addAll(query.collectionIds);
+    }
+    final range = query.dateRange?.resolve(DateTime.now());
+    if (range?.from != null) {
+      where.add('i.created_at >= ?');
+      args.add(range!.from!.millisecondsSinceEpoch);
+    }
+    if (range?.to != null) {
+      where.add('i.created_at < ?');
+      args.add(range!.to!.millisecondsSinceEpoch);
+    }
+    final text = query.textQuery?.trim().toLowerCase();
+    if (text?.isNotEmpty == true) {
+      for (final token in text!.split(RegExp(r'\s+')).where((value) => value.isNotEmpty)) {
+        where.add('LOWER(i.searchable_text) LIKE ?');
+        args.add('%$token%');
+      }
+    }
+    final whereSql = where.isEmpty ? '' : 'WHERE ${where.join(' AND ')}';
+    final countRows = await _db.rawQuery(
+      'SELECT COUNT(DISTINCT i.id) AS total FROM clipboard_items i $join $whereSql',
+      args,
+    );
+    final total = (countRows.firstOrNull?['total'] as int?) ?? 0;
+    final orderBy = switch (query.sort) {
+      ClipboardSort.oldest => 'i.created_at ASC',
+      ClipboardSort.mostCopied => 'i.copy_count DESC, i.created_at DESC',
+      ClipboardSort.recentlyCopied => 'i.last_copied_at DESC',
+      ClipboardSort.newest => 'i.created_at DESC',
+    };
+    final rows = await _db.rawQuery(
+      '''SELECT DISTINCT i.* FROM clipboard_items i $join $whereSql
+         ORDER BY $orderBy LIMIT ? OFFSET ?''',
+      [...args, query.limit, query.offset],
+    );
+    final items = <ClipboardItem>[];
+    for (final row in rows) {
+      items.add(ClipboardItem.fromMap(await _normalizeRow(row)));
+    }
+    return ClipboardSearchPage(
+      items: items,
+      total: total,
+      hasMore: query.offset + items.length < total,
+    );
+  }
+
+  @override
+  Future<List<ClipboardItem>> getItemsByIds(List<String> ids) async {
+    if (ids.isEmpty) return const [];
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      whereArgs: ids,
+    );
+    final byId = <String, ClipboardItem>{};
+    for (final row in rows) {
+      final item = ClipboardItem.fromMap(await _normalizeRow(row));
+      byId[item.id] = item;
+    }
+    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+  }
+
+  @override
+  Future<void> setPinnedMany(List<String> ids, bool pinned) async {
+    if (ids.isEmpty) return;
+    await _db.update(
+      'clipboard_items',
+      {
+        'is_pinned': pinned ? 1 : 0,
+        'updated_at': DateTime.now().millisecondsSinceEpoch,
+      },
+      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      whereArgs: ids,
+    );
+  }
+
+  @override
+  Future<void> deleteItems(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final rows = await _db.query(
+      'clipboard_items',
+      columns: ['image_path'],
+      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      whereArgs: ids,
+    );
+    await _db.delete(
+      'clipboard_items',
+      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      whereArgs: ids,
+    );
+    for (final row in rows) {
+      await _deleteImage(row['image_path'] as String?);
+    }
+  }
+
+  @override
+  Future<void> addItemsToCollection(List<String> itemIds, String collectionId) async {
+    if (itemIds.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.transaction((transaction) async {
+      final batch = transaction.batch();
+      for (final id in itemIds) {
+        batch.insert(
+          'clipboard_item_collections',
+          {
+            'clipboard_item_id': id,
+            'collection_id': collectionId,
+            'created_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+      await batch.commit(noResult: true);
+      await transaction.update(
+        'clipboard_items',
+        {'updated_at': now},
+        where: 'id IN (${List.filled(itemIds.length, '?').join(',')})',
+        whereArgs: itemIds,
+      );
+    });
+  }
+
+  @override
+  Future<ClipboardCollection?> findCollectionByName(String name) async {
+    final needle = name.trim().toLowerCase();
+    if (needle.isEmpty) return null;
+    // A visible name is what the user said, so it must win over an internal id
+    // (seeded collections use ids such as "work" for localized names).
+    final rows = await _db.rawQuery(
+      '''SELECT * FROM collections
+         WHERE LOWER(name) = ? OR LOWER(id) = ?
+         ORDER BY CASE WHEN LOWER(name) = ? THEN 0 ELSE 1 END
+         LIMIT 1''',
+      [needle, needle, needle],
+    );
+    return rows.isEmpty ? null : ClipboardCollection.fromMap(rows.first);
+  }
+}
+
+extension _FirstOrNull<T> on List<T> {
+  T? get firstOrNull => isEmpty ? null : first;
 }

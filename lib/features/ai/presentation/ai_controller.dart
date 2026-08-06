@@ -17,23 +17,27 @@ import '../domain/ai_model_info.dart';
 import '../domain/ai_performance_mode.dart';
 import '../domain/ai_request_plan.dart';
 import '../domain/ai_request_classification.dart';
+import '../domain/ai_agent_protocol.dart';
 import '../localization/ai_language_context.dart';
 import '../localization/ai_language_detector.dart';
 import '../localization/ai_response_locale_resolver.dart';
 import '../services/ai_model_downloader_service.dart';
 import '../services/ai_utility_classifier.dart';
 import '../services/local_ai_engine.dart';
+import '../services/deep_app_ai_agent.dart';
 
 class PendingToolCall {
   const PendingToolCall({
     required this.toolName,
     required this.arguments,
     required this.completer,
+    this.confirmationRequest,
   });
 
   final String toolName;
   final Map<String, dynamic> arguments;
   final Completer<bool> completer;
+  final AiConfirmationRequest? confirmationRequest;
 }
 
 class AiState {
@@ -68,6 +72,12 @@ class AiState {
   /// True if at least one model has been fully downloaded.
   bool get hasAnyDownloadedModel =>
       downloadStates.values.any((s) => s == DownloadState.downloaded);
+
+  /// True when the dedicated classifier model (Qwen 0.6B) is not fully downloaded.
+  bool get isClassifierModelMissing {
+    const classifierId = AiUtilityClassifier.utilityModelId;
+    return downloadStates[classifierId] != DownloadState.downloaded;
+  }
 
   AiState copyWith({
     String? selectedModelId,
@@ -119,6 +129,7 @@ class AiController extends StateNotifier<AiState> {
         ),
       ) {
     _restoreFuture = _restoreConversation();
+    _deepAgent = DeepAppAiAgent(_ref.read(clipboardRepositoryProvider));
     _checkDownloadedModels();
   }
 
@@ -127,6 +138,7 @@ class AiController extends StateNotifier<AiState> {
   final AiConversationRepository _conversationRepository;
   final AiUtilityClassifier _utilityClassifier;
   final Ref _ref;
+  late final DeepAppAiAgent _deepAgent;
   late final Future<void> _restoreFuture;
   bool _restoreCompleted = false;
   bool _chatChangedBeforeRestore = false;
@@ -217,6 +229,14 @@ class AiController extends StateNotifier<AiState> {
     state = state.copyWith(downloadStates: states);
   }
 
+  /// Downloads the classifier model (Qwen 0.6B) using the unified model downloader.
+  void downloadClassifierModel() {
+    final classifierModel = AiModelInfo.findById(
+      AiUtilityClassifier.utilityModelId,
+    );
+    startDownload(classifierModel);
+  }
+
   void setClipboardContext(ClipboardItem? item) {
     if (!_restoreCompleted) _contextChangedBeforeRestore = true;
     state = state.copyWith(
@@ -233,6 +253,7 @@ class AiController extends StateNotifier<AiState> {
   void clearChat() {
     if (!_restoreCompleted) _chatChangedBeforeRestore = true;
     state = state.copyWith(chatMessages: []);
+    _deepAgent.resetSession();
     unawaited(_saveAfterRestore());
   }
 
@@ -327,6 +348,7 @@ class AiController extends StateNotifier<AiState> {
   Future<bool> requestToolConfirmation(
     String toolName,
     Map<String, dynamic> arguments,
+    {AiConfirmationRequest? confirmationRequest}
   ) {
     final completer = Completer<bool>();
     state = state.copyWith(
@@ -334,6 +356,7 @@ class AiController extends StateNotifier<AiState> {
         toolName: toolName,
         arguments: arguments,
         completer: completer,
+        confirmationRequest: confirmationRequest,
       ),
     );
     return completer.future.whenComplete(() {
@@ -380,6 +403,41 @@ class AiController extends StateNotifier<AiState> {
     );
     var activeContext = selectedContext;
 
+    final userMsg = AiChatMessage(
+      id: DateTime.now().microsecondsSinceEpoch.toString(),
+      role: AiMessageRole.user,
+      content: userText,
+      featureGroup: featureGroup,
+      selectedOption: selectedOption,
+      clipboardContext: activeContext,
+    );
+
+    final assistantMsgId = '${DateTime.now().microsecondsSinceEpoch}_ai';
+    final assistantMsg = AiChatMessage(
+      id: assistantMsgId,
+      role: AiMessageRole.assistant,
+      content: '',
+      isThinking: true,
+      featureGroup: featureGroup,
+      selectedOption: selectedOption,
+      clipboardContext: activeContext,
+    );
+
+    final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
+    state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
+
+    if (_deepAgent.canHandle(userText)) {
+      await _runDeepAgent(
+        request: AiUserRequest(
+          text: userText,
+          localeTag: _ref.read(settingsControllerProvider).language,
+          selectedClipboardIds: [if (activeContext != null) activeContext.id],
+        ),
+        assistantMessageId: assistantMsgId,
+      );
+      return;
+    }
+
     final targetContext = activeContext;
     if (targetContext != null &&
         targetContext.contentType == ClipboardContentType.image) {
@@ -424,6 +482,32 @@ class AiController extends StateNotifier<AiState> {
         content: imageInfoBuffer.toString(),
         normalizedContent: imageInfoBuffer.toString(),
       );
+
+      final currentMsgs = [...state.chatMessages];
+      final userIdx = currentMsgs.indexWhere((m) => m.id == userMsg.id);
+      if (userIdx != -1) {
+        currentMsgs[userIdx] = currentMsgs[userIdx].copyWith(
+          clipboardContext: activeContext,
+        );
+      }
+      final aiIdx = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
+      if (aiIdx != -1) {
+        currentMsgs[aiIdx] = currentMsgs[aiIdx].copyWith(
+          clipboardContext: activeContext,
+        );
+      }
+      state = state.copyWith(chatMessages: currentMsgs);
+
+      // Without a projector the model never sees the pixels, so say so instead
+      // of silently answering from OCR and looking broken.
+      if (!_modelForRequest().isMultimodalVision) {
+        _appendNotice(
+          assistantMsgId,
+          const AiLocalizedTitleBlock(
+            AiMessageTitle(kind: AiMessageTitleKind.imageNeedsVisionModel),
+          ),
+        );
+      }
     }
     final clipboardHistory = _ref
         .read(historyControllerProvider)
@@ -487,28 +571,6 @@ class AiController extends StateNotifier<AiState> {
         conversationContext: conversationContext,
       ),
     );
-    final userMsg = AiChatMessage(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      role: AiMessageRole.user,
-      content: userText,
-      featureGroup: featureGroup,
-      selectedOption: selectedOption,
-      clipboardContext: activeContext,
-    );
-
-    final assistantMsgId = '${DateTime.now().microsecondsSinceEpoch}_ai';
-    final assistantMsg = AiChatMessage(
-      id: assistantMsgId,
-      role: AiMessageRole.assistant,
-      content: '',
-      isThinking: true,
-      featureGroup: featureGroup,
-      selectedOption: selectedOption,
-      clipboardContext: activeContext,
-    );
-
-    final updatedMessages = [...state.chatMessages, userMsg, assistantMsg];
-    state = state.copyWith(chatMessages: updatedMessages, isGenerating: true);
 
     debug.log(
       level: AiDebugLevel.info,
@@ -635,6 +697,122 @@ class AiController extends StateNotifier<AiState> {
         await _saveConversation();
       }
     }
+  }
+
+  Future<void> _runDeepAgent({
+    required AiUserRequest request,
+    required String assistantMessageId,
+  }) async {
+    final blocks = <AiMessageBlock>[];
+    var resultSetIds = <String>[];
+    try {
+      await for (final event in _deepAgent.execute(request)) {
+        switch (event) {
+          case AiThinkingStarted():
+            _updateAssistant(assistantMessageId, isThinking: true);
+          case AiThinkingDelta(:final text):
+            final current = _messageById(assistantMessageId);
+            _updateAssistant(
+              assistantMessageId,
+              thinkingContent: '${current?.thinkingContent ?? ''}$text',
+            );
+          case AiTextDelta(:final text):
+            blocks.add(AiTextBlock(text));
+            _updateAssistant(assistantMessageId, blocks: List.of(blocks));
+          case AiUiBlockProduced(:final block):
+            blocks.add(block);
+            _updateAssistant(assistantMessageId, blocks: List.of(blocks));
+          case AiConfirmationRequested(:final request):
+            unawaited(
+              requestToolConfirmation(
+                request.actionCode,
+                {
+                  'count': request.itemIds.length,
+                  if (request.collectionName != null)
+                    'collection': request.collectionName,
+                },
+                confirmationRequest: request,
+              ).then(request.complete),
+            );
+          case AiActionCompleted(:final receipt):
+            blocks.add(AiActionReceiptBlock(receipt));
+            _updateAssistant(assistantMessageId, blocks: List.of(blocks));
+            await _ref.read(historyControllerProvider.notifier).reload();
+            await _ref.read(collectionsControllerProvider.notifier).reload();
+          case AiAgentCompleted(:final response):
+            if (response.blocks.isNotEmpty) {
+              blocks
+                ..clear()
+                ..addAll(response.blocks);
+            }
+            resultSetIds = response.resultSetIds;
+            _updateAssistant(
+              assistantMessageId,
+              blocks: List.of(blocks),
+              resultSetIds: resultSetIds,
+              isThinking: false,
+            );
+          case AiAgentFailed(:final code):
+            blocks.add(AiErrorBlock(code: code, localizedMessageKey: code));
+            _updateAssistant(
+              assistantMessageId,
+              blocks: List.of(blocks),
+              isThinking: false,
+            );
+          case AiToolStarted() || AiToolProgress():
+            break;
+        }
+      }
+    } finally {
+      _updateAssistant(
+        assistantMessageId,
+        blocks: List.of(blocks),
+        resultSetIds: resultSetIds,
+        isThinking: false,
+      );
+      state = state.copyWith(isGenerating: false);
+      await _saveConversation();
+    }
+  }
+
+  /// Adds an informational block to the assistant message without disturbing
+  /// any streamed text that arrives afterwards.
+  void _appendNotice(String assistantMessageId, AiMessageBlock block) {
+    final messages = [...state.chatMessages];
+    final index = messages.indexWhere(
+      (message) => message.id == assistantMessageId,
+    );
+    if (index < 0) return;
+    messages[index] = messages[index].copyWith(
+      blocks: [...messages[index].blocks, block],
+    );
+    state = state.copyWith(chatMessages: messages);
+  }
+
+  AiChatMessage? _messageById(String id) {
+    for (final message in state.chatMessages) {
+      if (message.id == id) return message;
+    }
+    return null;
+  }
+
+  void _updateAssistant(
+    String id, {
+    List<AiMessageBlock>? blocks,
+    List<String>? resultSetIds,
+    String? thinkingContent,
+    bool? isThinking,
+  }) {
+    final messages = [...state.chatMessages];
+    final index = messages.indexWhere((message) => message.id == id);
+    if (index < 0) return;
+    messages[index] = messages[index].copyWith(
+      blocks: blocks,
+      resultSetIds: resultSetIds,
+      thinkingContent: thinkingContent,
+      isThinking: isThinking,
+    );
+    state = state.copyWith(chatMessages: messages);
   }
 
   String _debugContextDetails({

@@ -77,14 +77,45 @@ class AiAgentOrchestrator {
   }
 
   /// Synthesizes the results of all steps into a single clear context text string.
-  String synthesizeContext(List<AiStepResult> results, String defaultContext) {
+  /// When [toolResultItems] are provided, formats them as structured clipboard
+  /// context with [clip:id] references so the LLM can produce accurate output.
+  String synthesizeContext(
+    List<AiStepResult> results,
+    String defaultContext, [
+    List<ClipboardItem> toolResultItems = const [],
+  ]) {
     if (results.isEmpty) return defaultContext;
+
+    // If we have concrete clipboard items from tools, build a proper [clip:id]
+    // formatted context that the LLM and AiResponseVerifier can both process.
+    if (toolResultItems.isNotEmpty) {
+      final buffer = StringBuffer();
+      for (var i = 0; i < toolResultItems.length; i++) {
+        final item = toolResultItems[i];
+        var content = item.content.trim();
+        if (item.contentType.name == 'image') {
+          final fileName = item.imagePath?.split('/').last ?? 'image.png';
+          content = content.isEmpty || content == '[Image]'
+              ? '[image file_name="$fileName"]'
+              : '[image file_name="$fileName" ocr="$content"]';
+        }
+        if (content.isEmpty) continue;
+        final app = item.sourceAppName ?? 'Unknown';
+        buffer.writeln(
+          '[clip:${item.id}] (${item.contentType.name}) $app: $content',
+        );
+      }
+      return buffer.toString().trim();
+    }
+
+    // Single step with no items: use step output text directly
     if (results.length == 1 && results.first.items.isEmpty) {
       return results.first.output.isNotEmpty
           ? results.first.output
           : defaultContext;
     }
 
+    // Multi-step: combine all step outputs labelled by step id and tool name
     final buffer = StringBuffer();
     for (final result in results) {
       buffer.writeln('[step:${result.stepId} tool:${result.tool}]');

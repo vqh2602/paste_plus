@@ -18,6 +18,7 @@ import '../domain/clipboard_item.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
+import 'widgets/note_edit_dialog.dart';
 import 'widgets/mobile_sidebar_sheet.dart';
 import 'widgets/sidebar_widget.dart';
 
@@ -207,6 +208,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
           CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context, 'note'),
+            child: Text(
+              item.note?.isNotEmpty == true
+                  ? context.l10n.edit_note
+                  : context.l10n.add_note,
+            ),
+          ),
+          CupertinoActionSheetAction(
             onPressed: () => Navigator.pop(context, 'ask_ai'),
             child: Text(context.l10n.ask_ai),
           ),
@@ -233,7 +242,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (!context.mounted || action == null) return;
 
-    if (action == 'ask_ai') {
+    if (action == 'note') {
+      await showNoteEditDialog(context, ref, item);
+    } else if (action == 'ask_ai') {
       ref.read(aiControllerProvider.notifier).setClipboardContext(item);
       await ref.read(desktopIntegrationProvider).showAiWindow();
     } else if (action == 'ocr') {
@@ -271,7 +282,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     } else if (action == 'copy') {
       historyNotifier.copy(item);
     } else if (action == 'pin') {
-      historyNotifier.togglePinned(item);
+      final wasPinned = item.isPinned;
+      await historyNotifier.togglePinned(item);
+      if (context.mounted) {
+        showCupertinoNotice(
+          context,
+          wasPinned ? context.l10n.unpin : context.l10n.pinned,
+        );
+      }
     } else if (action == 'collection') {
       onAddToCollection(item);
     } else if (action == 'delete') {
@@ -358,11 +376,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           _searchFocusNode.requestFocus(),
       shortcutActivator(
         decodeShortcut(settings.togglePinShortcut, ShortcutAction.togglePin),
-      ): () {
+      ): () async {
         final selected = state.selectedItemId;
         if (selected != null) {
           final item = state.visibleItems.firstWhere((it) => it.id == selected);
-          ref.read(historyControllerProvider.notifier).togglePinned(item);
+          final wasPinned = item.isPinned;
+          await ref.read(historyControllerProvider.notifier).togglePinned(item);
+          if (mounted) {
+            showCupertinoNotice(
+              context,
+              wasPinned ? context.l10n.unpin : context.l10n.pinned,
+            );
+          }
         }
       },
       shortcutActivator(

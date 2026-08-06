@@ -337,10 +337,24 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   }
 
   Future<void> togglePinned(ClipboardItem item) async {
-    final changed = item.copyWith(isPinned: !item.isPinned);
-    await _repository.setPinned(item.id, changed.isPinned);
-    await onItemMetadataChanged?.call(changed);
+    final newPinState = !item.isPinned;
+    await _repository.setPinned(item.id, newPinState);
+    await onItemMetadataChanged?.call(item.copyWith(isPinned: newPinState));
     await reload();
+  }
+
+  Future<void> updateNote(ClipboardItem item, String? note) async {
+    final trimmed = note?.trim();
+    final value = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    final updated = item.copyWith(note: value, clearNote: value == null);
+    await _repository.updateNote(item.id, value);
+    state = state.copyWith(
+      items: [
+        for (final current in state.items)
+          if (current.id == item.id) updated else current,
+      ],
+    );
+    await onItemMetadataChanged?.call(updated);
   }
 
   Future<void> delete(ClipboardItem item) async {
@@ -367,6 +381,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
         .where((current) => current.id == itemId)
         .firstOrNull;
     if (item != null) await onItemMetadataChanged?.call(item);
+    await reload();
   }
 
   Future<Set<String>> collectionIdsForItem(String itemId) {

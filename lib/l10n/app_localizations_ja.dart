@@ -114,6 +114,21 @@ class AppLocalizationsJa extends AppLocalizations {
   String get add_to_collection => 'コレクションに追加';
 
   @override
+  String get add_note => 'メモを追加';
+
+  @override
+  String get edit_note => 'メモを編集';
+
+  @override
+  String get note => 'メモ';
+
+  @override
+  String get no_note_yet => 'メモはありません...';
+
+  @override
+  String get type_note_placeholder => 'メモを入力（自動保存）...';
+
+  @override
   String get extract_ocr => 'テキスト抽出 (OCR)';
 
   @override
@@ -1414,4 +1429,74 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get ai_performance_smart => 'スマート';
+
+  @override
+  String get ai_result_count => '@count 件見つかりました。';
+
+  @override
+  String get ai_result_url_count => 'リンクを含む項目が @count 件見つかりました。';
+
+  @override
+  String get ai_result_image_count => '画像が @count 件見つかりました。';
+
+  @override
+  String get ai_result_empty => '一致するクリップボード項目はありません。';
+
+  @override
+  String get ai_result_show_more => 'さらに結果があります';
+
+  @override
+  String get ai_confirm_action_title => '操作の確認';
+
+  @override
+  String get ai_confirm_pin => 'この @count 件をピン留めしますか？';
+
+  @override
+  String get ai_confirm_unpin => 'この @count 件のピン留めを外しますか？';
+
+  @override
+  String get ai_confirm_delete => 'この @count 件を削除しますか？';
+
+  @override
+  String get ai_confirm_add_collection => 'この @count 件をコレクション「@name」に追加しますか？';
+
+  @override
+  String get ai_confirm_generic => 'この操作を @count 件に適用しますか？';
+
+  @override
+  String get ai_receipt_pin => '@count 件をピン留めしました。';
+
+  @override
+  String get ai_receipt_unpin => '@count 件のピン留めを外しました。';
+
+  @override
+  String get ai_receipt_delete => '@count 件を削除しました。';
+
+  @override
+  String get ai_receipt_collection => '@count 件をコレクションに追加しました。';
+
+  @override
+  String get ai_receipt_generic => '@count 件を更新しました。';
+
+  @override
+  String get ai_error_reference_not_found => 'どの項目を指しているか判別できません。まず検索してください。';
+
+  @override
+  String get ai_error_collection_not_found => 'そのコレクションは存在しません。';
+
+  @override
+  String get ai_error_collection_name_required => 'コレクション名を教えてください。';
+
+  @override
+  String get ai_error_generic => '操作を完了できませんでした。';
+
+  @override
+  String get ai_saved_result_set => '保存されたクリップボード結果（@count 件）。';
+
+  @override
+  String get confirm => '確認';
+
+  @override
+  String get ai_image_needs_vision_model =>
+      'このモデルは画像を読み取れません。OCRテキストとファイル情報のみで回答しました。画像自体を解析するにはビジョン対応モデル（Gemma 4 12B Vision または Qwen2.5-VL 7B）をダウンロードしてください。';
 }

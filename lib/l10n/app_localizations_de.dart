@@ -114,6 +114,22 @@ class AppLocalizationsDe extends AppLocalizations {
   String get add_to_collection => 'Zur Sammlung hinzufügen';
 
   @override
+  String get add_note => 'Notiz hinzufügen';
+
+  @override
+  String get edit_note => 'Notiz bearbeiten';
+
+  @override
+  String get note => 'Notiz';
+
+  @override
+  String get no_note_yet => 'Noch keine Notiz...';
+
+  @override
+  String get type_note_placeholder =>
+      'Notiz eingeben (automatisch gespeichert)...';
+
+  @override
   String get extract_ocr => 'Text extrahieren (OCR)';
 
   @override
@@ -1489,4 +1505,81 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get ai_performance_smart => 'Klug';
+
+  @override
+  String get ai_result_count => '@count Einträge gefunden.';
+
+  @override
+  String get ai_result_url_count => '@count Einträge mit Links gefunden.';
+
+  @override
+  String get ai_result_image_count => '@count Bilder gefunden.';
+
+  @override
+  String get ai_result_empty =>
+      'Keine passenden Zwischenablage-Einträge gefunden.';
+
+  @override
+  String get ai_result_show_more => 'Weitere Ergebnisse verfügbar';
+
+  @override
+  String get ai_confirm_action_title => 'Aktion bestätigen';
+
+  @override
+  String get ai_confirm_pin => 'Diese @count Einträge anheften?';
+
+  @override
+  String get ai_confirm_unpin => 'Anheften dieser @count Einträge lösen?';
+
+  @override
+  String get ai_confirm_delete => 'Diese @count Einträge löschen?';
+
+  @override
+  String get ai_confirm_add_collection =>
+      'Diese @count Einträge zur Sammlung \"@name\" hinzufügen?';
+
+  @override
+  String get ai_confirm_generic => 'Diese Aktion auf @count Einträge anwenden?';
+
+  @override
+  String get ai_receipt_pin => '@count Einträge angeheftet.';
+
+  @override
+  String get ai_receipt_unpin => 'Anheften von @count Einträgen gelöst.';
+
+  @override
+  String get ai_receipt_delete => '@count Einträge gelöscht.';
+
+  @override
+  String get ai_receipt_collection =>
+      '@count Einträge zur Sammlung hinzugefügt.';
+
+  @override
+  String get ai_receipt_generic => '@count Einträge aktualisiert.';
+
+  @override
+  String get ai_error_reference_not_found =>
+      'Ich konnte nicht erkennen, welche Einträge gemeint sind. Bitte zuerst suchen.';
+
+  @override
+  String get ai_error_collection_not_found => 'Diese Sammlung existiert nicht.';
+
+  @override
+  String get ai_error_collection_name_required =>
+      'Bitte nenne den Namen der Sammlung.';
+
+  @override
+  String get ai_error_generic =>
+      'Die Aktion konnte nicht abgeschlossen werden.';
+
+  @override
+  String get ai_saved_result_set =>
+      'Gespeichertes Zwischenablage-Ergebnis (@count Einträge).';
+
+  @override
+  String get confirm => 'Bestätigen';
+
+  @override
+  String get ai_image_needs_vision_model =>
+      'Dieses Modell kann keine Bilder lesen. Die Antwort beruht nur auf OCR-Text und Dateiangaben. Lade ein Vision-Modell (Gemma 4 12B Vision oder Qwen2.5-VL 7B), um das Bild selbst zu analysieren.';
 }

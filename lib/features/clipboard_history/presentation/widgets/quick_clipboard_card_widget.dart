@@ -26,7 +26,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
   final int number;
   final bool selected;
   final VoidCallback onTap;
-  final VoidCallback onPin;
+  final Future<void> Function() onPin;
   final ValueChanged<BuildContext> onActions;
 
   @override
@@ -39,240 +39,318 @@ class QuickClipboardCardWidget extends ConsumerWidget {
 
     return SizedBox(
       width: 292,
-      child: CupertinoPressable(
-        onPressed: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          decoration: BoxDecoration(
-            color: resolveColor(context, ClipFlowColors.surface),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: selected
-                  ? CupertinoTheme.of(context).primaryColor
-                  : resolveColor(context, ClipFlowColors.border),
-              width: selected ? 2.0 : 1.0,
-            ),
-            boxShadow: selected
-                ? [
-                    BoxShadow(
-                      color: CupertinoTheme.of(
-                        context,
-                      ).primaryColor.withValues(alpha: 0.35),
-                      blurRadius: 14,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [
-                    BoxShadow(
-                      color: const Color(0xFF000000).withValues(alpha: 0.04),
-                      blurRadius: 6,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        decoration: BoxDecoration(
+          color: resolveColor(context, ClipFlowColors.surface),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? CupertinoTheme.of(context).primaryColor
+                : resolveColor(context, ClipFlowColors.border),
+            width: selected ? 2.0 : 1.0,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                height: 50,
-                padding: const EdgeInsets.symmetric(horizontal: 13),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: CupertinoTheme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 4),
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      _typeIcon(item.contentType),
-                      color: CupertinoColors.white,
-                      size: 17,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _typeName(context, item.contentType),
-                        style: const TextStyle(
-                          color: CupertinoColors.white,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    CupertinoIconControl(
-                      icon: item.isPinned
-                          ? CupertinoIcons.pin_fill
-                          : CupertinoIcons.pin,
-                      color: CupertinoColors.white,
-                      size: 16,
-                      onPressed: onPin,
-                    ),
-                    CupertinoIconControl(
-                      icon: CupertinoIcons.ellipsis,
-                      color: CupertinoColors.white,
-                      size: 17,
-                      onPressed: () => onActions(context),
-                    ),
-                  ],
+                ]
+              : [
+                  BoxShadow(
+                    color: const Color(0xFF000000).withValues(alpha: 0.04),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 50,
+              padding: const EdgeInsets.symmetric(horizontal: 13),
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(15),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(13),
-                  child: item.contentType == ClipboardContentType.image
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(9),
-                                child:
-                                    (item.imagePath != null &&
-                                        File(item.imagePath!).existsSync())
-                                    ? Image.file(
-                                        File(item.imagePath!),
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      )
-                                    : CachedNetworkImage(
-                                        url: item.content,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                      ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CupertinoPressable(
+                      onPressed: onTap,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _typeIcon(item.contentType),
+                            color: CupertinoColors.white,
+                            size: 17,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _typeName(context, item.contentType),
+                              style: const TextStyle(
+                                color: CupertinoColors.white,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            if (item.content.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              HighlightedText(
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  CupertinoIconControl(
+                    icon:
+                        (ref.watch(pinnedStateOverrideProvider)[item.id] ??
+                                item.isPinned)
+                            ? CupertinoIcons.pin_fill
+                            : CupertinoIcons.pin,
+                    color: CupertinoColors.white,
+                    size: 16,
+                    onPressed: () async {
+                      final isCurrentlyPinned =
+                          ref.read(pinnedStateOverrideProvider)[item.id] ??
+                          item.isPinned;
+                      ref
+                          .read(pinnedStateOverrideProvider.notifier)
+                          .setPinned(item.id, !isCurrentlyPinned);
+                      await onPin();
+                      // Clear optimistic override so DB value drives the UI
+                      ref
+                          .read(pinnedStateOverrideProvider.notifier)
+                          .clearPinned(item.id);
+                    },
+                  ),
+                  CupertinoIconControl(
+                    icon: CupertinoIcons.ellipsis,
+                    color: CupertinoColors.white,
+                    size: 17,
+                    onPressed: () => onActions(context),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: CupertinoPressable(
+                onPressed: onTap,
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(13),
+                        child: item.contentType == ClipboardContentType.image
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: resolveColor(
+                                          context,
+                                          ClipFlowColors.surface,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          9,
+                                        ),
+                                        border: Border.all(
+                                          color: resolveColor(
+                                            context,
+                                            ClipFlowColors.border,
+                                          ),
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          8,
+                                        ),
+                                        child:
+                                            (item.imagePath != null &&
+                                                File(
+                                                  item.imagePath!,
+                                                ).existsSync())
+                                            ? Image.file(
+                                                File(item.imagePath!),
+                                                width: double.infinity,
+                                                fit: BoxFit.contain,
+                                              )
+                                            : CachedNetworkImage(
+                                                url: item.content,
+                                                width: double.infinity,
+                                                fit: BoxFit.contain,
+                                              ),
+                                      ),
+                                    ),
+                                  ),
+                                  if (item.content.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    HighlightedText(
+                                      text: item.content,
+                                      query: query,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: ClipFlowColors.secondaryText,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              )
+                            : isImageUrl(item.content)
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: resolveColor(
+                                          context,
+                                          ClipFlowColors.surface,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          9,
+                                        ),
+                                        border: Border.all(
+                                          color: resolveColor(
+                                            context,
+                                            ClipFlowColors.border,
+                                          ),
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(
+                                          8,
+                                        ),
+                                        child: CachedNetworkImage(
+                                          url: item.content,
+                                          width: double.infinity,
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  HighlightedText(
+                                    text: item.content,
+                                    query: query,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: ClipFlowColors.secondaryText,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : parsedColor != null
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Container(
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: parsedColor,
+                                        borderRadius: BorderRadius.circular(
+                                          9,
+                                        ),
+                                        border: Border.all(
+                                          color: resolveColor(
+                                            context,
+                                            ClipFlowColors.border,
+                                          ),
+                                          width: 1.0,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  HighlightedText(
+                                    text: item.content,
+                                    query: query,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: ClipFlowColors.secondaryText,
+                                      fontFamily: 'monospace',
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : HighlightedText(
                                 text: item.content,
                                 query: query,
-                                maxLines: 1,
+                                maxLines: 6,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: ClipFlowColors.secondaryText,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  height: 1.45,
+                                  color:
+                                      item.contentType ==
+                                          ClipboardContentType.url
+                                      ? CupertinoColors.activeBlue
+                                      : null,
+                                  decoration:
+                                      item.contentType ==
+                                          ClipboardContentType.url
+                                      ? TextDecoration.underline
+                                      : TextDecoration.none,
+                                  decorationColor:
+                                      item.contentType ==
+                                          ClipboardContentType.url
+                                      ? CupertinoColors.activeBlue.withValues(
+                                          alpha: 0.4,
+                                        )
+                                      : null,
+                                  fontFamily:
+                                      item.contentType ==
+                                              ClipboardContentType.code ||
+                                          item.contentType ==
+                                              ClipboardContentType.json
+                                      ? 'monospace'
+                                      : null,
                                 ),
                               ),
-                            ],
-                          ],
-                        )
-                      : isImageUrl(item.content)
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(9),
-                                child: CachedNetworkImage(
-                                  url: item.content,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            HighlightedText(
-                              text: item.content,
-                              query: query,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: ClipFlowColors.secondaryText,
-                              ),
-                            ),
-                          ],
-                        )
-                      : parsedColor != null
-                      ? Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Container(
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  color: parsedColor,
-                                  borderRadius: BorderRadius.circular(9),
-                                  border: Border.all(
-                                    color: resolveColor(
-                                      context,
-                                      ClipFlowColors.border,
-                                    ),
-                                    width: 1.0,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            HighlightedText(
-                              text: item.content,
-                              query: query,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: ClipFlowColors.secondaryText,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                          ],
-                        )
-                      : HighlightedText(
-                          text: item.content,
-                          query: query,
-                          maxLines: 6,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 13,
-                            height: 1.45,
-                            color: item.contentType == ClipboardContentType.url
-                                ? CupertinoColors.activeBlue
-                                : null,
-                            decoration:
-                                item.contentType == ClipboardContentType.url
-                                ? TextDecoration.underline
-                                : TextDecoration.none,
-                            decorationColor:
-                                item.contentType == ClipboardContentType.url
-                                ? CupertinoColors.activeBlue.withValues(
-                                    alpha: 0.4,
-                                  )
-                                : null,
-                            fontFamily:
-                                item.contentType == ClipboardContentType.code ||
-                                    item.contentType ==
-                                        ClipboardContentType.json
-                                ? 'monospace'
-                                : null,
-                          ),
-                        ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.sourceAppName ?? context.l10n.this_device,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: ClipFlowColors.secondaryText,
-                        ),
                       ),
                     ),
-                    if (number <= 9)
-                      Text(
-                        '${Platform.isMacOS ? '⌘' : 'Ctrl+'}$number',
-                        style: const TextStyle(fontSize: 11),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.sourceAppName ?? context.l10n.this_device,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ),
+                          if (number <= 9)
+                            Text(
+                              '${Platform.isMacOS ? '⌘' : 'Ctrl+'}$number',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                        ],
                       ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

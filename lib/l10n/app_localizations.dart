@@ -314,6 +314,36 @@ abstract class AppLocalizations {
   /// **'Add to Collection'**
   String get add_to_collection;
 
+  /// No description provided for @add_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Add note'**
+  String get add_note;
+
+  /// No description provided for @edit_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit note'**
+  String get edit_note;
+
+  /// No description provided for @note.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get note;
+
+  /// No description provided for @no_note_yet.
+  ///
+  /// In en, this message translates to:
+  /// **'No note yet...'**
+  String get no_note_yet;
+
+  /// No description provided for @type_note_placeholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Type note (auto-saves)...'**
+  String get type_note_placeholder;
+
   /// No description provided for @extract_ocr.
   ///
   /// In en, this message translates to:
@@ -2887,6 +2917,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Smart'**
   String get ai_performance_smart;
+
+  /// No description provided for @ai_result_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Found @count items.'**
+  String get ai_result_count;
+
+  /// No description provided for @ai_result_url_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Found @count items with links.'**
+  String get ai_result_url_count;
+
+  /// No description provided for @ai_result_image_count.
+  ///
+  /// In en, this message translates to:
+  /// **'Found @count images.'**
+  String get ai_result_image_count;
+
+  /// No description provided for @ai_result_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching clipboard items found.'**
+  String get ai_result_empty;
+
+  /// No description provided for @ai_result_show_more.
+  ///
+  /// In en, this message translates to:
+  /// **'More results available'**
+  String get ai_result_show_more;
+
+  /// No description provided for @ai_confirm_action_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm action'**
+  String get ai_confirm_action_title;
+
+  /// No description provided for @ai_confirm_pin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin these @count clipboard items?'**
+  String get ai_confirm_pin;
+
+  /// No description provided for @ai_confirm_unpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpin these @count clipboard items?'**
+  String get ai_confirm_unpin;
+
+  /// No description provided for @ai_confirm_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete these @count clipboard items?'**
+  String get ai_confirm_delete;
+
+  /// No description provided for @ai_confirm_add_collection.
+  ///
+  /// In en, this message translates to:
+  /// **'Add these @count items to collection \"@name\"?'**
+  String get ai_confirm_add_collection;
+
+  /// No description provided for @ai_confirm_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply this action to @count items?'**
+  String get ai_confirm_generic;
+
+  /// No description provided for @ai_receipt_pin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned @count items.'**
+  String get ai_receipt_pin;
+
+  /// No description provided for @ai_receipt_unpin.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpinned @count items.'**
+  String get ai_receipt_unpin;
+
+  /// No description provided for @ai_receipt_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted @count items.'**
+  String get ai_receipt_delete;
+
+  /// No description provided for @ai_receipt_collection.
+  ///
+  /// In en, this message translates to:
+  /// **'Added @count items to the collection.'**
+  String get ai_receipt_collection;
+
+  /// No description provided for @ai_receipt_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated @count items.'**
+  String get ai_receipt_generic;
+
+  /// No description provided for @ai_error_reference_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'I could not tell which clipboard items you meant. Please search first.'**
+  String get ai_error_reference_not_found;
+
+  /// No description provided for @ai_error_collection_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'That collection does not exist.'**
+  String get ai_error_collection_not_found;
+
+  /// No description provided for @ai_error_collection_name_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Please tell me the collection name.'**
+  String get ai_error_collection_name_required;
+
+  /// No description provided for @ai_error_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'The action could not be completed.'**
+  String get ai_error_generic;
+
+  /// No description provided for @ai_saved_result_set.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved clipboard result (@count items).'**
+  String get ai_saved_result_set;
+
+  /// No description provided for @confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm'**
+  String get confirm;
+
+  /// No description provided for @ai_image_needs_vision_model.
+  ///
+  /// In en, this message translates to:
+  /// **'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.'**
+  String get ai_image_needs_vision_model;
 }
 
 class _AppLocalizationsDelegate

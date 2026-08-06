@@ -346,3 +346,43 @@ final aiControllerProvider = StateNotifierProvider<AiController, AiState>((
     ref,
   );
 });
+
+final deletedItemIdsProvider =
+    StateNotifierProvider<DeletedItemIdsNotifier, Set<String>>(
+      (ref) => DeletedItemIdsNotifier(),
+    );
+
+class DeletedItemIdsNotifier extends StateNotifier<Set<String>> {
+  DeletedItemIdsNotifier() : super(const {});
+
+  void markDeleted(String id) {
+    state = {...state, id};
+  }
+
+  void markAllDeleted(Iterable<String> ids) {
+    state = {...state, ...ids};
+  }
+}
+
+final pinnedStateOverrideProvider =
+    StateNotifierProvider<PinnedStateOverrideNotifier, Map<String, bool>>(
+      (ref) => PinnedStateOverrideNotifier(),
+    );
+
+class PinnedStateOverrideNotifier extends StateNotifier<Map<String, bool>> {
+  PinnedStateOverrideNotifier() : super(const {});
+
+  void setPinned(String id, bool isPinned) {
+    state = {...state, id: isPinned};
+  }
+
+  void clearPinned(String id) {
+    if (state.containsKey(id)) {
+      final next = Map<String, bool>.from(state);
+      next.remove(id);
+      state = next;
+    }
+  }
+}
+
+

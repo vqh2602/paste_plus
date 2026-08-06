@@ -25,13 +25,19 @@ class AiClipboardRelevanceRanker {
     final asksForLink =
         preferImageUrls ||
         RegExp(
-          r'https?://|www\.',
+          r'https?://|www\.|link|url|liên kết|trang web|địa chỉ',
           caseSensitive: false,
         ).hasMatch(normalizedPrompt);
     final requestedExtensions = _imageExtensions
         .where((extension) => normalizedPrompt.contains(extension.substring(1)))
         .toSet();
-    final asksForImage = preferImageUrls || requestedExtensions.isNotEmpty;
+    final asksForImage =
+        preferImageUrls ||
+        requestedExtensions.isNotEmpty ||
+        RegExp(
+          r'ảnh|hình|image|photo|picture|pic|png|jpg|jpeg|gif|webp',
+          caseSensitive: false,
+        ).hasMatch(normalizedPrompt);
 
     final ranked = <({ClipboardItem item, double score, int order})>[];
     var order = 0;
@@ -48,39 +54,37 @@ class AiClipboardRelevanceRanker {
 
       final isUrlType = item.contentType == ClipboardContentType.url;
       final containsHttpUrl = RegExp(
-        r'https?://',
+        r'https?://|www\.',
         caseSensitive: false,
       ).hasMatch(content);
-      // final looksLikeUrl = isUrlType || containsHttpUrl;
       final imageLink = isImageUrl(content);
 
-      if (asksForLink) {
-        if (isUrlType) {
-          lexicalScore += 15.0;
-        } else if (containsHttpUrl) {
-          lexicalScore += 3.0;
-        }
-      }
-
-      if (asksForImage) {
-        if (item.contentType == ClipboardContentType.image) {
-          lexicalScore += 12.0;
-        }
-      }
+      final isDirectUrl =
+          isUrlType ||
+          content.startsWith('http://') ||
+          content.startsWith('https://');
 
       if (asksForLink && asksForImage) {
-        if (isUrlType && imageLink) {
-          lexicalScore += 20.0;
+        if (imageLink && isDirectUrl) {
+          lexicalScore += 50.0;
         } else if (imageLink) {
-          lexicalScore += 8.0;
+          lexicalScore += 35.0;
+        } else if (isUrlType || containsHttpUrl) {
+          lexicalScore += 30.0;
+        } else if (item.contentType == ClipboardContentType.image) {
+          lexicalScore += 25.0;
         }
-      } else if (asksForImage && imageLink) {
-        lexicalScore += 12.0;
-      }
-
-      for (final extension in requestedExtensions) {
-        if (normalizedContent.contains(extension.substring(1))) {
-          lexicalScore += 10.0;
+      } else if (asksForLink) {
+        if (isUrlType || containsHttpUrl) {
+          lexicalScore += 40.0;
+        } else {
+          lexicalScore -= 20.0;
+        }
+      } else if (asksForImage) {
+        if (item.contentType == ClipboardContentType.image || imageLink) {
+          lexicalScore += 40.0;
+        } else {
+          lexicalScore -= 20.0;
         }
       }
 
@@ -106,17 +110,22 @@ class AiClipboardRelevanceRanker {
 
   bool isImageUrl(String content) {
     final lower = content.toLowerCase().trim();
-    final looksLikeUrl = RegExp(
+    final containsUrl = RegExp(
       r'https?://',
       caseSensitive: false,
     ).hasMatch(lower);
-    if (!looksLikeUrl) return false;
+    if (!containsUrl) return false;
 
     final hasImageExt = _imageExtensions.any((ext) => lower.contains(ext));
     final hasImageDomain = _imageHostDomains.any(
       (domain) => lower.contains(domain),
     );
-    return hasImageExt || hasImageDomain;
+    final hasImagePathPattern = RegExp(
+      r'/(images?|img|photos?|pics?|pictures?|avatars?)/|\.(png|jpg|jpeg|gif|webp|svg|heic|avif)(\?|$)',
+      caseSensitive: false,
+    ).hasMatch(lower);
+
+    return hasImageExt || hasImageDomain || hasImagePathPattern;
   }
 
   String _normalize(String value) =>

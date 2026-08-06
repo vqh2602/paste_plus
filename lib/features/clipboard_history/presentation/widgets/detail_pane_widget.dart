@@ -8,12 +8,15 @@ import 'package:intl/intl.dart';
 import '../../../../app/providers.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/ui/image_zoom_viewer.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../../ai/domain/ai_feature_action.dart';
 import '../../../ai/domain/ai_feature_request.dart';
 import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+
+import 'note_edit_dialog.dart';
 
 class DetailPaneWidget extends ConsumerStatefulWidget {
   const DetailPaneWidget({super.key});
@@ -130,6 +133,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                           ClipboardImagePreviewWidget(
                             path: item.imagePath ?? item.content,
                             height: 260,
+                            item: item,
                           ),
                           if (item.content.isNotEmpty) ...[
                             const SizedBox(height: 12),
@@ -154,6 +158,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                           ClipboardImagePreviewWidget(
                             path: item.content,
                             height: 260,
+                            item: item,
                           ),
                           const SizedBox(height: 12),
                           Text(
@@ -232,6 +237,118 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                       ),
               ),
             ),
+            if (item.note != null && item.note!.trim().isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: resolveColor(context, ClipFlowColors.surface),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: resolveColor(context, ClipFlowColors.border),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.pencil,
+                          size: 13,
+                          color: resolveColor(
+                            context,
+                            ClipFlowColors.secondaryText,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          context.l10n.note,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: resolveColor(
+                              context,
+                              ClipFlowColors.secondaryText,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        CupertinoPressable(
+                          onPressed: () =>
+                              showNoteEditDialog(context, ref, item!),
+                          child: Text(
+                            context.l10n.edit_note,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: CupertinoColors.activeBlue,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 60,
+                      ),
+                      child: CupertinoScrollbar(
+                        child: SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Text(
+                            item.note!,
+                            style: TextStyle(
+                              fontSize: 13,
+                              height: 1.4,
+                              color: resolveColor(
+                                context,
+                                ClipFlowColors.secondaryText,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ] else ...[
+              const SizedBox(height: 8),
+              CupertinoPressable(
+                onPressed: () => showNoteEditDialog(context, ref, item!),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        CupertinoIcons.pencil,
+                        size: 13,
+                        color: resolveColor(
+                          context,
+                          ClipFlowColors.secondaryText,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        context.l10n.add_note,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: resolveColor(
+                            context,
+                            ClipFlowColors.secondaryText,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
             const CupertinoDivider(),
             const SizedBox(height: 12),
             MetadataRowWidget(
@@ -398,36 +515,86 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
   };
 }
 
-class ClipboardImagePreviewWidget extends StatelessWidget {
+class ClipboardImagePreviewWidget extends ConsumerWidget {
   const ClipboardImagePreviewWidget({
     super.key,
     required this.path,
     required this.height,
+    this.item,
   });
 
   final String path;
   final double height;
+  final ClipboardItem? item;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isOnline = isImageUrl(path);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: isOnline
-          ? CachedNetworkImage(
-              url: path,
-              height: height,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            )
-          : (File(path).existsSync()
-                ? Image.file(
-                    File(path),
-                    height: height,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  )
-                : Center(child: Text(context.l10n.image_not_found))),
+    final fileExists = !isOnline && File(path).existsSync();
+
+    return CupertinoPressable(
+      onPressed: () {
+        showImageZoomDialog(
+          context,
+          path: path,
+          title: item?.sourceAppName != null
+              ? 'Ảnh từ ${item!.sourceAppName}'
+              : 'Xem hình ảnh',
+          onCopy: item != null
+              ? () => ref.read(historyControllerProvider.notifier).copy(item!)
+              : null,
+        );
+      },
+      child: Stack(
+        children: [
+          Container(
+            height: height,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: resolveColor(context, ClipFlowColors.surface),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: resolveColor(context, ClipFlowColors.border),
+                width: 1.0,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(9),
+              child: isOnline
+                  ? CachedNetworkImage(
+                      url: path,
+                      height: height,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    )
+                  : (fileExists
+                        ? Image.file(
+                            File(path),
+                            height: height,
+                            width: double.infinity,
+                            fit: BoxFit.contain,
+                          )
+                        : Center(child: Text(context.l10n.image_not_found))),
+            ),
+          ),
+          Positioned(
+            right: 8,
+            bottom: 8,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: CupertinoColors.black.withValues(alpha: 0.55),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                CupertinoIcons.arrow_up_left_arrow_down_right,
+                size: 13,
+                color: CupertinoColors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

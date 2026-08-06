@@ -81,6 +81,9 @@ class FakeToolRepository implements ClipboardRepository {
   Future<void> updateMetadata(String id, String metadataJson) async {}
 
   @override
+  Future<void> updateNote(String id, String? note) async {}
+
+  @override
   Future<void> clearHistory({bool includePinned = false}) async {}
 
   @override

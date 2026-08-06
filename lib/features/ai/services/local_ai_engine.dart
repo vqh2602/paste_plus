@@ -96,19 +96,15 @@ class LocalAiEngine {
         );
     final initialPlan = classification == null || requestPlan != null
         ? legacyPlan
-        : AiRequestPlan(
-            intent: classification.intent,
-            useClipboardHistory:
-                classification.needsClipboard && clipboardContext == null,
-            useSelectedClipboard:
-                classification.needsClipboard && clipboardContext != null,
-            maxOutputTokens: resolveClassifiedOutputTokens(
-              classification: classification,
-              prompt: prompt,
-              featureGroup: featureGroup,
-            ),
-            responseLanguageTag: responseLanguageTag ??
-                classification.languageTag,
+        : _plannerService.createPlan(
+            prompt: prompt,
+            hasSelectedClipboard: clipboardContext != null,
+            hasConversation:
+                conversationContext.isNotEmpty || conversationMessages.isNotEmpty,
+            featureGroup: featureGroup,
+            appLanguageTag: appLanguageTag,
+            resolvedResponseLanguageTag: responseLanguageTag,
+            classification: classification,
           );
 
     var effectivePlan = initialPlan;
@@ -202,6 +198,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     }
 
     final executionPlan = effectivePlan.executionPlan;
+    var toolResultItems = <ClipboardItem>[];
     if (executionPlan != null && executionPlan.hasExecutableTools) {
       final stepResults = await _agentOrchestrator.executePlan(
         plan: executionPlan,
@@ -210,10 +207,58 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
         clipboardHistory: effectiveHistory,
         onConfirmationRequested: onConfirmationRequested,
       );
+      // Collect items returned by tools (e.g. search_clipboard results)
+      for (final r in stepResults) {
+        toolResultItems.addAll(r.items);
+      }
+      // Synthesize tool output into contextText — preserve this, do NOT overwrite later
       contextText = _agentOrchestrator.synthesizeContext(
         stepResults,
         contextText,
+        toolResultItems,
       );
+      _debug?.log(
+        level: AiDebugLevel.info,
+        stage: 'agent',
+        requestId: debugRequestId,
+        message: 'Agent tool execution complete',
+        details:
+            'steps: ${stepResults.length}\n'
+            'toolResultItems: ${toolResultItems.length}\n'
+            'contextLength: ${contextText.length}',
+      );
+
+      // ── SHORTCUT: For pure search tasks, stream results directly without LLM ──
+      // This makes search instant and 100% accurate — no JSON hallucination possible.
+      final isSearchIntent =
+          effectivePlan.intent == AiRequestIntent.clipboardSearch;
+      final hasNoConversation = conversationMessages.isEmpty &&
+          conversationContext.isEmpty;
+
+      if (isSearchIntent && hasNoConversation) {
+        final responseLanguage =
+            effectivePlan.responseLanguageTag.isNotEmpty
+                ? effectivePlan.responseLanguageTag
+                : 'vi';
+        final output = _responseVerifier.formatToolResults(
+          items: toolResultItems,
+          responseLanguage: responseLanguage,
+        );
+        _debug?.log(
+          level: AiDebugLevel.success,
+          stage: 'shortcut',
+          requestId: debugRequestId,
+          message: 'Direct tool result streamed (no LLM needed)',
+          details: 'items: ${toolResultItems.length}\noutputLength: ${output.length}',
+        );
+        yield {
+          'type': 'output',
+          'chunk': output,
+          'thinking': '',
+          'output': output,
+        };
+        return;
+      }
     }
 
     final systemPrompt = _buildSystemPrompt(
@@ -283,24 +328,38 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           tokenize: _inferenceService.tokenize,
           detokenize: _inferenceService.detokenize,
         );
-        if (effectiveClipboardContext == null && effectiveHistory.isNotEmpty) {
+
+        // Use tool result items as candidates when a tool already ran.
+        // Otherwise fall back to semantic ranking over the full history.
+        var candidateItems = toolResultItems.isNotEmpty
+            ? toolResultItems
+            : effectiveHistory;
+
+        if (toolResultItems.isEmpty &&
+            effectiveClipboardContext == null &&
+            effectiveHistory.isNotEmpty) {
+          // No tool ran: run semantic rank and rebuild contextText from ranked history
           final semanticItems = await _semanticRank(
             prompt: prompt,
             items: effectiveHistory,
             modelPath: modelFile.path,
             contextSize: effectiveContextSize,
             modelId: model.id,
+            preferImageUrls: classification?.preferImageUrls ?? false,
           );
-          contextText = _buildHistoryContext(semanticItems);
+          if (semanticItems.isNotEmpty) {
+            candidateItems = semanticItems;
+          }
+          contextText = _buildHistoryContext(candidateItems);
           _debug?.log(
             level: AiDebugLevel.info,
             stage: 'retrieval',
             requestId: debugRequestId,
             message: 'Clipboard history semantically ranked',
             details: kReleaseMode
-                ? 'inputItems: ${effectiveHistory.length}\nselectedItems: ${semanticItems.length}'
+                ? 'inputItems: ${effectiveHistory.length}\nselectedItems: ${candidateItems.length}'
                 : 'inputItems: ${effectiveHistory.length}\n'
-                      'selectedItems: ${semanticItems.length}\n'
+                      'selectedItems: ${candidateItems.length}\n'
                       'effectiveContext:\n$contextText',
           );
         }
@@ -326,7 +385,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
           debugRequestId: debugRequestId,
           imagePaths: imagePaths,
           mmprojPath: mmprojPath,
-          candidates: effectiveHistory,
+          candidates: candidateItems,
           onConfirmationRequested: onConfirmationRequested,
         );
         return;
@@ -1234,6 +1293,7 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
     required String modelPath,
     required int contextSize,
     String modelId = 'gemma-4-e2b',
+    bool preferImageUrls = false,
   }) async {
     if (items.isEmpty || prompt.trim().isEmpty) return items.take(8).toList();
     if (_clipboardRanker.hasExactFileConstraint(prompt)) {
@@ -1260,10 +1320,19 @@ ${hasText ? '"""\n$ocrContent\n"""' : '(No OCR text detected.)'}
         maxFinalItems: 8,
       );
 
-      return results.isNotEmpty ? results : items.take(8).toList();
+      return results.isNotEmpty
+          ? results
+          : _clipboardRanker
+                .rank(
+                  prompt: prompt,
+                  items: items,
+                  preferImageUrls: preferImageUrls,
+                )
+                .take(8)
+                .toList();
     } catch (_) {
       return _clipboardRanker
-          .rank(prompt: prompt, items: items)
+          .rank(prompt: prompt, items: items, preferImageUrls: preferImageUrls)
           .take(8)
           .toList();
     }

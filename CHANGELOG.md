@@ -1,6 +1,19 @@
 # Changelog
 
-Tất cả các thay đổi quan trọng của dự án **ClipFlow** sẽ được ghi lại trong tệp này.
+## [1.1.5] - 2026-08-06
+
+### 🚀 Tính năng mới & Cải tiến
+- **Quản lý Ghi chú Clipboard (Clipboard Notes)**:
+  - Thêm tính năng đính kèm ghi chú cho từng mục Clipboard với hộp thoại chỉnh sửa tự động lưu.
+  - Hỗ trợ tìm kiếm các mục clipboard theo cú pháp `note:`.
+  - Bổ sung nút Chỉnh sửa (Edit) riêng biệt và khung cuộn giới hạn chiều cao cho phần ghi chú trên các thẻ Clipboard Card.
+- **Nâng cấp Hệ thống Trợ lý AI (AI Agent & Execution Pipeline)**:
+  - **Kiến trúc AI Tool mới**: Đại trùng tu hệ thống AI Tool với payload có kiểu rõ ràng (`AiToolPayload`), triển khai quy trình thực thi Agent theo cấu trúc (`Structured Agent Execution Pipeline`).
+  - **Phân loại Ý định & Xếp hạng Liên quan**: Nâng cấp lập kế hoạch yêu cầu (`AiRequestPlanner`), tổng hợp ngữ cảnh đa phương tiện (Multi-modal context synthesis) và xếp hạng kết quả tìm kiếm clipboard theo mức độ liên quan.
+  - **Banner tải mô hình Classifier**: Thêm banner giao diện hiển thị trạng thái và tiến trình tải xuống riêng cho mô hình phân loại intent.
+  - **Tối ưu hóa Phản hồi AI**: Tăng giới hạn token cho phản hồi (`max_tokens`), tối ưu hóa prompt tìm kiếm clipboard, định dạng hiển thị clipboard thân thiện và bổ sung cơ chế fallback parsing cho JSON bị cắt ngắn.
+- **Cải tiến Giao diện & Tương tác (UI & Card Interactions)**:
+  - Chuyển đổi callback ghim sang bất đồng bộ (`async`) và tách biệt hoàn toàn thao tác nhấn/chạm trên thẻ Clipboard Card để tránh xung đột hành vi.
 
 ## [1.1.4] - 2026-08-04
 

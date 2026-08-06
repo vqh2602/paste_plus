@@ -18,7 +18,7 @@ void main() {
     expect(plan.intent, AiRequestIntent.conversation);
     expect(plan.useClipboardHistory, isFalse);
     expect(plan.useSelectedClipboard, isFalse);
-    expect(plan.maxOutputTokens, lessThan(1000));
+    expect(plan.maxOutputTokens, 1024);
     expect(plan.responseLanguageTag, 'vi-VN');
   });
 
@@ -29,7 +29,7 @@ void main() {
         prompt: 'hello',
         featureGroup: null,
       ),
-      512,
+      1024,
     );
     expect(
       resolveOutputTokens(
@@ -37,7 +37,7 @@ void main() {
         prompt: 'translate',
         featureGroup: AiFeatureGroup.translate,
       ),
-      1536,
+      2048,
     );
     expect(
       resolveGenerationTimeout(
