@@ -16,7 +16,7 @@
 ### 📦 Xuất dữ liệu & tìm kiếm có hướng dẫn
 - Nâng `.clipflow` thành gói dữ liệu đầy đủ gồm cài đặt, lịch sử clipboard, ảnh, Collection và quan hệ phân loại; Tủ khóa cùng khóa mã hóa thiết bị luôn bị loại trừ.
 - Lịch sử được mã hóa xác thực bằng **AES-256-GCM** với khóa PBKDF2-HMAC-SHA256 210.000 vòng; trình nhập bỏ qua trường tương lai chưa biết, bù giá trị mặc định cho trường cũ và vẫn đọc được tệp cấu hình `.clipflow` v1.
-- Thêm đề xuất cú pháp `app:`, `note:`, `type:`, `is:pinned` và `after:` ngay tại ô tìm kiếm của cửa sổ chính lẫn Quick Panel.
+- Thêm đề xuất cú pháp `app:`, `note:`, `type:`, `is:pinned` và `after:` ngay tại ô tìm kiếm của cửa sổ chính lẫn Quick Panel; có thể bấm để chèn tại con trỏ và các biểu thức tìm kiếm đặc biệt được in đậm để dễ phân biệt với từ khóa thường.
 
 ### 🔐 Tủ khóa bảo mật
 - Thêm **Tủ khóa** dưới dạng Collection hệ thống được tạo sẵn, không thể đổi tên hoặc xóa.

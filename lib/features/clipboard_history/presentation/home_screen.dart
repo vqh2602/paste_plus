@@ -24,6 +24,7 @@ import 'widgets/clipboard_share.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
 import 'widgets/note_edit_dialog.dart';
+import 'widgets/search_syntax_field.dart';
 import '../../vault/presentation/vault_dialogs.dart';
 import 'widgets/mobile_sidebar_sheet.dart';
 import 'widgets/sidebar_widget.dart';
@@ -36,7 +37,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  final _searchController = TextEditingController();
+  final _searchController = SearchSyntaxTextEditingController();
   final _searchFocusNode = FocusNode();
 
   @override

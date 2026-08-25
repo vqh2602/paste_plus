@@ -1,5 +1,52 @@
 import 'package:flutter/cupertino.dart';
 
+class SearchSyntaxTextEditingController extends TextEditingController {
+  SearchSyntaxTextEditingController({super.text});
+
+  static final _syntaxPattern = RegExp(
+    r'\b(?:is:pinned|(?:app|note):(?:"[^"]*"|\S*)|(?:type|after):\S*)',
+    caseSensitive: false,
+  );
+
+  @override
+  TextSpan buildTextSpan({
+    required BuildContext context,
+    TextStyle? style,
+    required bool withComposing,
+  }) {
+    // Preserve Flutter's composing underline and range handling while an IME
+    // is active. Syntax highlighting resumes as soon as composition finishes.
+    if (withComposing &&
+        value.composing.isValid &&
+        !value.composing.isCollapsed) {
+      return super.buildTextSpan(
+        context: context,
+        style: style,
+        withComposing: withComposing,
+      );
+    }
+
+    final spans = <InlineSpan>[];
+    var offset = 0;
+    for (final match in _syntaxPattern.allMatches(text)) {
+      if (match.start > offset) {
+        spans.add(TextSpan(text: text.substring(offset, match.start)));
+      }
+      spans.add(
+        TextSpan(
+          text: match.group(0),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      );
+      offset = match.end;
+    }
+    if (offset < text.length) {
+      spans.add(TextSpan(text: text.substring(offset)));
+    }
+    return TextSpan(style: style, children: spans);
+  }
+}
+
 class SearchSyntaxField extends StatefulWidget {
   const SearchSyntaxField({
     super.key,

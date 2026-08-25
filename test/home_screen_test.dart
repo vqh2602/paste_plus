@@ -12,6 +12,7 @@ import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.
 import 'package:clipflow/features/clipboard_history/domain/content_classifier.dart';
 import 'package:clipflow/features/clipboard_history/presentation/home_screen.dart';
 import 'package:clipflow/features/clipboard_history/presentation/history_controller.dart';
+import 'package:clipflow/features/clipboard_history/presentation/widgets/search_syntax_field.dart';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
@@ -265,6 +266,69 @@ void main() {
       ),
     );
     expect(editable.controller.text, 'app:');
+
+    await tester.enterText(
+      find.byKey(const Key('history-search')),
+      'app:Chrome note:"release notes" type:url is:pinned '
+      'after:2026-08-01 flutter',
+    );
+    await tester.pump();
+    final highlightedController = tester
+        .widget<EditableText>(
+          find.descendant(
+            of: find.byKey(const Key('history-search')),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .controller;
+    expect(highlightedController, isA<SearchSyntaxTextEditingController>());
+    final highlighted = highlightedController.buildTextSpan(
+      context: tester.element(find.byKey(const Key('history-search'))),
+      style: const TextStyle(),
+      withComposing: false,
+    );
+    final boldSyntax = highlighted.children!
+        .whereType<TextSpan>()
+        .where((span) => span.style?.fontWeight == FontWeight.w700)
+        .map((span) => span.text)
+        .toList();
+    expect(
+      boldSyntax,
+      containsAll(<String?>[
+        'app:Chrome',
+        'note:"release notes"',
+        'type:url',
+        'is:pinned',
+        'after:2026-08-01',
+      ]),
+    );
+  });
+
+  testWidgets('quick panel search suggestions fill the shared search field', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quick-panel-search')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('search-syntax-suggestions')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('search-suggestion-note:')));
+    await tester.pump();
+
+    final editable = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('quick-panel-search')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.controller.text, 'note:');
+    expect(editable.controller, isA<SearchSyntaxTextEditingController>());
   });
 
   testWidgets('pin button persists pinned state', (tester) async {

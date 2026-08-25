@@ -20,6 +20,7 @@ import 'widgets/note_edit_dialog.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
 import 'widgets/quick_empty_state_widget.dart';
 import 'widgets/quick_toolbar_widget.dart';
+import 'widgets/search_syntax_field.dart';
 import '../../vault/presentation/vault_dialogs.dart';
 
 class QuickPanelScreen extends ConsumerStatefulWidget {
@@ -31,7 +32,7 @@ class QuickPanelScreen extends ConsumerStatefulWidget {
 
 class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
+  final _searchController = SearchSyntaxTextEditingController();
   final _searchFocusNode = FocusNode();
   final _itemScrollController = ScrollController();
   late final AnimationController _entranceController;
