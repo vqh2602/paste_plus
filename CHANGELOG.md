@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7] - 2026-08-25
+
+### 🐛 Sửa lỗi & Cải tiến
+- **Chia sẻ Clipboard an toàn hơn**:
+  - Refactor cơ chế chia sẻ clipboard để bảo toàn đúng loại nội dung (content types) khi chia sẻ giữa các thiết bị.
+  - Bổ sung kiểm tra an toàn (`mounted context checks`) để tránh lỗi khi widget đã bị huỷ trước khi thao tác hoàn tất.
+
 ## [1.1.6] - 2026-08-25
 
 ### 🚀 Tính năng mới & Cải tiến
