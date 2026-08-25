@@ -385,14 +385,13 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
                                                     .notifier,
                                               )
                                               .togglePinned(item);
-                                          if (mounted) {
-                                            showCupertinoNotice(
-                                              context,
-                                              wasPinned
-                                                  ? context.l10n.unpin
-                                                  : context.l10n.pinned,
-                                            );
-                                          }
+                                          if (!context.mounted) return;
+                                          showCupertinoNotice(
+                                            context,
+                                            wasPinned
+                                                ? context.l10n.unpin
+                                                : context.l10n.pinned,
+                                          );
                                         },
                                         onActions: (ctx) =>
                                             _showItemActions(ctx, item),

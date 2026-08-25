@@ -368,12 +368,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           final item = state.visibleItems.firstWhere((it) => it.id == selected);
           final wasPinned = item.isPinned;
           await ref.read(historyControllerProvider.notifier).togglePinned(item);
-          if (mounted) {
-            showCupertinoNotice(
-              context,
-              wasPinned ? context.l10n.unpin : context.l10n.pinned,
-            );
-          }
+          if (!context.mounted) return;
+          showCupertinoNotice(
+            context,
+            wasPinned ? context.l10n.unpin : context.l10n.pinned,
+          );
         }
       },
       shortcutActivator(
