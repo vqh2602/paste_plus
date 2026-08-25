@@ -1531,4 +1531,85 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       '该模型无法读取图像。它仅根据 OCR 文本和文件详细信息进行回答。下载视觉模型（Gemma 4 12B Vision 或 Qwen2.5-VL 7B）来分析图片本身。';
+
+  @override
+  String get vault_title => '保险库';
+
+  @override
+  String get vault_enabled => '启用保险库';
+
+  @override
+  String get vault_enabled_sub => '使用加密和身份验证保护系统收藏夹。';
+
+  @override
+  String get vault_create_password_title => '创建保险库密码';
+
+  @override
+  String get vault_unlock_title => '解锁保险库';
+
+  @override
+  String get vault_unlock_sub => '验证身份以查看加密的剪贴板项目。';
+
+  @override
+  String get vault_password => '密码';
+
+  @override
+  String get vault_confirm_password => '确认密码';
+
+  @override
+  String get vault_new_password => '新密码';
+
+  @override
+  String get vault_password_min => '至少使用 6 个字符。';
+
+  @override
+  String get vault_password_mismatch => '密码不一致。';
+
+  @override
+  String get vault_unlock => '解锁';
+
+  @override
+  String get vault_use_device_auth => '使用设备身份验证';
+
+  @override
+  String get vault_invalid_password => '密码错误。';
+
+  @override
+  String get vault_attempts_remaining => '还可尝试 @count 次。';
+
+  @override
+  String get vault_data_wiped => '连续 5 次失败后，保险库数据已删除。';
+
+  @override
+  String get vault_change_password => '更改保险库密码';
+
+  @override
+  String get vault_change_password_sub => '使用新密码重新封装加密密钥。';
+
+  @override
+  String get vault_device_auth => '面容、指纹或设备身份验证';
+
+  @override
+  String get vault_device_auth_sub => '使用此设备上配置的身份验证方式。';
+
+  @override
+  String get vault_device_auth_failed => '设备身份验证不可用或已取消。';
+
+  @override
+  String get vault_wipe_after_five => '失败 5 次后删除保险库数据';
+
+  @override
+  String get vault_wipe_after_five_sub => '仅永久删除保险库中的加密项目。默认关闭。';
+
+  @override
+  String get vault_encryption_title => 'AES-256 静态加密';
+
+  @override
+  String get vault_encryption_sub => '剪贴板内容、元数据和图片文件在存储前会被加密。';
+
+  @override
+  String get vault_disable_confirm => '禁用保险库并将解密后的项目恢复到剪贴板历史记录？';
+
+  @override
+  String get vault_locked_notice => '请先解锁保险库。';
 }

@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 class AppDatabase {
   AppDatabase._(this.database, this.databasePath);
 
-  static const version = 7;
+  static const version = 8;
   final Database database;
   final String databasePath;
 
@@ -221,7 +221,8 @@ class AppDatabase {
         mime_type TEXT,
         file_extension TEXT,
         has_ocr_text INTEGER NOT NULL DEFAULT 0,
-        searchable_text TEXT NOT NULL DEFAULT ''
+        searchable_text TEXT NOT NULL DEFAULT '',
+        is_vault INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''
@@ -288,9 +289,11 @@ class AppDatabase {
       // a broken old trigger.
       await db.execute('DROP TRIGGER IF EXISTS clipboard_items_ai');
       await db.execute('''
-        CREATE TRIGGER clipboard_items_ai AFTER INSERT ON clipboard_items BEGIN
+        CREATE TRIGGER clipboard_items_ai AFTER INSERT ON clipboard_items
+        WHEN new.is_vault = 0 BEGIN
           INSERT INTO clipboard_items_fts(clipboard_id, searchable_text, source_app_name, note)
-          VALUES (new.id, new.searchable_text, COALESCE(new.source_app_name, ''), COALESCE(new.note, ''));
+          SELECT new.id, new.searchable_text, COALESCE(new.source_app_name, ''), COALESCE(new.note, '')
+          WHERE new.is_vault = 0;
         END;
       ''');
 
@@ -306,13 +309,15 @@ class AppDatabase {
         CREATE TRIGGER clipboard_items_au AFTER UPDATE ON clipboard_items BEGIN
           DELETE FROM clipboard_items_fts WHERE clipboard_id = old.id;
           INSERT INTO clipboard_items_fts(clipboard_id, searchable_text, source_app_name, note)
-          VALUES (new.id, new.searchable_text, COALESCE(new.source_app_name, ''), COALESCE(new.note, ''));
+          SELECT new.id, new.searchable_text, COALESCE(new.source_app_name, ''), COALESCE(new.note, '')
+          WHERE new.is_vault = 0;
         END;
       ''');
 
       await db.execute('''
         INSERT OR IGNORE INTO clipboard_items_fts(clipboard_id, searchable_text, source_app_name, note)
-        SELECT id, searchable_text, COALESCE(source_app_name, ''), COALESCE(note, '') FROM clipboard_items;
+        SELECT id, searchable_text, COALESCE(source_app_name, ''), COALESCE(note, '')
+        FROM clipboard_items WHERE is_vault = 0;
       ''');
     } catch (_) {
       // Ignore SQLite instances where FTS5 extension module is disabled
@@ -377,6 +382,7 @@ class AppDatabase {
   static Future<void> _seedCollections(Database db) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     const defaults = [
+      ('vault', 'Tủ khóa', 'lock'),
       ('work', 'Công việc', 'work'),
       ('personal', 'Cá nhân', 'person'),
       ('code', 'Code', 'code'),
@@ -391,8 +397,8 @@ class AppDatabase {
         'icon': item.$3,
         'created_at': now,
         'updated_at': now,
-        'sort_order': index,
-      });
+        'sort_order': item.$1 == 'vault' ? -1 : index,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
     }
   }
 
@@ -501,6 +507,18 @@ class AppDatabase {
       // triggers referencing `normalized_content` (old schema column).
       // Dropping the FTS virtual table does NOT drop triggers defined ON
       // clipboard_items, so we must drop each trigger explicitly here.
+      await db.execute('DROP TABLE IF EXISTS clipboard_items_fts');
+      await db.execute('DROP TRIGGER IF EXISTS clipboard_items_ai');
+      await db.execute('DROP TRIGGER IF EXISTS clipboard_items_ad');
+      await db.execute('DROP TRIGGER IF EXISTS clipboard_items_au');
+      await _createFtsTable(db);
+    }
+    if (oldVersion < 8) {
+      await _addColumnIfNotExists(
+        db,
+        'ALTER TABLE clipboard_items ADD COLUMN is_vault INTEGER NOT NULL DEFAULT 0',
+      );
+      await _seedCollections(db);
       await db.execute('DROP TABLE IF EXISTS clipboard_items_fts');
       await db.execute('DROP TRIGGER IF EXISTS clipboard_items_ai');
       await db.execute('DROP TRIGGER IF EXISTS clipboard_items_ad');

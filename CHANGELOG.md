@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.2.0] - 2026-08-25
+
+### 🔐 Tủ khóa bảo mật
+- Thêm **Tủ khóa** dưới dạng Collection hệ thống được tạo sẵn, không thể đổi tên hoặc xóa.
+- Clipboard được kéo vào Tủ khóa sẽ biến mất khỏi lịch sử, tìm kiếm, AI và đồng bộ thiết bị; nội dung chỉ hiển thị sau khi mở khóa đúng cách.
+- Hỗ trợ mở khóa bằng mật khẩu hoặc phương thức xác thực thiết bị (vân tay, Face ID, Windows Hello hay mã khóa hệ thống tùy nền tảng).
+- Thêm cấu hình bật/tắt Tủ khóa, đổi mật khẩu, bật/tắt xác thực thiết bị và tùy chọn tự xóa dữ liệu Tủ khóa sau 5 lần nhập sai liên tiếp.
+- Mã hóa tại chỗ bằng **AES-256-GCM** với khóa chính ngẫu nhiên; mật khẩu bảo vệ khóa bằng **PBKDF2-HMAC-SHA256 (210.000 vòng)**. Trường dữ liệu nhạy cảm trong SQLite và tệp ảnh thuộc Tủ khóa đều không còn lưu ở dạng đọc được.
+- Tự khóa khi ứng dụng mất tiêu điểm hoặc chuyển nền; các tệp xem trước đã giải mã được dọn ngay khi khóa.
+
+### 🧱 Cô lập dữ liệu & tương thích
+- Tủ khóa bị loại khỏi FTS, truy vấn AI, dọn lịch sử thông thường và luồng đồng bộ LAN để tránh rò rỉ dữ liệu ngoài ý muốn.
+- Khi tắt Tủ khóa, dữ liệu được giải mã và đưa trở lại lịch sử trước khi khóa mã hóa bị xóa.
+- Bổ sung cấu hình native cho Local Authentication trên Android/iOS và bản địa hóa giao diện Tủ khóa trên cả 6 ngôn ngữ.
+- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục và tự xóa; toàn bộ **240 kiểm thử** đều đạt.
+
 ## [1.1.7] - 2026-08-25
 
 ### 🐛 Sửa lỗi & Cải tiến

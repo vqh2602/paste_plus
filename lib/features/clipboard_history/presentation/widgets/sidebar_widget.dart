@@ -8,6 +8,7 @@ import '../../../../app/providers.dart';
 
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_item.dart';
+import '../../../vault/presentation/vault_dialogs.dart';
 import '../history_controller.dart';
 import 'clipboard_action_menu.dart';
 
@@ -35,10 +36,15 @@ class SidebarWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
 
-    void selectSection(HistorySection section, {String? collectionId}) {
-      unawaited(
-        historyNotifier.selectSection(section, collectionId: collectionId),
-      );
+    Future<void> selectSection(
+      HistorySection section, {
+      String? collectionId,
+    }) async {
+      if (collectionId == ClipboardCollection.vaultId &&
+          !await ensureVaultUnlocked(context, ref)) {
+        return;
+      }
+      await historyNotifier.selectSection(section, collectionId: collectionId);
       onNavigationSelected?.call();
     }
 
@@ -150,6 +156,7 @@ class SidebarWidget extends ConsumerWidget {
                             unawaited(
                               _addItemToCollection(
                                 context,
+                                ref,
                                 historyNotifier,
                                 details.data,
                                 collection,
@@ -158,7 +165,9 @@ class SidebarWidget extends ConsumerWidget {
                           },
                           builder: (context, candidateData, rejectedData) =>
                               SidebarTileWidget(
-                                icon: CupertinoIcons.folder,
+                                icon: collection.isVault
+                                    ? CupertinoIcons.lock_fill
+                                    : CupertinoIcons.folder,
                                 label: _displayCollectionName(
                                   context,
                                   collection,
@@ -172,17 +181,20 @@ class SidebarWidget extends ConsumerWidget {
                                   HistorySection.collection,
                                   collectionId: collection.id,
                                 ),
-                                onLongPress: () => _showCollectionActions(
-                                  context,
-                                  ref,
-                                  collection,
-                                ),
-                                onOptionsPressed: (menuContext) =>
-                                    _showCollectionActions(
-                                      menuContext,
-                                      ref,
-                                      collection,
-                                    ),
+                                onLongPress: collection.isSystem
+                                    ? null
+                                    : () => _showCollectionActions(
+                                        context,
+                                        ref,
+                                        collection,
+                                      ),
+                                onOptionsPressed: collection.isSystem
+                                    ? null
+                                    : (menuContext) => _showCollectionActions(
+                                        menuContext,
+                                        ref,
+                                        collection,
+                                      ),
                               ),
                         ),
                     ],
@@ -238,6 +250,7 @@ class SidebarWidget extends ConsumerWidget {
     ClipboardCollection collection,
   ) {
     return switch (collection.id) {
+      ClipboardCollection.vaultId => context.l10n.vault_title,
       'personal' => context.l10n.collection_personal,
       'link' => context.l10n.collection_link,
       'reply' => context.l10n.collection_reply,
@@ -247,10 +260,12 @@ class SidebarWidget extends ConsumerWidget {
 
   Future<void> _addItemToCollection(
     BuildContext context,
+    WidgetRef ref,
     ClipboardHistoryController historyNotifier,
     ClipboardItem item,
     ClipboardCollection collection,
   ) async {
+    if (collection.isVault && !await ensureVaultUnlocked(context, ref)) return;
     await historyNotifier.addToCollection(item.id, collection.id);
     if (context.mounted) {
       showCupertinoNotice(
@@ -268,6 +283,7 @@ class SidebarWidget extends ConsumerWidget {
     WidgetRef ref,
     ClipboardCollection collection,
   ) async {
+    if (collection.isSystem) return;
     final action = await showCompactActionMenu(
       context: context,
       menuKey: const Key('collection-action-menu'),

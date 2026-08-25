@@ -107,9 +107,17 @@ void main() {
         const AppSettings(ignoreSensitive: false),
       );
       final collections = await repository.getCollections();
-      expect(collections, hasLength(5));
-      await repository.addToCollection(stored!.id, collections.first.id);
-      await repository.deleteCollection(collections.first.id);
+      expect(collections, hasLength(6));
+      final vault = collections.singleWhere((item) => item.isVault);
+      await repository.renameCollection(vault.id, 'Cannot rename');
+      await repository.deleteCollection(vault.id);
+      expect(
+        (await repository.getCollections()).singleWhere((item) => item.isVault),
+        isNotNull,
+      );
+      final regular = collections.firstWhere((item) => !item.isSystem);
+      await repository.addToCollection(stored!.id, regular.id);
+      await repository.deleteCollection(regular.id);
       expect(await repository.getItems(), hasLength(1));
     },
   );

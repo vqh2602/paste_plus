@@ -12,6 +12,7 @@ Future<String?> showClipboardActionMenu({
   required ClipboardItem item,
   String copyAction = 'copy',
   String? copyLabel,
+  bool protectVaultContent = false,
 }) {
   final isImage = item.contentType == ClipboardContentType.image;
   final openableUrl = openableClipboardUrl(item);
@@ -49,7 +50,7 @@ Future<String?> showClipboardActionMenu({
       icon: CupertinoIcons.doc_text,
       label: item.note?.isNotEmpty == true ? l10n.edit_note : l10n.add_note,
     ),
-    if (isImage) ...[
+    if (!protectVaultContent && isImage) ...[
       CompactMenuAction(
         value: 'ocr',
         icon: CupertinoIcons.doc_text_search,
@@ -60,17 +61,18 @@ Future<String?> showClipboardActionMenu({
         icon: CupertinoIcons.cloud_upload,
         label: l10n.upload_cloud,
       ),
-    ] else
+    ] else if (!protectVaultContent)
       CompactMenuAction(
         value: 'translate',
         icon: CupertinoIcons.globe,
         label: l10n.translate_text,
       ),
-    CompactMenuAction(
-      value: 'ask_ai',
-      icon: CupertinoIcons.sparkles,
-      label: l10n.ask_ai,
-    ),
+    if (!protectVaultContent)
+      CompactMenuAction(
+        value: 'ask_ai',
+        icon: CupertinoIcons.sparkles,
+        label: l10n.ask_ai,
+      ),
     CompactMenuAction(
       value: 'pin',
       icon: CupertinoIcons.pin,

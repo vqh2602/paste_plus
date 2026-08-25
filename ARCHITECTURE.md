@@ -40,7 +40,8 @@ ClipFlow is built using **Flutter** and follows a **Feature-First Architecture**
 │   │   ├── clipboard_history/        # Classifier, repository, Home, Quick Panel & actions
 │   │   ├── device_sync/              # TLS LAN pairing, peer state, queues & metadata sync
 │   │   ├── onboarding/               # First-run and retention setup
-│   │   └── settings/                 # AppSettings, encrypted backup & settings UI
+│   │   ├── settings/                 # AppSettings, encrypted backup & settings UI
+│   │   └── vault/                    # Vault crypto, authentication, state & unlock dialogs
 │   └── l10n/                         # ARB sources and generated vi/en/ja/ko/de/zh classes
 ├── android/                          # Android Beta runner and platform configuration
 ├── ios/                              # iOS Beta runner and entitlements
@@ -76,6 +77,7 @@ ClipFlow selects the SQLite backend per target platform:
   - `created_at`: INTEGER (Epoch timestamp)
   - `updated_at`: INTEGER
   - `last_copied_at`: INTEGER
+  - `is_vault`: INTEGER (1 only for encrypted Vault rows; normal queries and FTS require 0)
 
 - **`collections` Table**:
   - `id`: TEXT PRIMARY KEY
@@ -118,6 +120,28 @@ Images copied to the clipboard are written to disk under the sandboxed Applicati
    - A file-list payload suppresses thumbnail bytes, so copied Word, Excel, PDF, folder, or image files are stored as **File** rather than **Image**.
 4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
 5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback.
+
+---
+
+## 🔐 Vault Security Architecture
+
+The Vault is a reserved Collection (`id = vault`) seeded by schema version 8. It cannot be renamed, deleted, synchronized, or addressed by AI tools. Moving an item into it removes every normal Collection membership and marks the row with `is_vault = 1`; all regular history, structured search, FTS, cleanup, and bulk-query paths explicitly require `is_vault = 0`.
+
+### Key hierarchy and authentication
+
+1. A random 256-bit master key is generated when the Vault is enabled.
+2. The user's password derives a wrapping key through PBKDF2-HMAC-SHA256 (210,000 iterations and a random salt).
+3. AES-256-GCM wraps the master key and authenticates every encrypted database field or file payload.
+4. The wrapped-key configuration is stored in OS-backed secure storage. If device unlock is enabled, a secure-storage copy of the master key is only loaded after `local_auth` succeeds (Touch ID, Face ID, fingerprint, Windows Hello, or the device credential supported by the OS).
+5. The in-memory key and decrypted image previews are cleared whenever the app loses focus, moves to the background, leaves the Vault, or is explicitly locked.
+
+### At-rest data boundary
+
+- Text, normalized text, hashes, source-app metadata, notes, URLs, MIME data, and extensions are AES-GCM ciphertext in SQLite while vaulted.
+- Image bytes are moved from `clipboard_images/` into encrypted `.cfv` files under `vault_files/`. A decrypted preview exists only in the system temporary directory while unlocked and is deleted on lock.
+- Searchable feature columns are blanked while vaulted, and FTS triggers never index Vault rows.
+- Vault items do not enter LAN synchronization or embedding/AI indexing. Copying an unlocked Vault item is temporarily suppressed from clipboard recapture to prevent an immediate plaintext duplicate.
+- The optional five-failure policy deletes only Vault rows/files; normal clipboard history remains intact. Disabling the feature first decrypts and restores Vault items to normal history, then deletes the key material.
 
 ---
 

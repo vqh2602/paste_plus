@@ -74,6 +74,7 @@ class ClipboardSyncCoordinator {
     LocalSharingState sharing, {
     bool deleted = false,
   }) async {
+    if (collection.isVault) return;
     final settings = _readSettings();
     if (!_sharingEnabled(settings)) return;
     for (final peer in sharing.pairedDevices.where(
@@ -173,7 +174,9 @@ class ClipboardSyncCoordinator {
   Future<bool> _sendCollections(String peerId) async {
     final settings = _readSettings();
     if (!_sharingEnabled(settings)) return false;
-    final collections = await _clipboardRepository.getCollections();
+    final collections = (await _clipboardRepository.getCollections())
+        .where((collection) => !collection.isVault)
+        .toList(growable: false);
     var allSucceeded = true;
     for (final collection in collections) {
       try {
@@ -213,7 +216,10 @@ class ClipboardSyncCoordinator {
           ? const <ClipboardCollection>[]
           : await _clipboardRepository.getCollections();
       final collections = allCollections
-          .where((collection) => collectionIds.contains(collection.id))
+          .where(
+            (collection) =>
+                !collection.isVault && collectionIds.contains(collection.id),
+          )
           .map(_collectionPayload)
           .toList(growable: false);
       await _transport.sendClipboard(

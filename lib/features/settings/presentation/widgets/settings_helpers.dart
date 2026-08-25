@@ -575,7 +575,18 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
     );
 
     if (res.isSuccess && res.settings != null) {
-      await updateSettings(ref, (_) => res.settings!);
+      // Vault keys and encrypted items are device-local and deliberately not
+      // part of a settings backup. Keep this device's Vault switches so an
+      // imported backup cannot hide an existing Vault or enable one without
+      // its secure-storage key material.
+      final current = ref.read(settingsControllerProvider);
+      await updateSettings(
+        ref,
+        (_) => res.settings!.copyWith(
+          vaultEnabled: current.vaultEnabled,
+          vaultWipeAfterFiveFailures: current.vaultWipeAfterFiveFailures,
+        ),
+      );
     }
 
     if (context.mounted) {

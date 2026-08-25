@@ -1586,4 +1586,93 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'Model hiện tại không đọc được hình ảnh. Câu trả lời chỉ dựa trên văn bản OCR và thông tin tệp. Hãy tải model hỗ trợ ảnh (Gemma 4 12B Vision hoặc Qwen2.5-VL 7B) để phân tích chính hình ảnh.';
+
+  @override
+  String get vault_title => 'Tủ khóa';
+
+  @override
+  String get vault_enabled => 'Bật Tủ khóa';
+
+  @override
+  String get vault_enabled_sub =>
+      'Bảo vệ một Collection hệ thống bằng mã hóa và xác thực.';
+
+  @override
+  String get vault_create_password_title => 'Tạo mật mã Tủ khóa';
+
+  @override
+  String get vault_unlock_title => 'Mở khóa Tủ khóa';
+
+  @override
+  String get vault_unlock_sub => 'Xác thực để xem các clipboard đã mã hóa.';
+
+  @override
+  String get vault_password => 'Mật mã';
+
+  @override
+  String get vault_confirm_password => 'Nhập lại mật mã';
+
+  @override
+  String get vault_new_password => 'Mật mã mới';
+
+  @override
+  String get vault_password_min => 'Sử dụng ít nhất 6 ký tự.';
+
+  @override
+  String get vault_password_mismatch => 'Hai mật mã không trùng khớp.';
+
+  @override
+  String get vault_unlock => 'Mở khóa';
+
+  @override
+  String get vault_use_device_auth => 'Dùng xác thực thiết bị';
+
+  @override
+  String get vault_invalid_password => 'Mật mã không đúng.';
+
+  @override
+  String get vault_attempts_remaining => 'Còn @count lần thử.';
+
+  @override
+  String get vault_data_wiped =>
+      'Dữ liệu Tủ khóa đã bị xóa sau 5 lần nhập sai.';
+
+  @override
+  String get vault_change_password => 'Đổi mật mã Tủ khóa';
+
+  @override
+  String get vault_change_password_sub =>
+      'Bọc lại khóa mã hóa bằng mật mã mới.';
+
+  @override
+  String get vault_device_auth => 'Face ID, vân tay hoặc xác thực thiết bị';
+
+  @override
+  String get vault_device_auth_sub =>
+      'Dùng phương thức xác thực đã cài trên thiết bị này.';
+
+  @override
+  String get vault_device_auth_failed =>
+      'Xác thực thiết bị không khả dụng hoặc đã bị hủy.';
+
+  @override
+  String get vault_wipe_after_five => 'Xóa dữ liệu Tủ khóa sau 5 lần nhập sai';
+
+  @override
+  String get vault_wipe_after_five_sub =>
+      'Chỉ xóa vĩnh viễn các mục đã mã hóa trong Tủ khóa. Mặc định tắt.';
+
+  @override
+  String get vault_encryption_title => 'Mã hóa AES-256 khi lưu trữ';
+
+  @override
+  String get vault_encryption_sub =>
+      'Nội dung, metadata và file ảnh được mã hóa trước khi lưu.';
+
+  @override
+  String get vault_disable_confirm =>
+      'Tắt Tủ khóa và khôi phục các mục đã giải mã về lịch sử clipboard?';
+
+  @override
+  String get vault_locked_notice => 'Hãy mở khóa Tủ khóa trước khi tiếp tục.';
 }

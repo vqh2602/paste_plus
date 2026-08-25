@@ -9,6 +9,8 @@ import 'package:clipflow/l10n/app_localizations.dart';
 import '../core/platform/desktop_integration_service.dart';
 import '../core/services/update_download_provider.dart';
 import '../core/ui/ai_debug_overlay.dart';
+import '../features/clipboard_history/domain/clipboard_item.dart';
+import '../features/clipboard_history/presentation/history_controller.dart';
 import 'providers.dart';
 import 'router.dart';
 import 'theme/app_theme.dart';
@@ -20,7 +22,8 @@ class ClipFlowApp extends ConsumerStatefulWidget {
   ConsumerState<ClipFlowApp> createState() => _ClipFlowAppState();
 }
 
-class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
+class _ClipFlowAppState extends ConsumerState<ClipFlowApp>
+    with WindowListener, WidgetsBindingObserver {
   late final router = createRouter(
     hasCompletedOnboarding: ref
         .read(settingsControllerProvider)
@@ -30,6 +33,7 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       windowManager.addListener(this);
     }
@@ -92,6 +96,7 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     if (Platform.isMacOS || Platform.isWindows || Platform.isLinux) {
       windowManager.removeListener(this);
     }
@@ -108,7 +113,26 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp> with WindowListener {
 
   @override
   void onWindowBlur() {
+    _lockVault();
     unawaited(ref.read(desktopIntegrationProvider).handleWindowBlur());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) _lockVault();
+  }
+
+  void _lockVault() {
+    ref.read(vaultControllerProvider.notifier).lock();
+    final history = ref.read(historyControllerProvider);
+    if (history.section == HistorySection.collection &&
+        history.collectionId == ClipboardCollection.vaultId) {
+      unawaited(
+        ref
+            .read(historyControllerProvider.notifier)
+            .selectSection(HistorySection.all),
+      );
+    }
   }
 
   @override

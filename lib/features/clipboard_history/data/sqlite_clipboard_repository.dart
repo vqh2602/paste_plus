@@ -10,6 +10,7 @@ import 'package:sqflite/sqflite.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../settings/domain/app_settings.dart';
+import '../../vault/services/vault_crypto.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_feature_extractor.dart';
 import '../domain/clipboard_item.dart';
@@ -22,10 +23,14 @@ class SqliteClipboardRepository
     implements
         ClipboardRepository,
         StructuredClipboardRepository,
-        EditableClipboardRepository {
-  SqliteClipboardRepository(this._appDatabase);
+        EditableClipboardRepository,
+        VaultClipboardRepository {
+  SqliteClipboardRepository(this._appDatabase, {VaultCrypto? vaultCrypto})
+    : _vaultCrypto = vaultCrypto;
 
   final AppDatabase _appDatabase;
+  final VaultCrypto? _vaultCrypto;
+  final Set<String> _vaultPreviewPaths = <String>{};
   Database get _db => _appDatabase.database;
 
   Future<String?> _resolveImagePath(String? path) async {
@@ -81,6 +86,11 @@ class SqliteClipboardRepository
   }) async {
     final where = <String>[];
     final args = <Object?>[];
+    final loadingVault = collectionId == ClipboardCollection.vaultId;
+    if (loadingVault && _vaultCrypto?.isUnlocked != true) {
+      throw const VaultLockedException();
+    }
+    where.add(loadingVault ? 'i.is_vault = 1' : 'i.is_vault = 0');
     if (pinnedOnly) where.add('i.is_pinned = 1');
     if (type != null) {
       where.add('i.content_type = ?');
@@ -102,10 +112,52 @@ class SqliteClipboardRepository
     );
     final items = <ClipboardItem>[];
     for (final row in rows) {
-      final normalizedRow = await _normalizeRow(row);
-      items.add(ClipboardItem.fromMap(normalizedRow));
+      items.add(await _itemFromRow(row));
     }
     return items;
+  }
+
+  Future<ClipboardItem> _itemFromRow(Map<String, Object?> row) async {
+    if ((row['is_vault'] as int? ?? 0) == 0) {
+      return ClipboardItem.fromMap(await _normalizeRow(row));
+    }
+    final crypto = _vaultCrypto;
+    if (crypto == null || !crypto.isUnlocked) {
+      throw const VaultLockedException();
+    }
+    final clear = Map<String, Object?>.from(row);
+    for (final field in _vaultEncryptedFields) {
+      final value = clear[field] as String?;
+      if (value != null && value.isNotEmpty) {
+        clear[field] = await crypto.decryptString(value);
+      }
+    }
+    final encryptedImagePath = row['image_path'] as String?;
+    if (encryptedImagePath != null && encryptedImagePath.isNotEmpty) {
+      clear['image_path'] = await _createVaultPreview(
+        row['id']! as String,
+        encryptedImagePath,
+      );
+    }
+    return ClipboardItem.fromMap(clear);
+  }
+
+  Future<String> _createVaultPreview(
+    String itemId,
+    String encryptedPath,
+  ) async {
+    final crypto = _vaultCrypto!;
+    final source = File(encryptedPath);
+    if (!await source.exists()) return encryptedPath;
+    final directory = Directory(
+      p.join(Directory.systemTemp.path, 'clipflow_vault_preview'),
+    );
+    await directory.create(recursive: true);
+    final preview = File(p.join(directory.path, '$itemId.png'));
+    final clearBytes = await crypto.decryptBytes(await source.readAsBytes());
+    await preview.writeAsBytes(clearBytes, flush: true);
+    _vaultPreviewPaths.add(preview.path);
+    return preview.path;
   }
 
   @override
@@ -291,16 +343,20 @@ class SqliteClipboardRepository
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     };
     if (rows.isNotEmpty) {
-      final item = ClipboardItem.fromMap(rows.first);
-      final features = const ClipboardFeatureExtractor().extract(
-        content: item.content,
-        contentType: item.contentType,
-        imagePath: item.imagePath,
-        metadataJson: metadataJson,
-        note: item.note,
-        sourceAppName: item.sourceAppName,
-      );
-      values.addAll(_featureValues(features));
+      if (_isVaultRow(rows.first)) {
+        values['metadata_json'] = await _encryptNullable(metadataJson);
+      } else {
+        final item = await _itemFromRow(rows.first);
+        final features = const ClipboardFeatureExtractor().extract(
+          content: item.content,
+          contentType: item.contentType,
+          imagePath: item.imagePath,
+          metadataJson: metadataJson,
+          note: item.note,
+          sourceAppName: item.sourceAppName,
+        );
+        values.addAll(_featureValues(features));
+      }
     }
     await _db.update(
       'clipboard_items',
@@ -325,16 +381,20 @@ class SqliteClipboardRepository
       'updated_at': DateTime.now().millisecondsSinceEpoch,
     };
     if (rows.isNotEmpty) {
-      final item = ClipboardItem.fromMap(rows.first);
-      final features = const ClipboardFeatureExtractor().extract(
-        content: item.content,
-        contentType: item.contentType,
-        imagePath: item.imagePath,
-        metadataJson: item.metadataJson,
-        note: value,
-        sourceAppName: item.sourceAppName,
-      );
-      values.addAll(_featureValues(features));
+      if (_isVaultRow(rows.first)) {
+        values['note'] = await _encryptNullable(value);
+      } else {
+        final item = await _itemFromRow(rows.first);
+        final features = const ClipboardFeatureExtractor().extract(
+          content: item.content,
+          contentType: item.contentType,
+          imagePath: item.imagePath,
+          metadataJson: item.metadataJson,
+          note: value,
+          sourceAppName: item.sourceAppName,
+        );
+        values.addAll(_featureValues(features));
+      }
     }
     await _db.update(
       'clipboard_items',
@@ -360,7 +420,8 @@ class SqliteClipboardRepository
       throw StateError('Clipboard item ${item.id} no longer exists.');
     }
 
-    final stored = ClipboardItem.fromMap(await _normalizeRow(rows.first));
+    final vaultItem = _isVaultRow(rows.first);
+    final stored = await _itemFromRow(rows.first);
     final editingImage = imageBytes != null;
     final normalized = editingImage
         ? content
@@ -376,19 +437,26 @@ class SqliteClipboardRepository
         ? imageBytes
         : Uint8List.fromList(utf8.encode(normalized));
     final hash = sha256.convert(hashBytes).toString();
-    final oldImagePath = stored.imagePath;
-    final imagePath = editingImage
-        ? await _saveImage(hash, imageBytes)
+    final oldImagePath = vaultItem
+        ? rows.first['image_path'] as String?
         : stored.imagePath;
+    var imagePath = editingImage
+        ? await _saveImage(hash, imageBytes)
+        : oldImagePath;
+    String? pendingPlainImagePath;
+    if (vaultItem && editingImage && imagePath != null) {
+      pendingPlainImagePath = imagePath;
+      imagePath = await _encryptImageFile(item.id, imagePath);
+    }
     final features = const ClipboardFeatureExtractor().extract(
       content: editingImage ? content : normalized,
       contentType: contentType,
-      imagePath: imagePath,
+      imagePath: vaultItem && !editingImage ? stored.imagePath : imagePath,
       metadataJson: stored.metadataJson,
       note: stored.note,
       sourceAppName: stored.sourceAppName,
     );
-    final values = <String, Object?>{
+    var values = <String, Object?>{
       'content': editingImage ? content : normalized,
       'normalized_content': normalized,
       'content_hash': hash,
@@ -397,6 +465,19 @@ class SqliteClipboardRepository
       'updated_at': DateTime.now().millisecondsSinceEpoch,
       ..._featureValues(features),
     };
+    if (vaultItem) {
+      values = await _encryptVaultValues(values);
+      values
+        ..['contains_url'] = 0
+        ..['primary_url'] = await _encryptNullable(features.primaryUrl)
+        ..['url_host'] = await _encryptNullable(features.urlHost)
+        ..['url_kind'] = await _encryptNullable(features.urlKind?.name)
+        ..['mime_type'] = await _encryptNullable(features.mimeType)
+        ..['file_extension'] = await _encryptNullable(features.fileExtension)
+        ..['has_ocr_text'] = 0
+        ..['searchable_text'] = ''
+        ..['is_vault'] = 1;
+    }
     await _db.update(
       'clipboard_items',
       values,
@@ -406,6 +487,9 @@ class SqliteClipboardRepository
     if (editingImage && oldImagePath != null && oldImagePath != imagePath) {
       await _deleteImage(oldImagePath);
     }
+    if (pendingPlainImagePath != null) {
+      await _deleteImage(pendingPlainImagePath);
+    }
 
     final updatedRows = await _db.query(
       'clipboard_items',
@@ -413,7 +497,7 @@ class SqliteClipboardRepository
       whereArgs: [item.id],
       limit: 1,
     );
-    return ClipboardItem.fromMap(await _normalizeRow(updatedRows.single));
+    return _itemFromRow(updatedRows.single);
   }
 
   @override
@@ -439,16 +523,16 @@ class SqliteClipboardRepository
 
   @override
   Future<void> clearHistory({bool includePinned = false}) async {
+    final where = includePinned
+        ? 'is_vault = 0'
+        : 'is_pinned = 0 AND is_vault = 0';
     final rows = await _db.query(
       'clipboard_items',
       columns: ['image_path'],
-      where: includePinned ? null : 'is_pinned = 0',
+      where: where,
     );
     await _db.transaction((transaction) async {
-      await transaction.delete(
-        'clipboard_items',
-        where: includePinned ? null : 'is_pinned = 0',
-      );
+      await transaction.delete('clipboard_items', where: where);
     });
     for (final row in rows) {
       await _deleteImage(row['image_path'] as String?);
@@ -486,6 +570,7 @@ class SqliteClipboardRepository
 
   @override
   Future<void> upsertCollection(ClipboardCollection collection) async {
+    if (collection.isVault) return;
     final value = collection.toMap();
     await _db.rawInsert(
       '''
@@ -512,6 +597,7 @@ class SqliteClipboardRepository
 
   @override
   Future<void> renameCollection(String id, String name) async {
+    if (id == ClipboardCollection.vaultId) return;
     await _db.update(
       'collections',
       {
@@ -525,6 +611,7 @@ class SqliteClipboardRepository
 
   @override
   Future<void> deleteCollection(String id) async {
+    if (id == ClipboardCollection.vaultId) return;
     await _db.delete(
       'clipboard_item_collections',
       where: 'collection_id = ?',
@@ -535,6 +622,14 @@ class SqliteClipboardRepository
 
   @override
   Future<void> addToCollection(String itemId, String collectionId) async {
+    if (collectionId == ClipboardCollection.vaultId) {
+      await _moveToVault(itemId);
+      return;
+    }
+    if (await _itemIsVault(itemId)) {
+      await _restoreFromVault(itemId, collectionId: collectionId);
+      return;
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transaction((transaction) async {
       await transaction.insert('clipboard_item_collections', {
@@ -553,6 +648,10 @@ class SqliteClipboardRepository
 
   @override
   Future<void> removeFromCollection(String itemId, String collectionId) async {
+    if (collectionId == ClipboardCollection.vaultId) {
+      await _restoreFromVault(itemId);
+      return;
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transaction((transaction) async {
       await transaction.delete(
@@ -580,9 +679,239 @@ class SqliteClipboardRepository
     return rows.map((row) => row['collection_id']! as String).toSet();
   }
 
+  Future<bool> _itemIsVault(String itemId) async {
+    final rows = await _db.query(
+      'clipboard_items',
+      columns: ['is_vault'],
+      where: 'id = ?',
+      whereArgs: [itemId],
+      limit: 1,
+    );
+    return rows.isNotEmpty && (rows.first['is_vault'] as int? ?? 0) == 1;
+  }
+
+  Future<void> _moveToVault(String itemId) async {
+    final crypto = _vaultCrypto;
+    if (crypto == null || !crypto.isUnlocked) {
+      throw const VaultLockedException();
+    }
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id = ?',
+      whereArgs: [itemId],
+      limit: 1,
+    );
+    if (rows.isEmpty || _isVaultRow(rows.first)) return;
+    final row = rows.first;
+    final imagePath = row['image_path'] as String?;
+    final encryptedImagePath = imagePath == null || imagePath.isEmpty
+        ? null
+        : await _encryptImageFile(itemId, imagePath);
+    final values = await _encryptVaultValues(
+      Map<String, Object?>.fromEntries(
+        _vaultEncryptedFields.map((field) => MapEntry(field, row[field])),
+      ),
+    );
+    values
+      ..['image_path'] = encryptedImagePath
+      ..['contains_url'] = 0
+      ..['has_ocr_text'] = 0
+      ..['searchable_text'] = ''
+      ..['is_vault'] = 1
+      ..['updated_at'] = DateTime.now().millisecondsSinceEpoch;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.transaction((transaction) async {
+      await transaction.delete(
+        'clipboard_item_collections',
+        where: 'clipboard_item_id = ?',
+        whereArgs: [itemId],
+      );
+      await transaction.update(
+        'clipboard_items',
+        values,
+        where: 'id = ?',
+        whereArgs: [itemId],
+      );
+      await transaction.insert('clipboard_item_collections', {
+        'clipboard_item_id': itemId,
+        'collection_id': ClipboardCollection.vaultId,
+        'created_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    });
+    if (imagePath != null && imagePath != encryptedImagePath) {
+      await _deleteImage(imagePath);
+    }
+  }
+
+  Future<void> _restoreFromVault(String itemId, {String? collectionId}) async {
+    final crypto = _vaultCrypto;
+    if (crypto == null || !crypto.isUnlocked) {
+      throw const VaultLockedException();
+    }
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id = ? AND is_vault = 1',
+      whereArgs: [itemId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return;
+    final row = rows.first;
+    final clear = Map<String, Object?>.from(row);
+    for (final field in _vaultEncryptedFields) {
+      final value = clear[field] as String?;
+      if (value != null && value.isNotEmpty) {
+        clear[field] = await crypto.decryptString(value);
+      }
+    }
+    final encryptedImagePath = row['image_path'] as String?;
+    String? restoredImagePath;
+    if (encryptedImagePath != null && encryptedImagePath.isNotEmpty) {
+      restoredImagePath = await _decryptImageFile(
+        itemId,
+        clear['content_hash']! as String,
+        encryptedImagePath,
+      );
+    }
+    final contentType = ClipboardContentType.fromDatabase(
+      clear['content_type']! as String,
+    );
+    final features = const ClipboardFeatureExtractor().extract(
+      content: clear['content'] as String? ?? '',
+      contentType: contentType,
+      imagePath: restoredImagePath,
+      metadataJson: clear['metadata_json'] as String?,
+      note: clear['note'] as String?,
+      sourceAppName: clear['source_app_name'] as String?,
+    );
+    final values = <String, Object?>{
+      for (final field in _vaultEncryptedFields) field: clear[field],
+      'image_path': restoredImagePath,
+      ..._featureValues(features),
+      'is_vault': 0,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+    };
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await _db.transaction((transaction) async {
+      await transaction.delete(
+        'clipboard_item_collections',
+        where: 'clipboard_item_id = ?',
+        whereArgs: [itemId],
+      );
+      await transaction.update(
+        'clipboard_items',
+        values,
+        where: 'id = ?',
+        whereArgs: [itemId],
+      );
+      if (collectionId != null) {
+        await transaction.insert(
+          'clipboard_item_collections',
+          {
+            'clipboard_item_id': itemId,
+            'collection_id': collectionId,
+            'created_at': now,
+          },
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+    });
+    if (encryptedImagePath != null) {
+      await _deleteImage(encryptedImagePath);
+    }
+  }
+
+  Future<String> _encryptImageFile(String itemId, String path) async {
+    final crypto = _vaultCrypto!;
+    final source = File(path);
+    final encrypted = await crypto.encryptBytes(await source.readAsBytes());
+    final supportPath = _appDatabase.databasePath == inMemoryDatabasePath
+        ? (await getApplicationSupportDirectory()).path
+        : p.dirname(_appDatabase.databasePath);
+    final directory = Directory(p.join(supportPath, 'vault_files'));
+    await directory.create(recursive: true);
+    final target = File(p.join(directory.path, '$itemId.cfv'));
+    await target.writeAsBytes(encrypted, flush: true);
+    return target.path;
+  }
+
+  Future<String> _decryptImageFile(
+    String itemId,
+    String hash,
+    String encryptedPath,
+  ) async {
+    final encrypted = await File(encryptedPath).readAsBytes();
+    final clear = await _vaultCrypto!.decryptBytes(encrypted);
+    final supportPath = _appDatabase.databasePath == inMemoryDatabasePath
+        ? (await getApplicationSupportDirectory()).path
+        : p.dirname(_appDatabase.databasePath);
+    final directory = Directory(p.join(supportPath, 'clipboard_images'));
+    await directory.create(recursive: true);
+    final target = File(p.join(directory.path, '$hash-$itemId.png'));
+    await target.writeAsBytes(clear, flush: true);
+    return target.path;
+  }
+
+  bool _isVaultRow(Map<String, Object?> row) =>
+      (row['is_vault'] as int? ?? 0) == 1;
+
+  Future<String?> _encryptNullable(String? value) async {
+    if (value == null || value.isEmpty) return value;
+    final crypto = _vaultCrypto;
+    if (crypto == null) throw const VaultLockedException();
+    return crypto.encryptString(value);
+  }
+
+  Future<Map<String, Object?>> _encryptVaultValues(
+    Map<String, Object?> values,
+  ) async {
+    final protected = Map<String, Object?>.from(values);
+    for (final field in _vaultEncryptedFields) {
+      if (!protected.containsKey(field)) continue;
+      protected[field] = await _encryptNullable(protected[field] as String?);
+    }
+    return protected;
+  }
+
+  @override
+  Future<void> clearVault() async {
+    final rows = await _db.query(
+      'clipboard_items',
+      columns: ['image_path'],
+      where: 'is_vault = 1',
+    );
+    await _db.delete('clipboard_items', where: 'is_vault = 1');
+    for (final row in rows) {
+      await _deleteImage(row['image_path'] as String?);
+    }
+    await clearVaultPreviews();
+  }
+
+  @override
+  Future<void> disableVault() async {
+    final rows = await _db.query(
+      'clipboard_items',
+      columns: ['id'],
+      where: 'is_vault = 1',
+    );
+    for (final row in rows) {
+      await _restoreFromVault(row['id']! as String);
+    }
+    await clearVaultPreviews();
+  }
+
+  @override
+  Future<void> clearVaultPreviews() async {
+    for (final path in _vaultPreviewPaths.toList(growable: false)) {
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    }
+    _vaultPreviewPaths.clear();
+  }
+
   @override
   Future<void> cleanup(AppSettings settings) async {
     final eligibility = <String>[
+      'i.is_vault = 0',
       if (settings.protectPinned) 'i.is_pinned = 0',
       if (settings.protectCollections)
         '''NOT EXISTS (
@@ -686,7 +1015,7 @@ class SqliteClipboardRepository
 
   @override
   Future<ClipboardSearchPage> search(ClipboardSearchQuery query) async {
-    final where = <String>[];
+    final where = <String>['i.is_vault = 0'];
     final args = <Object?>[];
     var join = '';
     if (!query.includeSensitive) where.add('i.is_sensitive = 0');
@@ -788,7 +1117,8 @@ class SqliteClipboardRepository
     if (ids.isEmpty) return const [];
     final rows = await _db.query(
       'clipboard_items',
-      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      where:
+          'is_vault = 0 AND id IN (${List.filled(ids.length, '?').join(',')})',
       whereArgs: ids,
     );
     final byId = <String, ClipboardItem>{};
@@ -811,7 +1141,8 @@ class SqliteClipboardRepository
         'is_pinned': pinned ? 1 : 0,
         'updated_at': DateTime.now().millisecondsSinceEpoch,
       },
-      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      where:
+          'is_vault = 0 AND id IN (${List.filled(ids.length, '?').join(',')})',
       whereArgs: ids,
     );
   }
@@ -822,12 +1153,14 @@ class SqliteClipboardRepository
     final rows = await _db.query(
       'clipboard_items',
       columns: ['image_path'],
-      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      where:
+          'is_vault = 0 AND id IN (${List.filled(ids.length, '?').join(',')})',
       whereArgs: ids,
     );
     await _db.delete(
       'clipboard_items',
-      where: 'id IN (${List.filled(ids.length, '?').join(',')})',
+      where:
+          'is_vault = 0 AND id IN (${List.filled(ids.length, '?').join(',')})',
       whereArgs: ids,
     );
     for (final row in rows) {
@@ -841,6 +1174,9 @@ class SqliteClipboardRepository
     String collectionId,
   ) async {
     if (itemIds.isEmpty) return;
+    if (collectionId == ClipboardCollection.vaultId) {
+      throw const VaultLockedException();
+    }
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transaction((transaction) async {
       final batch = transaction.batch();
@@ -873,10 +1209,10 @@ class SqliteClipboardRepository
     // (seeded collections use ids such as "work" for localized names).
     final rows = await _db.rawQuery(
       '''SELECT * FROM collections
-         WHERE LOWER(name) = ? OR LOWER(id) = ?
+         WHERE id != ? AND (LOWER(name) = ? OR LOWER(id) = ?)
          ORDER BY CASE WHEN LOWER(name) = ? THEN 0 ELSE 1 END
          LIMIT 1''',
-      [needle, needle, needle],
+      [ClipboardCollection.vaultId, needle, needle, needle],
     );
     return rows.isEmpty ? null : ClipboardCollection.fromMap(rows.first);
   }
@@ -885,3 +1221,18 @@ class SqliteClipboardRepository
 extension _FirstOrNull<T> on List<T> {
   T? get firstOrNull => isEmpty ? null : first;
 }
+
+const _vaultEncryptedFields = <String>[
+  'content',
+  'normalized_content',
+  'content_hash',
+  'source_app_name',
+  'source_app_identifier',
+  'metadata_json',
+  'note',
+  'primary_url',
+  'url_host',
+  'url_kind',
+  'mime_type',
+  'file_extension',
+];

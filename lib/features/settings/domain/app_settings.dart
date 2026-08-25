@@ -33,6 +33,8 @@ class AppSettings {
     this.deleteImagesFirst = true,
     this.protectPinned = true,
     this.protectCollections = true,
+    this.vaultEnabled = false,
+    this.vaultWipeAfterFiveFailures = false,
     this.shortcut = '⌃V',
     this.openPanelShortcut,
     this.focusSearchShortcut,
@@ -106,6 +108,8 @@ class AppSettings {
   final bool deleteImagesFirst;
   final bool protectPinned;
   final bool protectCollections;
+  final bool vaultEnabled;
+  final bool vaultWipeAfterFiveFailures;
   final String shortcut;
   final String? openPanelShortcut;
   final String? focusSearchShortcut;
@@ -156,6 +160,8 @@ class AppSettings {
     bool? deleteImagesFirst,
     bool? protectPinned,
     bool? protectCollections,
+    bool? vaultEnabled,
+    bool? vaultWipeAfterFiveFailures,
     String? shortcut,
     String? openPanelShortcut,
     String? focusSearchShortcut,
@@ -211,6 +217,9 @@ class AppSettings {
       deleteImagesFirst: deleteImagesFirst ?? this.deleteImagesFirst,
       protectPinned: protectPinned ?? this.protectPinned,
       protectCollections: protectCollections ?? this.protectCollections,
+      vaultEnabled: vaultEnabled ?? this.vaultEnabled,
+      vaultWipeAfterFiveFailures:
+          vaultWipeAfterFiveFailures ?? this.vaultWipeAfterFiveFailures,
       shortcut: shortcut ?? this.shortcut,
       openPanelShortcut: openPanelShortcut ?? this.openPanelShortcut,
       focusSearchShortcut: focusSearchShortcut ?? this.focusSearchShortcut,
@@ -263,6 +272,8 @@ class AppSettings {
     'deleteImagesFirst': deleteImagesFirst,
     'protectPinned': protectPinned,
     'protectCollections': protectCollections,
+    'vaultEnabled': vaultEnabled,
+    'vaultWipeAfterFiveFailures': vaultWipeAfterFiveFailures,
     'shortcut': shortcut,
     'openPanelShortcut': openPanelShortcut,
     'focusSearchShortcut': focusSearchShortcut,
@@ -332,6 +343,8 @@ class AppSettings {
       deleteImagesFirst: value('deleteImagesFirst', true),
       protectPinned: value('protectPinned', true),
       protectCollections: value('protectCollections', true),
+      vaultEnabled: value('vaultEnabled', false),
+      vaultWipeAfterFiveFailures: value('vaultWipeAfterFiveFailures', false),
       shortcut: value('shortcut', '⌃V'),
       openPanelShortcut: map['openPanelShortcut'] as String?,
       focusSearchShortcut: map['focusSearchShortcut'] as String?,

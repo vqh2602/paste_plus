@@ -28,6 +28,8 @@
 	<true/>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>ClipFlow uses your local network to securely discover and synchronize clipboard items with your paired devices.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>ClipFlow uses Face ID to unlock your encrypted Vault.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_clipflow._tcp</string>

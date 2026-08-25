@@ -1589,4 +1589,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.';
+
+  @override
+  String get vault_title => 'Vault';
+
+  @override
+  String get vault_enabled => 'Enable Vault';
+
+  @override
+  String get vault_enabled_sub =>
+      'Protect a system collection with encryption and authentication.';
+
+  @override
+  String get vault_create_password_title => 'Create Vault password';
+
+  @override
+  String get vault_unlock_title => 'Unlock Vault';
+
+  @override
+  String get vault_unlock_sub =>
+      'Authenticate to view encrypted clipboard items.';
+
+  @override
+  String get vault_password => 'Password';
+
+  @override
+  String get vault_confirm_password => 'Confirm password';
+
+  @override
+  String get vault_new_password => 'New password';
+
+  @override
+  String get vault_password_min => 'Use at least 6 characters.';
+
+  @override
+  String get vault_password_mismatch => 'Passwords do not match.';
+
+  @override
+  String get vault_unlock => 'Unlock';
+
+  @override
+  String get vault_use_device_auth => 'Use device authentication';
+
+  @override
+  String get vault_invalid_password => 'Incorrect password.';
+
+  @override
+  String get vault_attempts_remaining => '@count attempts remaining.';
+
+  @override
+  String get vault_data_wiped =>
+      'Vault data was deleted after 5 failed attempts.';
+
+  @override
+  String get vault_change_password => 'Change Vault password';
+
+  @override
+  String get vault_change_password_sub =>
+      'Rewrap the encryption key with a new password.';
+
+  @override
+  String get vault_device_auth =>
+      'Face ID, fingerprint or device authentication';
+
+  @override
+  String get vault_device_auth_sub =>
+      'Use an authentication method configured on this device.';
+
+  @override
+  String get vault_device_auth_failed =>
+      'Device authentication was unavailable or cancelled.';
+
+  @override
+  String get vault_wipe_after_five =>
+      'Delete Vault data after 5 failed attempts';
+
+  @override
+  String get vault_wipe_after_five_sub =>
+      'Permanently deletes only encrypted items in the Vault. Off by default.';
+
+  @override
+  String get vault_encryption_title => 'AES-256 encrypted at rest';
+
+  @override
+  String get vault_encryption_sub =>
+      'Clipboard content, metadata and image files are encrypted before being stored.';
+
+  @override
+  String get vault_disable_confirm =>
+      'Disable Vault and restore its decrypted items to clipboard history?';
+
+  @override
+  String get vault_locked_notice => 'Unlock the Vault before continuing.';
 }

@@ -156,6 +156,8 @@ class ClipboardItem {
 }
 
 class ClipboardCollection {
+  static const vaultId = 'vault';
+
   const ClipboardCollection({
     required this.id,
     required this.name,
@@ -171,6 +173,9 @@ class ClipboardCollection {
   final DateTime createdAt;
   final DateTime updatedAt;
   final int sortOrder;
+
+  bool get isVault => id == vaultId;
+  bool get isSystem => isVault;
 
   factory ClipboardCollection.fromMap(Map<String, Object?> map) {
     return ClipboardCollection(

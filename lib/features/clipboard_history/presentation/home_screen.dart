@@ -14,6 +14,7 @@ import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_item.dart';
+import 'history_controller.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/clipboard_action_menu.dart';
 import 'widgets/clipboard_edit_dialog.dart';
@@ -22,6 +23,7 @@ import 'widgets/clipboard_share.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
 import 'widgets/note_edit_dialog.dart';
+import '../../vault/presentation/vault_dialogs.dart';
 import 'widgets/mobile_sidebar_sheet.dart';
 import 'widgets/sidebar_widget.dart';
 
@@ -54,6 +56,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _openSettings() {
+    unawaited(_leaveVaultAndOpenSettings());
+  }
+
+  Future<void> _leaveVaultAndOpenSettings() async {
+    final history = ref.read(historyControllerProvider);
+    if (history.section == HistorySection.collection &&
+        history.collectionId == ClipboardCollection.vaultId) {
+      await ref
+          .read(historyControllerProvider.notifier)
+          .selectSection(HistorySection.all);
+      if (!mounted) return;
+    }
     context.push('/settings');
   }
 
@@ -148,8 +162,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _handleAddToCollection(ClipboardItem item) async {
+    final settings = ref.read(settingsControllerProvider);
     final collections =
-        ref.read(collectionsControllerProvider).value ?? const [];
+        (ref.read(collectionsControllerProvider).value ?? const [])
+            .where((collection) => !collection.isVault || settings.vaultEnabled)
+            .toList(growable: false);
     if (collections.isEmpty) {
       await _showCreateCollectionDialog();
       return;
@@ -172,7 +189,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
+    if (!mounted) return;
     if (collection != null) {
+      if (collection.isVault && !await ensureVaultUnlocked(context, ref)) {
+        return;
+      }
       await ref
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
@@ -195,8 +216,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ValueChanged<ClipboardItem> onAddToCollection,
   ) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
-
-    final action = await showClipboardActionMenu(context: context, item: item);
+    final history = ref.read(historyControllerProvider);
+    final action = await showClipboardActionMenu(
+      context: context,
+      item: item,
+      protectVaultContent:
+          history.section == HistorySection.collection &&
+          history.collectionId == ClipboardCollection.vaultId,
+    );
 
     if (!context.mounted || action == null) return;
 
@@ -339,7 +366,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final settings = ref.watch(settingsControllerProvider);
     final state = ref.watch(historyControllerProvider);
     final collections =
-        ref.watch(collectionsControllerProvider).value ?? const [];
+        (ref.watch(collectionsControllerProvider).value ?? const [])
+            .where((collection) => !collection.isVault || settings.vaultEnabled)
+            .toList(growable: false);
 
     final shortcutBindings = <ShortcutActivator, VoidCallback>{
       const SingleActivator(LogicalKeyboardKey.arrowDown): () =>

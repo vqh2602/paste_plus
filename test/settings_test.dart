@@ -44,6 +44,8 @@ void main() {
       syncPinnedItemsOnly: true,
       sharingMaxImageMb: 42,
       allConnectionsPaused: true,
+      vaultEnabled: true,
+      vaultWipeAfterFiveFailures: true,
     );
 
     await repository.save(changed);
@@ -63,6 +65,8 @@ void main() {
     expect(loaded.syncPinnedItemsOnly, isTrue);
     expect(loaded.sharingMaxImageMb, 42);
     expect(loaded.allConnectionsPaused, isTrue);
+    expect(loaded.vaultEnabled, isTrue);
+    expect(loaded.vaultWipeAfterFiveFailures, isTrue);
     expect(
       shortcutSignature(
         decodeShortcut(loaded.openPanelShortcut, ShortcutAction.openPanel),

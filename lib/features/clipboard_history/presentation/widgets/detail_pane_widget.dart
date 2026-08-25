@@ -15,6 +15,7 @@ import '../../../ai/domain/ai_feature_request.dart';
 import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import '../history_controller.dart';
 
 import 'clipboard_preview_dialog.dart';
 import 'note_edit_dialog.dart';
@@ -107,6 +108,9 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     }
     final isImage = item.contentType == ClipboardContentType.image;
     final isOnlineImage = isImageUrl(item.content);
+    final viewingVault =
+        state.section == HistorySection.collection &&
+        state.collectionId == ClipboardCollection.vaultId;
     return ColoredBox(
       color: resolveColor(context, ClipFlowColors.sidebar),
       child: Padding(
@@ -368,7 +372,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                 valueWidget: metadata,
               ),
             const SizedBox(height: 14),
-            if (isImage) ...[
+            if (!viewingVault && isImage) ...[
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(
@@ -441,7 +445,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                 ),
               ),
               const SizedBox(height: 8),
-            ] else ...[
+            ] else if (!viewingVault) ...[
               SizedBox(
                 width: double.infinity,
                 child: CupertinoButton(

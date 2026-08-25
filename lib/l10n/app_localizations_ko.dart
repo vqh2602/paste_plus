@@ -1540,4 +1540,85 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       '현재 모델은 이미지를 읽을 수 없습니다. OCR 텍스트와 파일 정보만으로 답변했습니다. 이미지를 직접 분석하려면 비전 모델(Gemma 4 12B Vision 또는 Qwen2.5-VL 7B)을 다운로드하세요.';
+
+  @override
+  String get vault_title => '비밀 보관함';
+
+  @override
+  String get vault_enabled => '비밀 보관함 사용';
+
+  @override
+  String get vault_enabled_sub => '시스템 컬렉션을 암호화와 인증으로 보호합니다.';
+
+  @override
+  String get vault_create_password_title => '비밀 보관함 비밀번호 만들기';
+
+  @override
+  String get vault_unlock_title => '비밀 보관함 잠금 해제';
+
+  @override
+  String get vault_unlock_sub => '암호화된 클립보드 항목을 보려면 인증하세요.';
+
+  @override
+  String get vault_password => '비밀번호';
+
+  @override
+  String get vault_confirm_password => '비밀번호 확인';
+
+  @override
+  String get vault_new_password => '새 비밀번호';
+
+  @override
+  String get vault_password_min => '6자 이상 입력하세요.';
+
+  @override
+  String get vault_password_mismatch => '비밀번호가 일치하지 않습니다.';
+
+  @override
+  String get vault_unlock => '잠금 해제';
+
+  @override
+  String get vault_use_device_auth => '기기 인증 사용';
+
+  @override
+  String get vault_invalid_password => '비밀번호가 올바르지 않습니다.';
+
+  @override
+  String get vault_attempts_remaining => '@count번 남았습니다.';
+
+  @override
+  String get vault_data_wiped => '5회 인증 실패 후 비밀 보관함 데이터를 삭제했습니다.';
+
+  @override
+  String get vault_change_password => '비밀 보관함 비밀번호 변경';
+
+  @override
+  String get vault_change_password_sub => '새 비밀번호로 암호화 키를 다시 보호합니다.';
+
+  @override
+  String get vault_device_auth => 'Face ID, 지문 또는 기기 인증';
+
+  @override
+  String get vault_device_auth_sub => '이 기기에 설정된 인증 방법을 사용합니다.';
+
+  @override
+  String get vault_device_auth_failed => '기기 인증을 사용할 수 없거나 취소되었습니다.';
+
+  @override
+  String get vault_wipe_after_five => '5회 실패 후 비밀 보관함 데이터 삭제';
+
+  @override
+  String get vault_wipe_after_five_sub => '보관함의 암호화 항목만 영구 삭제합니다. 기본값은 꺼짐입니다.';
+
+  @override
+  String get vault_encryption_title => '저장 시 AES-256 암호화';
+
+  @override
+  String get vault_encryption_sub => '내용, 메타데이터 및 이미지 파일을 저장 전에 암호화합니다.';
+
+  @override
+  String get vault_disable_confirm => '비밀 보관함을 끄고 복호화한 항목을 기록으로 복원할까요?';
+
+  @override
+  String get vault_locked_notice => '계속하려면 비밀 보관함을 잠금 해제하세요.';
 }

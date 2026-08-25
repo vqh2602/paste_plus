@@ -3141,6 +3141,168 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.'**
   String get ai_image_needs_vision_model;
+
+  /// No description provided for @vault_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault'**
+  String get vault_title;
+
+  /// No description provided for @vault_enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Vault'**
+  String get vault_enabled;
+
+  /// No description provided for @vault_enabled_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect a system collection with encryption and authentication.'**
+  String get vault_enabled_sub;
+
+  /// No description provided for @vault_create_password_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Vault password'**
+  String get vault_create_password_title;
+
+  /// No description provided for @vault_unlock_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Vault'**
+  String get vault_unlock_title;
+
+  /// No description provided for @vault_unlock_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to view encrypted clipboard items.'**
+  String get vault_unlock_sub;
+
+  /// No description provided for @vault_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get vault_password;
+
+  /// No description provided for @vault_confirm_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get vault_confirm_password;
+
+  /// No description provided for @vault_new_password.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get vault_new_password;
+
+  /// No description provided for @vault_password_min.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters.'**
+  String get vault_password_min;
+
+  /// No description provided for @vault_password_mismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get vault_password_mismatch;
+
+  /// No description provided for @vault_unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get vault_unlock;
+
+  /// No description provided for @vault_use_device_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device authentication'**
+  String get vault_use_device_auth;
+
+  /// No description provided for @vault_invalid_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password.'**
+  String get vault_invalid_password;
+
+  /// No description provided for @vault_attempts_remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'@count attempts remaining.'**
+  String get vault_attempts_remaining;
+
+  /// No description provided for @vault_data_wiped.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault data was deleted after 5 failed attempts.'**
+  String get vault_data_wiped;
+
+  /// No description provided for @vault_change_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Vault password'**
+  String get vault_change_password;
+
+  /// No description provided for @vault_change_password_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrap the encryption key with a new password.'**
+  String get vault_change_password_sub;
+
+  /// No description provided for @vault_device_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID, fingerprint or device authentication'**
+  String get vault_device_auth;
+
+  /// No description provided for @vault_device_auth_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an authentication method configured on this device.'**
+  String get vault_device_auth_sub;
+
+  /// No description provided for @vault_device_auth_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Device authentication was unavailable or cancelled.'**
+  String get vault_device_auth_failed;
+
+  /// No description provided for @vault_wipe_after_five.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Vault data after 5 failed attempts'**
+  String get vault_wipe_after_five;
+
+  /// No description provided for @vault_wipe_after_five_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently deletes only encrypted items in the Vault. Off by default.'**
+  String get vault_wipe_after_five_sub;
+
+  /// No description provided for @vault_encryption_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AES-256 encrypted at rest'**
+  String get vault_encryption_title;
+
+  /// No description provided for @vault_encryption_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard content, metadata and image files are encrypted before being stored.'**
+  String get vault_encryption_sub;
+
+  /// No description provided for @vault_disable_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Vault and restore its decrypted items to clipboard history?'**
+  String get vault_disable_confirm;
+
+  /// No description provided for @vault_locked_notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Vault before continuing.'**
+  String get vault_locked_notice;
 }
 
 class _AppLocalizationsDelegate

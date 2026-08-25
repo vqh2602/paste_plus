@@ -48,6 +48,9 @@ class HistoryPaneWidget extends ConsumerWidget {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
     final settings = ref.watch(settingsControllerProvider);
     final items = state.visibleItems;
+    final viewingVault =
+        state.section == HistorySection.collection &&
+        state.collectionId == ClipboardCollection.vaultId;
 
     return Column(
       children: [
@@ -82,7 +85,7 @@ class HistoryPaneWidget extends ConsumerWidget {
                 const SharingQuickStatusButton(),
                 const SizedBox(width: 2),
               ],
-              if (settings.aiEnabled) ...[
+              if (settings.aiEnabled && !viewingVault) ...[
                 CupertinoIconControl(
                   key: const Key('history-ai-button'),
                   icon: CupertinoIcons.sparkles,
