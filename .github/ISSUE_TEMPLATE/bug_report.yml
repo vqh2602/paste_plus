@@ -1,0 +1,104 @@
+name: "🐛 Báo lỗi / Bug Report"
+description: "Báo cáo lỗi hoặc sự cố phát sinh trong quá trình sử dụng ClipFlow"
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã dành thời gian báo cáo lỗi để giúp ClipFlow ngày càng hoàn thiện hơn!
+        *Thank you for taking the time to report a bug and help improve ClipFlow!*
+
+  - type: input
+    id: version
+    attributes:
+      label: "Phiên bản ClipFlow / ClipFlow Version"
+      description: "Phiên bản ClipFlow bạn đang sử dụng (ví dụ: v1.1.6)"
+      placeholder: "v1.1.6"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: "Hệ điều hành / Operating System"
+      description: "Nền tảng bạn đang cài đặt và chạy ClipFlow"
+      options:
+        - "macOS (Apple Silicon - M1/M2/M3/M4)"
+        - "macOS (Intel - x86_64)"
+        - "Windows 11 (x64)"
+        - "Windows 10 (x64)"
+        - "Windows 11 (ARM64)"
+        - "iOS / iPadOS"
+        - "Android"
+        - "Khác / Other"
+    validations:
+      required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: "Chi tiết phiên bản OS / OS Build Version"
+      description: "Phiên bản cụ thể của hệ điều hành (không bắt buộc)"
+      placeholder: "e.g. macOS Sonoma 14.5 / Windows 11 23H2 / iOS 17.5"
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Mô tả sự cố / Bug Description"
+      description: "Mô tả chi tiết, rõ ràng về lỗi xảy ra"
+      placeholder: "Mô tả ngắn gọn điều gì đã xảy ra bất thường..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Các bước tái hiện lỗi / Steps to Reproduce"
+      description: "Các bước chi tiết để tái hiện lại lỗi này"
+      placeholder: |
+        1. Mở ClipFlow...
+        2. Sao chép nội dung...
+        3. Nhấn tổ hợp phím hoặc chọn thao tác...
+        4. Thấy lỗi xuất hiện...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Hành vi kỳ vọng / Expected Behavior"
+      description: "Điều bạn mong đợi sẽ diễn ra bình thường"
+      placeholder: "Nội dung cần được sao chép/hiển thị chính xác..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Hành vi thực tế / Actual Behavior"
+      description: "Điều thực tế đã xảy ra (ví dụ: bị crash, không phản hồi, hiển thị sai...)"
+      placeholder: "Ứng dụng đóng đột ngột hoặc xuất hiện thông báo lỗi..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Log lỗi / Ảnh chụp màn hình / Error Logs & Screenshots"
+      description: "Dán log console, thông báo lỗi hoặc kéo thả ảnh chụp màn hình vào đây"
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Kiểm tra trước khi gửi / Checklist"
+      options:
+        - label: "Tôi đã kiểm tra và đang sử dụng phiên bản mới nhất của ClipFlow."
+          required: false
+        - label: "Tôi đã tìm kiếm trong danh sách Issues hiện có và không thấy báo cáo trùng lặp."
+          required: false
