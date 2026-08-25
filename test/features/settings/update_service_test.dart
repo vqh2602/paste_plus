@@ -36,7 +36,7 @@ void main() {
   });
 
   test(
-    'finds the Windows executable inside an extracted release folder',
+    'validates the full Windows bundle and builds a directory installer',
     () async {
       final root = await Directory.systemTemp.createTemp(
         'clipflow_update_test_',
@@ -48,13 +48,35 @@ void main() {
       await release.create(recursive: true);
       final executable = File(path.join(release.path, 'clipflow.exe'));
       await executable.writeAsBytes(const [1, 2, 3]);
+      await File(
+        path.join(release.path, 'flutter_windows.dll'),
+      ).writeAsBytes(const [4, 5, 6]);
+      final data = Directory(path.join(release.path, 'data'));
+      await Directory(
+        path.join(data.path, 'flutter_assets'),
+      ).create(recursive: true);
+      await File(path.join(data.path, 'app.so')).writeAsBytes(const [7, 8, 9]);
 
-      final found = await UpdateService.findExtractedExecutable(
+      final found = await UpdateService.findWindowsBundleDirectory(
         root,
         'ClipFlow.exe',
       );
 
-      expect(found?.path, executable.path);
+      expect(found?.path, release.path);
+
+      final script = UpdateService.buildWindowsInstallScript(
+        appProcessId: 4242,
+        sourceDirectory: release.path,
+        targetDirectory: r'D:\Apps\ClipFlow',
+        targetExecutable: r'D:\Apps\ClipFlow\clipflow.exe',
+        temporaryDirectory: root.path,
+      );
+      expect(script, contains('Wait-Process -Id 4242'));
+      expect(script, isNot(contains(r'Wait-Process -Id $pid')));
+      expect(script, contains('robocopy.exe'));
+      expect(script, contains('/MIR'));
+      expect(script, contains('flutter_windows.dll'));
+      expect(script, contains(r'data\flutter_assets'));
     },
   );
 }

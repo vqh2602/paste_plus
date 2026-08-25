@@ -5,6 +5,8 @@
 ### 🛡️ Bảo vệ dữ liệu nhạy cảm & quyền riêng tư
 - Thêm bộ lọc tùy chọn để bỏ qua số thẻ thanh toán hợp lệ theo thuật toán **Luhn** và mã định danh/hộ chiếu. Nhận dạng trực tiếp bằng checksum hoặc cấu trúc chặt cho Việt Nam, Mỹ, Trung Quốc, Ấn Độ, Nhật Bản, Thái Lan, Singapore, Đài Loan, Tây Ban Nha và Hàn Quốc; hộ chiếu quốc tế còn được nhận qua nhãn đa ngôn ngữ hoặc MRZ ICAO, đồng thời không còn bị phân loại nhầm thành số điện thoại.
 - Mở rộng phân loại số điện thoại bằng metadata libphonenumber cho các quốc gia trên toàn cầu; hỗ trợ mã quốc gia `+`/`00`, định dạng nội địa phổ biến, dấu chấm/gạch/ngoặc, `tel:`, số máy lẻ và chữ số Unicode trong khi loại trừ ngày tháng, mã định danh và mã quốc gia không hợp lệ.
+- Sửa trình cập nhật Windows portable: updater nay chờ đúng PID của ClipFlow, giải nén ZIP trực tiếp bằng Dart, xác thực đầy đủ `clipflow.exe`, `flutter_windows.dll`, `data/app.so` và `data/flutter_assets`, sau đó thay thế toàn bộ thư mục release bằng `robocopy` rồi khởi động lại ứng dụng tại đúng ổ đĩa cài đặt.
+- Khôi phục khả năng build Windows bằng MSVC 14.51 bằng lớp tương thích giới hạn riêng cho `local_auth_windows`, tránh lỗi STL1011 từ `<experimental/coroutine>` mà không tắt cảnh báo cho toàn bộ ứng dụng.
 - Thêm bảo vệ cửa sổ nhạy cảm trên macOS/Windows: bỏ qua clipboard khi con trỏ đang ở ô mật khẩu hoặc tiêu đề cửa sổ thể hiện đăng nhập, xác thực, thanh toán hay ngân hàng.
 - Thêm tùy chọn loại cửa sổ ClipFlow khỏi ảnh chụp, bản ghi và luồng chia sẻ màn hình bằng API bảo vệ nội dung native của hệ điều hành.
 - Tất cả ba lớp bảo vệ đều có công tắc riêng trong **Cài đặt > Quyền riêng tư**.

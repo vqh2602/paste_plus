@@ -57,6 +57,16 @@ add_subdirectory("runner")
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# local_auth_windows 2.0.1 still builds its C++/WinRT sources with /await and
+# <experimental/coroutine>. MSVC 14.51 turns that SDK deprecation into STL1011,
+# so keep the plugin build working until it migrates fully to <coroutine>.
+# Scope the compatibility define to this plugin instead of silencing it for the
+# application and every other dependency.
+if(MSVC AND TARGET local_auth_windows_plugin)
+  target_compile_definitions(local_auth_windows_plugin PRIVATE
+    _SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS)
+endif()
+
 
 # === Installation ===
 # Support files are copied into place next to the executable, so that it can

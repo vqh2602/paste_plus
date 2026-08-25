@@ -140,9 +140,19 @@ jobs:
       - name: Build Windows App (Develop 1.0.0)
         run: flutter build windows --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
 
-      - name: Create ZIP archive of Windows App
+      - name: Verify and archive the complete Windows bundle
         run: |
-          Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath ClipFlow-Windows-develop.zip
+          $bundle = "build\windows\x64\runner\Release"
+          $required = @(
+            "$bundle\clipflow.exe",
+            "$bundle\flutter_windows.dll",
+            "$bundle\data\app.so",
+            "$bundle\data\flutter_assets"
+          )
+          foreach ($entry in $required) {
+            if (-not (Test-Path -LiteralPath $entry)) { throw "Missing Windows bundle entry: $entry" }
+          }
+          Compress-Archive -Path "$bundle\*" -DestinationPath ClipFlow-Windows-develop.zip
         shell: powershell
 
       - name: Upload Windows Artifact
