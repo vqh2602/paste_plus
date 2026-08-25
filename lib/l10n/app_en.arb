@@ -284,6 +284,7 @@
   "view_license": "View License",
   "about_tagline": "A private, fast, local clipboard manager",
   "added_to_collection": "Added to collection",
+  "added_to_collection_named": "Added to collection \"@name\"",
   "all_cleared": "Clipboard history cleared",
   "all_clips": "All Clips",
   "all_types": "All Types",

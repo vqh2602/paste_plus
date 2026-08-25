@@ -110,9 +110,9 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                   CupertinoIconControl(
                     icon:
                         (ref.watch(pinnedStateOverrideProvider)[item.id] ??
-                                item.isPinned)
-                            ? CupertinoIcons.pin_fill
-                            : CupertinoIcons.pin,
+                            item.isPinned)
+                        ? CupertinoIcons.pin_fill
+                        : CupertinoIcons.pin,
                     color: CupertinoColors.white,
                     size: 16,
                     onPressed: () async {
@@ -129,11 +129,14 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           .clearPinned(item.id);
                     },
                   ),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.ellipsis,
-                    color: CupertinoColors.white,
-                    size: 17,
-                    onPressed: () => onActions(context),
+                  Builder(
+                    builder: (menuContext) => CupertinoIconControl(
+                      key: const Key('quick-item-more-button'),
+                      icon: CupertinoIcons.ellipsis,
+                      color: CupertinoColors.white,
+                      size: 17,
+                      onPressed: () => onActions(menuContext),
+                    ),
                   ),
                 ],
               ),
@@ -158,9 +161,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                           context,
                                           ClipFlowColors.surface,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,
@@ -169,9 +170,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                         ),
                                       ),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          8,
-                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                         child:
                                             (item.imagePath != null &&
                                                 File(
@@ -217,9 +216,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                           context,
                                           ClipFlowColors.surface,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,
@@ -228,9 +225,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                         ),
                                       ),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          8,
-                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                         child: CachedNetworkImage(
                                           url: item.content,
                                           width: double.infinity,
@@ -261,9 +256,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                       width: double.infinity,
                                       decoration: BoxDecoration(
                                         color: parsedColor,
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,

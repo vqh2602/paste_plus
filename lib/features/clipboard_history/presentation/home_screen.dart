@@ -175,7 +175,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
       if (!mounted) return;
-      showCupertinoNotice(context, context.l10n.added_to_collection);
+      showCupertinoNotice(
+        context,
+        context.l10n.added_to_collection_named.replaceAll(
+          '@name',
+          collection.name,
+        ),
+      );
     }
   }
 

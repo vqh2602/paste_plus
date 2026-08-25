@@ -286,6 +286,7 @@
   "view_license": "라이선스 보기",
   "about_tagline": "개인적이고 빠른 로컬 클립보드 관리자",
   "added_to_collection": "컬렉션에 추가되었습니다",
+  "added_to_collection_named": "\"@name\" 컬렉션에 추가되었습니다",
   "all_cleared": "클립보드 기록이 지워졌습니다",
   "all_clips": "모든 클립",
   "all_types": "모든 유형",

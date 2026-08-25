@@ -893,6 +893,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get added_to_collection => 'Đã thêm vào collection';
 
   @override
+  String get added_to_collection_named => 'Đã thêm vào collection \"@name\"';
+
+  @override
   String get all_cleared => 'Đã xóa toàn bộ lịch sử';
 
   @override

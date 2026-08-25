@@ -286,6 +286,7 @@
   "view_license": "ライセンスを表示",
   "about_tagline": "プライベートで高速なローカルクリップボードマネージャー",
   "added_to_collection": "コレクションに追加しました",
+  "added_to_collection_named": "コレクション「@name」に追加しました",
   "all_cleared": "クリップボード履歴をクリアしました",
   "all_clips": "すべてのクリップ",
   "all_types": "すべてのタイプ",

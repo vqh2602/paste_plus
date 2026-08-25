@@ -1808,6 +1808,12 @@ abstract class AppLocalizations {
   /// **'Added to collection'**
   String get added_to_collection;
 
+  /// No description provided for @added_to_collection_named.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to collection \"@name\"'**
+  String get added_to_collection_named;
+
   /// No description provided for @all_cleared.
   ///
   /// In en, this message translates to:

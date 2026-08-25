@@ -9,6 +9,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
+import 'clipboard_action_menu.dart';
 
 class SidebarWidget extends ConsumerWidget {
   const SidebarWidget({
@@ -331,14 +332,16 @@ class SidebarTileWidget extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.onOptionsPressed,
+    this.highlighted = false,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
+  final bool highlighted;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final VoidCallback? onOptionsPressed;
+  final ValueChanged<BuildContext>? onOptionsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -347,22 +350,35 @@ class SidebarTileWidget extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 2),
       child: GestureDetector(
         onLongPress: onLongPress,
-        onSecondaryTap: onOptionsPressed ?? onLongPress,
+        onSecondaryTap: onOptionsPressed != null
+            ? () => onOptionsPressed!(context)
+            : onLongPress,
         child: CupertinoPressable(
           onPressed: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? primary : const Color(0x00000000),
+              color: selected
+                  ? primary
+                  : highlighted
+                  ? primary.withValues(alpha: 0.16)
+                  : const Color(0x00000000),
               borderRadius: BorderRadius.circular(9),
+              border: highlighted && !selected
+                  ? Border.all(color: primary, width: 1.5)
+                  : null,
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
                   size: 16,
-                  color: selected ? CupertinoColors.white : null,
+                  color: selected
+                      ? CupertinoColors.white
+                      : highlighted
+                      ? primary
+                      : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -370,20 +386,30 @@ class SidebarTileWidget extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected ? CupertinoColors.white : null,
+                      fontWeight: selected || highlighted
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: selected
+                          ? CupertinoColors.white
+                          : highlighted
+                          ? primary
+                          : null,
                     ),
                   ),
                 ),
                 if (onOptionsPressed != null) ...[
                   const SizedBox(width: 4),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.ellipsis,
-                    size: 14,
-                    color: selected
-                        ? CupertinoColors.white
-                        : resolveColor(context, ClipFlowColors.secondaryText),
-                    onPressed: onOptionsPressed,
+                  Builder(
+                    builder: (menuContext) => CupertinoIconControl(
+                      icon: CupertinoIcons.ellipsis,
+                      size: 14,
+                      color: selected
+                          ? CupertinoColors.white
+                          : highlighted
+                          ? primary
+                          : resolveColor(context, ClipFlowColors.secondaryText),
+                      onPressed: () => onOptionsPressed!(menuContext),
+                    ),
                   ),
                 ],
               ],

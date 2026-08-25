@@ -913,6 +913,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get added_to_collection => 'Zur Sammlung hinzugefügt';
 
   @override
+  String get added_to_collection_named => 'Zur Sammlung \"@name\" hinzugefügt';
+
+  @override
   String get all_cleared => 'Clipboard-Verlauf gelöscht';
 
   @override

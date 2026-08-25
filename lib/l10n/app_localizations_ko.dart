@@ -868,6 +868,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get added_to_collection => '컬렉션에 추가되었습니다';
 
   @override
+  String get added_to_collection_named => '\"@name\" 컬렉션에 추가되었습니다';
+
+  @override
   String get all_cleared => '클립보드 기록이 지워졌습니다';
 
   @override

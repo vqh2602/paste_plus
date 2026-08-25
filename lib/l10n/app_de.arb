@@ -286,6 +286,7 @@
   "view_license": "Lizenz anzeigen",
   "about_tagline": "Ein privater, schneller, lokaler Clipboard-Manager",
   "added_to_collection": "Zur Sammlung hinzugefügt",
+  "added_to_collection_named": "Zur Sammlung \"@name\" hinzugefügt",
   "all_cleared": "Clipboard-Verlauf gelöscht",
   "all_clips": "Alle Clips",
   "all_types": "Alle Typen",

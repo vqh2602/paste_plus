@@ -891,6 +891,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get added_to_collection => 'Added to collection';
 
   @override
+  String get added_to_collection_named => 'Added to collection \"@name\"';
+
+  @override
   String get all_cleared => 'Clipboard history cleared';
 
   @override

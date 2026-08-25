@@ -869,6 +869,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get added_to_collection => 'コレクションに追加しました';
 
   @override
+  String get added_to_collection_named => 'コレクション「@name」に追加しました';
+
+  @override
   String get all_cleared => 'クリップボード履歴をクリアしました';
 
   @override

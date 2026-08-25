@@ -315,6 +315,7 @@
   "view_license": "Xem giấy phép",
   "about_tagline": "Trình quản lý clipboard riêng tư, nhanh và cục bộ",
   "added_to_collection": "Đã thêm vào collection",
+  "added_to_collection_named": "Đã thêm vào collection \"@name\"",
   "all_cleared": "Đã xóa toàn bộ lịch sử",
   "all_clips": "Tất cả bản sao",
   "all_types": "Tất cả loại",
