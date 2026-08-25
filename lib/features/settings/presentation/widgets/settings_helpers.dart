@@ -29,6 +29,8 @@ String typeNameHelper(BuildContext context, ClipboardContentType type) =>
       ClipboardContentType.code => context.l10n.code,
       ClipboardContentType.color => context.l10n.color,
       ClipboardContentType.json => context.l10n.json,
+      ClipboardContentType.jwt => context.l10n.jwt,
+      ClipboardContentType.emoji => context.l10n.emoji,
       ClipboardContentType.file => context.l10n.file,
       ClipboardContentType.image => context.l10n.image,
     };
@@ -515,6 +517,7 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
         settings: settings,
         password: pwd,
         filePath: filePath,
+        database: ref.read(appDatabaseProvider),
       );
 
       if (context.mounted) {
@@ -572,10 +575,25 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
     final res = await const SettingsBackupService().importSettings(
       filePath: filePath,
       password: pwd,
+      database: ref.read(appDatabaseProvider),
     );
 
     if (res.isSuccess && res.settings != null) {
-      await updateSettings(ref, (_) => res.settings!);
+      // Vault keys and encrypted items are device-local and deliberately not
+      // part of a settings backup. Keep this device's Vault switches so an
+      // imported backup cannot hide an existing Vault or enable one without
+      // its secure-storage key material.
+      final current = ref.read(settingsControllerProvider);
+      final importedSettings = res.settings!.copyWith(
+        vaultEnabled: current.vaultEnabled,
+        vaultWipeAfterFiveFailures: current.vaultWipeAfterFiveFailures,
+      );
+      await updateSettings(ref, (_) => importedSettings);
+      await ref
+          .read(desktopIntegrationProvider)
+          .setCaptureProtection(importedSettings.hideDuringScreenSharing);
+      await ref.read(collectionsControllerProvider.notifier).reload();
+      await ref.read(historyControllerProvider.notifier).reload();
     }
 
     if (context.mounted) {

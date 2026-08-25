@@ -12,6 +12,7 @@ import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.
 import 'package:clipflow/features/clipboard_history/domain/content_classifier.dart';
 import 'package:clipflow/features/clipboard_history/presentation/home_screen.dart';
 import 'package:clipflow/features/clipboard_history/presentation/history_controller.dart';
+import 'package:clipflow/features/clipboard_history/presentation/widgets/search_syntax_field.dart';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
@@ -243,6 +244,93 @@ void main() {
     expect(find.text('Không tìm thấy kết quả'), findsOneWidget);
   });
 
+  testWidgets('search field suggests and inserts supported syntax', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('history-search')));
+    await tester.pump();
+    expect(find.byKey(const Key('search-syntax-suggestions')), findsOneWidget);
+    expect(find.text('app:'), findsOneWidget);
+    expect(find.text('note:'), findsOneWidget);
+    expect(find.text('type:'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('search-suggestion-app:')));
+    await tester.pump();
+    final editable = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('history-search')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.controller.text, 'app:');
+
+    await tester.enterText(
+      find.byKey(const Key('history-search')),
+      'app:Chrome note:"release notes" type:url is:pinned '
+      'after:2026-08-01 flutter',
+    );
+    await tester.pump();
+    final highlightedController = tester
+        .widget<EditableText>(
+          find.descendant(
+            of: find.byKey(const Key('history-search')),
+            matching: find.byType(EditableText),
+          ),
+        )
+        .controller;
+    expect(highlightedController, isA<SearchSyntaxTextEditingController>());
+    final highlighted = highlightedController.buildTextSpan(
+      context: tester.element(find.byKey(const Key('history-search'))),
+      style: const TextStyle(),
+      withComposing: false,
+    );
+    final boldSyntax = highlighted.children!
+        .whereType<TextSpan>()
+        .where((span) => span.style?.fontWeight == FontWeight.w700)
+        .map((span) => span.text)
+        .toList();
+    expect(
+      boldSyntax,
+      containsAll(<String?>[
+        'app:Chrome',
+        'note:"release notes"',
+        'type:url',
+        'is:pinned',
+        'after:2026-08-01',
+      ]),
+    );
+  });
+
+  testWidgets('quick panel search suggestions fill the shared search field', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('quick-panel-search')));
+    await tester.pump();
+
+    expect(find.byKey(const Key('search-syntax-suggestions')), findsOneWidget);
+    await tester.tap(find.byKey(const Key('search-suggestion-note:')));
+    await tester.pump();
+
+    final editable = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('quick-panel-search')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.controller.text, 'note:');
+    expect(editable.controller, isA<SearchSyntaxTextEditingController>());
+  });
+
   testWidgets('pin button persists pinned state', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
@@ -302,6 +390,67 @@ void main() {
     expect(watcher.current?.text, 'https://flutter.dev');
     expect(watcher.current?.imageBytes, isNull);
     expect(repository.items.single.copyCount, 2);
+  });
+
+  testWidgets('text conversion opens a compact submenu and copies result', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Chuyển đổi văn bản'), findsOneWidget);
+    expect(find.text('Làm sạch liên kết'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-action-text_transform')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('text-transform-menu')), findsOneWidget);
+    expect(find.text('Định dạng JSON'), findsOneWidget);
+    expect(find.text('Mã hóa Base64'), findsOneWidget);
+    expect(find.text('Băm MD5'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('text-transform-urlEncode')),
+    );
+    await tester.tap(find.byKey(const Key('text-transform-urlEncode')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(watcher.current?.text, 'https%3A%2F%2Fflutter.dev');
+    expect(find.text('Đã sao chép kết quả chuyển đổi'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('Link Cleaner removes tracking parameters', (tester) async {
+    repository.items[0] = repository.items[0].copyWith(
+      content: 'https://flutter.dev/docs?utm_source=test&page=2&fbclid=x',
+      normalizedContent:
+          'https://flutter.dev/docs?utm_source=test&page=2&fbclid=x',
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('clipboard-action-link_cleaner')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(watcher.current?.text, 'https://flutter.dev/docs?page=2');
+    expect(find.text('Đã sao chép liên kết sạch'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('valid math expression shows its instant result', (tester) async {
+    repository.items[0] = repository.items[0].copyWith(
+      content: '2 + 3 * (4 - 1)',
+      normalizedContent: '2 + 3 * (4 - 1)',
+      contentType: ClipboardContentType.text,
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kết quả: 11'), findsWidgets);
   });
 
   testWidgets('clipboard edit updates the existing item', (tester) async {

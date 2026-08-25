@@ -6,6 +6,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   bonsoir_windows
   flutter_secure_storage_windows
   hotkey_manager_windows
+  local_auth_windows
   screen_retriever_windows
   share_plus
   tray_manager

@@ -41,11 +41,14 @@
   - **Auto-Reconnect (Exponential Backoff)**: Smart background auto-reconnection for trusted devices.
 - 🤖 **On-Device Local AI**: Smart AI assistant running 100% locally on your machine (via GGUF models). Analyze images, summarize text, rewrite code, and chat with your clipboard context offline.
 - 🔒 **Local-First & Private**: Clipboard history stays on your device with no cloud sync or tracking. Network access only occurs when you explicitly use an online action such as image hosting, translation, update checks, or model downloads.
+- 🔐 **Encrypted Vault**: Move private clipboard items into an undeletable system Vault protected by a password or device authentication. Vault database fields and image files are encrypted at rest with AES-256-GCM and excluded from search, AI, retention cleanup, and LAN sync.
 - 🎨 **15+ Aesthetic Themes & Pastel Accents**: Express your desktop setup with curated palettes, Emerald Mint, Cyber Violet, Sunset Orange, and Soft Pastel colors.
 - 📱 **Mobile Beta**: Responsive `SafeArea` layouts and mobile-friendly navigation for iOS and Android beta builds.
 - 🌐 **Six App Languages**: Switch instantly between Vietnamese, English, Japanese, Korean, German, and Simplified Chinese.
 - 📦 **Password-Protected Encrypted Backups**: Export and import your entire setup with `.clipflow` encrypted files.
 - 🚫 **Smart Exclusion Protection**: Automatically bypass password managers (Bitwarden, 1Password) or exclude specific applications from history recording.
+- 🛡️ **Sensitive Capture Protection**: Optionally skip Luhn-valid payment cards, labeled identity/passport numbers, password fields, and sensitive login/payment windows.
+- 🎥 **Screen Capture Privacy**: Exclude the ClipFlow window from OS screenshots, screen recordings, and screen-sharing streams when enabled.
 
 ---
 
@@ -55,12 +58,16 @@
 |---|---|
 | **⚡ Floating Quick Panel** | Press `Control+V` (macOS) / `Ctrl+Shift+V` (Windows) anywhere to summon a sleek horizontal paste bar right under your cursor. |
 | **🤖 Local AI Assistant** | Ask questions, translate, summarize, or analyze clipboard items using on-device GGUF LLMs without sending data to cloud servers. |
-| **🔍 Instant Smart Search** | Filter history instantly with text or syntax like `type:link`, `app:Xcode`, or `is:pinned`. |
+| **🔍 Instant Smart Search** | Filter history instantly with text or syntax like `type:link`, `app:Xcode`, or `is:pinned`; both the main window and Quick Panel suggest supported filters as you search. |
+| **📦 Portable `.clipflow` Archive** | Export encrypted settings, normal clipboard history, embedded images, Collections, and memberships; import tolerates older archives and unknown future fields. |
 | **🔍 OCR & Translate** | Extract text from copied images via native OCR and translate snippets through the selected local-AI or translation workflow. |
-| **📑 Content Auto-Classification** | Automatically categorizes Links, Emails, Phone Numbers, Hex Colors, Code Snippets, JSON, Files, & Images. |
+| **📑 Content Auto-Classification** | Automatically categorizes Links, Emails, Phone Numbers, Hex Colors, Emoji, Code Snippets, JSON, Files, & Images. |
+| **🧰 Smart Text Tools** | Convert JSON, Base64, URL encoding, letter case, timestamps, MD5 and line lists from a compact submenu; clean tracking parameters from links and calculate copied expressions instantly. |
+| **🧠 Smart Text Recognition** | Recognizes JWT tokens and common programming languages in addition to URLs, email addresses, phone numbers, JSON, code and Emoji. |
 | **☁️ Optional Image Hosting** | Explicitly upload an image to FreeImage.host or ImgBB and save the returned URL as a new clipboard item. |
 | **🖱️ Drag to Collections** | Drag clipboard cards directly onto a collection with hover highlighting and a named confirmation notice. |
 | **🛡️ Sensitive Content Shield** | Ignores OTP verification codes, API keys, and long sensitive tokens automatically. |
+| **🔐 Password-Protected Vault** | Hide selected clipboard items behind password, fingerprint/Face ID/Windows Hello or device authentication, with optional wipe after five failed attempts and AES-256-GCM encryption at rest. |
 | **📌 Pinning & Custom Collections** | Group frequent prompts, code snippets, or notes into color-coded collections that never expire. |
 | **💾 Flexible Retention Control** | Keep history for 1 day, 7 days, 30 days, 1 year, or unlimited with smart image cleanup. |
 

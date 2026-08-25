@@ -24,6 +24,9 @@ class AppSettings {
     this.ignoreSensitive = true,
     this.ignoreOtp = true,
     this.ignoreLongToken = true,
+    this.ignoreFinancialAndIdentity = true,
+    this.protectSensitiveWindows = true,
+    this.hideDuringScreenSharing = false,
     this.minTextLength = 1,
     this.maxTextLength = 100000,
     this.maxImageMb = 20,
@@ -33,6 +36,8 @@ class AppSettings {
     this.deleteImagesFirst = true,
     this.protectPinned = true,
     this.protectCollections = true,
+    this.vaultEnabled = false,
+    this.vaultWipeAfterFiveFailures = false,
     this.shortcut = '⌃V',
     this.openPanelShortcut,
     this.focusSearchShortcut,
@@ -60,6 +65,8 @@ class AppSettings {
       'code',
       'color',
       'json',
+      'jwt',
+      'emoji',
       'file',
       'image',
     },
@@ -97,6 +104,9 @@ class AppSettings {
   final bool ignoreSensitive;
   final bool ignoreOtp;
   final bool ignoreLongToken;
+  final bool ignoreFinancialAndIdentity;
+  final bool protectSensitiveWindows;
+  final bool hideDuringScreenSharing;
   final int minTextLength;
   final int maxTextLength;
   final int maxImageMb;
@@ -106,6 +116,8 @@ class AppSettings {
   final bool deleteImagesFirst;
   final bool protectPinned;
   final bool protectCollections;
+  final bool vaultEnabled;
+  final bool vaultWipeAfterFiveFailures;
   final String shortcut;
   final String? openPanelShortcut;
   final String? focusSearchShortcut;
@@ -147,6 +159,9 @@ class AppSettings {
     bool? ignoreSensitive,
     bool? ignoreOtp,
     bool? ignoreLongToken,
+    bool? ignoreFinancialAndIdentity,
+    bool? protectSensitiveWindows,
+    bool? hideDuringScreenSharing,
     int? minTextLength,
     int? maxTextLength,
     int? maxImageMb,
@@ -156,6 +171,8 @@ class AppSettings {
     bool? deleteImagesFirst,
     bool? protectPinned,
     bool? protectCollections,
+    bool? vaultEnabled,
+    bool? vaultWipeAfterFiveFailures,
     String? shortcut,
     String? openPanelShortcut,
     String? focusSearchShortcut,
@@ -202,6 +219,12 @@ class AppSettings {
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
       ignoreOtp: ignoreOtp ?? this.ignoreOtp,
       ignoreLongToken: ignoreLongToken ?? this.ignoreLongToken,
+      ignoreFinancialAndIdentity:
+          ignoreFinancialAndIdentity ?? this.ignoreFinancialAndIdentity,
+      protectSensitiveWindows:
+          protectSensitiveWindows ?? this.protectSensitiveWindows,
+      hideDuringScreenSharing:
+          hideDuringScreenSharing ?? this.hideDuringScreenSharing,
       minTextLength: minTextLength ?? this.minTextLength,
       maxTextLength: maxTextLength ?? this.maxTextLength,
       maxImageMb: maxImageMb ?? this.maxImageMb,
@@ -211,6 +234,9 @@ class AppSettings {
       deleteImagesFirst: deleteImagesFirst ?? this.deleteImagesFirst,
       protectPinned: protectPinned ?? this.protectPinned,
       protectCollections: protectCollections ?? this.protectCollections,
+      vaultEnabled: vaultEnabled ?? this.vaultEnabled,
+      vaultWipeAfterFiveFailures:
+          vaultWipeAfterFiveFailures ?? this.vaultWipeAfterFiveFailures,
       shortcut: shortcut ?? this.shortcut,
       openPanelShortcut: openPanelShortcut ?? this.openPanelShortcut,
       focusSearchShortcut: focusSearchShortcut ?? this.focusSearchShortcut,
@@ -254,6 +280,9 @@ class AppSettings {
     'ignoreSensitive': ignoreSensitive,
     'ignoreOtp': ignoreOtp,
     'ignoreLongToken': ignoreLongToken,
+    'ignoreFinancialAndIdentity': ignoreFinancialAndIdentity,
+    'protectSensitiveWindows': protectSensitiveWindows,
+    'hideDuringScreenSharing': hideDuringScreenSharing,
     'minTextLength': minTextLength,
     'maxTextLength': maxTextLength,
     'maxImageMb': maxImageMb,
@@ -263,6 +292,8 @@ class AppSettings {
     'deleteImagesFirst': deleteImagesFirst,
     'protectPinned': protectPinned,
     'protectCollections': protectCollections,
+    'vaultEnabled': vaultEnabled,
+    'vaultWipeAfterFiveFailures': vaultWipeAfterFiveFailures,
     'shortcut': shortcut,
     'openPanelShortcut': openPanelShortcut,
     'focusSearchShortcut': focusSearchShortcut,
@@ -270,6 +301,7 @@ class AppSettings {
     'deleteItemShortcut': deleteItemShortcut,
     'duplicateBehavior': duplicateBehavior.name,
     'allowedTypes': allowedTypes.toList(),
+    'contentTypesVersion': 2,
     'excludedApplications': excludedApplications,
   });
 
@@ -279,7 +311,11 @@ class AppSettings {
     T value<T>(String key, T fallback) => (map[key] as T?) ?? fallback;
     final allowedTypes = map['allowedTypes'] is List
         ? (map['allowedTypes'] as List).cast<String>().toSet()
-        : defaults.allowedTypes;
+        : {...defaults.allowedTypes};
+    final contentTypesVersion =
+        (map['contentTypesVersion'] as num?)?.toInt() ?? 0;
+    if (contentTypesVersion < 1) allowedTypes.add('emoji');
+    if (contentTypesVersion < 2) allowedTypes.add('jwt');
     final excludedApplications = map['excludedApplications'] is List
         ? (map['excludedApplications'] as List).cast<String>()
         : defaults.excludedApplications;
@@ -323,6 +359,9 @@ class AppSettings {
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),
       ignoreLongToken: value('ignoreLongToken', true),
+      ignoreFinancialAndIdentity: value('ignoreFinancialAndIdentity', true),
+      protectSensitiveWindows: value('protectSensitiveWindows', true),
+      hideDuringScreenSharing: value('hideDuringScreenSharing', false),
       minTextLength: value('minTextLength', 1),
       maxTextLength: value('maxTextLength', 100000),
       maxImageMb: value('maxImageMb', 20),
@@ -332,6 +371,8 @@ class AppSettings {
       deleteImagesFirst: value('deleteImagesFirst', true),
       protectPinned: value('protectPinned', true),
       protectCollections: value('protectCollections', true),
+      vaultEnabled: value('vaultEnabled', false),
+      vaultWipeAfterFiveFailures: value('vaultWipeAfterFiveFailures', false),
       shortcut: value('shortcut', '⌃V'),
       openPanelShortcut: map['openPanelShortcut'] as String?,
       focusSearchShortcut: map['focusSearchShortcut'] as String?,

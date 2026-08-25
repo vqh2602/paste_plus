@@ -33,8 +33,9 @@ std::wstring utf8_decode(const std::string &str) {
 }
 
 void WindowPlugin::RegisterWithMessenger(
-    flutter::BinaryMessenger* messenger) {
-  auto plugin = std::make_shared<WindowPlugin>();
+    flutter::BinaryMessenger* messenger,
+    HWND window_handle) {
+  auto plugin = std::make_shared<WindowPlugin>(window_handle);
 
   auto channel =
       std::make_shared<flutter::MethodChannel<flutter::EncodableValue>>(
@@ -51,7 +52,7 @@ void WindowPlugin::RegisterWithMessenger(
   s_channels.push_back(channel);
 }
 
-WindowPlugin::WindowPlugin() {}
+WindowPlugin::WindowPlugin(HWND window_handle) : window_handle_(window_handle) {}
 
 WindowPlugin::~WindowPlugin() {}
 
@@ -115,6 +116,15 @@ void WindowPlugin::HandleMethodCall(
     result->Success(); // Managed by window_manager
   } else if (method_call.method_name().compare("setQuickPanelMode") == 0) {
     result->Success(); // Managed by window_manager mostly on Windows
+  } else if (method_call.method_name().compare("setCaptureProtection") == 0) {
+    bool enabled = false;
+    if (const auto* value = std::get_if<bool>(method_call.arguments())) {
+      enabled = *value;
+    }
+    constexpr DWORD kExcludeFromCapture = 0x00000011;
+    const BOOL applied = SetWindowDisplayAffinity(
+        window_handle_, enabled ? kExcludeFromCapture : WDA_NONE);
+    result->Success(flutter::EncodableValue(applied != FALSE));
   } else if (method_call.method_name().compare("getRunningApplications") == 0) {
     flutter::EncodableList list;
     EnumWindows(EnumWindowsProc, reinterpret_cast<LPARAM>(&list));

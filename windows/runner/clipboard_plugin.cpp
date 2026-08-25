@@ -11,11 +11,51 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <cctype>
+#include <cwctype>
+#include <algorithm>
 
 #pragma comment (lib,"Gdiplus.lib")
 
 using namespace Gdiplus;
+
+static std::wstring lowercase(std::wstring value) {
+  std::transform(
+      value.begin(), value.end(), value.begin(),
+      [](wchar_t character) {
+        return static_cast<wchar_t>(std::towlower(character));
+      });
+  return value;
+}
+
+static bool IsSensitiveWindow(HWND window) {
+  if (!window) return false;
+  HWND root = GetAncestor(window, GA_ROOT);
+  WCHAR title[512] = {};
+  GetWindowTextW(root ? root : window, title, ARRAYSIZE(title));
+  const std::wstring normalized = lowercase(title);
+  const std::vector<std::wstring> sensitiveTitles = {
+      L"password", L"passcode", L"sign in", L"log in", L"login",
+      L"authentication", L"verify identity", L"payment", L"banking",
+      L"m\u1eadt kh\u1ea9u", L"\u0111\u0103ng nh\u1eadp",
+      L"x\u00e1c th\u1ef1c", L"thanh to\u00e1n", L"ng\u00e2n h\u00e0ng"};
+  for (const auto& keyword : sensitiveTitles) {
+    if (normalized.find(keyword) != std::wstring::npos) return true;
+  }
+
+  const DWORD threadId = GetWindowThreadProcessId(root ? root : window, nullptr);
+  GUITHREADINFO info = {};
+  info.cbSize = sizeof(info);
+  if (GetGUIThreadInfo(threadId, &info) && info.hwndFocus) {
+    WCHAR className[64] = {};
+    GetClassNameW(info.hwndFocus, className, ARRAYSIZE(className));
+    const LONG_PTR style = GetWindowLongPtrW(info.hwndFocus, GWL_STYLE);
+    if (lowercase(className).find(L"edit") != std::wstring::npos &&
+        (style & ES_PASSWORD) != 0) {
+      return true;
+    }
+  }
+  return false;
+}
 
 extern std::string utf8_encode(const std::wstring &wstr);
 extern std::wstring utf8_decode(const std::string &str);
@@ -180,6 +220,9 @@ void ClipboardPlugin::HandleMethodCall(
     map[flutter::EncodableValue("sequenceNumber")] = flutter::EncodableValue(static_cast<int64_t>(seqNum));
     
     HWND owner = GetClipboardOwner();
+    HWND contextWindow = owner ? owner : GetForegroundWindow();
+    map[flutter::EncodableValue("sensitiveContext")] =
+        flutter::EncodableValue(IsSensitiveWindow(contextWindow));
     if (owner) {
         DWORD processId;
         GetWindowThreadProcessId(owner, &processId);

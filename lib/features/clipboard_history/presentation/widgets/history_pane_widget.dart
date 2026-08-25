@@ -12,6 +12,7 @@ import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
 import 'clipboard_card_widget.dart';
 import 'content_type_filter_sheet.dart';
+import 'search_syntax_field.dart';
 
 class HistoryPaneWidget extends ConsumerWidget {
   const HistoryPaneWidget({
@@ -48,6 +49,9 @@ class HistoryPaneWidget extends ConsumerWidget {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
     final settings = ref.watch(settingsControllerProvider);
     final items = state.visibleItems;
+    final viewingVault =
+        state.section == HistorySection.collection &&
+        state.collectionId == ClipboardCollection.vaultId;
 
     return Column(
       children: [
@@ -69,8 +73,8 @@ class HistoryPaneWidget extends ConsumerWidget {
                 const SizedBox(width: 8),
               ],
               Expanded(
-                child: CupertinoSearchTextField(
-                  key: const Key('history-search'),
+                child: SearchSyntaxField(
+                  fieldKey: const Key('history-search'),
                   controller: searchController,
                   focusNode: focusNode,
                   placeholder: context.l10n.search_history_placeholder,
@@ -82,7 +86,7 @@ class HistoryPaneWidget extends ConsumerWidget {
                 const SharingQuickStatusButton(),
                 const SizedBox(width: 2),
               ],
-              if (settings.aiEnabled) ...[
+              if (settings.aiEnabled && !viewingVault) ...[
                 CupertinoIconControl(
                   key: const Key('history-ai-button'),
                   icon: CupertinoIcons.sparkles,

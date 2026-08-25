@@ -75,6 +75,8 @@ ShareParams? buildClipboardShareParams(
     case ClipboardContentType.code:
     case ClipboardContentType.color:
     case ClipboardContentType.json:
+    case ClipboardContentType.jwt:
+    case ClipboardContentType.emoji:
       return _textShareParams(item.content, sharePositionOrigin);
   }
 }

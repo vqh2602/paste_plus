@@ -10,6 +10,7 @@ class MainFlutterWindow: NSWindow {
   private var standardIsOpaque = true
   private var standardHasShadow = true
   private var standardIsMovable = true
+  private var standardSharingType: NSWindow.SharingType = .readOnly
   private var previousApplication: NSRunningApplication?
   private var lastActiveApplication: NSRunningApplication?
 
@@ -24,6 +25,7 @@ class MainFlutterWindow: NSWindow {
     standardIsOpaque = self.isOpaque
     standardHasShadow = self.hasShadow
     standardIsMovable = self.isMovable
+    standardSharingType = self.sharingType
     Self.migrateLegacySandboxPreferences()
 
     NSWorkspace.shared.notificationCenter.addObserver(
@@ -67,6 +69,7 @@ class MainFlutterWindow: NSWindow {
         if let app = self.lastActiveApplication ?? NSWorkspace.shared.frontmostApplication {
           response["sourceAppName"] = app.localizedName
           response["sourceAppIdentifier"] = app.bundleIdentifier
+          response["sensitiveContext"] = Self.isSensitiveContext(app)
         }
         result(response)
       case "writeText":
@@ -291,6 +294,19 @@ class MainFlutterWindow: NSWindow {
           NSApp.activate(ignoringOtherApps: true)
         }
         result(nil)
+      case "setCaptureProtection":
+        guard let enabled = call.arguments as? Bool else {
+          result(
+            FlutterError(
+              code: "invalid_arguments",
+              message: "Expected a boolean capture-protection state.",
+              details: nil
+            )
+          )
+          return
+        }
+        self.sharingType = enabled ? .none : self.standardSharingType
+        result(nil)
       case "checkAccessibilityPermission":
         result(AXIsProcessTrusted())
       case "requestAccessibilityPermission":
@@ -365,6 +381,57 @@ class MainFlutterWindow: NSWindow {
       self.lastActiveApplication = app
       self.previousApplication = app
     }
+  }
+
+  private static func isSensitiveContext(_ application: NSRunningApplication) -> Bool {
+    guard AXIsProcessTrusted() else { return false }
+    let applicationElement = AXUIElementCreateApplication(application.processIdentifier)
+
+    var focusedValue: CFTypeRef?
+    if AXUIElementCopyAttributeValue(
+      applicationElement,
+      kAXFocusedUIElementAttribute as CFString,
+      &focusedValue
+    ) == .success, let focusedElement = focusedValue as! AXUIElement? {
+      var roleValue: CFTypeRef?
+      if AXUIElementCopyAttributeValue(
+        focusedElement,
+        kAXRoleAttribute as CFString,
+        &roleValue
+      ) == .success,
+        let role = roleValue as? String,
+        role == "AXSecureTextField"
+      {
+        return true
+      }
+    }
+
+    var windowValue: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(
+      applicationElement,
+      kAXFocusedWindowAttribute as CFString,
+      &windowValue
+    ) == .success,
+      let focusedWindow = windowValue as! AXUIElement?
+    else {
+      return false
+    }
+    var titleValue: CFTypeRef?
+    guard AXUIElementCopyAttributeValue(
+      focusedWindow,
+      kAXTitleAttribute as CFString,
+      &titleValue
+    ) == .success,
+      let title = (titleValue as? String)?.lowercased()
+    else {
+      return false
+    }
+    let sensitiveTitles = [
+      "password", "passcode", "sign in", "log in", "login", "authentication",
+      "verify identity", "payment", "banking", "mật khẩu", "đăng nhập", "xác thực",
+      "thanh toán", "ngân hàng"
+    ]
+    return sensitiveTitles.contains { title.contains($0) }
   }
 
   private static func pngDataFromTiff(_ pasteboard: NSPasteboard) -> Data? {

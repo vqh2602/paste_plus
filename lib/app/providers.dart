@@ -35,6 +35,9 @@ import '../features/device_sync/services/mdns_tls_local_sharing_service.dart';
 import '../features/settings/data/settings_repository.dart';
 import '../features/settings/domain/app_settings.dart';
 import '../features/settings/presentation/settings_controller.dart';
+import '../features/vault/presentation/vault_controller.dart';
+import '../features/vault/services/vault_crypto.dart';
+import '../features/device_sync/services/device_identity_store.dart';
 
 final appDatabaseProvider = Provider<AppDatabase>(
   (ref) => throw UnimplementedError('AppDatabase must be overridden in main.'),
@@ -56,9 +59,27 @@ final aiDebugControllerProvider =
 final quickPanelModeProvider = StateProvider<bool>((ref) => false);
 final aiWindowModeProvider = StateProvider<bool>((ref) => false);
 
-final clipboardRepositoryProvider = Provider<ClipboardRepository>((ref) {
-  return SqliteClipboardRepository(ref.watch(appDatabaseProvider));
+final vaultCryptoProvider = Provider<VaultCrypto>((ref) {
+  return VaultCrypto(
+    secretStore: const PlatformSecretStore(),
+    deviceAuthenticator: PlatformVaultDeviceAuthenticator(),
+  );
 });
+
+final clipboardRepositoryProvider = Provider<ClipboardRepository>((ref) {
+  return SqliteClipboardRepository(
+    ref.watch(appDatabaseProvider),
+    vaultCrypto: ref.watch(vaultCryptoProvider),
+  );
+});
+
+final vaultControllerProvider =
+    StateNotifierProvider<VaultController, VaultState>((ref) {
+      return VaultController(
+        ref.watch(vaultCryptoProvider),
+        ref.watch(clipboardRepositoryProvider),
+      );
+    });
 
 final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
   final watcher = Platform.isMacOS
@@ -159,6 +180,7 @@ final historyControllerProvider =
         },
         onCollectionsChanged: () =>
             ref.read(collectionsControllerProvider.notifier).reload(),
+        onVaultExit: () => ref.read(vaultControllerProvider.notifier).lock(),
       );
       final incomingSubscription = ref
           .watch(localSharingServiceProvider)
@@ -384,5 +406,3 @@ class PinnedStateOverrideNotifier extends StateNotifier<Map<String, bool>> {
     }
   }
 }
-
-

@@ -96,6 +96,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     this.onItemStored,
     this.onItemMetadataChanged,
     this.onCollectionsChanged,
+    this.onVaultExit,
   }) : super(const ClipboardHistoryState()) {
     _subscription = _watcher.watch().listen(
       _capture,
@@ -114,6 +115,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   final Future<void> Function(ClipboardItem item)? onItemStored;
   final Future<void> Function(ClipboardItem item)? onItemMetadataChanged;
   final Future<void> Function()? onCollectionsChanged;
+  final void Function()? onVaultExit;
   ClipboardPayload? _suppressedRemotePayload;
   DateTime? _suppressRemoteUntil;
   late final StreamSubscription<ClipboardPayload> _subscription;
@@ -289,6 +291,12 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     String? collectionId,
     bool preserveTypeFilter = false,
   }) async {
+    final leavingVault =
+        state.section == HistorySection.collection &&
+        state.collectionId == ClipboardCollection.vaultId &&
+        (section != HistorySection.collection ||
+            collectionId != ClipboardCollection.vaultId);
+    if (leavingVault) onVaultExit?.call();
     state = state.copyWith(
       section: section,
       collectionId: collectionId,
@@ -313,14 +321,14 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> copy(ClipboardItem item) async {
     final imageFile = item.imagePath == null ? null : File(item.imagePath!);
-    await _watcher.write(
-      ClipboardPayload(
-        text: item.content.isEmpty ? null : item.content,
-        imageBytes: imageFile != null && await imageFile.exists()
-            ? await imageFile.readAsBytes()
-            : null,
-      ),
+    final payload = ClipboardPayload(
+      text: item.content.isEmpty ? null : item.content,
+      imageBytes: imageFile != null && await imageFile.exists()
+          ? await imageFile.readAsBytes()
+          : null,
     );
+    _suppressVaultRecapture(payload);
+    await _watcher.write(payload);
     await _repository.markCopied(item.id);
     final copiedAt = DateTime.now();
     state = state.copyWith(
@@ -339,7 +347,9 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<bool> copyAsPlainText(ClipboardItem item) async {
     if (item.content.trim().isEmpty) return false;
-    await _watcher.write(ClipboardPayload(text: item.content));
+    final payload = ClipboardPayload(text: item.content);
+    _suppressVaultRecapture(payload);
+    await _watcher.write(payload);
     await _repository.markCopied(item.id);
     final copiedAt = DateTime.now();
     state = state.copyWith(
@@ -357,14 +367,27 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     return true;
   }
 
+  void _suppressVaultRecapture(ClipboardPayload payload) {
+    if (state.section != HistorySection.collection ||
+        state.collectionId != ClipboardCollection.vaultId) {
+      return;
+    }
+    _suppressedRemotePayload = payload;
+    _suppressRemoteUntil = DateTime.now().add(const Duration(seconds: 2));
+  }
+
   Future<void> togglePinned(ClipboardItem item) async {
+    final vaultOperation = _isViewingVault;
     final newPinState = !item.isPinned;
     await _repository.setPinned(item.id, newPinState);
-    await onItemMetadataChanged?.call(item.copyWith(isPinned: newPinState));
+    if (!vaultOperation) {
+      await onItemMetadataChanged?.call(item.copyWith(isPinned: newPinState));
+    }
     await reload();
   }
 
   Future<void> updateNote(ClipboardItem item, String? note) async {
+    final vaultOperation = _isViewingVault;
     final trimmed = note?.trim();
     final value = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
     final updated = item.copyWith(note: value, clearNote: value == null);
@@ -375,7 +398,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
           if (current.id == item.id) updated else current,
       ],
     );
-    await onItemMetadataChanged?.call(updated);
+    if (!vaultOperation) await onItemMetadataChanged?.call(updated);
   }
 
   Future<ClipboardItem?> updateItemContent(
@@ -384,6 +407,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     Uint8List? imageBytes,
   }) async {
     if (_repository is! EditableClipboardRepository) return null;
+    final vaultOperation = _isViewingVault;
     final repository = _repository as EditableClipboardRepository;
     final updated = await repository.updateItemContent(
       item,
@@ -396,7 +420,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
           if (current.id == item.id) updated else current,
       ],
     );
-    await onItemMetadataChanged?.call(updated);
+    if (!vaultOperation) await onItemMetadataChanged?.call(updated);
     return updated;
   }
 
@@ -420,6 +444,10 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> addToCollection(String itemId, String collectionId) async {
     await _repository.addToCollection(itemId, collectionId);
+    if (collectionId == ClipboardCollection.vaultId) {
+      await reload();
+      return;
+    }
     final item = state.items
         .where((current) => current.id == itemId)
         .firstOrNull;
@@ -430,6 +458,10 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   Future<Set<String>> collectionIdsForItem(String itemId) {
     return _repository.collectionIdsForItem(itemId);
   }
+
+  bool get _isViewingVault =>
+      state.section == HistorySection.collection &&
+      state.collectionId == ClipboardCollection.vaultId;
 
   Future<String?> addTextItem(String text) async {
     final payload = ClipboardPayload(text: text);

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:archive/archive_io.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -30,7 +31,7 @@ class UpdateInfo {
 class UpdateService {
   const UpdateService();
 
-  static const String currentVersion = '1.1.7';
+  static const String currentVersion = '1.2.0';
   static const MethodChannel _windowChannel = MethodChannel('clipflow/window');
   static bool _autoUpdateChecked = false;
 
@@ -203,20 +204,7 @@ class UpdateService {
 
       final extractDir = '${tempDir.path}/extracted';
       await Directory(extractDir).create(recursive: true);
-      final unzipResult = Platform.isWindows
-          ? await Process.run('powershell.exe', [
-              '-NoProfile',
-              '-NonInteractive',
-              '-Command',
-              r'Expand-Archive -LiteralPath $args[0] '
-                  r'-DestinationPath $args[1] -Force',
-              zipPath,
-              extractDir,
-            ])
-          : await Process.run('unzip', ['-o', zipPath, '-d', extractDir]);
-      if (unzipResult.exitCode != 0) {
-        return false;
-      }
+      await extractFileToDisk(zipPath, extractDir);
 
       if (Platform.isWindows) {
         return _installWindowsDirectory(
@@ -279,13 +267,13 @@ rm -rf "${tempDir.path}"
   }) async {
     final currentExecutable = File(Platform.resolvedExecutable);
     final executableName = path.basename(currentExecutable.path);
-    final newExecutable = await findExtractedExecutable(
+    final sourceBundle = await findWindowsBundleDirectory(
       extractedDirectory,
       executableName,
     );
-    if (newExecutable == null) return false;
+    if (sourceBundle == null) return false;
 
-    final sourceDirectory = newExecutable.parent.path;
+    final sourceDirectory = sourceBundle.path;
     final targetDirectory = currentExecutable.parent.path;
     if (path.equals(sourceDirectory, targetDirectory)) return false;
 
@@ -293,26 +281,102 @@ rm -rf "${tempDir.path}"
     final script = File(
       path.join(temporaryDirectory.path, 'install-update.ps1'),
     );
-    await script.writeAsString('''
-\$ErrorActionPreference = 'Stop'
-Wait-Process -Id $pid -ErrorAction SilentlyContinue
-robocopy.exe ${_powerShellQuote(sourceDirectory)} ${_powerShellQuote(targetDirectory)} /MIR /R:5 /W:1
-\$copyExitCode = \$LASTEXITCODE
-if (\$copyExitCode -gt 7) { exit \$copyExitCode }
-Start-Process -FilePath ${_powerShellQuote(targetExecutable)}
-Start-Sleep -Seconds 2
-Remove-Item -LiteralPath ${_powerShellQuote(temporaryDirectory.path)} -Recurse -Force -ErrorAction SilentlyContinue
-''', flush: true);
+    await script.writeAsString(
+      buildWindowsInstallScript(
+        appProcessId: pid,
+        sourceDirectory: sourceDirectory,
+        targetDirectory: targetDirectory,
+        targetExecutable: targetExecutable,
+        temporaryDirectory: temporaryDirectory.path,
+      ),
+      flush: true,
+    );
 
-    await Process.start('powershell.exe', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      script.path,
-    ], mode: ProcessStartMode.detached);
+    await Process.start(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        script.path,
+      ],
+      mode: ProcessStartMode.detached,
+      workingDirectory: temporaryDirectory.path,
+    );
     exit(0);
+  }
+
+  static Future<Directory?> findWindowsBundleDirectory(
+    Directory root,
+    String executableName,
+  ) async {
+    final executable = await findExtractedExecutable(root, executableName);
+    if (executable == null) return null;
+    final bundle = executable.parent;
+    return await isValidWindowsBundle(bundle, executableName) ? bundle : null;
+  }
+
+  static Future<bool> isValidWindowsBundle(
+    Directory directory,
+    String executableName,
+  ) async {
+    final executable = File(path.join(directory.path, executableName));
+    final flutterLibrary = File(
+      path.join(directory.path, 'flutter_windows.dll'),
+    );
+    final dataDirectory = Directory(path.join(directory.path, 'data'));
+    final flutterAssets = Directory(
+      path.join(dataDirectory.path, 'flutter_assets'),
+    );
+    final appLibrary = File(path.join(dataDirectory.path, 'app.so'));
+    return await executable.exists() &&
+        await flutterLibrary.exists() &&
+        await dataDirectory.exists() &&
+        await flutterAssets.exists() &&
+        await appLibrary.exists();
+  }
+
+  static String buildWindowsInstallScript({
+    required int appProcessId,
+    required String sourceDirectory,
+    required String targetDirectory,
+    required String targetExecutable,
+    required String temporaryDirectory,
+  }) {
+    final targetFlutterLibrary = path.windows.join(
+      targetDirectory,
+      'flutter_windows.dll',
+    );
+    final targetAssets = path.windows.join(
+      targetDirectory,
+      'data',
+      'flutter_assets',
+    );
+    final logPath = path.join(temporaryDirectory, 'install-update.log');
+    return '''
+\$ErrorActionPreference = 'Stop'
+\$updateLog = ${_powerShellQuote(logPath)}
+try {
+  Wait-Process -Id $appProcessId -ErrorAction SilentlyContinue
+  & robocopy.exe ${_powerShellQuote(sourceDirectory)} ${_powerShellQuote(targetDirectory)} /MIR /R:10 /W:1 /XJ /NP /LOG:\$updateLog
+  \$copyExitCode = \$LASTEXITCODE
+  if (\$copyExitCode -gt 7) { throw "Robocopy failed with exit code \$copyExitCode" }
+  if (-not (Test-Path -LiteralPath ${_powerShellQuote(targetExecutable)} -PathType Leaf)) { throw 'Updated executable is missing' }
+  if (-not (Test-Path -LiteralPath ${_powerShellQuote(targetFlutterLibrary)} -PathType Leaf)) { throw 'flutter_windows.dll is missing' }
+  if (-not (Test-Path -LiteralPath ${_powerShellQuote(targetAssets)} -PathType Container)) { throw 'Flutter assets are missing' }
+  Start-Process -FilePath ${_powerShellQuote(targetExecutable)} -WorkingDirectory ${_powerShellQuote(targetDirectory)}
+  Start-Sleep -Seconds 2
+  Remove-Item -LiteralPath ${_powerShellQuote(temporaryDirectory)} -Recurse -Force -ErrorAction SilentlyContinue
+} catch {
+  Add-Content -LiteralPath \$updateLog -Value \$_.Exception.ToString() -ErrorAction SilentlyContinue
+  if (Test-Path -LiteralPath ${_powerShellQuote(targetExecutable)} -PathType Leaf) {
+    Start-Process -FilePath ${_powerShellQuote(targetExecutable)} -WorkingDirectory ${_powerShellQuote(targetDirectory)}
+  }
+  exit 1
+}
+''';
   }
 
   static Future<File?> findExtractedExecutable(

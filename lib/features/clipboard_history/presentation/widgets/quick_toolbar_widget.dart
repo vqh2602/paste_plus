@@ -8,6 +8,8 @@ import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
 import 'content_type_filter_sheet.dart';
+import '../../../vault/presentation/vault_dialogs.dart';
+import 'search_syntax_field.dart';
 
 class QuickToolbarWidget extends ConsumerWidget {
   const QuickToolbarWidget({
@@ -120,15 +122,25 @@ class QuickToolbarWidget extends ConsumerWidget {
                   ],
                   for (final collection in collections) ...[
                     CupertinoChoicePill(
-                      label: collection.name,
-                      icon: CupertinoIcons.folder,
+                      label: collection.isVault
+                          ? context.l10n.vault_title
+                          : collection.name,
+                      icon: collection.isVault
+                          ? CupertinoIcons.lock_fill
+                          : CupertinoIcons.folder,
                       selected:
                           state.section == HistorySection.collection &&
                           state.collectionId == collection.id,
-                      onPressed: () => historyNotifier.selectSection(
-                        HistorySection.collection,
-                        collectionId: collection.id,
-                      ),
+                      onPressed: () async {
+                        if (collection.isVault &&
+                            !await ensureVaultUnlocked(context, ref)) {
+                          return;
+                        }
+                        await historyNotifier.selectSection(
+                          HistorySection.collection,
+                          collectionId: collection.id,
+                        );
+                      },
                     ),
                     const SizedBox(width: 6),
                   ],
@@ -169,8 +181,8 @@ class QuickToolbarWidget extends ConsumerWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 260,
-            child: CupertinoSearchTextField(
-              key: const Key('quick-panel-search'),
+            child: SearchSyntaxField(
+              fieldKey: const Key('quick-panel-search'),
               controller: searchController,
               focusNode: searchFocusNode,
               placeholder: context.l10n.search_in_clipboard,

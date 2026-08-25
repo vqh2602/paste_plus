@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_item.dart';
+import '../domain/smart_text_tools.dart';
+import 'history_controller.dart';
 import 'widgets/clipboard_action_menu.dart';
 import 'widgets/clipboard_edit_dialog.dart';
 import 'widgets/clipboard_preview_dialog.dart';
@@ -18,6 +20,8 @@ import 'widgets/note_edit_dialog.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
 import 'widgets/quick_empty_state_widget.dart';
 import 'widgets/quick_toolbar_widget.dart';
+import 'widgets/search_syntax_field.dart';
+import '../../vault/presentation/vault_dialogs.dart';
 
 class QuickPanelScreen extends ConsumerStatefulWidget {
   const QuickPanelScreen({super.key});
@@ -28,7 +32,7 @@ class QuickPanelScreen extends ConsumerStatefulWidget {
 
 class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     with SingleTickerProviderStateMixin {
-  final _searchController = TextEditingController();
+  final _searchController = SearchSyntaxTextEditingController();
   final _searchFocusNode = FocusNode();
   final _itemScrollController = ScrollController();
   late final AnimationController _entranceController;
@@ -149,8 +153,11 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
   }
 
   Future<void> _handleAddToCollection(ClipboardItem item) async {
+    final settings = ref.read(settingsControllerProvider);
     final collections =
-        ref.read(collectionsControllerProvider).value ?? const [];
+        (ref.read(collectionsControllerProvider).value ?? const [])
+            .where((collection) => !collection.isVault || settings.vaultEnabled)
+            .toList(growable: false);
     if (collections.isEmpty) {
       showCupertinoNotice(context, context.l10n.no_collections);
       return;
@@ -173,7 +180,11 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       ),
     );
 
+    if (!mounted) return;
     if (collection != null) {
+      if (collection.isVault && !await ensureVaultUnlocked(context, ref)) {
+        return;
+      }
       await ref
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
@@ -190,11 +201,15 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
 
   void _showItemActions(BuildContext context, ClipboardItem item) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
+    final history = ref.read(historyControllerProvider);
     final action = await showClipboardActionMenu(
       context: context,
       item: item,
       copyAction: 'copy_paste',
       copyLabel: context.l10n.copy_and_paste,
+      protectVaultContent:
+          history.section == HistorySection.collection &&
+          history.collectionId == ClipboardCollection.vaultId,
     );
 
     if (!context.mounted || action == null) return;
@@ -206,6 +221,32 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       }
     } else if (action == 'paste_plain') {
       await _pasteItemAsPlainText(item);
+    } else if (action == 'text_transform') {
+      final transform = await showTextTransformMenu(context: context);
+      if (!context.mounted || transform == null) return;
+      try {
+        final result = SmartTextTools.transform(item.content, transform);
+        await historyNotifier.addTextItem(result);
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transformed_copied);
+        }
+      } on TextTransformException {
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transform_failed);
+        }
+      }
+    } else if (action == 'link_cleaner') {
+      try {
+        final result = SmartTextTools.cleanUrl(item.content);
+        await historyNotifier.addTextItem(result);
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.link_cleaned);
+        }
+      } on TextTransformException {
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transform_failed);
+        }
+      }
     } else if (action == 'share') {
       final shared = await shareClipboardItem(context, item);
       if (!shared && context.mounted) {
@@ -280,9 +321,11 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(historyControllerProvider);
-    final collections =
-        ref.watch(collectionsControllerProvider).value ?? const [];
     final settings = ref.watch(settingsControllerProvider);
+    final collections =
+        (ref.watch(collectionsControllerProvider).value ?? const [])
+            .where((collection) => !collection.isVault || settings.vaultEnabled)
+            .toList(growable: false);
     final visibleItems = state.visibleItems;
     final totalItems = visibleItems.length;
 

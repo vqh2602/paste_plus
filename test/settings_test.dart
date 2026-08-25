@@ -21,6 +21,14 @@ void main() {
     expect(const AppSettings().imgBbApiKey, '670005d0dea70dbc4350f1ff1ad1dc33');
   });
 
+  test('adds new content types once and preserves later opt-out', () {
+    final migrated = AppSettings.fromJson('{"allowedTypes":["text"]}');
+    expect(migrated.allowedTypes, {'text', 'emoji', 'jwt'});
+
+    final disabled = migrated.copyWith(allowedTypes: {'text'});
+    expect(AppSettings.fromJson(disabled.toJson()).allowedTypes, {'text'});
+  });
+
   test('settings serialize and persist with collections intact', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
@@ -44,6 +52,11 @@ void main() {
       syncPinnedItemsOnly: true,
       sharingMaxImageMb: 42,
       allConnectionsPaused: true,
+      vaultEnabled: true,
+      vaultWipeAfterFiveFailures: true,
+      ignoreFinancialAndIdentity: false,
+      protectSensitiveWindows: false,
+      hideDuringScreenSharing: true,
     );
 
     await repository.save(changed);
@@ -63,6 +76,11 @@ void main() {
     expect(loaded.syncPinnedItemsOnly, isTrue);
     expect(loaded.sharingMaxImageMb, 42);
     expect(loaded.allConnectionsPaused, isTrue);
+    expect(loaded.vaultEnabled, isTrue);
+    expect(loaded.vaultWipeAfterFiveFailures, isTrue);
+    expect(loaded.ignoreFinancialAndIdentity, isFalse);
+    expect(loaded.protectSensitiveWindows, isFalse);
+    expect(loaded.hideDuringScreenSharing, isTrue);
     expect(
       shortcutSignature(
         decodeShortcut(loaded.openPanelShortcut, ShortcutAction.openPanel),

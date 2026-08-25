@@ -29,7 +29,7 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   
   WindowPlugin::RegisterWithMessenger(
-      flutter_controller_->engine()->messenger());
+      flutter_controller_->engine()->messenger(), GetHandle());
   
   ClipboardPlugin::RegisterWithMessenger(
       flutter_controller_->engine()->messenger());

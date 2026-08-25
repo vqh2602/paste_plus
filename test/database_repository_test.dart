@@ -99,6 +99,65 @@ void main() {
     expect(persisted.urlHost, 'flutter.dev');
   });
 
+  test('repository persists emoji-only clipboard as emoji', () async {
+    final stored = await repository.store(
+      const ClipboardPayload(text: '👩🏽‍💻✨'),
+      const AppSettings(ignoreSensitive: false),
+    );
+
+    expect(stored, isNotNull);
+    expect(stored!.contentType.name, 'emoji');
+    expect((await repository.getItems()).single.contentType.name, 'emoji');
+  });
+
+  test('repository skips financial and identity data when enabled', () async {
+    final card = await repository.store(
+      const ClipboardPayload(text: '4111 1111 1111 1111'),
+      const AppSettings(),
+    );
+    final citizenId = await repository.store(
+      const ClipboardPayload(text: '079203001234'),
+      const AppSettings(),
+    );
+    final chineseCitizenId = await repository.store(
+      const ClipboardPayload(text: '11010519491231002X'),
+      const AppSettings(),
+    );
+    final indianAadhaar = await repository.store(
+      const ClipboardPayload(text: '2345 6789 0124'),
+      const AppSettings(),
+    );
+    final labeledPassport = await repository.store(
+      const ClipboardPayload(text: 'Passport No: E12345678'),
+      const AppSettings(),
+    );
+    final allowed = await repository.store(
+      const ClipboardPayload(text: '4111 1111 1111 1111'),
+      const AppSettings(ignoreFinancialAndIdentity: false),
+    );
+
+    expect(card, isNull);
+    expect(citizenId, isNull);
+    expect(chineseCitizenId, isNull);
+    expect(indianAadhaar, isNull);
+    expect(labeledPassport, isNull);
+    expect(allowed, isNotNull);
+  });
+
+  test('repository skips clipboard captured from a sensitive window', () async {
+    final protected = await repository.store(
+      const ClipboardPayload(text: 'ordinary text', sensitiveContext: true),
+      const AppSettings(ignoreSensitive: false),
+    );
+    final allowed = await repository.store(
+      const ClipboardPayload(text: 'ordinary text', sensitiveContext: true),
+      const AppSettings(ignoreSensitive: false, protectSensitiveWindows: false),
+    );
+
+    expect(protected, isNull);
+    expect(allowed, isNotNull);
+  });
+
   test(
     'collections are seeded and deleting one preserves clipboard items',
     () async {
@@ -107,9 +166,17 @@ void main() {
         const AppSettings(ignoreSensitive: false),
       );
       final collections = await repository.getCollections();
-      expect(collections, hasLength(5));
-      await repository.addToCollection(stored!.id, collections.first.id);
-      await repository.deleteCollection(collections.first.id);
+      expect(collections, hasLength(6));
+      final vault = collections.singleWhere((item) => item.isVault);
+      await repository.renameCollection(vault.id, 'Cannot rename');
+      await repository.deleteCollection(vault.id);
+      expect(
+        (await repository.getCollections()).singleWhere((item) => item.isVault),
+        isNotNull,
+      );
+      final regular = collections.firstWhere((item) => !item.isSystem);
+      await repository.addToCollection(stored!.id, regular.id);
+      await repository.deleteCollection(regular.id);
       expect(await repository.getItems(), hasLength(1));
     },
   );

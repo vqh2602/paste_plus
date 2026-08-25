@@ -69,7 +69,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT 令牌';
+
+  @override
   String get image => '图片';
+
+  @override
+  String get emoji => '表情符号';
 
   @override
   String get image_link => '图片链接';
@@ -534,6 +540,66 @@ class AppLocalizationsZh extends AppLocalizations {
   String get translate_failed => '无法翻译文本';
 
   @override
+  String get text_transform => '文本转换';
+
+  @override
+  String get format_json => '格式化 JSON';
+
+  @override
+  String get minify_json => '压缩 JSON';
+
+  @override
+  String get encode_base64 => 'Base64 编码';
+
+  @override
+  String get decode_base64 => 'Base64 解码';
+
+  @override
+  String get encode_url => 'URL 编码';
+
+  @override
+  String get decode_url => 'URL 解码';
+
+  @override
+  String get uppercase => '大写';
+
+  @override
+  String get lowercase => '小写';
+
+  @override
+  String get title_case => '标题格式';
+
+  @override
+  String get parse_timestamp => '解析时间戳';
+
+  @override
+  String get md5_hash => 'MD5 哈希';
+
+  @override
+  String get sort_lines => '行排序';
+
+  @override
+  String get remove_duplicate_lines => '删除重复行';
+
+  @override
+  String get link_cleaner => '链接清理';
+
+  @override
+  String get transformed_copied => '已复制转换结果';
+
+  @override
+  String get transform_failed => '无法完成此转换';
+
+  @override
+  String get link_cleaned => '已复制清理后的链接';
+
+  @override
+  String get calculation_result => '结果';
+
+  @override
+  String get detected_language => '已识别';
+
+  @override
   String get upload_cloud_success => '已上传至云端并复制链接';
 
   @override
@@ -995,10 +1061,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get export_backup_prompt => '输入密码以保护备份文件。';
 
   @override
-  String get export_backup_sub => '将设置保存到加密的 .clipflow 文件';
+  String get export_backup_sub => '将剪贴板历史和设置保存到加密的 .clipflow 文件';
 
   @override
-  String get export_backup_title => '导出设置';
+  String get export_backup_title => '导出数据';
 
   @override
   String get filter_by_type => '按内容类型过滤';
@@ -1022,6 +1088,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ignore_long_token_sub => '不要保存长秘密或类似令牌的文本';
 
   @override
+  String get ignore_financial_identity => '过滤支付和身份数据';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      '跳过通过 Luhn 校验的银行卡号，以及受支持国家中已识别的身份证件或护照号码';
+
+  @override
+  String get protect_sensitive_windows => '敏感窗口保护';
+
+  @override
+  String get protect_sensitive_windows_sub => '在密码字段和登录窗口中暂停采集';
+
+  @override
+  String get hide_during_screen_sharing => '屏幕共享时隐藏';
+
+  @override
+  String get hide_during_screen_sharing_sub => '从屏幕截图和录屏中排除 ClipFlow 窗口';
+
+  @override
   String get ignore_sensitive_sub => '不要保存看起来敏感的内容';
 
   @override
@@ -1037,10 +1122,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get import_backup_prompt => '输入密码以解密备份文件。';
 
   @override
-  String get import_backup_sub => '从 .clipflow 文件恢复设置';
+  String get import_backup_sub => '从 .clipflow 文件恢复剪贴板历史和设置';
 
   @override
-  String get import_backup_title => '导入设置';
+  String get import_backup_title => '导入数据';
 
   @override
   String get in_app_shortcuts => '应用内快捷方式';
@@ -1531,4 +1616,88 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       '该模型无法读取图像。它仅根据 OCR 文本和文件详细信息进行回答。下载视觉模型（Gemma 4 12B Vision 或 Qwen2.5-VL 7B）来分析图片本身。';
+
+  @override
+  String get vault_title => '保险库';
+
+  @override
+  String get vault_enabled => '启用保险库';
+
+  @override
+  String get vault_enabled_sub => '使用加密和身份验证保护系统收藏夹。';
+
+  @override
+  String get vault_enable_failed => '无法访问设备安全存储。请检查 Keychain 或 Keystore 权限后重试。';
+
+  @override
+  String get vault_create_password_title => '创建保险库密码';
+
+  @override
+  String get vault_unlock_title => '解锁保险库';
+
+  @override
+  String get vault_unlock_sub => '验证身份以查看加密的剪贴板项目。';
+
+  @override
+  String get vault_password => '密码';
+
+  @override
+  String get vault_confirm_password => '确认密码';
+
+  @override
+  String get vault_new_password => '新密码';
+
+  @override
+  String get vault_password_min => '至少使用 6 个字符。';
+
+  @override
+  String get vault_password_mismatch => '密码不一致。';
+
+  @override
+  String get vault_unlock => '解锁';
+
+  @override
+  String get vault_use_device_auth => '使用设备身份验证';
+
+  @override
+  String get vault_invalid_password => '密码错误。';
+
+  @override
+  String get vault_attempts_remaining => '还可尝试 @count 次。';
+
+  @override
+  String get vault_data_wiped => '连续 5 次失败后，保险库数据已删除。';
+
+  @override
+  String get vault_change_password => '更改保险库密码';
+
+  @override
+  String get vault_change_password_sub => '使用新密码重新封装加密密钥。';
+
+  @override
+  String get vault_device_auth => '面容、指纹或设备身份验证';
+
+  @override
+  String get vault_device_auth_sub => '使用此设备上配置的身份验证方式。';
+
+  @override
+  String get vault_device_auth_failed => '设备身份验证不可用或已取消。';
+
+  @override
+  String get vault_wipe_after_five => '失败 5 次后删除保险库数据';
+
+  @override
+  String get vault_wipe_after_five_sub => '仅永久删除保险库中的加密项目。默认关闭。';
+
+  @override
+  String get vault_encryption_title => 'AES-256 静态加密';
+
+  @override
+  String get vault_encryption_sub => '剪贴板内容、元数据和图片文件在存储前会被加密。';
+
+  @override
+  String get vault_disable_confirm => '禁用保险库并将解密后的项目恢复到剪贴板历史记录？';
+
+  @override
+  String get vault_locked_notice => '请先解锁保险库。';
 }

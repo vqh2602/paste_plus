@@ -10,6 +10,8 @@ import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import '../../domain/smart_text_tools.dart';
+import 'calculation_result_line.dart';
 
 class ClipboardCardWidget extends ConsumerWidget {
   const ClipboardCardWidget({
@@ -47,6 +49,9 @@ class ClipboardCardWidget extends ConsumerWidget {
     final state = ref.watch(historyControllerProvider);
     final parsedColor = item.contentType == ClipboardContentType.color
         ? ColorParser.parse(item.content)
+        : null;
+    final codeLanguage = item.contentType == ClipboardContentType.code
+        ? SmartTextTools.programmingLanguage(item.content)
         : null;
 
     return AnimatedContainer(
@@ -108,7 +113,10 @@ class ClipboardCardWidget extends ConsumerWidget {
                         const SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            item.sourceAppName ?? context.l10n.unknown,
+                            [
+                              item.sourceAppName ?? context.l10n.unknown,
+                              ?codeLanguage,
+                            ].join(' · '),
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: 11,
@@ -312,6 +320,10 @@ class ClipboardCardWidget extends ConsumerWidget {
                             : null,
                       ),
                     ),
+                    CalculationResultLine(
+                      content: item.content,
+                      enabled: item.contentType == ClipboardContentType.text,
+                    ),
                   ],
                 ],
               ),
@@ -330,6 +342,8 @@ class ClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.code => const Color(0xFFAF52DE),
     ClipboardContentType.color => const Color(0xFFFF2D55),
     ClipboardContentType.json => const Color(0xFF00C7BE),
+    ClipboardContentType.jwt => const Color(0xFFFF6B35),
+    ClipboardContentType.emoji => const Color(0xFFFFCC00),
     ClipboardContentType.file => const Color(0xFFA28B55),
     ClipboardContentType.image => const Color(0xFFFF3B30),
   };
@@ -344,6 +358,8 @@ class ClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.color => CupertinoIcons.color_filter,
     ClipboardContentType.json =>
       CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.jwt => CupertinoIcons.lock,
+    ClipboardContentType.emoji => CupertinoIcons.smiley,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };
@@ -356,6 +372,8 @@ class ClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.code => 'CODE',
     ClipboardContentType.color => 'COLOR',
     ClipboardContentType.json => 'JSON',
+    ClipboardContentType.jwt => 'JWT',
+    ClipboardContentType.emoji => 'EMOJI',
     ClipboardContentType.file => 'FILE',
     ClipboardContentType.image => 'IMAGE',
   };

@@ -1,5 +1,41 @@
 # Changelog
 
+## [1.2.0] - 2026-08-25
+
+### 🛡️ Bảo vệ dữ liệu nhạy cảm & quyền riêng tư
+- Thêm bộ lọc tùy chọn để bỏ qua số thẻ thanh toán hợp lệ theo thuật toán **Luhn** và mã định danh/hộ chiếu. Nhận dạng trực tiếp bằng checksum hoặc cấu trúc chặt cho Việt Nam, Mỹ, Trung Quốc, Ấn Độ, Nhật Bản, Thái Lan, Singapore, Đài Loan, Tây Ban Nha và Hàn Quốc; hộ chiếu quốc tế còn được nhận qua nhãn đa ngôn ngữ hoặc MRZ ICAO, đồng thời không còn bị phân loại nhầm thành số điện thoại.
+- Mở rộng phân loại số điện thoại bằng metadata libphonenumber cho các quốc gia trên toàn cầu; hỗ trợ mã quốc gia `+`/`00`, định dạng nội địa phổ biến, dấu chấm/gạch/ngoặc, `tel:`, số máy lẻ và chữ số Unicode trong khi loại trừ ngày tháng, mã định danh và mã quốc gia không hợp lệ.
+- Sửa trình cập nhật Windows portable: updater nay chờ đúng PID của ClipFlow, giải nén ZIP trực tiếp bằng Dart, xác thực đầy đủ `clipflow.exe`, `flutter_windows.dll`, `data/app.so` và `data/flutter_assets`, sau đó thay thế toàn bộ thư mục release bằng `robocopy` rồi khởi động lại ứng dụng tại đúng ổ đĩa cài đặt.
+- Khôi phục khả năng build Windows bằng MSVC 14.51 bằng lớp tương thích giới hạn riêng cho `local_auth_windows`, tránh lỗi STL1011 từ `<experimental/coroutine>` mà không tắt cảnh báo cho toàn bộ ứng dụng.
+- Thêm bảo vệ cửa sổ nhạy cảm trên macOS/Windows: bỏ qua clipboard khi con trỏ đang ở ô mật khẩu hoặc tiêu đề cửa sổ thể hiện đăng nhập, xác thực, thanh toán hay ngân hàng.
+- Thêm tùy chọn loại cửa sổ ClipFlow khỏi ảnh chụp, bản ghi và luồng chia sẻ màn hình bằng API bảo vệ nội dung native của hệ điều hành.
+- Tất cả ba lớp bảo vệ đều có công tắc riêng trong **Cài đặt > Quyền riêng tư**.
+- Sửa lỗi bật Tủ khóa trên macOS có thể phát sinh Keychain `-34018`: loại bỏ thao tác xóa khóa xác thực thiết bị không cần thiết, chỉ cập nhật trạng thái sau khi ghi kho bảo mật thành công và hiển thị lỗi có kiểm soát nếu secure storage không khả dụng.
+- Sửa Quick Panel bị ẩn và khóa lại Tủ khóa khi Touch ID/Windows Hello tạm thời làm mất focus; cửa sổ nay giữ nguyên trong quá trình xác thực và tự lấy lại focus sau khi hộp thoại hệ thống đóng.
+
+### 📦 Xuất dữ liệu & tìm kiếm có hướng dẫn
+- Nâng `.clipflow` thành gói dữ liệu đầy đủ gồm cài đặt, lịch sử clipboard, ảnh, Collection và quan hệ phân loại; Tủ khóa cùng khóa mã hóa thiết bị luôn bị loại trừ.
+- Lịch sử được mã hóa xác thực bằng **AES-256-GCM** với khóa PBKDF2-HMAC-SHA256 210.000 vòng; trình nhập bỏ qua trường tương lai chưa biết, bù giá trị mặc định cho trường cũ và vẫn đọc được tệp cấu hình `.clipflow` v1.
+- Thêm đề xuất cú pháp `app:`, `note:`, `type:`, `is:pinned` và `after:` ngay tại ô tìm kiếm của cửa sổ chính lẫn Quick Panel; có thể bấm để chèn tại con trỏ và các biểu thức tìm kiếm đặc biệt được in đậm để dễ phân biệt với từ khóa thường.
+
+### 🔐 Tủ khóa bảo mật
+- Thêm **Tủ khóa** dưới dạng Collection hệ thống được tạo sẵn, không thể đổi tên hoặc xóa.
+- Clipboard được kéo vào Tủ khóa sẽ biến mất khỏi lịch sử, tìm kiếm, AI và đồng bộ thiết bị; nội dung chỉ hiển thị sau khi mở khóa đúng cách.
+- Hỗ trợ mở khóa bằng mật khẩu hoặc phương thức xác thực thiết bị (vân tay, Face ID, Windows Hello hay mã khóa hệ thống tùy nền tảng).
+- Thêm cấu hình bật/tắt Tủ khóa, đổi mật khẩu, bật/tắt xác thực thiết bị và tùy chọn tự xóa dữ liệu Tủ khóa sau 5 lần nhập sai liên tiếp.
+- Mã hóa tại chỗ bằng **AES-256-GCM** với khóa chính ngẫu nhiên; mật khẩu bảo vệ khóa bằng **PBKDF2-HMAC-SHA256 (210.000 vòng)**. Trường dữ liệu nhạy cảm trong SQLite và tệp ảnh thuộc Tủ khóa đều không còn lưu ở dạng đọc được.
+- Tự khóa khi ứng dụng mất tiêu điểm hoặc chuyển nền; các tệp xem trước đã giải mã được dọn ngay khi khóa.
+
+### 🧱 Cô lập dữ liệu & tương thích
+- Thêm submenu **Chuyển đổi văn bản** cho định dạng/thu nhỏ JSON, Base64, URL encode/decode, đổi hoa thường, Title Case, phân tích timestamp, MD5, sắp xếp và loại bỏ dòng trùng; kết quả được sao chép/lưu thành mục mới mà không ghi đè bản gốc.
+- Thêm **Link Cleaner** chỉ xuất hiện với URL để loại bỏ tham số theo dõi nhưng giữ nguyên tham số nghiệp vụ và fragment.
+- Thêm tính toán biểu thức an toàn ngay trên thẻ clipboard và vùng chi tiết, cùng nhận diện **JWT** và ngôn ngữ lập trình phổ biến.
+- Thêm phân loại **Emoji** cho emoji đơn, chuỗi emoji, cờ, màu da, ZWJ và keycap; văn bản có xen emoji vẫn được giữ đúng loại Văn bản.
+- Tủ khóa bị loại khỏi FTS, truy vấn AI, dọn lịch sử thông thường và luồng đồng bộ LAN để tránh rò rỉ dữ liệu ngoài ý muốn.
+- Khi tắt Tủ khóa, dữ liệu được giải mã và đưa trở lại lịch sử trước khi khóa mã hóa bị xóa.
+- Bổ sung cấu hình native cho Local Authentication trên Android/iOS và bản địa hóa giao diện Tủ khóa trên cả 6 ngôn ngữ.
+- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh, phân loại Emoji/JWT, bộ lọc nhạy cảm, archive và gợi ý tìm kiếm; toàn bộ **272 kiểm thử** đều đạt.
+
 ## [1.1.7] - 2026-08-25
 
 ### 🐛 Sửa lỗi & Cải tiến

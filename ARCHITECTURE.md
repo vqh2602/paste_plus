@@ -40,7 +40,8 @@ ClipFlow is built using **Flutter** and follows a **Feature-First Architecture**
 │   │   ├── clipboard_history/        # Classifier, repository, Home, Quick Panel & actions
 │   │   ├── device_sync/              # TLS LAN pairing, peer state, queues & metadata sync
 │   │   ├── onboarding/               # First-run and retention setup
-│   │   └── settings/                 # AppSettings, encrypted backup & settings UI
+│   │   ├── settings/                 # AppSettings, encrypted backup & settings UI
+│   │   └── vault/                    # Vault crypto, authentication, state & unlock dialogs
 │   └── l10n/                         # ARB sources and generated vi/en/ja/ko/de/zh classes
 ├── android/                          # Android Beta runner and platform configuration
 ├── ios/                              # iOS Beta runner and entitlements
@@ -65,7 +66,7 @@ ClipFlow selects the SQLite backend per target platform:
   - `content_hash`: TEXT UNIQUE (SHA-256 hash for O(1) deduplication)
   - `content`: TEXT
   - `normalized_content`: TEXT
-  - `content_type`: TEXT (text, url, email, phone, color, json, file, code, image)
+  - `content_type`: TEXT (text, url, email, phone, color, json, jwt, emoji, file, code, image)
   - `image_path`: TEXT (Local relative file path to application support storage)
   - `is_pinned`: INTEGER (0 or 1)
   - `is_sensitive`: INTEGER (0 or 1)
@@ -76,6 +77,7 @@ ClipFlow selects the SQLite backend per target platform:
   - `created_at`: INTEGER (Epoch timestamp)
   - `updated_at`: INTEGER
   - `last_copied_at`: INTEGER
+  - `is_vault`: INTEGER (1 only for encrypted Vault rows; normal queries and FTS require 0)
 
 - **`collections` Table**:
   - `id`: TEXT PRIMARY KEY
@@ -111,13 +113,35 @@ Images copied to the clipboard are written to disk under the sandboxed Applicati
    - macOS uses `MacOSClipboardWatcher` and `NSPasteboard.changeCount`.
    - Windows Beta uses `WindowsClipboardWatcher` and `GetClipboardSequenceNumber()`.
    - iOS/Android Beta and other platforms use the foreground `FlutterClipboardWatcher` fallback.
-2. **Typed native payload** (`ClipboardPayload`): text, image bytes, source application metadata, and an explicit `filePaths` list travel through one domain object.
+2. **Typed native payload** (`ClipboardPayload`): text, image bytes, source application metadata, an explicit `filePaths` list, and the native `sensitiveContext` signal travel through one domain object.
 3. **File-first native decoding**:
    - macOS reads Finder file URLs before `.png`/TIFF thumbnail data.
    - Windows reads Explorer `CF_HDROP` paths before `CF_UNICODETEXT` or bitmap formats.
    - A file-list payload suppresses thumbnail bytes, so copied Word, Excel, PDF, folder, or image files are stored as **File** rather than **Image**.
-4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
-5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback.
+4. **Privacy gate, classification and persistence**: `SqliteClipboardRepository` first applies each enabled policy: OTP/long-token filtering, a Luhn check for 13–19 digit payment-card candidates, label-bound identity/passport recognition, and the native sensitive-window signal. Rejected payloads never reach SQLite. `ContentClassifier` then recognizes URLs, email, phone, color, JSON, JWT, Emoji, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SmartTextTools` additionally detects common programming-language signatures and evaluates only a bounded, explicitly parsed mathematical grammar. Accepted items are normalized, hashed, deduplicated, enriched with searchable features, and persisted.
+5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, cloud upload, Link Cleaner and a nested text-conversion menu. Text transforms are pure local operations and create a new clipboard item rather than mutating the source. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback. Both search surfaces use the same syntax-suggestion component for `app:`, `note:`, `type:`, `is:pinned`, and `after:` filters.
+
+---
+
+## 🔐 Vault Security Architecture
+
+The Vault is a reserved Collection (`id = vault`) seeded by schema version 8. It cannot be renamed, deleted, synchronized, or addressed by AI tools. Moving an item into it removes every normal Collection membership and marks the row with `is_vault = 1`; all regular history, structured search, FTS, cleanup, and bulk-query paths explicitly require `is_vault = 0`.
+
+### Key hierarchy and authentication
+
+1. A random 256-bit master key is generated when the Vault is enabled.
+2. The user's password derives a wrapping key through PBKDF2-HMAC-SHA256 (210,000 iterations and a random salt).
+3. AES-256-GCM wraps the master key and authenticates every encrypted database field or file payload.
+4. The wrapped-key configuration is stored in OS-backed secure storage. If device unlock is enabled, a secure-storage copy of the master key is only loaded after `local_auth` succeeds (Touch ID, Face ID, fingerprint, Windows Hello, or the device credential supported by the OS).
+5. The in-memory key and decrypted image previews are cleared whenever the app loses focus, moves to the background, leaves the Vault, or is explicitly locked.
+
+### At-rest data boundary
+
+- Text, normalized text, hashes, source-app metadata, notes, URLs, MIME data, and extensions are AES-GCM ciphertext in SQLite while vaulted.
+- Image bytes are moved from `clipboard_images/` into encrypted `.cfv` files under `vault_files/`. A decrypted preview exists only in the system temporary directory while unlocked and is deleted on lock.
+- Searchable feature columns are blanked while vaulted, and FTS triggers never index Vault rows.
+- Vault items do not enter LAN synchronization or embedding/AI indexing. Copying an unlocked Vault item is temporarily suppressed from clipboard recapture to prevent an immediate plaintext duplicate.
+- The optional five-failure policy deletes only Vault rows/files; normal clipboard history remains intact. Disabling the feature first decrypts and restores Vault items to normal history, then deletes the key material.
 
 ---
 
@@ -171,14 +195,20 @@ When a user selects an item in the Quick Panel:
 ### 2. Global Hotkey & System Tray
 - Uses `hotkey_manager` and `tray_manager` to register `Control+V` (`⌃V`) on macOS / `Ctrl+Shift+V` on Windows system-wide, toggling the Quick Panel under the mouse cursor.
 
+### 3. Native Privacy Signals & Capture Exclusion
+- **macOS** uses Accessibility roles and focused-window titles to mark password/login/payment contexts, and `NSWindow.sharingType = .none` to exclude ClipFlow from capture when the user enables screen-sharing privacy.
+- **Windows** checks focused `ES_PASSWORD` edit controls and window-title keywords, and applies `SetWindowDisplayAffinity(WDA_EXCLUDEFROMCAPTURE)` to the ClipFlow window.
+- These native signals are advisory inputs to the repository privacy gate. Each policy remains independently controlled by `AppSettings`, and capture exclusion is restored at startup and immediately after settings import.
+
 ---
 
 ## 📦 Encrypted Backup & Restore Protocol (`.clipflow`)
 
-ClipFlow configuration backups are exported as encrypted `.clipflow` archives:
-1. Serializes `AppSettings` JSON data (theme, accent color, shortcuts, exclusion lists, content limits).
-2. Encrypts payload with user-supplied password using AES-256 / PBKDF2 encryption (`crypto`).
-3. Imports and validates password hash prior to applying restored settings.
+ClipFlow exports portable `.clipflow` ZIP archives with two independently protected payloads:
+1. `settings.enc` retains the authenticated v1 settings envelope so current archives remain readable by the legacy settings importer.
+2. `history.enc` contains non-Vault clipboard rows, embedded image bytes, user Collections, and memberships. It uses AES-256-GCM with a random nonce and a password key derived by PBKDF2-HMAC-SHA256 (210,000 iterations).
+3. `manifest.json` records the archive, payload, KDF, and encryption schema versions. The history importer intersects archive fields with live SQLite columns, ignores unknown future fields, supplies defaults for older missing fields, merges Collection names, deduplicates clipboard hashes, and restores images to Application Support storage.
+4. Vault rows, Vault membership, device-local wrapped keys, and decrypted Vault files are never exported. A settings-only `clipflow_config_v1` archive remains importable.
 
 ---
 

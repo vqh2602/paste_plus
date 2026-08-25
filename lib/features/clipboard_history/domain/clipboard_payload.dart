@@ -7,6 +7,7 @@ class ClipboardPayload {
     this.filePaths = const [],
     this.sourceAppName,
     this.sourceAppIdentifier,
+    this.sensitiveContext = false,
   });
 
   final String? text;
@@ -14,6 +15,7 @@ class ClipboardPayload {
   final List<String> filePaths;
   final String? sourceAppName;
   final String? sourceAppIdentifier;
+  final bool sensitiveContext;
 
   bool get isEmpty =>
       (text == null || text!.trim().isEmpty) &&

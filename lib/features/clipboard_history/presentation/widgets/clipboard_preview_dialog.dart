@@ -527,6 +527,8 @@ IconData _typeIcon(ClipboardContentType type) => switch (type) {
   ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
   ClipboardContentType.color => CupertinoIcons.color_filter,
   ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+  ClipboardContentType.jwt => CupertinoIcons.lock,
+  ClipboardContentType.emoji => CupertinoIcons.smiley,
   ClipboardContentType.file => CupertinoIcons.folder,
   ClipboardContentType.image => CupertinoIcons.photo,
 };
@@ -541,6 +543,8 @@ String _typeLabel(BuildContext context, ClipboardItem item) {
     ClipboardContentType.code => context.l10n.code,
     ClipboardContentType.color => context.l10n.color,
     ClipboardContentType.json => context.l10n.json,
+    ClipboardContentType.jwt => context.l10n.jwt,
+    ClipboardContentType.emoji => context.l10n.emoji,
     ClipboardContentType.file => context.l10n.file,
     ClipboardContentType.image => context.l10n.image,
   };

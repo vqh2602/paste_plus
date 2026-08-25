@@ -38,10 +38,16 @@ class SearchClipboardTool implements AiTool {
       },
       'query': {'type': 'string'},
       'content_types': {'type': 'array'},
-      'contains_url': {'type': ['boolean', 'null']},
+      'contains_url': {
+        'type': ['boolean', 'null'],
+      },
       'url_hosts': {'type': 'array'},
-      'url_kind': {'type': ['string', 'null']},
-      'text_query': {'type': ['string', 'null']},
+      'url_kind': {
+        'type': ['string', 'null'],
+      },
+      'text_query': {
+        'type': ['string', 'null'],
+      },
       'source_apps': {'type': 'array'},
       'file_extensions': {'type': 'array'},
       'date_range': {
@@ -95,15 +101,20 @@ class SearchClipboardTool implements AiTool {
         for (final type in ClipboardContentType.values)
           if (type.name == value) type,
     };
-    final date = (arguments['date_preset'] ?? arguments['date_range'])?.toString();
+    final date = (arguments['date_preset'] ?? arguments['date_range'])
+        ?.toString();
     final urlKindName = arguments['url_kind']?.toString();
     final urlKind = ClipboardUrlKind.values
-        .where((kind) => kind.name == urlKindName ||
-            (kind == ClipboardUrlKind.webPage && urlKindName == 'web_page'))
+        .where(
+          (kind) =>
+              kind.name == urlKindName ||
+              (kind == ClipboardUrlKind.webPage && urlKindName == 'web_page'),
+        )
         .firstOrNull;
     final explicitText = arguments['text_query']?.toString().trim();
     final rawQuery = arguments['query']?.toString().trim();
-    final cleanTextQuery = explicitText ??
+    final cleanTextQuery =
+        explicitText ??
         (rawQuery?.isNotEmpty == true
             ? ClipboardSemanticQueryCompiler().compile(rawQuery!).textQuery
             : null);
@@ -111,7 +122,8 @@ class SearchClipboardTool implements AiTool {
     return ClipboardSearchQuery(
       contentTypes: types,
       textQuery: cleanTextQuery,
-      containsUrl: arguments['contains_url'] as bool? ??
+      containsUrl:
+          arguments['contains_url'] as bool? ??
           (types.contains(ClipboardContentType.url) ? true : null),
       urlHosts: strings(arguments['url_hosts']).toSet(),
       urlKind: urlKind,
@@ -120,9 +132,7 @@ class SearchClipboardTool implements AiTool {
       pinned: arguments['pinned'] as bool?,
       dateRange: date == null || date.isEmpty
           ? null
-          : ClipboardDateRange(
-              preset: date == 'recent' ? 'last_7_days' : date,
-            ),
+          : ClipboardDateRange(preset: date == 'recent' ? 'last_7_days' : date),
       limit: ((arguments['limit'] as num?)?.toInt() ?? 30).clamp(1, 100),
     );
   }
@@ -271,8 +281,7 @@ class ExtractUrlsTool implements AiTool {
       status: matches.isEmpty ? AiToolStatus.empty : AiToolStatus.success,
       code: matches.isEmpty ? 'url.extract.empty' : 'url.extract.success',
       payload: UrlExtractionPayload(matches),
-      legacyOutput:
-      matches.isNotEmpty
+      legacyOutput: matches.isNotEmpty
           ? 'Đã trích xuất ${matches.length} URL:\n${matches.join('\n')}'
           : 'Không tìm thấy URL nào trong văn bản.',
     );
@@ -305,14 +314,17 @@ class ListCollectionsTool implements AiTool {
   Future<AiToolResult> execute(Map<String, dynamic> arguments) async {
     if (_repository != null) {
       final collections = await _repository.getCollections();
-      final list = collections
+      final visibleCollections = collections
+          .where((collection) => !collection.isVault)
+          .toList(growable: false);
+      final list = visibleCollections
           .map((c) => '- [collection:${c.id}] ${c.name}')
           .join('\n');
       return AiToolResult.ok(
-        collections.isNotEmpty
+        visibleCollections.isNotEmpty
             ? 'Danh sách bộ sưu tập:\n$list'
             : 'Chưa có bộ sưu tập nào.',
-        collections,
+        visibleCollections,
       );
     }
     return AiToolResult.ok('Danh sách bộ sưu tập hiện trống.');

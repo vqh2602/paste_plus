@@ -65,6 +65,12 @@ abstract interface class EditableClipboardRepository {
   });
 }
 
+abstract interface class VaultClipboardRepository {
+  Future<void> clearVault();
+  Future<void> disableVault();
+  Future<void> clearVaultPreviews();
+}
+
 extension DeepClipboardRepository on ClipboardRepository {
   Future<ClipboardSearchPage> searchStructured(
     ClipboardSearchQuery query,

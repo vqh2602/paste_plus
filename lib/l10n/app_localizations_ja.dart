@@ -69,7 +69,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => '画像';
+
+  @override
+  String get emoji => '絵文字';
 
   @override
   String get image_link => '画像リンク';
@@ -533,6 +539,66 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get translate_failed => 'テキストを翻訳できませんでした';
+
+  @override
+  String get text_transform => 'テキスト変換';
+
+  @override
+  String get format_json => 'JSON を整形';
+
+  @override
+  String get minify_json => 'JSON を圧縮';
+
+  @override
+  String get encode_base64 => 'Base64 エンコード';
+
+  @override
+  String get decode_base64 => 'Base64 デコード';
+
+  @override
+  String get encode_url => 'URL エンコード';
+
+  @override
+  String get decode_url => 'URL デコード';
+
+  @override
+  String get uppercase => '大文字';
+
+  @override
+  String get lowercase => '小文字';
+
+  @override
+  String get title_case => 'タイトルケース';
+
+  @override
+  String get parse_timestamp => 'タイムスタンプを解析';
+
+  @override
+  String get md5_hash => 'MD5 ハッシュ';
+
+  @override
+  String get sort_lines => '行を並べ替え';
+
+  @override
+  String get remove_duplicate_lines => '重複行を削除';
+
+  @override
+  String get link_cleaner => 'リンクを整理';
+
+  @override
+  String get transformed_copied => '変換結果をコピーしました';
+
+  @override
+  String get transform_failed => 'この変換を完了できませんでした';
+
+  @override
+  String get link_cleaned => '整理したリンクをコピーしました';
+
+  @override
+  String get calculation_result => '結果';
+
+  @override
+  String get detected_language => '検出';
 
   @override
   String get upload_cloud_success => 'クラウドにアップロード & リンクをコピーしました';
@@ -1001,10 +1067,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get export_backup_prompt => 'バックアップファイルを保護するパスワードを入力してください。';
 
   @override
-  String get export_backup_sub => '設定を暗号化した .clipflow ファイルに保存';
+  String get export_backup_sub => 'クリップボード履歴と設定を暗号化した .clipflow ファイルに保存';
 
   @override
-  String get export_backup_title => '設定をエクスポート';
+  String get export_backup_title => 'データをエクスポート';
 
   @override
   String get filter_by_type => 'コンテンツタイプでフィルター';
@@ -1028,6 +1094,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ignore_long_token_sub => '長いシークレットやトークン的なテキストを保存しない';
 
   @override
+  String get ignore_financial_identity => '支払い・本人確認データを除外';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Luhn 検証済みカード番号と、対応国の認識済み身分証・旅券番号を保存しません';
+
+  @override
+  String get protect_sensitive_windows => '機密ウインドウ保護';
+
+  @override
+  String get protect_sensitive_windows_sub => 'パスワード欄とログイン画面では収集を一時停止します';
+
+  @override
+  String get hide_during_screen_sharing => '画面共有中に非表示';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'ClipFlow ウインドウをスクリーンショットと録画から除外します';
+
+  @override
   String get ignore_sensitive_sub => '機密と思われるコンテンツを保存しない';
 
   @override
@@ -1043,10 +1129,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get import_backup_prompt => 'バックアップファイルを復号化するパスワードを入力してください。';
 
   @override
-  String get import_backup_sub => '設定を .clipflow ファイルから復元';
+  String get import_backup_sub => 'クリップボード履歴と設定を .clipflow ファイルから復元';
 
   @override
-  String get import_backup_title => '設定をインポート';
+  String get import_backup_title => 'データをインポート';
 
   @override
   String get in_app_shortcuts => 'アプリ内ショートカット';
@@ -1541,4 +1627,89 @@ class AppLocalizationsJa extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'このモデルは画像を読み取れません。OCRテキストとファイル情報のみで回答しました。画像自体を解析するにはビジョン対応モデル（Gemma 4 12B Vision または Qwen2.5-VL 7B）をダウンロードしてください。';
+
+  @override
+  String get vault_title => '保管庫';
+
+  @override
+  String get vault_enabled => '保管庫を有効にする';
+
+  @override
+  String get vault_enabled_sub => 'システムコレクションを暗号化と認証で保護します。';
+
+  @override
+  String get vault_enable_failed =>
+      '保護されたデバイスストレージにアクセスできませんでした。Keychain または Keystore の権限を確認して再試行してください。';
+
+  @override
+  String get vault_create_password_title => '保管庫のパスワードを作成';
+
+  @override
+  String get vault_unlock_title => '保管庫をロック解除';
+
+  @override
+  String get vault_unlock_sub => '暗号化されたクリップボード項目を表示するには認証してください。';
+
+  @override
+  String get vault_password => 'パスワード';
+
+  @override
+  String get vault_confirm_password => 'パスワードを確認';
+
+  @override
+  String get vault_new_password => '新しいパスワード';
+
+  @override
+  String get vault_password_min => '6文字以上を使用してください。';
+
+  @override
+  String get vault_password_mismatch => 'パスワードが一致しません。';
+
+  @override
+  String get vault_unlock => 'ロック解除';
+
+  @override
+  String get vault_use_device_auth => 'デバイス認証を使用';
+
+  @override
+  String get vault_invalid_password => 'パスワードが正しくありません。';
+
+  @override
+  String get vault_attempts_remaining => '残り @count 回です。';
+
+  @override
+  String get vault_data_wiped => '5回の認証失敗後、保管庫のデータを削除しました。';
+
+  @override
+  String get vault_change_password => '保管庫のパスワードを変更';
+
+  @override
+  String get vault_change_password_sub => '新しいパスワードで暗号化キーを再保護します。';
+
+  @override
+  String get vault_device_auth => 'Face ID、指紋、またはデバイス認証';
+
+  @override
+  String get vault_device_auth_sub => 'このデバイスに設定された認証方法を使用します。';
+
+  @override
+  String get vault_device_auth_failed => 'デバイス認証を利用できないか、キャンセルされました。';
+
+  @override
+  String get vault_wipe_after_five => '5回失敗したら保管庫データを削除';
+
+  @override
+  String get vault_wipe_after_five_sub => '保管庫内の暗号化項目のみを完全に削除します。既定ではオフです。';
+
+  @override
+  String get vault_encryption_title => '保存時にAES-256で暗号化';
+
+  @override
+  String get vault_encryption_sub => '内容、メタデータ、画像ファイルは保存前に暗号化されます。';
+
+  @override
+  String get vault_disable_confirm => '保管庫を無効にし、復号した項目を履歴に戻しますか？';
+
+  @override
+  String get vault_locked_notice => '続行する前に保管庫をロック解除してください。';
 }

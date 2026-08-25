@@ -69,7 +69,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Hình ảnh';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Link Ảnh';
@@ -550,6 +556,66 @@ class AppLocalizationsVi extends AppLocalizations {
   String get translate_failed => 'Không thể dịch văn bản này';
 
   @override
+  String get text_transform => 'Chuyển đổi văn bản';
+
+  @override
+  String get format_json => 'Định dạng JSON';
+
+  @override
+  String get minify_json => 'Thu nhỏ JSON';
+
+  @override
+  String get encode_base64 => 'Mã hóa Base64';
+
+  @override
+  String get decode_base64 => 'Giải mã Base64';
+
+  @override
+  String get encode_url => 'Mã hóa URL';
+
+  @override
+  String get decode_url => 'Giải mã URL';
+
+  @override
+  String get uppercase => 'CHỮ HOA';
+
+  @override
+  String get lowercase => 'chữ thường';
+
+  @override
+  String get title_case => 'Viết Hoa Đầu Từ';
+
+  @override
+  String get parse_timestamp => 'Phân tích dấu thời gian';
+
+  @override
+  String get md5_hash => 'Băm MD5';
+
+  @override
+  String get sort_lines => 'Sắp xếp dòng';
+
+  @override
+  String get remove_duplicate_lines => 'Loại bỏ dòng trùng';
+
+  @override
+  String get link_cleaner => 'Làm sạch liên kết';
+
+  @override
+  String get transformed_copied => 'Đã sao chép kết quả chuyển đổi';
+
+  @override
+  String get transform_failed => 'Không thể thực hiện chuyển đổi này';
+
+  @override
+  String get link_cleaned => 'Đã sao chép liên kết sạch';
+
+  @override
+  String get calculation_result => 'Kết quả';
+
+  @override
+  String get detected_language => 'Nhận diện';
+
+  @override
   String get upload_cloud_success => 'Đã tải ảnh lên cloud & sao chép link';
 
   @override
@@ -1028,10 +1094,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get export_backup_prompt => 'Nhập mật khẩu để bảo vệ tệp sao lưu.';
 
   @override
-  String get export_backup_sub => 'Lưu cài đặt vào tệp .clipflow được mã hóa';
+  String get export_backup_sub =>
+      'Lưu lịch sử clipboard và cài đặt vào tệp .clipflow được mã hóa';
 
   @override
-  String get export_backup_title => 'Xuất cấu hình';
+  String get export_backup_title => 'Xuất dữ liệu';
 
   @override
   String get filter_by_type => 'Lọc theo loại nội dung';
@@ -1055,6 +1122,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ignore_long_token_sub => 'Không lưu chuỗi bí mật hoặc token dài';
 
   @override
+  String get ignore_financial_identity => 'Lọc dữ liệu thanh toán và định danh';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Bỏ qua số thẻ hợp lệ theo Luhn và số định danh hoặc hộ chiếu được nhận diện từ các quốc gia hỗ trợ';
+
+  @override
+  String get protect_sensitive_windows => 'Bảo vệ cửa sổ nhạy cảm';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Tạm dừng thu thập tại ô mật khẩu và cửa sổ đăng nhập';
+
+  @override
+  String get hide_during_screen_sharing => 'Ẩn khi chia sẻ màn hình';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'Loại cửa sổ ClipFlow khỏi ảnh chụp và bản ghi màn hình';
+
+  @override
   String get ignore_sensitive_sub => 'Không lưu nội dung có vẻ nhạy cảm';
 
   @override
@@ -1070,10 +1158,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get import_backup_prompt => 'Nhập mật khẩu để giải mã tệp sao lưu.';
 
   @override
-  String get import_backup_sub => 'Khôi phục cài đặt từ tệp .clipflow';
+  String get import_backup_sub =>
+      'Khôi phục lịch sử clipboard và cài đặt từ tệp .clipflow';
 
   @override
-  String get import_backup_title => 'Nhập cấu hình';
+  String get import_backup_title => 'Nhập dữ liệu';
 
   @override
   String get in_app_shortcuts => 'Phím tắt trong ứng dụng';
@@ -1586,4 +1675,97 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'Model hiện tại không đọc được hình ảnh. Câu trả lời chỉ dựa trên văn bản OCR và thông tin tệp. Hãy tải model hỗ trợ ảnh (Gemma 4 12B Vision hoặc Qwen2.5-VL 7B) để phân tích chính hình ảnh.';
+
+  @override
+  String get vault_title => 'Tủ khóa';
+
+  @override
+  String get vault_enabled => 'Bật Tủ khóa';
+
+  @override
+  String get vault_enabled_sub =>
+      'Bảo vệ một Collection hệ thống bằng mã hóa và xác thực.';
+
+  @override
+  String get vault_enable_failed =>
+      'Tủ khóa không truy cập được kho bảo mật của thiết bị. Hãy kiểm tra quyền Keychain hoặc Keystore rồi thử lại.';
+
+  @override
+  String get vault_create_password_title => 'Tạo mật mã Tủ khóa';
+
+  @override
+  String get vault_unlock_title => 'Mở khóa Tủ khóa';
+
+  @override
+  String get vault_unlock_sub => 'Xác thực để xem các clipboard đã mã hóa.';
+
+  @override
+  String get vault_password => 'Mật mã';
+
+  @override
+  String get vault_confirm_password => 'Nhập lại mật mã';
+
+  @override
+  String get vault_new_password => 'Mật mã mới';
+
+  @override
+  String get vault_password_min => 'Sử dụng ít nhất 6 ký tự.';
+
+  @override
+  String get vault_password_mismatch => 'Hai mật mã không trùng khớp.';
+
+  @override
+  String get vault_unlock => 'Mở khóa';
+
+  @override
+  String get vault_use_device_auth => 'Dùng xác thực thiết bị';
+
+  @override
+  String get vault_invalid_password => 'Mật mã không đúng.';
+
+  @override
+  String get vault_attempts_remaining => 'Còn @count lần thử.';
+
+  @override
+  String get vault_data_wiped =>
+      'Dữ liệu Tủ khóa đã bị xóa sau 5 lần nhập sai.';
+
+  @override
+  String get vault_change_password => 'Đổi mật mã Tủ khóa';
+
+  @override
+  String get vault_change_password_sub =>
+      'Bọc lại khóa mã hóa bằng mật mã mới.';
+
+  @override
+  String get vault_device_auth => 'Face ID, vân tay hoặc xác thực thiết bị';
+
+  @override
+  String get vault_device_auth_sub =>
+      'Dùng phương thức xác thực đã cài trên thiết bị này.';
+
+  @override
+  String get vault_device_auth_failed =>
+      'Xác thực thiết bị không khả dụng hoặc đã bị hủy.';
+
+  @override
+  String get vault_wipe_after_five => 'Xóa dữ liệu Tủ khóa sau 5 lần nhập sai';
+
+  @override
+  String get vault_wipe_after_five_sub =>
+      'Chỉ xóa vĩnh viễn các mục đã mã hóa trong Tủ khóa. Mặc định tắt.';
+
+  @override
+  String get vault_encryption_title => 'Mã hóa AES-256 khi lưu trữ';
+
+  @override
+  String get vault_encryption_sub =>
+      'Nội dung, metadata và file ảnh được mã hóa trước khi lưu.';
+
+  @override
+  String get vault_disable_confirm =>
+      'Tắt Tủ khóa và khôi phục các mục đã giải mã về lịch sử clipboard?';
+
+  @override
+  String get vault_locked_notice => 'Hãy mở khóa Tủ khóa trước khi tiếp tục.';
 }

@@ -69,7 +69,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Bild';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Bild-Link';
@@ -554,6 +560,66 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get translate_failed => 'Text konnte nicht übersetzt werden';
+
+  @override
+  String get text_transform => 'Text umwandeln';
+
+  @override
+  String get format_json => 'JSON formatieren';
+
+  @override
+  String get minify_json => 'JSON minimieren';
+
+  @override
+  String get encode_base64 => 'Base64 kodieren';
+
+  @override
+  String get decode_base64 => 'Base64 dekodieren';
+
+  @override
+  String get encode_url => 'URL kodieren';
+
+  @override
+  String get decode_url => 'URL dekodieren';
+
+  @override
+  String get uppercase => 'GROSSBUCHSTABEN';
+
+  @override
+  String get lowercase => 'kleinbuchstaben';
+
+  @override
+  String get title_case => 'Wörter großschreiben';
+
+  @override
+  String get parse_timestamp => 'Zeitstempel analysieren';
+
+  @override
+  String get md5_hash => 'MD5-Hash';
+
+  @override
+  String get sort_lines => 'Zeilen sortieren';
+
+  @override
+  String get remove_duplicate_lines => 'Doppelte Zeilen entfernen';
+
+  @override
+  String get link_cleaner => 'Link bereinigen';
+
+  @override
+  String get transformed_copied => 'Umgewandeltes Ergebnis kopiert';
+
+  @override
+  String get transform_failed => 'Diese Umwandlung ist fehlgeschlagen';
+
+  @override
+  String get link_cleaned => 'Bereinigten Link kopiert';
+
+  @override
+  String get calculation_result => 'Ergebnis';
+
+  @override
+  String get detected_language => 'Erkannt';
 
   @override
   String get upload_cloud_success => 'In Cloud hochgeladen & Link kopiert';
@@ -1053,10 +1119,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get export_backup_sub =>
-      'Einstellungen in eine verschlüsselte .clipflow-Datei speichern';
+      'Zwischenablageverlauf und Einstellungen in einer verschlüsselten .clipflow-Datei speichern';
 
   @override
-  String get export_backup_title => 'Einstellungen exportieren';
+  String get export_backup_title => 'Daten exportieren';
 
   @override
   String get filter_by_type => 'Nach Inhaltstyp filtern';
@@ -1081,6 +1147,28 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lange Geheimnisse oder token-ähnlichen Text nicht speichern';
 
   @override
+  String get ignore_financial_identity =>
+      'Zahlungs- und Identitätsdaten filtern';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Luhn-gültige Kartennummern und erkannte Ausweis- oder Passnummern aus unterstützten Ländern überspringen';
+
+  @override
+  String get protect_sensitive_windows => 'Schutz sensibler Fenster';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Erfassung bei Passwortfeldern und Anmeldefenstern pausieren';
+
+  @override
+  String get hide_during_screen_sharing => 'Bei Bildschirmfreigabe ausblenden';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'ClipFlow-Fenster von Screenshots und Aufzeichnungen ausschließen';
+
+  @override
   String get ignore_sensitive_sub =>
       'Inhalte, die sensibel erscheinen, nicht speichern';
 
@@ -1099,10 +1187,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get import_backup_sub =>
-      'Einstellungen aus einer .clipflow-Datei wiederherstellen';
+      'Zwischenablageverlauf und Einstellungen aus einer .clipflow-Datei wiederherstellen';
 
   @override
-  String get import_backup_title => 'Einstellungen importieren';
+  String get import_backup_title => 'Daten importieren';
 
   @override
   String get in_app_shortcuts => 'In-App-Tastenkürzel';
@@ -1625,4 +1713,100 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'Dieses Modell kann keine Bilder lesen. Die Antwort beruht nur auf OCR-Text und Dateiangaben. Lade ein Vision-Modell (Gemma 4 12B Vision oder Qwen2.5-VL 7B), um das Bild selbst zu analysieren.';
+
+  @override
+  String get vault_title => 'Tresor';
+
+  @override
+  String get vault_enabled => 'Tresor aktivieren';
+
+  @override
+  String get vault_enabled_sub =>
+      'Schützt eine System-Sammlung mit Verschlüsselung und Authentifizierung.';
+
+  @override
+  String get vault_enable_failed =>
+      'Der Tresor konnte nicht auf den sicheren Gerätespeicher zugreifen. Keychain- oder Keystore-Berechtigung prüfen und erneut versuchen.';
+
+  @override
+  String get vault_create_password_title => 'Tresor-Passwort erstellen';
+
+  @override
+  String get vault_unlock_title => 'Tresor entsperren';
+
+  @override
+  String get vault_unlock_sub =>
+      'Authentifiziere dich, um verschlüsselte Zwischenablagen zu sehen.';
+
+  @override
+  String get vault_password => 'Passwort';
+
+  @override
+  String get vault_confirm_password => 'Passwort bestätigen';
+
+  @override
+  String get vault_new_password => 'Neues Passwort';
+
+  @override
+  String get vault_password_min => 'Verwende mindestens 6 Zeichen.';
+
+  @override
+  String get vault_password_mismatch => 'Die Passwörter stimmen nicht überein.';
+
+  @override
+  String get vault_unlock => 'Entsperren';
+
+  @override
+  String get vault_use_device_auth => 'Geräteauthentifizierung verwenden';
+
+  @override
+  String get vault_invalid_password => 'Falsches Passwort.';
+
+  @override
+  String get vault_attempts_remaining => 'Noch @count Versuche.';
+
+  @override
+  String get vault_data_wiped =>
+      'Die Tresordaten wurden nach 5 Fehlversuchen gelöscht.';
+
+  @override
+  String get vault_change_password => 'Tresor-Passwort ändern';
+
+  @override
+  String get vault_change_password_sub =>
+      'Schützt den Verschlüsselungsschlüssel mit einem neuen Passwort.';
+
+  @override
+  String get vault_device_auth =>
+      'Face ID, Fingerabdruck oder Geräteauthentifizierung';
+
+  @override
+  String get vault_device_auth_sub =>
+      'Verwendet eine auf diesem Gerät eingerichtete Authentifizierung.';
+
+  @override
+  String get vault_device_auth_failed =>
+      'Die Geräteauthentifizierung war nicht verfügbar oder wurde abgebrochen.';
+
+  @override
+  String get vault_wipe_after_five =>
+      'Tresordaten nach 5 Fehlversuchen löschen';
+
+  @override
+  String get vault_wipe_after_five_sub =>
+      'Löscht nur verschlüsselte Tresorobjekte dauerhaft. Standardmäßig aus.';
+
+  @override
+  String get vault_encryption_title => 'AES-256-Verschlüsselung im Ruhezustand';
+
+  @override
+  String get vault_encryption_sub =>
+      'Inhalt, Metadaten und Bilddateien werden vor dem Speichern verschlüsselt.';
+
+  @override
+  String get vault_disable_confirm =>
+      'Tresor deaktivieren und entschlüsselte Objekte in den Verlauf zurückholen?';
+
+  @override
+  String get vault_locked_notice => 'Entsperre zuerst den Tresor.';
 }

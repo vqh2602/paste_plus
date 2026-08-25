@@ -69,7 +69,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Image';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Image Link';
@@ -544,6 +550,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translate_failed => 'Unable to translate text';
+
+  @override
+  String get text_transform => 'Text conversion';
+
+  @override
+  String get format_json => 'Format JSON';
+
+  @override
+  String get minify_json => 'Minify JSON';
+
+  @override
+  String get encode_base64 => 'Encode Base64';
+
+  @override
+  String get decode_base64 => 'Decode Base64';
+
+  @override
+  String get encode_url => 'Encode URL';
+
+  @override
+  String get decode_url => 'Decode URL';
+
+  @override
+  String get uppercase => 'UPPERCASE';
+
+  @override
+  String get lowercase => 'lowercase';
+
+  @override
+  String get title_case => 'Title Case';
+
+  @override
+  String get parse_timestamp => 'Parse timestamp';
+
+  @override
+  String get md5_hash => 'MD5 hash';
+
+  @override
+  String get sort_lines => 'Sort lines';
+
+  @override
+  String get remove_duplicate_lines => 'Remove duplicate lines';
+
+  @override
+  String get link_cleaner => 'Link Cleaner';
+
+  @override
+  String get transformed_copied => 'Converted result copied';
+
+  @override
+  String get transform_failed => 'This conversion could not be completed';
+
+  @override
+  String get link_cleaned => 'Clean link copied';
+
+  @override
+  String get calculation_result => 'Result';
+
+  @override
+  String get detected_language => 'Detected';
 
   @override
   String get upload_cloud_success => 'Uploaded to cloud & link copied';
@@ -1028,10 +1094,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get export_backup_sub =>
-      'Save settings to an encrypted .clipflow file';
+      'Save clipboard history and settings to an encrypted .clipflow file';
 
   @override
-  String get export_backup_title => 'Export Settings';
+  String get export_backup_title => 'Export Data';
 
   @override
   String get filter_by_type => 'Filter by content type';
@@ -1056,6 +1122,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do not save long secrets or token-like text';
 
   @override
+  String get ignore_financial_identity => 'Filter payment and identity data';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Skip Luhn-valid payment cards and recognized identity or passport numbers from supported countries';
+
+  @override
+  String get protect_sensitive_windows => 'Sensitive window protection';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Pause capture for password fields and sign-in windows';
+
+  @override
+  String get hide_during_screen_sharing => 'Hide during screen sharing';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'Exclude ClipFlow windows from screenshots and screen recordings';
+
+  @override
   String get ignore_sensitive_sub =>
       'Do not save content that appears sensitive';
 
@@ -1073,10 +1160,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the password to decrypt the backup file.';
 
   @override
-  String get import_backup_sub => 'Restore settings from a .clipflow file';
+  String get import_backup_sub =>
+      'Restore clipboard history and settings from a .clipflow file';
 
   @override
-  String get import_backup_title => 'Import Settings';
+  String get import_backup_title => 'Import Data';
 
   @override
   String get in_app_shortcuts => 'In-App Shortcuts';
@@ -1589,4 +1677,100 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get ai_image_needs_vision_model =>
       'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.';
+
+  @override
+  String get vault_title => 'Vault';
+
+  @override
+  String get vault_enabled => 'Enable Vault';
+
+  @override
+  String get vault_enabled_sub =>
+      'Protect a system collection with encryption and authentication.';
+
+  @override
+  String get vault_enable_failed =>
+      'Vault could not access secure device storage. Check the Keychain or Keystore permission and try again.';
+
+  @override
+  String get vault_create_password_title => 'Create Vault password';
+
+  @override
+  String get vault_unlock_title => 'Unlock Vault';
+
+  @override
+  String get vault_unlock_sub =>
+      'Authenticate to view encrypted clipboard items.';
+
+  @override
+  String get vault_password => 'Password';
+
+  @override
+  String get vault_confirm_password => 'Confirm password';
+
+  @override
+  String get vault_new_password => 'New password';
+
+  @override
+  String get vault_password_min => 'Use at least 6 characters.';
+
+  @override
+  String get vault_password_mismatch => 'Passwords do not match.';
+
+  @override
+  String get vault_unlock => 'Unlock';
+
+  @override
+  String get vault_use_device_auth => 'Use device authentication';
+
+  @override
+  String get vault_invalid_password => 'Incorrect password.';
+
+  @override
+  String get vault_attempts_remaining => '@count attempts remaining.';
+
+  @override
+  String get vault_data_wiped =>
+      'Vault data was deleted after 5 failed attempts.';
+
+  @override
+  String get vault_change_password => 'Change Vault password';
+
+  @override
+  String get vault_change_password_sub =>
+      'Rewrap the encryption key with a new password.';
+
+  @override
+  String get vault_device_auth =>
+      'Face ID, fingerprint or device authentication';
+
+  @override
+  String get vault_device_auth_sub =>
+      'Use an authentication method configured on this device.';
+
+  @override
+  String get vault_device_auth_failed =>
+      'Device authentication was unavailable or cancelled.';
+
+  @override
+  String get vault_wipe_after_five =>
+      'Delete Vault data after 5 failed attempts';
+
+  @override
+  String get vault_wipe_after_five_sub =>
+      'Permanently deletes only encrypted items in the Vault. Off by default.';
+
+  @override
+  String get vault_encryption_title => 'AES-256 encrypted at rest';
+
+  @override
+  String get vault_encryption_sub =>
+      'Clipboard content, metadata and image files are encrypted before being stored.';
+
+  @override
+  String get vault_disable_confirm =>
+      'Disable Vault and restore its decrypted items to clipboard history?';
+
+  @override
+  String get vault_locked_notice => 'Unlock the Vault before continuing.';
 }

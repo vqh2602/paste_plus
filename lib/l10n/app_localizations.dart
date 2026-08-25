@@ -226,11 +226,23 @@ abstract class AppLocalizations {
   /// **'JSON'**
   String get json;
 
+  /// No description provided for @jwt.
+  ///
+  /// In en, this message translates to:
+  /// **'JWT'**
+  String get jwt;
+
   /// No description provided for @image.
   ///
   /// In en, this message translates to:
   /// **'Image'**
   String get image;
+
+  /// No description provided for @emoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get emoji;
 
   /// No description provided for @image_link.
   ///
@@ -1156,6 +1168,126 @@ abstract class AppLocalizations {
   /// **'Unable to translate text'**
   String get translate_failed;
 
+  /// No description provided for @text_transform.
+  ///
+  /// In en, this message translates to:
+  /// **'Text conversion'**
+  String get text_transform;
+
+  /// No description provided for @format_json.
+  ///
+  /// In en, this message translates to:
+  /// **'Format JSON'**
+  String get format_json;
+
+  /// No description provided for @minify_json.
+  ///
+  /// In en, this message translates to:
+  /// **'Minify JSON'**
+  String get minify_json;
+
+  /// No description provided for @encode_base64.
+  ///
+  /// In en, this message translates to:
+  /// **'Encode Base64'**
+  String get encode_base64;
+
+  /// No description provided for @decode_base64.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode Base64'**
+  String get decode_base64;
+
+  /// No description provided for @encode_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Encode URL'**
+  String get encode_url;
+
+  /// No description provided for @decode_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode URL'**
+  String get decode_url;
+
+  /// No description provided for @uppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'UPPERCASE'**
+  String get uppercase;
+
+  /// No description provided for @lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'lowercase'**
+  String get lowercase;
+
+  /// No description provided for @title_case.
+  ///
+  /// In en, this message translates to:
+  /// **'Title Case'**
+  String get title_case;
+
+  /// No description provided for @parse_timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Parse timestamp'**
+  String get parse_timestamp;
+
+  /// No description provided for @md5_hash.
+  ///
+  /// In en, this message translates to:
+  /// **'MD5 hash'**
+  String get md5_hash;
+
+  /// No description provided for @sort_lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort lines'**
+  String get sort_lines;
+
+  /// No description provided for @remove_duplicate_lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove duplicate lines'**
+  String get remove_duplicate_lines;
+
+  /// No description provided for @link_cleaner.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Cleaner'**
+  String get link_cleaner;
+
+  /// No description provided for @transformed_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted result copied'**
+  String get transformed_copied;
+
+  /// No description provided for @transform_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversion could not be completed'**
+  String get transform_failed;
+
+  /// No description provided for @link_cleaned.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean link copied'**
+  String get link_cleaned;
+
+  /// No description provided for @calculation_result.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get calculation_result;
+
+  /// No description provided for @detected_language.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected'**
+  String get detected_language;
+
   /// No description provided for @upload_cloud_success.
   ///
   /// In en, this message translates to:
@@ -2077,13 +2209,13 @@ abstract class AppLocalizations {
   /// No description provided for @export_backup_sub.
   ///
   /// In en, this message translates to:
-  /// **'Save settings to an encrypted .clipflow file'**
+  /// **'Save clipboard history and settings to an encrypted .clipflow file'**
   String get export_backup_sub;
 
   /// No description provided for @export_backup_title.
   ///
   /// In en, this message translates to:
-  /// **'Export Settings'**
+  /// **'Export Data'**
   String get export_backup_title;
 
   /// No description provided for @filter_by_type.
@@ -2128,6 +2260,42 @@ abstract class AppLocalizations {
   /// **'Do not save long secrets or token-like text'**
   String get ignore_long_token_sub;
 
+  /// No description provided for @ignore_financial_identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter payment and identity data'**
+  String get ignore_financial_identity;
+
+  /// No description provided for @ignore_financial_identity_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Luhn-valid payment cards and recognized identity or passport numbers from supported countries'**
+  String get ignore_financial_identity_sub;
+
+  /// No description provided for @protect_sensitive_windows.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive window protection'**
+  String get protect_sensitive_windows;
+
+  /// No description provided for @protect_sensitive_windows_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause capture for password fields and sign-in windows'**
+  String get protect_sensitive_windows_sub;
+
+  /// No description provided for @hide_during_screen_sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide during screen sharing'**
+  String get hide_during_screen_sharing;
+
+  /// No description provided for @hide_during_screen_sharing_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude ClipFlow windows from screenshots and screen recordings'**
+  String get hide_during_screen_sharing_sub;
+
   /// No description provided for @ignore_sensitive_sub.
   ///
   /// In en, this message translates to:
@@ -2161,13 +2329,13 @@ abstract class AppLocalizations {
   /// No description provided for @import_backup_sub.
   ///
   /// In en, this message translates to:
-  /// **'Restore settings from a .clipflow file'**
+  /// **'Restore clipboard history and settings from a .clipflow file'**
   String get import_backup_sub;
 
   /// No description provided for @import_backup_title.
   ///
   /// In en, this message translates to:
-  /// **'Import Settings'**
+  /// **'Import Data'**
   String get import_backup_title;
 
   /// No description provided for @in_app_shortcuts.
@@ -3141,6 +3309,174 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This model cannot read images. It answered from OCR text and file details only. Download a vision model (Gemma 4 12B Vision or Qwen2.5-VL 7B) to analyse the picture itself.'**
   String get ai_image_needs_vision_model;
+
+  /// No description provided for @vault_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault'**
+  String get vault_title;
+
+  /// No description provided for @vault_enabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable Vault'**
+  String get vault_enabled;
+
+  /// No description provided for @vault_enabled_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Protect a system collection with encryption and authentication.'**
+  String get vault_enabled_sub;
+
+  /// No description provided for @vault_enable_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault could not access secure device storage. Check the Keychain or Keystore permission and try again.'**
+  String get vault_enable_failed;
+
+  /// No description provided for @vault_create_password_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Vault password'**
+  String get vault_create_password_title;
+
+  /// No description provided for @vault_unlock_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Vault'**
+  String get vault_unlock_title;
+
+  /// No description provided for @vault_unlock_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Authenticate to view encrypted clipboard items.'**
+  String get vault_unlock_sub;
+
+  /// No description provided for @vault_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get vault_password;
+
+  /// No description provided for @vault_confirm_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get vault_confirm_password;
+
+  /// No description provided for @vault_new_password.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get vault_new_password;
+
+  /// No description provided for @vault_password_min.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 6 characters.'**
+  String get vault_password_min;
+
+  /// No description provided for @vault_password_mismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get vault_password_mismatch;
+
+  /// No description provided for @vault_unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get vault_unlock;
+
+  /// No description provided for @vault_use_device_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Use device authentication'**
+  String get vault_use_device_auth;
+
+  /// No description provided for @vault_invalid_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect password.'**
+  String get vault_invalid_password;
+
+  /// No description provided for @vault_attempts_remaining.
+  ///
+  /// In en, this message translates to:
+  /// **'@count attempts remaining.'**
+  String get vault_attempts_remaining;
+
+  /// No description provided for @vault_data_wiped.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault data was deleted after 5 failed attempts.'**
+  String get vault_data_wiped;
+
+  /// No description provided for @vault_change_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Change Vault password'**
+  String get vault_change_password;
+
+  /// No description provided for @vault_change_password_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Rewrap the encryption key with a new password.'**
+  String get vault_change_password_sub;
+
+  /// No description provided for @vault_device_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Face ID, fingerprint or device authentication'**
+  String get vault_device_auth;
+
+  /// No description provided for @vault_device_auth_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Use an authentication method configured on this device.'**
+  String get vault_device_auth_sub;
+
+  /// No description provided for @vault_device_auth_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Device authentication was unavailable or cancelled.'**
+  String get vault_device_auth_failed;
+
+  /// No description provided for @vault_wipe_after_five.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Vault data after 5 failed attempts'**
+  String get vault_wipe_after_five;
+
+  /// No description provided for @vault_wipe_after_five_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently deletes only encrypted items in the Vault. Off by default.'**
+  String get vault_wipe_after_five_sub;
+
+  /// No description provided for @vault_encryption_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AES-256 encrypted at rest'**
+  String get vault_encryption_title;
+
+  /// No description provided for @vault_encryption_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard content, metadata and image files are encrypted before being stored.'**
+  String get vault_encryption_sub;
+
+  /// No description provided for @vault_disable_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable Vault and restore its decrypted items to clipboard history?'**
+  String get vault_disable_confirm;
+
+  /// No description provided for @vault_locked_notice.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock the Vault before continuing.'**
+  String get vault_locked_notice;
 }
 
 class _AppLocalizationsDelegate

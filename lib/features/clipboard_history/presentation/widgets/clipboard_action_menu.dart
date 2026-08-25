@@ -6,16 +6,22 @@ import 'package:flutter/cupertino.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import '../../domain/smart_text_tools.dart';
 
 Future<String?> showClipboardActionMenu({
   required BuildContext context,
   required ClipboardItem item,
   String copyAction = 'copy',
   String? copyLabel,
+  bool protectVaultContent = false,
 }) {
   final isImage = item.contentType == ClipboardContentType.image;
   final openableUrl = openableClipboardUrl(item);
   final hasPlainText = item.content.trim().isNotEmpty;
+  final canTransformText =
+      hasPlainText &&
+      item.contentType != ClipboardContentType.image &&
+      item.contentType != ClipboardContentType.file;
   final l10n = context.l10n;
 
   final actions = <CompactMenuAction>[
@@ -38,18 +44,32 @@ Future<String?> showClipboardActionMenu({
       label: copyLabel ?? l10n.copy,
       dividerBefore: !hasPlainText && openableUrl != null,
     ),
+    if (!protectVaultContent && canTransformText)
+      CompactMenuAction(
+        value: 'text_transform',
+        icon: CupertinoIcons.arrow_2_squarepath,
+        label: l10n.text_transform,
+        trailingIcon: CupertinoIcons.chevron_right,
+        dividerBefore: true,
+      ),
+    if (!protectVaultContent && item.contentType == ClipboardContentType.url)
+      CompactMenuAction(
+        value: 'link_cleaner',
+        icon: CupertinoIcons.wand_stars,
+        label: l10n.link_cleaner,
+      ),
     CompactMenuAction(
       value: 'edit',
       icon: CupertinoIcons.pencil,
       label: l10n.edit_clipboard,
-      dividerBefore: true,
+      dividerBefore: protectVaultContent || !canTransformText,
     ),
     CompactMenuAction(
       value: 'note',
       icon: CupertinoIcons.doc_text,
       label: item.note?.isNotEmpty == true ? l10n.edit_note : l10n.add_note,
     ),
-    if (isImage) ...[
+    if (!protectVaultContent && isImage) ...[
       CompactMenuAction(
         value: 'ocr',
         icon: CupertinoIcons.doc_text_search,
@@ -60,17 +80,18 @@ Future<String?> showClipboardActionMenu({
         icon: CupertinoIcons.cloud_upload,
         label: l10n.upload_cloud,
       ),
-    ] else
+    ] else if (!protectVaultContent)
       CompactMenuAction(
         value: 'translate',
         icon: CupertinoIcons.globe,
         label: l10n.translate_text,
       ),
-    CompactMenuAction(
-      value: 'ask_ai',
-      icon: CupertinoIcons.sparkles,
-      label: l10n.ask_ai,
-    ),
+    if (!protectVaultContent)
+      CompactMenuAction(
+        value: 'ask_ai',
+        icon: CupertinoIcons.sparkles,
+        label: l10n.ask_ai,
+      ),
     CompactMenuAction(
       value: 'pin',
       icon: CupertinoIcons.pin,
@@ -107,6 +128,89 @@ Future<String?> showClipboardActionMenu({
     menuKey: const Key('clipboard-action-menu'),
     itemKeyPrefix: 'clipboard-action',
   );
+}
+
+Future<TextTransform?> showTextTransformMenu({
+  required BuildContext context,
+}) async {
+  final l10n = context.l10n;
+  final action = await showCompactActionMenu(
+    context: context,
+    menuKey: const Key('text-transform-menu'),
+    itemKeyPrefix: 'text-transform',
+    actions: [
+      CompactMenuAction(
+        value: TextTransform.formatJson.name,
+        icon: CupertinoIcons.text_badge_checkmark,
+        label: l10n.format_json,
+      ),
+      CompactMenuAction(
+        value: TextTransform.minifyJson.name,
+        icon: CupertinoIcons.arrow_down_right_arrow_up_left,
+        label: l10n.minify_json,
+      ),
+      CompactMenuAction(
+        value: TextTransform.base64Encode.name,
+        icon: CupertinoIcons.lock,
+        label: l10n.encode_base64,
+        dividerBefore: true,
+      ),
+      CompactMenuAction(
+        value: TextTransform.base64Decode.name,
+        icon: CupertinoIcons.lock_open,
+        label: l10n.decode_base64,
+      ),
+      CompactMenuAction(
+        value: TextTransform.urlEncode.name,
+        icon: CupertinoIcons.link,
+        label: l10n.encode_url,
+      ),
+      CompactMenuAction(
+        value: TextTransform.urlDecode.name,
+        icon: CupertinoIcons.link,
+        label: l10n.decode_url,
+      ),
+      CompactMenuAction(
+        value: TextTransform.uppercase.name,
+        icon: CupertinoIcons.textformat_size,
+        label: l10n.uppercase,
+        dividerBefore: true,
+      ),
+      CompactMenuAction(
+        value: TextTransform.lowercase.name,
+        icon: CupertinoIcons.textformat,
+        label: l10n.lowercase,
+      ),
+      CompactMenuAction(
+        value: TextTransform.titleCase.name,
+        icon: CupertinoIcons.textformat_abc,
+        label: l10n.title_case,
+      ),
+      CompactMenuAction(
+        value: TextTransform.parseTimestamp.name,
+        icon: CupertinoIcons.time,
+        label: l10n.parse_timestamp,
+        dividerBefore: true,
+      ),
+      CompactMenuAction(
+        value: TextTransform.md5Hash.name,
+        icon: CupertinoIcons.number,
+        label: l10n.md5_hash,
+      ),
+      CompactMenuAction(
+        value: TextTransform.sortLines.name,
+        icon: CupertinoIcons.sort_down,
+        label: l10n.sort_lines,
+      ),
+      CompactMenuAction(
+        value: TextTransform.uniqueLines.name,
+        icon: CupertinoIcons.square_stack_3d_down_right,
+        label: l10n.remove_duplicate_lines,
+      ),
+    ],
+  );
+  if (action == null) return null;
+  return TextTransform.values.firstWhere((item) => item.name == action);
 }
 
 Future<String?> showCompactActionMenu({
@@ -194,6 +298,7 @@ class CompactMenuAction {
     required this.label,
     this.dividerBefore = false,
     this.destructive = false,
+    this.trailingIcon,
   });
 
   final String value;
@@ -201,6 +306,7 @@ class CompactMenuAction {
   final String label;
   final bool dividerBefore;
   final bool destructive;
+  final IconData? trailingIcon;
 }
 
 class _CompactActionMenu extends StatelessWidget {
@@ -308,6 +414,8 @@ class _CompactActionMenuItemState extends State<_CompactActionMenuItem> {
                   style: TextStyle(fontSize: 13, color: foreground),
                 ),
               ),
+              if (action.trailingIcon != null)
+                Icon(action.trailingIcon, size: 12, color: foreground),
             ],
           ),
         ),
