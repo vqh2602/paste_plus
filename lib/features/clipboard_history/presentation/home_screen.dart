@@ -14,6 +14,7 @@ import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_item.dart';
+import '../domain/smart_text_tools.dart';
 import 'history_controller.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/clipboard_action_menu.dart';
@@ -238,6 +239,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         final desktop = ref.read(desktopIntegrationProvider);
         await desktop.hideQuickPanel();
         await desktop.pasteToPreviousApplication();
+      }
+    } else if (action == 'text_transform') {
+      final transform = await showTextTransformMenu(context: context);
+      if (!context.mounted || transform == null) return;
+      try {
+        final result = SmartTextTools.transform(item.content, transform);
+        await historyNotifier.addTextItem(result);
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transformed_copied);
+        }
+      } on TextTransformException {
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transform_failed);
+        }
+      }
+    } else if (action == 'link_cleaner') {
+      try {
+        final result = SmartTextTools.cleanUrl(item.content);
+        await historyNotifier.addTextItem(result);
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.link_cleaned);
+        }
+      } on TextTransformException {
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transform_failed);
+        }
       }
     } else if (action == 'share') {
       final shared = await shareClipboardItem(context, item);

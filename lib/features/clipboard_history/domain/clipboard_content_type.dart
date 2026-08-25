@@ -6,6 +6,8 @@ enum ClipboardContentType {
   code,
   color,
   json,
+  jwt,
+  emoji,
   file,
   image;
 

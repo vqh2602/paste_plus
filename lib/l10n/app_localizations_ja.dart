@@ -69,7 +69,13 @@ class AppLocalizationsJa extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => '画像';
+
+  @override
+  String get emoji => '絵文字';
 
   @override
   String get image_link => '画像リンク';
@@ -533,6 +539,66 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get translate_failed => 'テキストを翻訳できませんでした';
+
+  @override
+  String get text_transform => 'テキスト変換';
+
+  @override
+  String get format_json => 'JSON を整形';
+
+  @override
+  String get minify_json => 'JSON を圧縮';
+
+  @override
+  String get encode_base64 => 'Base64 エンコード';
+
+  @override
+  String get decode_base64 => 'Base64 デコード';
+
+  @override
+  String get encode_url => 'URL エンコード';
+
+  @override
+  String get decode_url => 'URL デコード';
+
+  @override
+  String get uppercase => '大文字';
+
+  @override
+  String get lowercase => '小文字';
+
+  @override
+  String get title_case => 'タイトルケース';
+
+  @override
+  String get parse_timestamp => 'タイムスタンプを解析';
+
+  @override
+  String get md5_hash => 'MD5 ハッシュ';
+
+  @override
+  String get sort_lines => '行を並べ替え';
+
+  @override
+  String get remove_duplicate_lines => '重複行を削除';
+
+  @override
+  String get link_cleaner => 'リンクを整理';
+
+  @override
+  String get transformed_copied => '変換結果をコピーしました';
+
+  @override
+  String get transform_failed => 'この変換を完了できませんでした';
+
+  @override
+  String get link_cleaned => '整理したリンクをコピーしました';
+
+  @override
+  String get calculation_result => '結果';
+
+  @override
+  String get detected_language => '検出';
 
   @override
   String get upload_cloud_success => 'クラウドにアップロード & リンクをコピーしました';

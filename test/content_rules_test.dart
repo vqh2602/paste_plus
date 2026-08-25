@@ -16,13 +16,20 @@ void main() {
       '+84 912 345 678': ClipboardContentType.phone,
       '#635BFF': ClipboardContentType.color,
       '{"ok":true}': ClipboardContentType.json,
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'
+              'eyJzdWIiOiIxMjM0NTY3ODkwIn0.signature':
+          ClipboardContentType.jwt,
       '/Users/demo/file.txt': ClipboardContentType.file,
       '/Users/demo/report.xlsx': ClipboardContentType.file,
       r'C:\Users\demo\report.docx': ClipboardContentType.file,
       'file:///Users/demo/report.pdf': ClipboardContentType.file,
       '/Users/demo/one.png\n/Users/demo/two.docx': ClipboardContentType.file,
+      '😀': ClipboardContentType.emoji,
+      '❤️ 👍🏽 👨‍👩‍👧‍👦 🇻🇳 1️⃣': ClipboardContentType.emoji,
       'class Demo {\n  void run() {}\n}': ClipboardContentType.code,
+      'def greet(name):\n    return f"Hello {name}"': ClipboardContentType.code,
       'Ghi chú bình thường': ClipboardContentType.text,
+      'Xin chào 👋': ClipboardContentType.text,
     };
 
     for (final entry in cases.entries) {

@@ -69,7 +69,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Bild';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Bild-Link';
@@ -554,6 +560,66 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get translate_failed => 'Text konnte nicht übersetzt werden';
+
+  @override
+  String get text_transform => 'Text umwandeln';
+
+  @override
+  String get format_json => 'JSON formatieren';
+
+  @override
+  String get minify_json => 'JSON minimieren';
+
+  @override
+  String get encode_base64 => 'Base64 kodieren';
+
+  @override
+  String get decode_base64 => 'Base64 dekodieren';
+
+  @override
+  String get encode_url => 'URL kodieren';
+
+  @override
+  String get decode_url => 'URL dekodieren';
+
+  @override
+  String get uppercase => 'GROSSBUCHSTABEN';
+
+  @override
+  String get lowercase => 'kleinbuchstaben';
+
+  @override
+  String get title_case => 'Wörter großschreiben';
+
+  @override
+  String get parse_timestamp => 'Zeitstempel analysieren';
+
+  @override
+  String get md5_hash => 'MD5-Hash';
+
+  @override
+  String get sort_lines => 'Zeilen sortieren';
+
+  @override
+  String get remove_duplicate_lines => 'Doppelte Zeilen entfernen';
+
+  @override
+  String get link_cleaner => 'Link bereinigen';
+
+  @override
+  String get transformed_copied => 'Umgewandeltes Ergebnis kopiert';
+
+  @override
+  String get transform_failed => 'Diese Umwandlung ist fehlgeschlagen';
+
+  @override
+  String get link_cleaned => 'Bereinigten Link kopiert';
+
+  @override
+  String get calculation_result => 'Ergebnis';
+
+  @override
+  String get detected_language => 'Erkannt';
 
   @override
   String get upload_cloud_success => 'In Cloud hochgeladen & Link kopiert';

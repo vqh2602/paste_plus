@@ -69,7 +69,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT 令牌';
+
+  @override
   String get image => '图片';
+
+  @override
+  String get emoji => '表情符号';
 
   @override
   String get image_link => '图片链接';
@@ -532,6 +538,66 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get translate_failed => '无法翻译文本';
+
+  @override
+  String get text_transform => '文本转换';
+
+  @override
+  String get format_json => '格式化 JSON';
+
+  @override
+  String get minify_json => '压缩 JSON';
+
+  @override
+  String get encode_base64 => 'Base64 编码';
+
+  @override
+  String get decode_base64 => 'Base64 解码';
+
+  @override
+  String get encode_url => 'URL 编码';
+
+  @override
+  String get decode_url => 'URL 解码';
+
+  @override
+  String get uppercase => '大写';
+
+  @override
+  String get lowercase => '小写';
+
+  @override
+  String get title_case => '标题格式';
+
+  @override
+  String get parse_timestamp => '解析时间戳';
+
+  @override
+  String get md5_hash => 'MD5 哈希';
+
+  @override
+  String get sort_lines => '行排序';
+
+  @override
+  String get remove_duplicate_lines => '删除重复行';
+
+  @override
+  String get link_cleaner => '链接清理';
+
+  @override
+  String get transformed_copied => '已复制转换结果';
+
+  @override
+  String get transform_failed => '无法完成此转换';
+
+  @override
+  String get link_cleaned => '已复制清理后的链接';
+
+  @override
+  String get calculation_result => '结果';
+
+  @override
+  String get detected_language => '已识别';
 
   @override
   String get upload_cloud_success => '已上传至云端并复制链接';

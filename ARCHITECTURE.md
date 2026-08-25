@@ -66,7 +66,7 @@ ClipFlow selects the SQLite backend per target platform:
   - `content_hash`: TEXT UNIQUE (SHA-256 hash for O(1) deduplication)
   - `content`: TEXT
   - `normalized_content`: TEXT
-  - `content_type`: TEXT (text, url, email, phone, color, json, file, code, image)
+  - `content_type`: TEXT (text, url, email, phone, color, json, jwt, emoji, file, code, image)
   - `image_path`: TEXT (Local relative file path to application support storage)
   - `is_pinned`: INTEGER (0 or 1)
   - `is_sensitive`: INTEGER (0 or 1)
@@ -118,8 +118,8 @@ Images copied to the clipboard are written to disk under the sandboxed Applicati
    - macOS reads Finder file URLs before `.png`/TIFF thumbnail data.
    - Windows reads Explorer `CF_HDROP` paths before `CF_UNICODETEXT` or bitmap formats.
    - A file-list payload suppresses thumbnail bytes, so copied Word, Excel, PDF, folder, or image files are stored as **File** rather than **Image**.
-4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
-5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback.
+4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, JWT, Emoji, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SmartTextTools` additionally detects common programming-language signatures and evaluates only a bounded, explicitly parsed mathematical grammar. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
+5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, cloud upload, Link Cleaner and a nested text-conversion menu. Text transforms are pure local operations and create a new clipboard item rather than mutating the source. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback.
 
 ---
 

@@ -10,6 +10,8 @@ import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import '../../domain/smart_text_tools.dart';
+import 'calculation_result_line.dart';
 import 'clipboard_preview_dialog.dart';
 
 class QuickClipboardCardWidget extends ConsumerWidget {
@@ -282,39 +284,56 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                   ),
                                 ],
                               )
-                            : HighlightedText(
-                                text: item.content,
-                                query: query,
-                                maxLines: 6,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  height: 1.45,
-                                  color:
-                                      item.contentType ==
-                                          ClipboardContentType.url
-                                      ? CupertinoColors.activeBlue
-                                      : null,
-                                  decoration:
-                                      item.contentType ==
-                                          ClipboardContentType.url
-                                      ? TextDecoration.underline
-                                      : TextDecoration.none,
-                                  decorationColor:
-                                      item.contentType ==
-                                          ClipboardContentType.url
-                                      ? CupertinoColors.activeBlue.withValues(
-                                          alpha: 0.4,
-                                        )
-                                      : null,
-                                  fontFamily:
-                                      item.contentType ==
-                                              ClipboardContentType.code ||
-                                          item.contentType ==
-                                              ClipboardContentType.json
-                                      ? 'monospace'
-                                      : null,
-                                ),
+                            : Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.topLeft,
+                                      child: HighlightedText(
+                                        text: item.content,
+                                        query: query,
+                                        maxLines: 6,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          height: 1.45,
+                                          color:
+                                              item.contentType ==
+                                                  ClipboardContentType.url
+                                              ? CupertinoColors.activeBlue
+                                              : null,
+                                          decoration:
+                                              item.contentType ==
+                                                  ClipboardContentType.url
+                                              ? TextDecoration.underline
+                                              : TextDecoration.none,
+                                          decorationColor:
+                                              item.contentType ==
+                                                  ClipboardContentType.url
+                                              ? CupertinoColors.activeBlue
+                                                    .withValues(alpha: 0.4)
+                                              : null,
+                                          fontFamily:
+                                              item.contentType ==
+                                                      ClipboardContentType
+                                                          .code ||
+                                                  item.contentType ==
+                                                      ClipboardContentType.json
+                                              ? 'monospace'
+                                              : null,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  CalculationResultLine(
+                                    content: item.content,
+                                    compact: true,
+                                    enabled:
+                                        item.contentType ==
+                                        ClipboardContentType.text,
+                                  ),
+                                ],
                               ),
                       ),
                     ),
@@ -349,6 +368,8 @@ class QuickClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.code => const Color(0xFFAF52DE),
     ClipboardContentType.color => const Color(0xFFFF2D55),
     ClipboardContentType.json => const Color(0xFF00C7BE),
+    ClipboardContentType.jwt => const Color(0xFFFF6B35),
+    ClipboardContentType.emoji => const Color(0xFFFFCC00),
     ClipboardContentType.file => const Color(0xFFA28B55),
     ClipboardContentType.image => const Color(0xFFFF3B30),
   };
@@ -363,6 +384,8 @@ class QuickClipboardCardWidget extends ConsumerWidget {
     ClipboardContentType.color => CupertinoIcons.color_filter,
     ClipboardContentType.json =>
       CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.jwt => CupertinoIcons.lock,
+    ClipboardContentType.emoji => CupertinoIcons.smiley,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };
@@ -376,6 +399,8 @@ class QuickClipboardCardWidget extends ConsumerWidget {
         ClipboardContentType.code => context.l10n.code,
         ClipboardContentType.color => context.l10n.color,
         ClipboardContentType.json => context.l10n.json,
+        ClipboardContentType.jwt => context.l10n.jwt,
+        ClipboardContentType.emoji => context.l10n.emoji,
         ClipboardContentType.file => context.l10n.file,
         ClipboardContentType.image => context.l10n.image,
       };
@@ -433,6 +458,16 @@ class _SourceAndMetadata extends StatelessWidget {
         return Text(
           format,
           key: Key('quick-card-color-metadata-${item.id}'),
+          style: _style,
+        );
+      }
+    }
+    if (item.contentType == ClipboardContentType.code) {
+      final language = SmartTextTools.programmingLanguage(item.content);
+      if (language != null) {
+        return Text(
+          language,
+          key: Key('quick-card-code-metadata-${item.id}'),
           style: _style,
         );
       }

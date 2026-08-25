@@ -69,7 +69,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Image';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Image Link';
@@ -544,6 +550,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get translate_failed => 'Unable to translate text';
+
+  @override
+  String get text_transform => 'Text conversion';
+
+  @override
+  String get format_json => 'Format JSON';
+
+  @override
+  String get minify_json => 'Minify JSON';
+
+  @override
+  String get encode_base64 => 'Encode Base64';
+
+  @override
+  String get decode_base64 => 'Decode Base64';
+
+  @override
+  String get encode_url => 'Encode URL';
+
+  @override
+  String get decode_url => 'Decode URL';
+
+  @override
+  String get uppercase => 'UPPERCASE';
+
+  @override
+  String get lowercase => 'lowercase';
+
+  @override
+  String get title_case => 'Title Case';
+
+  @override
+  String get parse_timestamp => 'Parse timestamp';
+
+  @override
+  String get md5_hash => 'MD5 hash';
+
+  @override
+  String get sort_lines => 'Sort lines';
+
+  @override
+  String get remove_duplicate_lines => 'Remove duplicate lines';
+
+  @override
+  String get link_cleaner => 'Link Cleaner';
+
+  @override
+  String get transformed_copied => 'Converted result copied';
+
+  @override
+  String get transform_failed => 'This conversion could not be completed';
+
+  @override
+  String get link_cleaned => 'Clean link copied';
+
+  @override
+  String get calculation_result => 'Result';
+
+  @override
+  String get detected_language => 'Detected';
 
   @override
   String get upload_cloud_success => 'Uploaded to cloud & link copied';

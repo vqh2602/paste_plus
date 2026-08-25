@@ -29,6 +29,8 @@ String typeNameHelper(BuildContext context, ClipboardContentType type) =>
       ClipboardContentType.code => context.l10n.code,
       ClipboardContentType.color => context.l10n.color,
       ClipboardContentType.json => context.l10n.json,
+      ClipboardContentType.jwt => context.l10n.jwt,
+      ClipboardContentType.emoji => context.l10n.emoji,
       ClipboardContentType.file => context.l10n.file,
       ClipboardContentType.image => context.l10n.image,
     };

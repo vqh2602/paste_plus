@@ -62,6 +62,8 @@ class AppSettings {
       'code',
       'color',
       'json',
+      'jwt',
+      'emoji',
       'file',
       'image',
     },
@@ -281,6 +283,7 @@ class AppSettings {
     'deleteItemShortcut': deleteItemShortcut,
     'duplicateBehavior': duplicateBehavior.name,
     'allowedTypes': allowedTypes.toList(),
+    'contentTypesVersion': 2,
     'excludedApplications': excludedApplications,
   });
 
@@ -290,7 +293,11 @@ class AppSettings {
     T value<T>(String key, T fallback) => (map[key] as T?) ?? fallback;
     final allowedTypes = map['allowedTypes'] is List
         ? (map['allowedTypes'] as List).cast<String>().toSet()
-        : defaults.allowedTypes;
+        : {...defaults.allowedTypes};
+    final contentTypesVersion =
+        (map['contentTypesVersion'] as num?)?.toInt() ?? 0;
+    if (contentTypesVersion < 1) allowedTypes.add('emoji');
+    if (contentTypesVersion < 2) allowedTypes.add('jwt');
     final excludedApplications = map['excludedApplications'] is List
         ? (map['excludedApplications'] as List).cast<String>()
         : defaults.excludedApplications;

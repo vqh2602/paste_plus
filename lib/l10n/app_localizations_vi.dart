@@ -69,7 +69,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => 'Hình ảnh';
+
+  @override
+  String get emoji => 'Emoji';
 
   @override
   String get image_link => 'Link Ảnh';
@@ -548,6 +554,66 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get translate_failed => 'Không thể dịch văn bản này';
+
+  @override
+  String get text_transform => 'Chuyển đổi văn bản';
+
+  @override
+  String get format_json => 'Định dạng JSON';
+
+  @override
+  String get minify_json => 'Thu nhỏ JSON';
+
+  @override
+  String get encode_base64 => 'Mã hóa Base64';
+
+  @override
+  String get decode_base64 => 'Giải mã Base64';
+
+  @override
+  String get encode_url => 'Mã hóa URL';
+
+  @override
+  String get decode_url => 'Giải mã URL';
+
+  @override
+  String get uppercase => 'CHỮ HOA';
+
+  @override
+  String get lowercase => 'chữ thường';
+
+  @override
+  String get title_case => 'Viết Hoa Đầu Từ';
+
+  @override
+  String get parse_timestamp => 'Phân tích dấu thời gian';
+
+  @override
+  String get md5_hash => 'Băm MD5';
+
+  @override
+  String get sort_lines => 'Sắp xếp dòng';
+
+  @override
+  String get remove_duplicate_lines => 'Loại bỏ dòng trùng';
+
+  @override
+  String get link_cleaner => 'Làm sạch liên kết';
+
+  @override
+  String get transformed_copied => 'Đã sao chép kết quả chuyển đổi';
+
+  @override
+  String get transform_failed => 'Không thể thực hiện chuyển đổi này';
+
+  @override
+  String get link_cleaned => 'Đã sao chép liên kết sạch';
+
+  @override
+  String get calculation_result => 'Kết quả';
+
+  @override
+  String get detected_language => 'Nhận diện';
 
   @override
   String get upload_cloud_success => 'Đã tải ảnh lên cloud & sao chép link';

@@ -15,6 +15,8 @@ import '../../../ai/domain/ai_feature_request.dart';
 import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import '../../domain/smart_text_tools.dart';
+import 'calculation_result_line.dart';
 import '../history_controller.dart';
 
 import 'clipboard_preview_dialog.dart';
@@ -214,31 +216,46 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                           ),
                         ],
                       )
-                    : HighlightedText(
-                        text: item.content,
-                        query: state.query,
-                        style: TextStyle(
-                          fontSize: 14,
-                          height: 1.55,
-                          color: item.contentType == ClipboardContentType.url
-                              ? CupertinoColors.activeBlue
-                              : null,
-                          decoration:
-                              item.contentType == ClipboardContentType.url
-                              ? TextDecoration.underline
-                              : TextDecoration.none,
-                          decorationColor:
-                              item.contentType == ClipboardContentType.url
-                              ? CupertinoColors.activeBlue.withValues(
-                                  alpha: 0.4,
-                                )
-                              : null,
-                          fontFamily:
-                              item.contentType == ClipboardContentType.code ||
-                                  item.contentType == ClipboardContentType.json
-                              ? 'monospace'
-                              : null,
-                        ),
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          HighlightedText(
+                            text: item.content,
+                            query: state.query,
+                            style: TextStyle(
+                              fontSize: 14,
+                              height: 1.55,
+                              color:
+                                  item.contentType == ClipboardContentType.url
+                                  ? CupertinoColors.activeBlue
+                                  : null,
+                              decoration:
+                                  item.contentType == ClipboardContentType.url
+                                  ? TextDecoration.underline
+                                  : TextDecoration.none,
+                              decorationColor:
+                                  item.contentType == ClipboardContentType.url
+                                  ? CupertinoColors.activeBlue.withValues(
+                                      alpha: 0.4,
+                                    )
+                                  : null,
+                              fontFamily:
+                                  item.contentType ==
+                                          ClipboardContentType.code ||
+                                      item.contentType ==
+                                          ClipboardContentType.json ||
+                                      item.contentType ==
+                                          ClipboardContentType.jwt
+                                  ? 'monospace'
+                                  : null,
+                            ),
+                          ),
+                          CalculationResultLine(
+                            content: item.content,
+                            enabled:
+                                item.contentType == ClipboardContentType.text,
+                          ),
+                        ],
                       ),
               ),
             ),
@@ -525,6 +542,23 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
         );
       }
     }
+    if (item.contentType == ClipboardContentType.code) {
+      final language = SmartTextTools.programmingLanguage(item.content);
+      if (language != null) {
+        return Text(
+          '${context.l10n.detected_language}: $language',
+          key: const Key('detail-pane-code-metadata'),
+          style: valueStyle,
+        );
+      }
+    }
+    if (item.contentType == ClipboardContentType.jwt) {
+      return Text(
+        context.l10n.jwt,
+        key: const Key('detail-pane-jwt-metadata'),
+        style: valueStyle,
+      );
+    }
     return null;
   }
 
@@ -538,6 +572,8 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     ClipboardContentType.color => CupertinoIcons.color_filter,
     ClipboardContentType.json =>
       CupertinoIcons.chevron_left_slash_chevron_right,
+    ClipboardContentType.jwt => CupertinoIcons.lock,
+    ClipboardContentType.emoji => CupertinoIcons.smiley,
     ClipboardContentType.file => CupertinoIcons.folder,
     ClipboardContentType.image => CupertinoIcons.photo,
   };
@@ -550,6 +586,8 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     ClipboardContentType.code => 'CODE',
     ClipboardContentType.color => 'COLOR',
     ClipboardContentType.json => 'JSON',
+    ClipboardContentType.jwt => 'JWT',
+    ClipboardContentType.emoji => 'EMOJI',
     ClipboardContentType.file => 'FILE',
     ClipboardContentType.image => 'IMAGE',
   };

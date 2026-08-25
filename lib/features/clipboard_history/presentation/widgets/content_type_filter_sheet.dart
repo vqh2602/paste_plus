@@ -156,6 +156,8 @@ String contentTypeLabel(BuildContext context, ClipboardContentType type) =>
       ClipboardContentType.code => context.l10n.code,
       ClipboardContentType.color => context.l10n.color,
       ClipboardContentType.json => 'JSON',
+      ClipboardContentType.jwt => context.l10n.jwt,
+      ClipboardContentType.emoji => context.l10n.emoji,
       ClipboardContentType.file => context.l10n.files,
       ClipboardContentType.image => context.l10n.images,
     };
@@ -168,6 +170,8 @@ IconData contentTypeIcon(ClipboardContentType type) => switch (type) {
   ClipboardContentType.code => CupertinoIcons.chevron_left_slash_chevron_right,
   ClipboardContentType.color => CupertinoIcons.color_filter,
   ClipboardContentType.json => CupertinoIcons.chevron_left_slash_chevron_right,
+  ClipboardContentType.jwt => CupertinoIcons.lock,
+  ClipboardContentType.emoji => CupertinoIcons.smiley,
   ClipboardContentType.file => CupertinoIcons.folder,
   ClipboardContentType.image => CupertinoIcons.photo,
 };

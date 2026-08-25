@@ -17,6 +17,9 @@ void main() {
       expect(l10n.settings, isNotEmpty);
       expect(l10n.delete, isNotEmpty);
       expect(l10n.aiTitle, isNotEmpty);
+      expect(l10n.emoji, isNotEmpty);
+      expect(l10n.jwt, isNotEmpty);
+      expect(l10n.text_transform, isNotEmpty);
     }
 
     final chinese = lookupAppLocalizations(const Locale('zh'));

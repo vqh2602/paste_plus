@@ -58,7 +58,9 @@
 | **🤖 Local AI Assistant** | Ask questions, translate, summarize, or analyze clipboard items using on-device GGUF LLMs without sending data to cloud servers. |
 | **🔍 Instant Smart Search** | Filter history instantly with text or syntax like `type:link`, `app:Xcode`, or `is:pinned`. |
 | **🔍 OCR & Translate** | Extract text from copied images via native OCR and translate snippets through the selected local-AI or translation workflow. |
-| **📑 Content Auto-Classification** | Automatically categorizes Links, Emails, Phone Numbers, Hex Colors, Code Snippets, JSON, Files, & Images. |
+| **📑 Content Auto-Classification** | Automatically categorizes Links, Emails, Phone Numbers, Hex Colors, Emoji, Code Snippets, JSON, Files, & Images. |
+| **🧰 Smart Text Tools** | Convert JSON, Base64, URL encoding, letter case, timestamps, MD5 and line lists from a compact submenu; clean tracking parameters from links and calculate copied expressions instantly. |
+| **🧠 Smart Text Recognition** | Recognizes JWT tokens and common programming languages in addition to URLs, email addresses, phone numbers, JSON, code and Emoji. |
 | **☁️ Optional Image Hosting** | Explicitly upload an image to FreeImage.host or ImgBB and save the returned URL as a new clipboard item. |
 | **🖱️ Drag to Collections** | Drag clipboard cards directly onto a collection with hover highlighting and a named confirmation notice. |
 | **🛡️ Sensitive Content Shield** | Ignores OTP verification codes, API keys, and long sensitive tokens automatically. |

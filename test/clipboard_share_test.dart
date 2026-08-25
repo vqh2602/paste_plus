@@ -15,6 +15,8 @@ void main() {
         ClipboardContentType.code,
         ClipboardContentType.color,
         ClipboardContentType.json,
+        ClipboardContentType.jwt,
+        ClipboardContentType.emoji,
       ];
 
       for (final type in textualTypes) {

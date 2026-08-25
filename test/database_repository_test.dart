@@ -99,6 +99,17 @@ void main() {
     expect(persisted.urlHost, 'flutter.dev');
   });
 
+  test('repository persists emoji-only clipboard as emoji', () async {
+    final stored = await repository.store(
+      const ClipboardPayload(text: '👩🏽‍💻✨'),
+      const AppSettings(ignoreSensitive: false),
+    );
+
+    expect(stored, isNotNull);
+    expect(stored!.contentType.name, 'emoji');
+    expect((await repository.getItems()).single.contentType.name, 'emoji');
+  });
+
   test(
     'collections are seeded and deleting one preserves clipboard items',
     () async {

@@ -69,7 +69,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get json => 'JSON';
 
   @override
+  String get jwt => 'JWT';
+
+  @override
   String get image => '이미지';
+
+  @override
+  String get emoji => '이모지';
 
   @override
   String get image_link => '이미지 링크';
@@ -533,6 +539,66 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get translate_failed => '텍스트를 번역할 수 없습니다';
+
+  @override
+  String get text_transform => '텍스트 변환';
+
+  @override
+  String get format_json => 'JSON 서식 지정';
+
+  @override
+  String get minify_json => 'JSON 축소';
+
+  @override
+  String get encode_base64 => 'Base64 인코딩';
+
+  @override
+  String get decode_base64 => 'Base64 디코딩';
+
+  @override
+  String get encode_url => 'URL 인코딩';
+
+  @override
+  String get decode_url => 'URL 디코딩';
+
+  @override
+  String get uppercase => '대문자';
+
+  @override
+  String get lowercase => '소문자';
+
+  @override
+  String get title_case => '제목 대소문자';
+
+  @override
+  String get parse_timestamp => '타임스탬프 분석';
+
+  @override
+  String get md5_hash => 'MD5 해시';
+
+  @override
+  String get sort_lines => '줄 정렬';
+
+  @override
+  String get remove_duplicate_lines => '중복 줄 제거';
+
+  @override
+  String get link_cleaner => '링크 정리';
+
+  @override
+  String get transformed_copied => '변환 결과를 복사했습니다';
+
+  @override
+  String get transform_failed => '이 변환을 완료할 수 없습니다';
+
+  @override
+  String get link_cleaned => '정리된 링크를 복사했습니다';
+
+  @override
+  String get calculation_result => '결과';
+
+  @override
+  String get detected_language => '감지됨';
 
   @override
   String get upload_cloud_success => '클라우드에 업로드됨 & 링크 복사됨';

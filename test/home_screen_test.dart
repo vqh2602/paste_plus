@@ -304,6 +304,67 @@ void main() {
     expect(repository.items.single.copyCount, 2);
   });
 
+  testWidgets('text conversion opens a compact submenu and copies result', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Chuyển đổi văn bản'), findsOneWidget);
+    expect(find.text('Làm sạch liên kết'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-action-text_transform')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('text-transform-menu')), findsOneWidget);
+    expect(find.text('Định dạng JSON'), findsOneWidget);
+    expect(find.text('Mã hóa Base64'), findsOneWidget);
+    expect(find.text('Băm MD5'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('text-transform-urlEncode')),
+    );
+    await tester.tap(find.byKey(const Key('text-transform-urlEncode')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(watcher.current?.text, 'https%3A%2F%2Fflutter.dev');
+    expect(find.text('Đã sao chép kết quả chuyển đổi'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('Link Cleaner removes tracking parameters', (tester) async {
+    repository.items[0] = repository.items[0].copyWith(
+      content: 'https://flutter.dev/docs?utm_source=test&page=2&fbclid=x',
+      normalizedContent:
+          'https://flutter.dev/docs?utm_source=test&page=2&fbclid=x',
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('clipboard-action-link_cleaner')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(watcher.current?.text, 'https://flutter.dev/docs?page=2');
+    expect(find.text('Đã sao chép liên kết sạch'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('valid math expression shows its instant result', (tester) async {
+    repository.items[0] = repository.items[0].copyWith(
+      content: '2 + 3 * (4 - 1)',
+      normalizedContent: '2 + 3 * (4 - 1)',
+      contentType: ClipboardContentType.text,
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Kết quả: 11'), findsWidgets);
+  });
+
   testWidgets('clipboard edit updates the existing item', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();

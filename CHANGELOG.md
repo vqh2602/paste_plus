@@ -11,10 +11,14 @@
 - Tự khóa khi ứng dụng mất tiêu điểm hoặc chuyển nền; các tệp xem trước đã giải mã được dọn ngay khi khóa.
 
 ### 🧱 Cô lập dữ liệu & tương thích
+- Thêm submenu **Chuyển đổi văn bản** cho định dạng/thu nhỏ JSON, Base64, URL encode/decode, đổi hoa thường, Title Case, phân tích timestamp, MD5, sắp xếp và loại bỏ dòng trùng; kết quả được sao chép/lưu thành mục mới mà không ghi đè bản gốc.
+- Thêm **Link Cleaner** chỉ xuất hiện với URL để loại bỏ tham số theo dõi nhưng giữ nguyên tham số nghiệp vụ và fragment.
+- Thêm tính toán biểu thức an toàn ngay trên thẻ clipboard và vùng chi tiết, cùng nhận diện **JWT** và ngôn ngữ lập trình phổ biến.
+- Thêm phân loại **Emoji** cho emoji đơn, chuỗi emoji, cờ, màu da, ZWJ và keycap; văn bản có xen emoji vẫn được giữ đúng loại Văn bản.
 - Tủ khóa bị loại khỏi FTS, truy vấn AI, dọn lịch sử thông thường và luồng đồng bộ LAN để tránh rò rỉ dữ liệu ngoài ý muốn.
 - Khi tắt Tủ khóa, dữ liệu được giải mã và đưa trở lại lịch sử trước khi khóa mã hóa bị xóa.
 - Bổ sung cấu hình native cho Local Authentication trên Android/iOS và bản địa hóa giao diện Tủ khóa trên cả 6 ngôn ngữ.
-- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục và tự xóa; toàn bộ **240 kiểm thử** đều đạt.
+- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh và phân loại Emoji/JWT; toàn bộ **257 kiểm thử** đều đạt.
 
 ## [1.1.7] - 2026-08-25
 

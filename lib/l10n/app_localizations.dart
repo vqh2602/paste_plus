@@ -226,11 +226,23 @@ abstract class AppLocalizations {
   /// **'JSON'**
   String get json;
 
+  /// No description provided for @jwt.
+  ///
+  /// In en, this message translates to:
+  /// **'JWT'**
+  String get jwt;
+
   /// No description provided for @image.
   ///
   /// In en, this message translates to:
   /// **'Image'**
   String get image;
+
+  /// No description provided for @emoji.
+  ///
+  /// In en, this message translates to:
+  /// **'Emoji'**
+  String get emoji;
 
   /// No description provided for @image_link.
   ///
@@ -1155,6 +1167,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unable to translate text'**
   String get translate_failed;
+
+  /// No description provided for @text_transform.
+  ///
+  /// In en, this message translates to:
+  /// **'Text conversion'**
+  String get text_transform;
+
+  /// No description provided for @format_json.
+  ///
+  /// In en, this message translates to:
+  /// **'Format JSON'**
+  String get format_json;
+
+  /// No description provided for @minify_json.
+  ///
+  /// In en, this message translates to:
+  /// **'Minify JSON'**
+  String get minify_json;
+
+  /// No description provided for @encode_base64.
+  ///
+  /// In en, this message translates to:
+  /// **'Encode Base64'**
+  String get encode_base64;
+
+  /// No description provided for @decode_base64.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode Base64'**
+  String get decode_base64;
+
+  /// No description provided for @encode_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Encode URL'**
+  String get encode_url;
+
+  /// No description provided for @decode_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Decode URL'**
+  String get decode_url;
+
+  /// No description provided for @uppercase.
+  ///
+  /// In en, this message translates to:
+  /// **'UPPERCASE'**
+  String get uppercase;
+
+  /// No description provided for @lowercase.
+  ///
+  /// In en, this message translates to:
+  /// **'lowercase'**
+  String get lowercase;
+
+  /// No description provided for @title_case.
+  ///
+  /// In en, this message translates to:
+  /// **'Title Case'**
+  String get title_case;
+
+  /// No description provided for @parse_timestamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Parse timestamp'**
+  String get parse_timestamp;
+
+  /// No description provided for @md5_hash.
+  ///
+  /// In en, this message translates to:
+  /// **'MD5 hash'**
+  String get md5_hash;
+
+  /// No description provided for @sort_lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Sort lines'**
+  String get sort_lines;
+
+  /// No description provided for @remove_duplicate_lines.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove duplicate lines'**
+  String get remove_duplicate_lines;
+
+  /// No description provided for @link_cleaner.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Cleaner'**
+  String get link_cleaner;
+
+  /// No description provided for @transformed_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Converted result copied'**
+  String get transformed_copied;
+
+  /// No description provided for @transform_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'This conversion could not be completed'**
+  String get transform_failed;
+
+  /// No description provided for @link_cleaned.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean link copied'**
+  String get link_cleaned;
+
+  /// No description provided for @calculation_result.
+  ///
+  /// In en, this message translates to:
+  /// **'Result'**
+  String get calculation_result;
+
+  /// No description provided for @detected_language.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected'**
+  String get detected_language;
 
   /// No description provided for @upload_cloud_success.
   ///
