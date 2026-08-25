@@ -10,7 +10,9 @@ import '../../../app/providers.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../domain/clipboard_item.dart';
 import 'widgets/clipboard_action_menu.dart';
+import 'widgets/clipboard_edit_dialog.dart';
 import 'widgets/clipboard_preview_dialog.dart';
+import 'widgets/clipboard_share.dart';
 import 'widgets/content_type_filter_sheet.dart';
 import 'widgets/note_edit_dialog.dart';
 import 'widgets/quick_clipboard_card_widget.dart';
@@ -118,6 +120,20 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     await desktop.pasteToPreviousApplication();
   }
 
+  Future<void> _pasteItemAsPlainText(ClipboardItem item) async {
+    final desktop = ref.read(desktopIntegrationProvider);
+    _searchController.clear();
+    ref.read(historyControllerProvider.notifier).search('');
+    if (mounted) setState(() => _selectedIndex = 0);
+    final copied = await ref
+        .read(historyControllerProvider.notifier)
+        .copyAsPlainText(item);
+    if (!copied) return;
+    ref.read(quickPanelModeProvider.notifier).state = false;
+    await desktop.hideQuickPanel();
+    await desktop.pasteToPreviousApplication();
+  }
+
   Future<void> _openMainWindow() async {
     final desktop = ref.read(desktopIntegrationProvider);
     await desktop.showMainWindow();
@@ -183,12 +199,29 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
 
     if (!context.mounted || action == null) return;
 
-    if (action == 'preview') {
+    if (action == 'open') {
+      final url = openableClipboardUrl(item);
+      if (url != null) {
+        await ref.read(desktopIntegrationProvider).openUrl(url);
+      }
+    } else if (action == 'paste_plain') {
+      await _pasteItemAsPlainText(item);
+    } else if (action == 'share') {
+      final shared = await shareClipboardItem(context, item);
+      if (!shared && context.mounted) {
+        showCupertinoNotice(context, context.l10n.share_failed);
+      }
+    } else if (action == 'preview') {
       await showClipboardPreviewDialog(
         context: context,
         item: item,
         onCopy: () => historyNotifier.copy(item),
       );
+    } else if (action == 'edit') {
+      final updated = await showClipboardEditDialog(context, ref, item);
+      if (updated && context.mounted) {
+        showCupertinoNotice(context, context.l10n.clipboard_updated);
+      }
     } else if (action == 'note') {
       await showNoteEditDialog(context, ref, item);
     } else if (action == 'ask_ai') {

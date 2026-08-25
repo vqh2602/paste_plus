@@ -120,6 +120,31 @@ class AppLocalizationsDe extends AppLocalizations {
   String get edit_note => 'Notiz bearbeiten';
 
   @override
+  String get edit_clipboard => 'Bearbeiten';
+
+  @override
+  String get clipboard_updated => 'Zwischenablage aktualisiert';
+
+  @override
+  String get clipboard_update_failed =>
+      'Zwischenablage konnte nicht aktualisiert werden';
+
+  @override
+  String get invalid_color_code => 'Gültigen Farbcode eingeben';
+
+  @override
+  String get open_link => 'Öffnen';
+
+  @override
+  String get paste_as_plain_text => 'Als reinen Text einfügen';
+
+  @override
+  String get share_clipboard => 'Teilen';
+
+  @override
+  String get share_failed => 'Zwischenablage konnte nicht geteilt werden';
+
+  @override
   String get note => 'Notiz';
 
   @override

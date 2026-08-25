@@ -120,6 +120,30 @@ class AppLocalizationsJa extends AppLocalizations {
   String get edit_note => 'メモを編集';
 
   @override
+  String get edit_clipboard => '編集';
+
+  @override
+  String get clipboard_updated => 'クリップボードを更新しました';
+
+  @override
+  String get clipboard_update_failed => 'このクリップボードを更新できません';
+
+  @override
+  String get invalid_color_code => '有効なカラーコードを入力してください';
+
+  @override
+  String get open_link => '開く';
+
+  @override
+  String get paste_as_plain_text => 'プレーンテキストとして貼り付け';
+
+  @override
+  String get share_clipboard => '共有';
+
+  @override
+  String get share_failed => 'このクリップボードを共有できません';
+
+  @override
   String get note => 'メモ';
 
   @override

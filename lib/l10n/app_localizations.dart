@@ -326,6 +326,54 @@ abstract class AppLocalizations {
   /// **'Edit note'**
   String get edit_note;
 
+  /// No description provided for @edit_clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit_clipboard;
+
+  /// No description provided for @clipboard_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard updated'**
+  String get clipboard_updated;
+
+  /// No description provided for @clipboard_update_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update this clipboard'**
+  String get clipboard_update_failed;
+
+  /// No description provided for @invalid_color_code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid color code'**
+  String get invalid_color_code;
+
+  /// No description provided for @open_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open_link;
+
+  /// No description provided for @paste_as_plain_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste as Plain Text'**
+  String get paste_as_plain_text;
+
+  /// No description provided for @share_clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share_clipboard;
+
+  /// No description provided for @share_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to share this clipboard'**
+  String get share_failed;
+
   /// No description provided for @note.
   ///
   /// In en, this message translates to:

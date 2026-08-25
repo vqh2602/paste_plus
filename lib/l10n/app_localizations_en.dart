@@ -120,6 +120,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit_note => 'Edit note';
 
   @override
+  String get edit_clipboard => 'Edit';
+
+  @override
+  String get clipboard_updated => 'Clipboard updated';
+
+  @override
+  String get clipboard_update_failed => 'Unable to update this clipboard';
+
+  @override
+  String get invalid_color_code => 'Enter a valid color code';
+
+  @override
+  String get open_link => 'Open';
+
+  @override
+  String get paste_as_plain_text => 'Paste as Plain Text';
+
+  @override
+  String get share_clipboard => 'Share';
+
+  @override
+  String get share_failed => 'Unable to share this clipboard';
+
+  @override
   String get note => 'Note';
 
   @override

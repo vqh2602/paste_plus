@@ -14,19 +14,40 @@ Future<String?> showClipboardActionMenu({
   String? copyLabel,
 }) {
   final isImage = item.contentType == ClipboardContentType.image;
+  final openableUrl = openableClipboardUrl(item);
+  final hasPlainText = item.content.trim().isNotEmpty;
   final l10n = context.l10n;
 
   final actions = <CompactMenuAction>[
+    if (openableUrl != null)
+      CompactMenuAction(
+        value: 'open',
+        icon: CupertinoIcons.arrow_up_right_square,
+        label: l10n.open_link,
+      ),
+    if (hasPlainText)
+      CompactMenuAction(
+        value: 'paste_plain',
+        icon: CupertinoIcons.text_alignleft,
+        label: l10n.paste_as_plain_text,
+        dividerBefore: openableUrl != null,
+      ),
     CompactMenuAction(
       value: copyAction,
       icon: CupertinoIcons.doc_on_doc,
       label: copyLabel ?? l10n.copy,
+      dividerBefore: !hasPlainText && openableUrl != null,
+    ),
+    CompactMenuAction(
+      value: 'edit',
+      icon: CupertinoIcons.pencil,
+      label: l10n.edit_clipboard,
+      dividerBefore: true,
     ),
     CompactMenuAction(
       value: 'note',
-      icon: CupertinoIcons.pencil,
+      icon: CupertinoIcons.doc_text,
       label: item.note?.isNotEmpty == true ? l10n.edit_note : l10n.add_note,
-      dividerBefore: true,
     ),
     if (isImage) ...[
       CompactMenuAction(
@@ -68,6 +89,11 @@ Future<String?> showClipboardActionMenu({
       dividerBefore: true,
     ),
     CompactMenuAction(
+      value: 'share',
+      icon: CupertinoIcons.share,
+      label: l10n.share_clipboard,
+    ),
+    CompactMenuAction(
       value: 'delete',
       icon: CupertinoIcons.trash,
       label: l10n.delete,
@@ -103,8 +129,8 @@ Future<String?> showCompactActionMenu({
   final estimatedHeight = actions.length * 36.0 + dividerCount * 9.0 + 14;
   final maxBottom = viewport.height - safePadding.bottom - 8;
   final availableHeight = math.min(
-    estimatedHeight,
-    math.max(1.0, maxBottom - safePadding.top - 8),
+    390.0,
+    math.min(estimatedHeight, math.max(1.0, maxBottom - safePadding.top - 8)),
   );
   final below = anchorOrigin.dy + anchorSize.height + 5;
   final minTop = safePadding.top + 8;
@@ -145,6 +171,20 @@ Future<String?> showCompactActionMenu({
     transitionBuilder: (context, animation, secondaryAnimation, child) =>
         FadeTransition(opacity: animation, child: child),
   );
+}
+
+String? openableClipboardUrl(ClipboardItem item) {
+  final raw = item.primaryUrl?.trim().isNotEmpty == true
+      ? item.primaryUrl!.trim()
+      : item.content.trim();
+  final uri = Uri.tryParse(raw);
+  if (uri == null ||
+      !uri.hasScheme ||
+      !{'http', 'https'}.contains(uri.scheme.toLowerCase()) ||
+      uri.host.isEmpty) {
+    return null;
+  }
+  return uri.toString();
 }
 
 class CompactMenuAction {

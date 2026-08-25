@@ -73,6 +73,9 @@ class FlutterClipboardWatcher implements ClipboardWatcher {
 
   String? _signature(ClipboardPayload? payload) {
     if (payload == null) return null;
+    if (payload.filePaths.isNotEmpty) {
+      return 'files:${payload.filePaths.join('\n')}';
+    }
     if (payload.imageBytes != null) {
       final bytes = payload.imageBytes!;
       final sample = bytes.take(32).toList(growable: false);
@@ -131,13 +134,7 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
       if (!changed) return;
       _lastChangeCount = changeCount;
 
-      final imageSource = result['imageBase64'] as String?;
-      final payload = ClipboardPayload(
-        text: result['text'] as String?,
-        imageBytes: imageSource == null ? null : base64Decode(imageSource),
-        sourceAppName: result['sourceAppName'] as String?,
-        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
-      );
+      final payload = _payloadFromNativeResult(result);
       if (payload.isEmpty) return;
 
       final signature = _signature(payload);
@@ -158,13 +155,7 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
         'readClipboard',
       );
       if (result == null) return null;
-      final imageSource = result['imageBase64'] as String?;
-      final payload = ClipboardPayload(
-        text: result['text'] as String?,
-        imageBytes: imageSource == null ? null : base64Decode(imageSource),
-        sourceAppName: result['sourceAppName'] as String?,
-        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
-      );
+      final payload = _payloadFromNativeResult(result);
       return payload.isEmpty ? null : payload;
     } on PlatformException {
       return super.readCurrent();
@@ -244,13 +235,7 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
       if (!changed) return;
       _lastSequenceNumber = seqNum;
 
-      final imageSource = result['imageBase64'] as String?;
-      final payload = ClipboardPayload(
-        text: result['text'] as String?,
-        imageBytes: imageSource == null ? null : base64Decode(imageSource),
-        sourceAppName: result['sourceAppName'] as String?,
-        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
-      );
+      final payload = _payloadFromNativeResult(result);
       if (payload.isEmpty) return;
 
       final signature = _signature(payload);
@@ -271,13 +256,7 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
         'readClipboard',
       );
       if (result == null) return null;
-      final imageSource = result['imageBase64'] as String?;
-      final payload = ClipboardPayload(
-        text: result['text'] as String?,
-        imageBytes: imageSource == null ? null : base64Decode(imageSource),
-        sourceAppName: result['sourceAppName'] as String?,
-        sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
-      );
+      final payload = _payloadFromNativeResult(result);
       return payload.isEmpty ? null : payload;
     } on PlatformException {
       return super.readCurrent();
@@ -311,4 +290,23 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
       _lastSequenceNumber = result?['sequenceNumber'] as int?;
     } on Object catch (_) {}
   }
+}
+
+ClipboardPayload _payloadFromNativeResult(Map<String, dynamic> result) {
+  final filePaths = (result['filePaths'] as List<Object?>? ?? const [])
+      .whereType<String>()
+      .where((path) => path.trim().isNotEmpty)
+      .toList(growable: false);
+  final imageSource = result['imageBase64'] as String?;
+  return ClipboardPayload(
+    text: filePaths.isEmpty ? result['text'] as String? : filePaths.join('\n'),
+    // Finder and Explorer may expose a thumbnail together with CF_HDROP/file
+    // URLs. A file-list payload must never be downgraded to an image payload.
+    imageBytes: filePaths.isNotEmpty || imageSource == null
+        ? null
+        : base64Decode(imageSource),
+    filePaths: filePaths,
+    sourceAppName: result['sourceAppName'] as String?,
+    sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
+  );
 }

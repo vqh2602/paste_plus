@@ -17,6 +17,10 @@ void main() {
       '#635BFF': ClipboardContentType.color,
       '{"ok":true}': ClipboardContentType.json,
       '/Users/demo/file.txt': ClipboardContentType.file,
+      '/Users/demo/report.xlsx': ClipboardContentType.file,
+      r'C:\Users\demo\report.docx': ClipboardContentType.file,
+      'file:///Users/demo/report.pdf': ClipboardContentType.file,
+      '/Users/demo/one.png\n/Users/demo/two.docx': ClipboardContentType.file,
       'class Demo {\n  void run() {}\n}': ClipboardContentType.code,
       'Ghi chú bình thường': ClipboardContentType.text,
     };

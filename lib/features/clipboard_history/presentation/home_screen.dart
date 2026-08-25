@@ -16,7 +16,9 @@ import '../../ai/presentation/ai_chat_screen.dart';
 import '../domain/clipboard_item.dart';
 import 'quick_panel_screen.dart';
 import 'widgets/clipboard_action_menu.dart';
+import 'widgets/clipboard_edit_dialog.dart';
 import 'widgets/clipboard_preview_dialog.dart';
+import 'widgets/clipboard_share.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
 import 'widgets/note_edit_dialog.dart';
@@ -198,12 +200,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     if (!context.mounted || action == null) return;
 
-    if (action == 'preview') {
+    if (action == 'open') {
+      final url = openableClipboardUrl(item);
+      if (url != null) {
+        await ref.read(desktopIntegrationProvider).openUrl(url);
+      }
+    } else if (action == 'paste_plain') {
+      final copied = await historyNotifier.copyAsPlainText(item);
+      if (copied) {
+        final desktop = ref.read(desktopIntegrationProvider);
+        await desktop.hideQuickPanel();
+        await desktop.pasteToPreviousApplication();
+      }
+    } else if (action == 'share') {
+      final shared = await shareClipboardItem(context, item);
+      if (!shared && context.mounted) {
+        showCupertinoNotice(context, context.l10n.share_failed);
+      }
+    } else if (action == 'preview') {
       await showClipboardPreviewDialog(
         context: context,
         item: item,
         onCopy: () => historyNotifier.copy(item),
       );
+    } else if (action == 'edit') {
+      final updated = await showClipboardEditDialog(context, ref, item);
+      if (updated && context.mounted) {
+        showCupertinoNotice(context, context.l10n.clipboard_updated);
+      }
     } else if (action == 'note') {
       await showNoteEditDialog(context, ref, item);
     } else if (action == 'ask_ai') {

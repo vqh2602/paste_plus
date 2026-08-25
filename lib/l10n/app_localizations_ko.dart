@@ -120,6 +120,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get edit_note => '메모 편집';
 
   @override
+  String get edit_clipboard => '편집';
+
+  @override
+  String get clipboard_updated => '클립보드를 업데이트했습니다';
+
+  @override
+  String get clipboard_update_failed => '이 클립보드를 업데이트할 수 없습니다';
+
+  @override
+  String get invalid_color_code => '올바른 색상 코드를 입력하세요';
+
+  @override
+  String get open_link => '열기';
+
+  @override
+  String get paste_as_plain_text => '일반 텍스트로 붙여넣기';
+
+  @override
+  String get share_clipboard => '공유';
+
+  @override
+  String get share_failed => '이 클립보드를 공유할 수 없습니다';
+
+  @override
   String get note => '메모';
 
   @override

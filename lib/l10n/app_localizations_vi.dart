@@ -120,6 +120,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get edit_note => 'Sửa ghi chú';
 
   @override
+  String get edit_clipboard => 'Chỉnh sửa';
+
+  @override
+  String get clipboard_updated => 'Đã cập nhật clipboard';
+
+  @override
+  String get clipboard_update_failed => 'Không thể cập nhật clipboard này';
+
+  @override
+  String get invalid_color_code => 'Hãy nhập mã màu hợp lệ';
+
+  @override
+  String get open_link => 'Mở';
+
+  @override
+  String get paste_as_plain_text => 'Dán dưới dạng văn bản thuần';
+
+  @override
+  String get share_clipboard => 'Chia sẻ';
+
+  @override
+  String get share_failed => 'Không thể chia sẻ clipboard này';
+
+  @override
   String get note => 'Ghi chú';
 
   @override
