@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:clipflow/app/providers.dart';
 import 'package:clipflow/core/services/clipboard_watcher.dart';
@@ -7,6 +9,7 @@ import 'package:clipflow/features/clipboard_history/domain/clipboard_content_typ
 import 'package:clipflow/features/clipboard_history/domain/clipboard_item.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.dart';
+import 'package:clipflow/features/clipboard_history/domain/content_classifier.dart';
 import 'package:clipflow/features/clipboard_history/presentation/home_screen.dart';
 import 'package:clipflow/features/clipboard_history/presentation/history_controller.dart';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
@@ -16,6 +19,7 @@ import 'package:clipflow/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MockClipboardWatcher implements ClipboardWatcher {
@@ -42,8 +46,11 @@ class MockClipboardWatcher implements ClipboardWatcher {
   Future<void> dispose() => controller.close();
 }
 
-class InMemoryClipboardRepository implements ClipboardRepository {
+class InMemoryClipboardRepository
+    implements ClipboardRepository, EditableClipboardRepository {
+  Uint8List? lastEditedImageBytes;
   final collections = <ClipboardCollection>[];
+  final collectionItems = <String, Set<String>>{};
   final items = <ClipboardItem>[
     ClipboardItem(
       id: 'item-1',
@@ -61,7 +68,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   ];
 
   @override
-  Future<void> addToCollection(String itemId, String collectionId) async {}
+  Future<void> addToCollection(String itemId, String collectionId) async {
+    collectionItems.putIfAbsent(collectionId, () => {}).add(itemId);
+  }
 
   @override
   Future<int> approximateStorageBytes() async => 0;
@@ -107,7 +116,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
         .where(
           (item) =>
               (!pinnedOnly || item.isPinned) &&
-              (type == null || item.contentType == type),
+              (type == null || item.contentType == type) &&
+              (collectionId == null ||
+                  (collectionItems[collectionId]?.contains(item.id) ?? false)),
         )
         .take(limit)
         .toList();
@@ -141,6 +152,25 @@ class InMemoryClipboardRepository implements ClipboardRepository {
 
   @override
   Future<void> updateMetadata(String id, String metadataJson) async {}
+
+  @override
+  Future<ClipboardItem> updateItemContent(
+    ClipboardItem item, {
+    required String content,
+    Uint8List? imageBytes,
+  }) async {
+    lastEditedImageBytes = imageBytes;
+    final index = items.indexWhere((entry) => entry.id == item.id);
+    final updated = item.copyWith(
+      content: content.trim(),
+      normalizedContent: content.trim(),
+      contentType: imageBytes == null
+          ? ContentClassifier.classify(content)
+          : ClipboardContentType.image,
+    );
+    items[index] = updated;
+    return updated;
+  }
 
   @override
   Future<void> updateNote(String id, String? note) async {
@@ -223,6 +253,436 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
+  testWidgets('clipboard menu is compact and opens a full preview', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('clipboard-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(tester.getSize(menu).height, lessThan(400));
+    expect(find.text('Mở'), findsOneWidget);
+    expect(find.text('Dán dưới dạng văn bản thuần'), findsOneWidget);
+    expect(find.text('Xem trước'), findsOneWidget);
+    expect(find.text('Chỉnh sửa'), findsOneWidget);
+    expect(find.text('Chia sẻ'), findsOneWidget);
+
+    await tester.ensureVisible(
+      find.byKey(const Key('clipboard-action-preview')),
+    );
+    await tester.tap(find.byKey(const Key('clipboard-action-preview')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('clipboard-preview-dialog')), findsOneWidget);
+    expect(find.text('19 ký tự'), findsOneWidget);
+    expect(find.text('1 từ'), findsOneWidget);
+    expect(find.text('1 dòng'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-preview-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('clipboard-preview-dialog')), findsNothing);
+  });
+
+  testWidgets('paste as plain text writes only text to the clipboard', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('clipboard-action-paste_plain')));
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(watcher.current?.text, 'https://flutter.dev');
+    expect(watcher.current?.imageBytes, isNull);
+    expect(repository.items.single.copyCount, 2);
+  });
+
+  testWidgets('clipboard edit updates the existing item', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('clipboard-action-edit')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.byKey(const Key('clipboard-edit-dialog')), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const Key('clipboard-edit-field')),
+      'hello edited clipboard',
+    );
+    await tester.tap(find.byKey(const Key('clipboard-edit-save')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(repository.items, hasLength(1));
+    expect(repository.items.single.id, 'item-1');
+    expect(repository.items.single.content, 'hello edited clipboard');
+    expect(repository.items.single.contentType, ClipboardContentType.text);
+    expect(find.text('Đã cập nhật clipboard'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('image edit rotates and saves the transformed image', (
+    tester,
+  ) async {
+    final source = img.Image(width: 3, height: 2);
+    final imageFile = File(
+      '${Directory.systemTemp.path}/clipflow-edit-${DateTime.now().microsecondsSinceEpoch}.png',
+    );
+    imageFile.writeAsBytesSync(img.encodePng(source));
+    addTearDown(() {
+      if (imageFile.existsSync()) {
+        imageFile.deleteSync();
+      }
+    });
+    repository.items
+      ..clear()
+      ..add(
+        ClipboardItem(
+          id: 'editable-image',
+          content: '',
+          normalizedContent: '',
+          contentHash: 'editable-image-hash',
+          contentType: ClipboardContentType.image,
+          createdAt: DateTime(2026, 8, 25),
+          updatedAt: DateTime(2026, 8, 25),
+          lastCopiedAt: DateTime(2026, 8, 25),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+          imagePath: imageFile.path,
+        ),
+      );
+
+    await tester.pumpWidget(app());
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('Chia sẻ'), findsOneWidget);
+    expect(find.text('Dán dưới dạng văn bản thuần'), findsNothing);
+    expect(find.text('Mở'), findsNothing);
+    await tester.tap(find.byKey(const Key('clipboard-action-edit')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    final footer = find.byKey(const Key('clipboard-edit-footer'));
+    expect(footer, findsOneWidget);
+    expect(tester.widget<Text>(footer).data, '3 × 2 px');
+    await tester.tap(find.byKey(const Key('clipboard-edit-rotate-right')));
+    await tester.pump();
+    expect(find.text('2 × 3 px'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-edit-save')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    final saved = img.decodeImage(repository.lastEditedImageBytes!);
+    expect(saved, isNotNull);
+    expect(saved!.width, 2);
+    expect(saved.height, 3);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('image preview shows its actual pixel dimensions', (
+    tester,
+  ) async {
+    final imageFile = File(
+      '${Directory.current.path}/assets/branding/clipflow_app_icon.png',
+    );
+    expect(imageFile.existsSync(), isTrue);
+    repository.items
+      ..clear()
+      ..add(
+        ClipboardItem(
+          id: 'image-item',
+          content: '',
+          normalizedContent: '',
+          contentHash: 'image-hash',
+          contentType: ClipboardContentType.image,
+          createdAt: DateTime(2026, 8, 25),
+          updatedAt: DateTime(2026, 8, 25),
+          lastCopiedAt: DateTime(2026, 8, 25),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+          imagePath: imageFile.path,
+        ),
+      );
+
+    await tester.pumpWidget(app());
+    await tester.pump(const Duration(milliseconds: 600));
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pump(const Duration(milliseconds: 200));
+    await tester.tap(find.byKey(const Key('clipboard-action-preview')));
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final dimensions = find.byKey(
+      const Key('clipboard-preview-image-dimensions'),
+    );
+    expect(dimensions, findsOneWidget);
+    expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+  });
+
+  testWidgets('collection options use the compact anchored menu', (
+    tester,
+  ) async {
+    repository.collections.add(
+      ClipboardCollection(
+        id: 'work',
+        name: 'Work',
+        icon: 'folder',
+        createdAt: DateTime(2026, 8, 25),
+        updatedAt: DateTime(2026, 8, 25),
+        sortOrder: 0,
+      ),
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final collectionTile = find.widgetWithText(SidebarTileWidget, 'Work');
+    final optionsButton = find.descendant(
+      of: collectionTile,
+      matching: find.byIcon(CupertinoIcons.ellipsis),
+    );
+    await tester.tap(optionsButton);
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('collection-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(tester.getSize(menu).height, lessThan(120));
+    expect(find.text('Đổi tên'), findsOneWidget);
+    expect(find.text('Xóa collection'), findsOneWidget);
+  });
+
+  testWidgets('dragging a clipboard item onto a collection adds it', (
+    tester,
+  ) async {
+    final collection = ClipboardCollection(
+      id: 'work',
+      name: 'Work',
+      icon: 'folder',
+      createdAt: DateTime(2026, 8, 25),
+      updatedAt: DateTime(2026, 8, 25),
+      sortOrder: 0,
+    );
+    repository.collections.add(collection);
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final item = find.byKey(const Key('clipboard-item'));
+    final target = find.byKey(const Key('collection-drop-target-work'));
+    final start = tester.getCenter(item);
+    final end = tester.getCenter(target);
+    final gesture = await tester.startGesture(start);
+    await gesture.moveTo(end);
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<SidebarTileWidget>(
+            find.widgetWithText(SidebarTileWidget, 'Work'),
+          )
+          .highlighted,
+      isTrue,
+    );
+
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(repository.collectionItems['work'], contains('item-1'));
+    expect(find.text('Đã thêm vào collection "Work"'), findsOneWidget);
+    expect(
+      tester
+          .widget<SidebarTileWidget>(
+            find.widgetWithText(SidebarTileWidget, 'Work'),
+          )
+          .highlighted,
+      isFalse,
+    );
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('quick panel item options use the compact menu', (tester) async {
+    tester.view.physicalSize = const Size(1400, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('quick-item-more-button')));
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('clipboard-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(find.text('Sao chép & Dán'), findsOneWidget);
+    expect(find.text('Mở'), findsOneWidget);
+    expect(find.text('Dán dưới dạng văn bản thuần'), findsOneWidget);
+    expect(find.text('Chỉnh sửa'), findsOneWidget);
+    expect(find.text('Xem trước'), findsOneWidget);
+    expect(find.text('Chia sẻ'), findsOneWidget);
+  });
+
+  testWidgets('quick cards show metadata after their source app', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1400, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    final imagePath =
+        '${Directory.current.path}/assets/branding/clipflow_app_icon.png';
+    repository.items
+      ..clear()
+      ..addAll([
+        ClipboardItem(
+          id: 'text-item',
+          content: 'hello',
+          normalizedContent: 'hello',
+          contentHash: 'text-hash',
+          contentType: ClipboardContentType.text,
+          createdAt: DateTime(2026, 8, 25),
+          updatedAt: DateTime(2026, 8, 25),
+          lastCopiedAt: DateTime(2026, 8, 25),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+          sourceAppName: 'ChatGPT',
+        ),
+        ClipboardItem(
+          id: 'image-item',
+          content: '',
+          normalizedContent: '',
+          contentHash: 'image-hash',
+          contentType: ClipboardContentType.image,
+          createdAt: DateTime(2026, 8, 25),
+          updatedAt: DateTime(2026, 8, 25),
+          lastCopiedAt: DateTime(2026, 8, 25),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+          sourceAppName: 'Finder',
+          imagePath: imagePath,
+        ),
+        ClipboardItem(
+          id: 'color-item',
+          content: 'rgba(255, 0, 128, 0.5)',
+          normalizedContent: 'rgba(255, 0, 128, 0.5)',
+          contentHash: 'color-hash',
+          contentType: ClipboardContentType.color,
+          createdAt: DateTime(2026, 8, 25),
+          updatedAt: DateTime(2026, 8, 25),
+          lastCopiedAt: DateTime(2026, 8, 25),
+          isPinned: false,
+          isSensitive: false,
+          copyCount: 1,
+          sourceAppName: 'Design Tool',
+        ),
+      ]);
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+
+    expect(find.text('ChatGPT'), findsOneWidget);
+    expect(find.text('Finder'), findsOneWidget);
+    expect(find.text('Design Tool'), findsOneWidget);
+    expect(find.text('5 ký tự'), findsOneWidget);
+
+    final dimensions = find.byKey(
+      const Key('quick-card-image-metadata-image-item'),
+    );
+    expect(dimensions, findsOneWidget);
+    expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+
+    final colorFormat = find.byKey(
+      const Key('quick-card-color-metadata-color-item'),
+    );
+    expect(colorFormat, findsOneWidget);
+    expect(tester.widget<Text>(colorFormat).data, 'RGBA');
+  });
+
+  testWidgets('main detail shows the same clipboard metadata', (tester) async {
+    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    ClipboardItem item({
+      required String id,
+      required String content,
+      required ClipboardContentType type,
+      String? imagePath,
+    }) => ClipboardItem(
+      id: id,
+      content: content,
+      normalizedContent: content,
+      contentHash: '$id-hash',
+      contentType: type,
+      createdAt: DateTime(2026, 8, 25),
+      updatedAt: DateTime(2026, 8, 25),
+      lastCopiedAt: DateTime(2026, 8, 25),
+      isPinned: false,
+      isSensitive: false,
+      copyCount: 1,
+      sourceAppName: 'ChatGPT',
+      imagePath: imagePath,
+    );
+
+    Future<void> show(ClipboardItem clipboardItem) async {
+      await tester.pumpWidget(const SizedBox());
+      repository.items
+        ..clear()
+        ..add(clipboardItem);
+      await tester.pumpWidget(app());
+      await tester.pumpAndSettle();
+    }
+
+    await show(
+      item(id: 'main-text', content: 'hello', type: ClipboardContentType.text),
+    );
+    expect(find.text('Chi tiết'), findsOneWidget);
+    expect(find.text('5 ký tự'), findsOneWidget);
+
+    await show(
+      item(
+        id: 'main-image',
+        content: '',
+        type: ClipboardContentType.image,
+        imagePath:
+            '${Directory.current.path}/assets/branding/clipflow_app_icon.png',
+      ),
+    );
+    final dimensions = find.byKey(const Key('detail-pane-image-metadata'));
+    expect(dimensions, findsOneWidget);
+    expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+
+    await show(
+      item(
+        id: 'main-color',
+        content: '#ff0080',
+        type: ClipboardContentType.color,
+      ),
+    );
+    final colorFormat = find.byKey(const Key('detail-pane-color-metadata'));
+    expect(colorFormat, findsOneWidget);
+    expect(tester.widget<Text>(colorFormat).data, 'HEX');
+  });
+
   testWidgets('main history header shows AI button when AI is enabled', (
     tester,
   ) async {
@@ -294,7 +754,10 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('item-more-button')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Xóa'));
+    await tester.ensureVisible(
+      find.byKey(const Key('clipboard-action-delete')),
+    );
+    await tester.tap(find.byKey(const Key('clipboard-action-delete')));
     await tester.pumpAndSettle();
     expect(find.text('Xóa mục này?'), findsOneWidget);
     await tester.tap(find.widgetWithText(CupertinoDialogAction, 'Xóa'));

@@ -17,6 +17,10 @@ void main() {
     );
   });
 
+  test('uses the configured ImgBB API key by default', () {
+    expect(const AppSettings().imgBbApiKey, '670005d0dea70dbc4350f1ff1ad1dc33');
+  });
+
   test('settings serialize and persist with collections intact', () async {
     SharedPreferences.setMockInitialValues({});
     final preferences = await SharedPreferences.getInstance();
@@ -30,6 +34,7 @@ void main() {
       targetTranslationLanguage: 'ja',
       cloudImageHost: 'freeimage',
       freeImageApiKey: '6d207e02198a847aa98d0a2a901485a5',
+      imgBbApiKey: 'custom-imgbb-key',
       allowedTypes: {'text', 'url'},
       excludedApplications: ['Password App'],
       openPanelShortcut: openShortcut,
@@ -49,6 +54,7 @@ void main() {
     expect(loaded.targetTranslationLanguage, 'ja');
     expect(loaded.cloudImageHost, 'freeimage');
     expect(loaded.freeImageApiKey, '6d207e02198a847aa98d0a2a901485a5');
+    expect(loaded.imgBbApiKey, 'custom-imgbb-key');
     expect(loaded.allowedTypes, {'text', 'url'});
     expect(loaded.excludedApplications, ['Password App']);
     expect(loaded.localSharingEnabled, isTrue);

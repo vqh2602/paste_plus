@@ -5,6 +5,36 @@ import 'package:flutter/painting.dart' show HSVColor;
 class ColorParser {
   const ColorParser._();
 
+  static String? formatName(String value) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+
+    if (RegExp(
+      r'^#?([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$',
+    ).hasMatch(normalized)) {
+      return 'HEX';
+    }
+    if (normalized.startsWith('rgba(')) return 'RGBA';
+    if (normalized.startsWith('rgb(')) return 'RGB';
+    if (normalized.startsWith('hsla(')) return 'HSLA';
+    if (normalized.startsWith('hsl(')) return 'HSL';
+    if (normalized.startsWith('hsb(')) return 'HSB';
+    if (normalized.startsWith('hsv(')) return 'HSV';
+    if (normalized.startsWith('cmyk(')) return 'CMYK';
+    if (normalized.startsWith('lab(') || normalized.startsWith('l*')) {
+      return 'LAB';
+    }
+    if (normalized.startsWith('xyz(') || normalized.startsWith('x:')) {
+      return 'XYZ';
+    }
+    if (normalized.startsWith('hwb(')) return 'HWB';
+
+    final components = normalized.split(',');
+    if (components.length == 4) return 'CMYK';
+    if (components.length == 3) return 'HSV';
+    return null;
+  }
+
   static Color? parse(String value) {
     value = value.trim();
     if (value.isEmpty) return null;

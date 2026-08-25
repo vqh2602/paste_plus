@@ -288,7 +288,12 @@
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				de,
 				en,
+				ja,
+				ko,
+				vi,
+				zh,
 				Base,
 			);
 			mainGroup = 33CC10E42044A3C60003C045;

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:clipflow/core/database/app_database.dart';
 import 'package:clipflow/features/clipboard_history/data/sqlite_clipboard_repository.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dart';
@@ -59,6 +61,42 @@ void main() {
 
     await repository.deleteItem(items.single.id);
     expect(await repository.getItems(), isEmpty);
+  });
+
+  test('a native file list takes priority over an image thumbnail', () async {
+    const filePath = '/Users/demo/Documents/report.xlsx';
+    final stored = await repository.store(
+      ClipboardPayload(
+        text: filePath,
+        filePaths: const [filePath],
+        imageBytes: Uint8List.fromList(const [1, 2, 3]),
+      ),
+      const AppSettings(ignoreSensitive: false),
+    );
+
+    expect(stored, isNotNull);
+    expect(stored!.content, filePath);
+    expect(stored.contentType.name, 'file');
+    expect(stored.imagePath, isNull);
+  });
+
+  test('editing content keeps the item id and refreshes its type', () async {
+    final stored = await repository.store(
+      const ClipboardPayload(text: 'plain text'),
+      const AppSettings(ignoreSensitive: false),
+    );
+
+    final updated = await repository.updateItemContent(
+      stored!,
+      content: 'https://flutter.dev',
+    );
+    final persisted = (await repository.getItems()).single;
+
+    expect(updated.id, stored.id);
+    expect(persisted.id, stored.id);
+    expect(persisted.content, 'https://flutter.dev');
+    expect(persisted.contentType.name, 'url');
+    expect(persisted.urlHost, 'flutter.dev');
   });
 
   test(

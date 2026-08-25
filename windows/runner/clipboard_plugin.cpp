@@ -3,6 +3,7 @@
 #include <windows.h>
 #include <gdiplus.h>
 #include <psapi.h>
+#include <shellapi.h>
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <shlwapi.h>
@@ -198,7 +199,32 @@ void ClipboardPlugin::HandleMethodCall(
     }
     
     if (OpenClipboard(nullptr)) {
-        if (IsClipboardFormatAvailable(CF_UNICODETEXT)) {
+        bool hasFiles = false;
+        if (IsClipboardFormatAvailable(CF_HDROP)) {
+            HDROP drop = static_cast<HDROP>(GetClipboardData(CF_HDROP));
+            if (drop) {
+                const UINT fileCount = DragQueryFileW(drop, 0xFFFFFFFF, nullptr, 0);
+                flutter::EncodableList filePaths;
+                std::wstring combinedPaths;
+                for (UINT index = 0; index < fileCount; ++index) {
+                    const UINT length = DragQueryFileW(drop, index, nullptr, 0);
+                    std::vector<WCHAR> path(length + 1);
+                    if (DragQueryFileW(drop, index, path.data(), length + 1) > 0) {
+                        const std::wstring filePath(path.data());
+                        filePaths.push_back(flutter::EncodableValue(utf8_encode(filePath)));
+                        if (!combinedPaths.empty()) combinedPaths += L"\n";
+                        combinedPaths += filePath;
+                    }
+                }
+                if (!filePaths.empty()) {
+                    hasFiles = true;
+                    map[flutter::EncodableValue("filePaths")] = flutter::EncodableValue(filePaths);
+                    map[flutter::EncodableValue("text")] = flutter::EncodableValue(utf8_encode(combinedPaths));
+                }
+            }
+        }
+
+        if (!hasFiles && IsClipboardFormatAvailable(CF_UNICODETEXT)) {
             HANDLE hData = GetClipboardData(CF_UNICODETEXT);
             if (hData) {
                 WCHAR* pszText = static_cast<WCHAR*>(GlobalLock(hData));
@@ -209,7 +235,7 @@ void ClipboardPlugin::HandleMethodCall(
             }
         }
         
-        if (IsClipboardFormatAvailable(CF_DIB) || IsClipboardFormatAvailable(CF_BITMAP)) {
+        if (!hasFiles && (IsClipboardFormatAvailable(CF_DIB) || IsClipboardFormatAvailable(CF_BITMAP))) {
             HANDLE hData = GetClipboardData(CF_BITMAP);
             if (!hData && IsClipboardFormatAvailable(CF_DIB)) {
                  hData = GetClipboardData(CF_DIB);

@@ -19,7 +19,10 @@ import '../domain/content_classifier.dart';
 import '../domain/search_query.dart';
 
 class SqliteClipboardRepository
-    implements ClipboardRepository, StructuredClipboardRepository {
+    implements
+        ClipboardRepository,
+        StructuredClipboardRepository,
+        EditableClipboardRepository {
   SqliteClipboardRepository(this._appDatabase);
 
   final AppDatabase _appDatabase;
@@ -119,16 +122,20 @@ class SqliteClipboardRepository
       return null;
     }
 
-    final normalized = payload.text == null
+    final payloadText = payload.filePaths.isEmpty
+        ? payload.text
+        : payload.filePaths.join('\n');
+    final imageBytes = payload.filePaths.isEmpty ? payload.imageBytes : null;
+    final normalized = payloadText == null
         ? ''
-        : ContentNormalizer.normalize(payload.text!);
-    if (payload.imageBytes == null &&
+        : ContentNormalizer.normalize(payloadText);
+    if (imageBytes == null &&
         (normalized.length < settings.minTextLength ||
             normalized.length > settings.maxTextLength)) {
       return null;
     }
-    if (payload.imageBytes != null &&
-        payload.imageBytes!.length > settings.maxImageMb * 1024 * 1024) {
+    if (imageBytes != null &&
+        imageBytes.length > settings.maxImageMb * 1024 * 1024) {
       return null;
     }
     if (settings.ignoreSensitive &&
@@ -140,12 +147,13 @@ class SqliteClipboardRepository
       return null;
     }
 
-    final contentType = payload.imageBytes == null
+    final contentType = payload.filePaths.isNotEmpty
+        ? ClipboardContentType.file
+        : imageBytes == null
         ? ContentClassifier.classify(normalized)
         : ClipboardContentType.image;
     if (!settings.allowedTypes.contains(contentType.name)) return null;
-    final hashBytes =
-        payload.imageBytes ?? Uint8List.fromList(utf8.encode(normalized));
+    final hashBytes = imageBytes ?? Uint8List.fromList(utf8.encode(normalized));
     final hash = sha256.convert(hashBytes).toString();
     final now = DateTime.now();
 
@@ -185,11 +193,11 @@ class SqliteClipboardRepository
       }
     }
 
-    final imagePath = payload.imageBytes == null
+    final imagePath = imageBytes == null
         ? null
-        : await _saveImage(hash, payload.imageBytes!);
+        : await _saveImage(hash, imageBytes);
     final features = const ClipboardFeatureExtractor().extract(
-      content: payload.text ?? '',
+      content: payloadText ?? '',
       contentType: contentType,
       imagePath: imagePath,
       sourceAppName: payload.sourceAppName,
@@ -197,7 +205,7 @@ class SqliteClipboardRepository
     final id = '${now.microsecondsSinceEpoch}-${hash.substring(0, 8)}';
     final item = ClipboardItem(
       id: id,
-      content: payload.text ?? '',
+      content: payloadText ?? '',
       normalizedContent: normalized,
       contentHash: hash,
       contentType: contentType,
@@ -334,6 +342,78 @@ class SqliteClipboardRepository
       where: 'id = ?',
       whereArgs: [id],
     );
+  }
+
+  @override
+  Future<ClipboardItem> updateItemContent(
+    ClipboardItem item, {
+    required String content,
+    Uint8List? imageBytes,
+  }) async {
+    final rows = await _db.query(
+      'clipboard_items',
+      where: 'id = ?',
+      whereArgs: [item.id],
+      limit: 1,
+    );
+    if (rows.isEmpty) {
+      throw StateError('Clipboard item ${item.id} no longer exists.');
+    }
+
+    final stored = ClipboardItem.fromMap(await _normalizeRow(rows.first));
+    final editingImage = imageBytes != null;
+    final normalized = editingImage
+        ? content
+        : ContentNormalizer.normalize(content);
+    if (!editingImage && normalized.isEmpty) {
+      throw ArgumentError.value(content, 'content', 'Content cannot be empty.');
+    }
+
+    final contentType = editingImage
+        ? ClipboardContentType.image
+        : ContentClassifier.classify(normalized);
+    final hashBytes = editingImage
+        ? imageBytes
+        : Uint8List.fromList(utf8.encode(normalized));
+    final hash = sha256.convert(hashBytes).toString();
+    final oldImagePath = stored.imagePath;
+    final imagePath = editingImage
+        ? await _saveImage(hash, imageBytes)
+        : stored.imagePath;
+    final features = const ClipboardFeatureExtractor().extract(
+      content: editingImage ? content : normalized,
+      contentType: contentType,
+      imagePath: imagePath,
+      metadataJson: stored.metadataJson,
+      note: stored.note,
+      sourceAppName: stored.sourceAppName,
+    );
+    final values = <String, Object?>{
+      'content': editingImage ? content : normalized,
+      'normalized_content': normalized,
+      'content_hash': hash,
+      'content_type': contentType.name,
+      'image_path': imagePath,
+      'updated_at': DateTime.now().millisecondsSinceEpoch,
+      ..._featureValues(features),
+    };
+    await _db.update(
+      'clipboard_items',
+      values,
+      where: 'id = ?',
+      whereArgs: [item.id],
+    );
+    if (editingImage && oldImagePath != null && oldImagePath != imagePath) {
+      await _deleteImage(oldImagePath);
+    }
+
+    final updatedRows = await _db.query(
+      'clipboard_items',
+      where: 'id = ?',
+      whereArgs: [item.id],
+      limit: 1,
+    );
+    return ClipboardItem.fromMap(await _normalizeRow(updatedRows.single));
   }
 
   @override
@@ -625,7 +705,9 @@ class SqliteClipboardRepository
         '(${query.urlHosts.map((_) => '(i.url_host = ? OR i.url_host LIKE ?)').join(' OR ')})',
       );
       for (final host in query.urlHosts) {
-        args..add(host)..add('%.$host');
+        args
+          ..add(host)
+          ..add('%.$host');
       }
     }
     if (query.urlKind != null && query.urlKind != ClipboardUrlKind.any) {
@@ -649,7 +731,8 @@ class SqliteClipboardRepository
       args.add(query.pinned! ? 1 : 0);
     }
     if (query.collectionIds.isNotEmpty) {
-      join = 'INNER JOIN clipboard_item_collections ic ON ic.clipboard_item_id = i.id';
+      join =
+          'INNER JOIN clipboard_item_collections ic ON ic.clipboard_item_id = i.id';
       where.add(
         'ic.collection_id IN (${List.filled(query.collectionIds.length, '?').join(',')})',
       );
@@ -666,7 +749,8 @@ class SqliteClipboardRepository
     }
     final text = query.textQuery?.trim().toLowerCase();
     if (text?.isNotEmpty == true) {
-      for (final token in text!.split(RegExp(r'\s+')).where((value) => value.isNotEmpty)) {
+      for (final token
+          in text!.split(RegExp(r'\s+')).where((value) => value.isNotEmpty)) {
         where.add('LOWER(i.searchable_text) LIKE ?');
         args.add('%$token%');
       }
@@ -712,7 +796,10 @@ class SqliteClipboardRepository
       final item = ClipboardItem.fromMap(await _normalizeRow(row));
       byId[item.id] = item;
     }
-    return [for (final id in ids) if (byId[id] != null) byId[id]!];
+    return [
+      for (final id in ids)
+        if (byId[id] != null) byId[id]!,
+    ];
   }
 
   @override
@@ -749,7 +836,10 @@ class SqliteClipboardRepository
   }
 
   @override
-  Future<void> addItemsToCollection(List<String> itemIds, String collectionId) async {
+  Future<void> addItemsToCollection(
+    List<String> itemIds,
+    String collectionId,
+  ) async {
     if (itemIds.isEmpty) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.transaction((transaction) async {

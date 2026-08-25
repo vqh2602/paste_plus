@@ -9,6 +9,7 @@ import '../../../../app/providers.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
+import 'clipboard_action_menu.dart';
 
 class SidebarWidget extends ConsumerWidget {
   const SidebarWidget({
@@ -142,20 +143,47 @@ class SidebarWidget extends ConsumerWidget {
                     padding: EdgeInsets.zero,
                     children: [
                       for (final collection in collections)
-                        SidebarTileWidget(
-                          icon: CupertinoIcons.folder,
-                          label: _displayCollectionName(context, collection),
-                          selected:
-                              state.section == HistorySection.collection &&
-                              state.collectionId == collection.id,
-                          onTap: () => selectSection(
-                            HistorySection.collection,
-                            collectionId: collection.id,
-                          ),
-                          onLongPress: () =>
-                              _showCollectionActions(context, ref, collection),
-                          onOptionsPressed: () =>
-                              _showCollectionActions(context, ref, collection),
+                        DragTarget<ClipboardItem>(
+                          key: Key('collection-drop-target-${collection.id}'),
+                          onWillAcceptWithDetails: (details) => true,
+                          onAcceptWithDetails: (details) {
+                            unawaited(
+                              _addItemToCollection(
+                                context,
+                                historyNotifier,
+                                details.data,
+                                collection,
+                              ),
+                            );
+                          },
+                          builder: (context, candidateData, rejectedData) =>
+                              SidebarTileWidget(
+                                icon: CupertinoIcons.folder,
+                                label: _displayCollectionName(
+                                  context,
+                                  collection,
+                                ),
+                                selected:
+                                    state.section ==
+                                        HistorySection.collection &&
+                                    state.collectionId == collection.id,
+                                highlighted: candidateData.isNotEmpty,
+                                onTap: () => selectSection(
+                                  HistorySection.collection,
+                                  collectionId: collection.id,
+                                ),
+                                onLongPress: () => _showCollectionActions(
+                                  context,
+                                  ref,
+                                  collection,
+                                ),
+                                onOptionsPressed: (menuContext) =>
+                                    _showCollectionActions(
+                                      menuContext,
+                                      ref,
+                                      collection,
+                                    ),
+                              ),
                         ),
                     ],
                   ),
@@ -217,31 +245,47 @@ class SidebarWidget extends ConsumerWidget {
     };
   }
 
+  Future<void> _addItemToCollection(
+    BuildContext context,
+    ClipboardHistoryController historyNotifier,
+    ClipboardItem item,
+    ClipboardCollection collection,
+  ) async {
+    await historyNotifier.addToCollection(item.id, collection.id);
+    if (context.mounted) {
+      showCupertinoNotice(
+        context,
+        context.l10n.added_to_collection_named.replaceAll(
+          '@name',
+          _displayCollectionName(context, collection),
+        ),
+      );
+    }
+  }
+
   Future<void> _showCollectionActions(
     BuildContext context,
     WidgetRef ref,
     ClipboardCollection collection,
   ) async {
-    final action = await showCupertinoModalPopup<String>(
+    final action = await showCompactActionMenu(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text(collection.name),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'rename'),
-            child: Text(context.l10n.rename),
-          ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text(context.l10n.delete_collection),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
+      menuKey: const Key('collection-action-menu'),
+      itemKeyPrefix: 'collection-action',
+      actions: [
+        CompactMenuAction(
+          value: 'rename',
+          icon: CupertinoIcons.pencil,
+          label: context.l10n.rename,
         ),
-      ),
+        CompactMenuAction(
+          value: 'delete',
+          icon: CupertinoIcons.trash,
+          label: context.l10n.delete_collection,
+          dividerBefore: true,
+          destructive: true,
+        ),
+      ],
     );
     if (!context.mounted) return;
     if (action == 'delete') {
@@ -288,14 +332,16 @@ class SidebarTileWidget extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.onOptionsPressed,
+    this.highlighted = false,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
+  final bool highlighted;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
-  final VoidCallback? onOptionsPressed;
+  final ValueChanged<BuildContext>? onOptionsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -304,22 +350,35 @@ class SidebarTileWidget extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 2),
       child: GestureDetector(
         onLongPress: onLongPress,
-        onSecondaryTap: onOptionsPressed ?? onLongPress,
+        onSecondaryTap: onOptionsPressed != null
+            ? () => onOptionsPressed!(context)
+            : onLongPress,
         child: CupertinoPressable(
           onPressed: onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              color: selected ? primary : const Color(0x00000000),
+              color: selected
+                  ? primary
+                  : highlighted
+                  ? primary.withValues(alpha: 0.16)
+                  : const Color(0x00000000),
               borderRadius: BorderRadius.circular(9),
+              border: highlighted && !selected
+                  ? Border.all(color: primary, width: 1.5)
+                  : null,
             ),
             child: Row(
               children: [
                 Icon(
                   icon,
                   size: 16,
-                  color: selected ? CupertinoColors.white : null,
+                  color: selected
+                      ? CupertinoColors.white
+                      : highlighted
+                      ? primary
+                      : null,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -327,20 +386,30 @@ class SidebarTileWidget extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                      color: selected ? CupertinoColors.white : null,
+                      fontWeight: selected || highlighted
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: selected
+                          ? CupertinoColors.white
+                          : highlighted
+                          ? primary
+                          : null,
                     ),
                   ),
                 ),
                 if (onOptionsPressed != null) ...[
                   const SizedBox(width: 4),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.ellipsis,
-                    size: 14,
-                    color: selected
-                        ? CupertinoColors.white
-                        : resolveColor(context, ClipFlowColors.secondaryText),
-                    onPressed: onOptionsPressed,
+                  Builder(
+                    builder: (menuContext) => CupertinoIconControl(
+                      icon: CupertinoIcons.ellipsis,
+                      size: 14,
+                      color: selected
+                          ? CupertinoColors.white
+                          : highlighted
+                          ? primary
+                          : resolveColor(context, ClipFlowColors.secondaryText),
+                      onPressed: () => onOptionsPressed!(menuContext),
+                    ),
                   ),
                 ],
               ],

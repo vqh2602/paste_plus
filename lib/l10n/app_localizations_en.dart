@@ -120,6 +120,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit_note => 'Edit note';
 
   @override
+  String get edit_clipboard => 'Edit';
+
+  @override
+  String get clipboard_updated => 'Clipboard updated';
+
+  @override
+  String get clipboard_update_failed => 'Unable to update this clipboard';
+
+  @override
+  String get invalid_color_code => 'Enter a valid color code';
+
+  @override
+  String get open_link => 'Open';
+
+  @override
+  String get paste_as_plain_text => 'Paste as Plain Text';
+
+  @override
+  String get share_clipboard => 'Share';
+
+  @override
+  String get share_failed => 'Unable to share this clipboard';
+
+  @override
   String get note => 'Note';
 
   @override
@@ -139,6 +163,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ask_ai => 'Ask AI Assistant';
+
+  @override
+  String get preview => 'Preview';
 
   @override
   String get delete => 'Delete';
@@ -613,6 +640,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive (Coming soon)';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'FreeImage API Key';
+
+  @override
+  String get imgbb_api_key => 'ImgBB API Key';
+
+  @override
   String get api_key_placeholder => 'Enter API key...';
 
   @override
@@ -886,6 +925,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get added_to_collection => 'Added to collection';
+
+  @override
+  String get added_to_collection_named => 'Added to collection \"@name\"';
 
   @override
   String get all_cleared => 'Clipboard history cleared';

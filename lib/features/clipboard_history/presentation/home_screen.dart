@@ -13,9 +13,12 @@ import '../../../core/services/update_service.dart';
 import '../../../core/ui/app_window_controls.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../ai/presentation/ai_chat_screen.dart';
-import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import 'quick_panel_screen.dart';
+import 'widgets/clipboard_action_menu.dart';
+import 'widgets/clipboard_edit_dialog.dart';
+import 'widgets/clipboard_preview_dialog.dart';
+import 'widgets/clipboard_share.dart';
 import 'widgets/detail_pane_widget.dart';
 import 'widgets/history_pane_widget.dart';
 import 'widgets/note_edit_dialog.dart';
@@ -174,7 +177,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           .read(historyControllerProvider.notifier)
           .addToCollection(item.id, collection.id);
       if (!mounted) return;
-      showCupertinoNotice(context, context.l10n.added_to_collection);
+      showCupertinoNotice(
+        context,
+        context.l10n.added_to_collection_named.replaceAll(
+          '@name',
+          collection.name,
+        ),
+      );
     }
   }
 
@@ -186,63 +195,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ValueChanged<ClipboardItem> onAddToCollection,
   ) async {
     final historyNotifier = ref.read(historyControllerProvider.notifier);
-    final isImage = item.contentType == ClipboardContentType.image;
 
-    final action = await showCupertinoModalPopup<String>(
-      context: context,
-      builder: (context) => CupertinoActionSheet(
-        actions: [
-          if (isImage) ...[
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, 'ocr'),
-              child: Text(context.l10n.extract_ocr),
-            ),
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, 'cloud_upload'),
-              child: Text(context.l10n.upload_cloud),
-            ),
-          ] else ...[
-            CupertinoActionSheetAction(
-              onPressed: () => Navigator.pop(context, 'translate'),
-              child: Text(context.l10n.translate_text),
-            ),
-          ],
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'note'),
-            child: Text(
-              item.note?.isNotEmpty == true
-                  ? context.l10n.edit_note
-                  : context.l10n.add_note,
-            ),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'ask_ai'),
-            child: Text(context.l10n.ask_ai),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'copy'),
-            child: Text(context.l10n.copy),
-          ),
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'collection'),
-            child: Text(context.l10n.add_to_collection),
-          ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text(context.l10n.delete),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
-        ),
-      ),
-    );
+    final action = await showClipboardActionMenu(context: context, item: item);
 
     if (!context.mounted || action == null) return;
 
-    if (action == 'note') {
+    if (action == 'open') {
+      final url = openableClipboardUrl(item);
+      if (url != null) {
+        await ref.read(desktopIntegrationProvider).openUrl(url);
+      }
+    } else if (action == 'paste_plain') {
+      final copied = await historyNotifier.copyAsPlainText(item);
+      if (copied) {
+        final desktop = ref.read(desktopIntegrationProvider);
+        await desktop.hideQuickPanel();
+        await desktop.pasteToPreviousApplication();
+      }
+    } else if (action == 'share') {
+      final shared = await shareClipboardItem(context, item);
+      if (!shared && context.mounted) {
+        showCupertinoNotice(context, context.l10n.share_failed);
+      }
+    } else if (action == 'preview') {
+      await showClipboardPreviewDialog(
+        context: context,
+        item: item,
+        onCopy: () => historyNotifier.copy(item),
+      );
+    } else if (action == 'edit') {
+      final updated = await showClipboardEditDialog(context, ref, item);
+      if (updated && context.mounted) {
+        showCupertinoNotice(context, context.l10n.clipboard_updated);
+      }
+    } else if (action == 'note') {
       await showNoteEditDialog(context, ref, item);
     } else if (action == 'ask_ai') {
       ref.read(aiControllerProvider.notifier).setClipboardContext(item);

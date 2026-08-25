@@ -10,6 +10,7 @@ import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import 'clipboard_preview_dialog.dart';
 
 class QuickClipboardCardWidget extends ConsumerWidget {
   const QuickClipboardCardWidget({
@@ -110,9 +111,9 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                   CupertinoIconControl(
                     icon:
                         (ref.watch(pinnedStateOverrideProvider)[item.id] ??
-                                item.isPinned)
-                            ? CupertinoIcons.pin_fill
-                            : CupertinoIcons.pin,
+                            item.isPinned)
+                        ? CupertinoIcons.pin_fill
+                        : CupertinoIcons.pin,
                     color: CupertinoColors.white,
                     size: 16,
                     onPressed: () async {
@@ -129,11 +130,14 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                           .clearPinned(item.id);
                     },
                   ),
-                  CupertinoIconControl(
-                    icon: CupertinoIcons.ellipsis,
-                    color: CupertinoColors.white,
-                    size: 17,
-                    onPressed: () => onActions(context),
+                  Builder(
+                    builder: (menuContext) => CupertinoIconControl(
+                      key: const Key('quick-item-more-button'),
+                      icon: CupertinoIcons.ellipsis,
+                      color: CupertinoColors.white,
+                      size: 17,
+                      onPressed: () => onActions(menuContext),
+                    ),
                   ),
                 ],
               ),
@@ -158,9 +162,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                           context,
                                           ClipFlowColors.surface,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,
@@ -169,9 +171,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                         ),
                                       ),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          8,
-                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                         child:
                                             (item.imagePath != null &&
                                                 File(
@@ -217,9 +217,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                           context,
                                           ClipFlowColors.surface,
                                         ),
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,
@@ -228,9 +226,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                         ),
                                       ),
                                       child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(
-                                          8,
-                                        ),
+                                        borderRadius: BorderRadius.circular(8),
                                         child: CachedNetworkImage(
                                           url: item.content,
                                           width: double.infinity,
@@ -261,9 +257,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                       width: double.infinity,
                                       decoration: BoxDecoration(
                                         color: parsedColor,
-                                        borderRadius: BorderRadius.circular(
-                                          9,
-                                        ),
+                                        borderRadius: BorderRadius.circular(9),
                                         border: Border.all(
                                           color: resolveColor(
                                             context,
@@ -328,16 +322,7 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(13, 0, 13, 10),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              item.sourceAppName ?? context.l10n.this_device,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: ClipFlowColors.secondaryText,
-                              ),
-                            ),
-                          ),
+                          Expanded(child: _SourceAndMetadata(item: item)),
                           if (number <= 9)
                             Text(
                               '${Platform.isMacOS ? '⌘' : 'Ctrl+'}$number',
@@ -394,4 +379,64 @@ class QuickClipboardCardWidget extends ConsumerWidget {
         ClipboardContentType.file => context.l10n.file,
         ClipboardContentType.image => context.l10n.image,
       };
+}
+
+class _SourceAndMetadata extends StatelessWidget {
+  const _SourceAndMetadata({required this.item});
+
+  final ClipboardItem item;
+
+  static const _style = TextStyle(
+    fontSize: 11,
+    color: ClipFlowColors.secondaryText,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final metadata = _metadata(context);
+    return Row(
+      children: [
+        Flexible(
+          child: Text(
+            item.sourceAppName ?? context.l10n.this_device,
+            key: Key('quick-card-source-${item.id}'),
+            overflow: TextOverflow.ellipsis,
+            style: _style,
+          ),
+        ),
+        if (metadata != null) ...[const Text(' · ', style: _style), metadata],
+      ],
+    );
+  }
+
+  Widget? _metadata(BuildContext context) {
+    if (item.contentType == ClipboardContentType.text) {
+      return Text(
+        '${item.content.runes.length} ${context.l10n.chars_unit}',
+        key: Key('quick-card-text-metadata-${item.id}'),
+        style: _style,
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.image ||
+        isImageUrl(item.content)) {
+      return ImageDimensionsText(
+        path: item.imagePath ?? item.content,
+        textKey: Key('quick-card-image-metadata-${item.id}'),
+        style: _style,
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.color) {
+      final format = ColorParser.formatName(item.content);
+      if (format != null) {
+        return Text(
+          format,
+          key: Key('quick-card-color-metadata-${item.id}'),
+          style: _style,
+        );
+      }
+    }
+    return null;
+  }
 }

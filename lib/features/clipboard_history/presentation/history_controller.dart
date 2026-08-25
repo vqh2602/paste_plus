@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -336,6 +337,26 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     );
   }
 
+  Future<bool> copyAsPlainText(ClipboardItem item) async {
+    if (item.content.trim().isEmpty) return false;
+    await _watcher.write(ClipboardPayload(text: item.content));
+    await _repository.markCopied(item.id);
+    final copiedAt = DateTime.now();
+    state = state.copyWith(
+      items: [
+        for (final current in state.items)
+          if (current.id == item.id)
+            current.copyWith(
+              lastCopiedAt: copiedAt,
+              copyCount: current.copyCount + 1,
+            )
+          else
+            current,
+      ],
+    );
+    return true;
+  }
+
   Future<void> togglePinned(ClipboardItem item) async {
     final newPinState = !item.isPinned;
     await _repository.setPinned(item.id, newPinState);
@@ -355,6 +376,28 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
       ],
     );
     await onItemMetadataChanged?.call(updated);
+  }
+
+  Future<ClipboardItem?> updateItemContent(
+    ClipboardItem item, {
+    required String content,
+    Uint8List? imageBytes,
+  }) async {
+    if (_repository is! EditableClipboardRepository) return null;
+    final repository = _repository as EditableClipboardRepository;
+    final updated = await repository.updateItemContent(
+      item,
+      content: content,
+      imageBytes: imageBytes,
+    );
+    state = state.copyWith(
+      items: [
+        for (final current in state.items)
+          if (current.id == item.id) updated else current,
+      ],
+    );
+    await onItemMetadataChanged?.call(updated);
+    return updated;
   }
 
   Future<void> delete(ClipboardItem item) async {

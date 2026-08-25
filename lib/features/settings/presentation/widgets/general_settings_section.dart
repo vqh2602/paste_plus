@@ -7,7 +7,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers.dart';
 
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../l10n/app_localizations.dart';
 import 'settings_helpers.dart';
+
+const appLanguageNativeNames = <String, String>{
+  'vi': 'Tiếng Việt',
+  'en': 'English',
+  'ja': '日本語',
+  'ko': '한국어',
+  'de': 'Deutsch',
+  'zh': '简体中文',
+};
+
+Map<String, String> supportedAppLanguageItems() => {
+  for (final locale in AppLocalizations.supportedLocales)
+    locale.languageCode:
+        appLanguageNativeNames[locale.languageCode] ?? locale.toLanguageTag(),
+};
 
 class GeneralSettingsSection extends ConsumerWidget {
   const GeneralSettingsSection({super.key});
@@ -211,7 +227,7 @@ class GeneralSettingsSection extends ConsumerWidget {
             PickerRowWidget<String>(
               title: context.l10n.app_language,
               value: settings.language,
-              items: const {'vi': 'Tiếng Việt', 'en': 'English'},
+              items: supportedAppLanguageItems(),
               onChanged: (value) => updateSettings(
                 ref,
                 (current) => current.copyWith(language: value),
@@ -249,7 +265,8 @@ class GeneralSettingsSection extends ConsumerWidget {
               subtitle: context.l10n.cloud_provider_sub,
               value: settings.cloudImageHost,
               items: {
-                'freeimage': context.l10n.cloud_in_use,
+                'freeimage': context.l10n.cloud_provider_freeimage,
+                'imgbb': context.l10n.cloud_provider_imgbb,
                 'gdrive': context.l10n.cloud_coming_soon,
               },
               onChanged: (value) {
@@ -260,15 +277,26 @@ class GeneralSettingsSection extends ConsumerWidget {
                 );
               },
             ),
-            TextRowWidget(
-              title: 'FreeImage API Key',
-              value: settings.freeImageApiKey,
-              placeholder: context.l10n.api_key_placeholder,
-              onChanged: (value) => updateSettings(
-                ref,
-                (current) => current.copyWith(freeImageApiKey: value),
+            if (settings.cloudImageHost == 'imgbb')
+              TextRowWidget(
+                title: context.l10n.imgbb_api_key,
+                value: settings.imgBbApiKey,
+                placeholder: context.l10n.api_key_placeholder,
+                onChanged: (value) => updateSettings(
+                  ref,
+                  (current) => current.copyWith(imgBbApiKey: value),
+                ),
+              )
+            else
+              TextRowWidget(
+                title: context.l10n.freeimage_api_key,
+                value: settings.freeImageApiKey,
+                placeholder: context.l10n.api_key_placeholder,
+                onChanged: (value) => updateSettings(
+                  ref,
+                  (current) => current.copyWith(freeImageApiKey: value),
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 14),

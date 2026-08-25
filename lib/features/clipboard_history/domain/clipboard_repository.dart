@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../settings/domain/app_settings.dart';
 import 'clipboard_content_type.dart';
 import 'clipboard_item.dart';
@@ -55,8 +57,18 @@ abstract interface class StructuredClipboardRepository {
   Future<ClipboardCollection?> findCollectionByName(String name);
 }
 
+abstract interface class EditableClipboardRepository {
+  Future<ClipboardItem> updateItemContent(
+    ClipboardItem item, {
+    required String content,
+    Uint8List? imageBytes,
+  });
+}
+
 extension DeepClipboardRepository on ClipboardRepository {
-  Future<ClipboardSearchPage> searchStructured(ClipboardSearchQuery query) async {
+  Future<ClipboardSearchPage> searchStructured(
+    ClipboardSearchQuery query,
+  ) async {
     if (this is StructuredClipboardRepository) {
       return (this as StructuredClipboardRepository).search(query);
     }
@@ -68,20 +80,29 @@ extension DeepClipboardRepository on ClipboardRepository {
           !query.contentTypes.contains(item.contentType)) {
         return false;
       }
-      if (query.containsUrl == true && !item.containsUrl &&
-          !RegExp(r'https?://|www\.', caseSensitive: false).hasMatch(item.content)) {
+      if (query.containsUrl == true &&
+          !item.containsUrl &&
+          !RegExp(
+            r'https?://|www\.',
+            caseSensitive: false,
+          ).hasMatch(item.content)) {
         return false;
       }
       if (query.urlHosts.isNotEmpty) {
         final host = item.urlHost?.toLowerCase();
         if (host == null ||
-            !query.urlHosts.any((wanted) => host == wanted || host.endsWith('.$wanted'))) {
+            !query.urlHosts.any(
+              (wanted) => host == wanted || host.endsWith('.$wanted'),
+            )) {
           return false;
         }
       }
       if (query.sourceApps.isNotEmpty &&
-          !query.sourceApps.any((app) =>
-              (item.sourceAppName ?? '').toLowerCase().contains(app.toLowerCase()))) {
+          !query.sourceApps.any(
+            (app) => (item.sourceAppName ?? '').toLowerCase().contains(
+              app.toLowerCase(),
+            ),
+          )) {
         return false;
       }
       if (query.fileExtensions.isNotEmpty &&
@@ -89,23 +110,32 @@ extension DeepClipboardRepository on ClipboardRepository {
         return false;
       }
       if (query.pinned != null && item.isPinned != query.pinned) return false;
-      if (range?.from != null && item.createdAt.isBefore(range!.from!)) return false;
-      if (range?.to != null && !item.createdAt.isBefore(range!.to!)) return false;
+      if (range?.from != null && item.createdAt.isBefore(range!.from!)) {
+        return false;
+      }
+      if (range?.to != null && !item.createdAt.isBefore(range!.to!)) {
+        return false;
+      }
       final text = query.textQuery?.trim().toLowerCase();
       if (text?.isNotEmpty == true) {
         final haystack = item.searchableText.isNotEmpty
             ? item.searchableText
-            : '${item.content} ${item.note ?? ''} ${item.sourceAppName ?? ''}'.toLowerCase();
+            : '${item.content} ${item.note ?? ''} ${item.sourceAppName ?? ''}'
+                  .toLowerCase();
         if (!text!.split(RegExp(r'\s+')).every(haystack.contains)) return false;
       }
       return true;
     }).toList();
-    items.sort((a, b) => switch (query.sort) {
-      ClipboardSort.oldest => a.createdAt.compareTo(b.createdAt),
-      ClipboardSort.mostCopied => b.copyCount.compareTo(a.copyCount),
-      ClipboardSort.recentlyCopied => b.lastCopiedAt.compareTo(a.lastCopiedAt),
-      ClipboardSort.newest => b.createdAt.compareTo(a.createdAt),
-    });
+    items.sort(
+      (a, b) => switch (query.sort) {
+        ClipboardSort.oldest => a.createdAt.compareTo(b.createdAt),
+        ClipboardSort.mostCopied => b.copyCount.compareTo(a.copyCount),
+        ClipboardSort.recentlyCopied => b.lastCopiedAt.compareTo(
+          a.lastCopiedAt,
+        ),
+        ClipboardSort.newest => b.createdAt.compareTo(a.createdAt),
+      },
+    );
     final total = items.length;
     items = items.skip(query.offset).take(query.limit).toList(growable: false);
     return ClipboardSearchPage(
@@ -122,7 +152,10 @@ extension DeepClipboardRepository on ClipboardRepository {
     final wanted = ids.toSet();
     final items = await getItems(limit: 2000);
     final byId = {for (final item in items) item.id: item};
-    return [for (final id in ids) if (wanted.contains(id) && byId[id] != null) byId[id]!];
+    return [
+      for (final id in ids)
+        if (wanted.contains(id) && byId[id] != null) byId[id]!,
+    ];
   }
 
   Future<void> setPinnedBatch(List<String> ids, bool pinned) async {
@@ -143,10 +176,15 @@ extension DeepClipboardRepository on ClipboardRepository {
     }
   }
 
-  Future<void> addBatchToCollection(List<String> ids, String collectionId) async {
+  Future<void> addBatchToCollection(
+    List<String> ids,
+    String collectionId,
+  ) async {
     if (this is StructuredClipboardRepository) {
-      return (this as StructuredClipboardRepository)
-          .addItemsToCollection(ids, collectionId);
+      return (this as StructuredClipboardRepository).addItemsToCollection(
+        ids,
+        collectionId,
+      );
     }
     for (final id in ids) {
       await addToCollection(id, collectionId);

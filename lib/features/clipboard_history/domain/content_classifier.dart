@@ -20,7 +20,7 @@ class ContentClassifier {
   );
   static final RegExp _phone = RegExp(r'^\+?[0-9][0-9 ()-]{6,18}$');
   static final RegExp _filePath = RegExp(
-    r'^(?:/[^\n]+|[A-Za-z]:\\[^\n]+|file://[^\n]+)$',
+    r'^(?:/[^\n]+|[A-Za-z]:[\\/][^\n]+|\\\\[^\\/\n]+[\\/][^\n]+|file://[^\n]+)$',
   );
 
   static ClipboardContentType classify(String raw) {
@@ -35,9 +35,18 @@ class ContentClassifier {
     if (_email.hasMatch(value)) return ClipboardContentType.email;
     if (ColorParser.parse(value) != null) return ClipboardContentType.color;
     if (_phone.hasMatch(value)) return ClipboardContentType.phone;
-    if (_filePath.hasMatch(value)) return ClipboardContentType.file;
+    if (_isFilePathList(value)) return ClipboardContentType.file;
     if (_looksLikeCode(value)) return ClipboardContentType.code;
     return ClipboardContentType.text;
+  }
+
+  static bool _isFilePathList(String value) {
+    final paths = value
+        .split('\n')
+        .map((path) => path.trim())
+        .where((path) => path.isNotEmpty)
+        .toList(growable: false);
+    return paths.isNotEmpty && paths.every(_filePath.hasMatch);
   }
 
   static bool _isJson(String value) {

@@ -161,18 +161,46 @@ class HistoryPaneWidget extends ConsumerWidget {
                         index: index,
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: ClipboardCardWidget(
-                            key: const Key('clipboard-item'),
-                            item: item,
-                            selected: item.id == state.selectedItemId,
-                            onTap: () {
-                              historyNotifier.select(item.id);
-                              onCopy(item);
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              Widget buildCard({Key? key}) {
+                                return ClipboardCardWidget(
+                                  key: key,
+                                  item: item,
+                                  selected: item.id == state.selectedItemId,
+                                  onTap: () {
+                                    historyNotifier.select(item.id);
+                                    onCopy(item);
+                                  },
+                                  onCopy: onCopy,
+                                  onDelete: onDelete,
+                                  onAddToCollection: onAddToCollection,
+                                  onShowItemActions: onShowItemActions,
+                                );
+                              }
+
+                              if (compact) {
+                                return buildCard(
+                                  key: const Key('clipboard-item'),
+                                );
+                              }
+
+                              return Draggable<ClipboardItem>(
+                                data: item,
+                                affinity: Axis.horizontal,
+                                maxSimultaneousDrags: 1,
+                                feedback: SizedBox(
+                                  width: constraints.maxWidth,
+                                  child: Opacity(
+                                    opacity: 0.9,
+                                    child: buildCard(),
+                                  ),
+                                ),
+                                child: buildCard(
+                                  key: const Key('clipboard-item'),
+                                ),
+                              );
                             },
-                            onCopy: onCopy,
-                            onDelete: onDelete,
-                            onAddToCollection: onAddToCollection,
-                            onShowItemActions: onShowItemActions,
                           ),
                         ),
                       );

@@ -10,6 +10,7 @@ import 'app_localizations_en.dart';
 import 'app_localizations_ja.dart';
 import 'app_localizations_ko.dart';
 import 'app_localizations_vi.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -102,6 +103,7 @@ abstract class AppLocalizations {
     Locale('ja'),
     Locale('ko'),
     Locale('vi'),
+    Locale('zh'),
   ];
 
   /// No description provided for @aiTitle.
@@ -326,6 +328,54 @@ abstract class AppLocalizations {
   /// **'Edit note'**
   String get edit_note;
 
+  /// No description provided for @edit_clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit_clipboard;
+
+  /// No description provided for @clipboard_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Clipboard updated'**
+  String get clipboard_updated;
+
+  /// No description provided for @clipboard_update_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to update this clipboard'**
+  String get clipboard_update_failed;
+
+  /// No description provided for @invalid_color_code.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid color code'**
+  String get invalid_color_code;
+
+  /// No description provided for @open_link.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open_link;
+
+  /// No description provided for @paste_as_plain_text.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste as Plain Text'**
+  String get paste_as_plain_text;
+
+  /// No description provided for @share_clipboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get share_clipboard;
+
+  /// No description provided for @share_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to share this clipboard'**
+  String get share_failed;
+
   /// No description provided for @note.
   ///
   /// In en, this message translates to:
@@ -367,6 +417,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ask AI Assistant'**
   String get ask_ai;
+
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
 
   /// No description provided for @delete.
   ///
@@ -1274,6 +1330,30 @@ abstract class AppLocalizations {
   /// **'Google Drive (Coming soon)'**
   String get cloud_coming_soon;
 
+  /// No description provided for @cloud_provider_freeimage.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeImage.host'**
+  String get cloud_provider_freeimage;
+
+  /// No description provided for @cloud_provider_imgbb.
+  ///
+  /// In en, this message translates to:
+  /// **'ImgBB'**
+  String get cloud_provider_imgbb;
+
+  /// No description provided for @freeimage_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeImage API Key'**
+  String get freeimage_api_key;
+
+  /// No description provided for @imgbb_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'ImgBB API Key'**
+  String get imgbb_api_key;
+
   /// No description provided for @api_key_placeholder.
   ///
   /// In en, this message translates to:
@@ -1801,6 +1881,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Added to collection'**
   String get added_to_collection;
+
+  /// No description provided for @added_to_collection_named.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to collection \"@name\"'**
+  String get added_to_collection_named;
 
   /// No description provided for @all_cleared.
   ///
@@ -3067,8 +3153,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['de', 'en', 'ja', 'ko', 'vi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'ja',
+    'ko',
+    'vi',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3087,6 +3179,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsKo();
     case 'vi':
       return AppLocalizationsVi();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

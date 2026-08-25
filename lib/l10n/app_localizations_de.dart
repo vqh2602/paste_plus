@@ -120,6 +120,31 @@ class AppLocalizationsDe extends AppLocalizations {
   String get edit_note => 'Notiz bearbeiten';
 
   @override
+  String get edit_clipboard => 'Bearbeiten';
+
+  @override
+  String get clipboard_updated => 'Zwischenablage aktualisiert';
+
+  @override
+  String get clipboard_update_failed =>
+      'Zwischenablage konnte nicht aktualisiert werden';
+
+  @override
+  String get invalid_color_code => 'Gültigen Farbcode eingeben';
+
+  @override
+  String get open_link => 'Öffnen';
+
+  @override
+  String get paste_as_plain_text => 'Als reinen Text einfügen';
+
+  @override
+  String get share_clipboard => 'Teilen';
+
+  @override
+  String get share_failed => 'Zwischenablage konnte nicht geteilt werden';
+
+  @override
   String get note => 'Notiz';
 
   @override
@@ -140,6 +165,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get ask_ai => 'KI-Assistenten fragen';
+
+  @override
+  String get preview => 'Vorschau';
 
   @override
   String get delete => 'Löschen';
@@ -627,6 +655,18 @@ class AppLocalizationsDe extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive (Demnächst)';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'FreeImage-API-Schlüssel';
+
+  @override
+  String get imgbb_api_key => 'ImgBB-API-Schlüssel';
+
+  @override
   String get api_key_placeholder => 'API-Schlüssel eingeben...';
 
   @override
@@ -908,6 +948,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get added_to_collection => 'Zur Sammlung hinzugefügt';
+
+  @override
+  String get added_to_collection_named => 'Zur Sammlung \"@name\" hinzugefügt';
 
   @override
   String get all_cleared => 'Clipboard-Verlauf gelöscht';

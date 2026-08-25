@@ -39,5 +39,7 @@ void main() {
     expect(locale.languageCode, 'zh');
     expect(locale.scriptCode, 'Hans');
     expect(locale.countryCode, 'CN');
+    expect(AiLanguageRegistry.normalizeTag('zh'), 'zh-Hans-CN');
+    expect(AiLanguageRegistry.normalizeTag('zh-CN'), 'zh-Hans-CN');
   });
 }

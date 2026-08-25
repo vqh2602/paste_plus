@@ -120,6 +120,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get edit_note => 'Sửa ghi chú';
 
   @override
+  String get edit_clipboard => 'Chỉnh sửa';
+
+  @override
+  String get clipboard_updated => 'Đã cập nhật clipboard';
+
+  @override
+  String get clipboard_update_failed => 'Không thể cập nhật clipboard này';
+
+  @override
+  String get invalid_color_code => 'Hãy nhập mã màu hợp lệ';
+
+  @override
+  String get open_link => 'Mở';
+
+  @override
+  String get paste_as_plain_text => 'Dán dưới dạng văn bản thuần';
+
+  @override
+  String get share_clipboard => 'Chia sẻ';
+
+  @override
+  String get share_failed => 'Không thể chia sẻ clipboard này';
+
+  @override
   String get note => 'Ghi chú';
 
   @override
@@ -139,6 +163,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ask_ai => 'Hỏi AI Assistant';
+
+  @override
+  String get preview => 'Xem trước';
 
   @override
   String get delete => 'Xóa';
@@ -617,6 +644,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive (Sắp có)';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'Khóa API FreeImage';
+
+  @override
+  String get imgbb_api_key => 'Khóa API ImgBB';
+
+  @override
   String get api_key_placeholder => 'Nhập API key...';
 
   @override
@@ -888,6 +927,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get added_to_collection => 'Đã thêm vào collection';
+
+  @override
+  String get added_to_collection_named => 'Đã thêm vào collection \"@name\"';
 
   @override
   String get all_cleared => 'Đã xóa toàn bộ lịch sử';

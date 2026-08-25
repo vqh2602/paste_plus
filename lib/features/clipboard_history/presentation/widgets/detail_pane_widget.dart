@@ -16,6 +16,7 @@ import '../../../ai/localization/ai_locale_spec.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 
+import 'clipboard_preview_dialog.dart';
 import 'note_edit_dialog.dart';
 
 class DetailPaneWidget extends ConsumerStatefulWidget {
@@ -291,9 +292,7 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                     ),
                     const SizedBox(height: 6),
                     ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxHeight: 60,
-                      ),
+                      constraints: const BoxConstraints(maxHeight: 60),
                       child: CupertinoScrollbar(
                         child: SingleChildScrollView(
                           physics: const BouncingScrollPhysics(),
@@ -363,6 +362,11 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
               label: context.l10n.usage_count,
               value: '${item.copyCount}',
             ),
+            if (_metadataValue(context, item) case final metadata?)
+              MetadataRowWidget(
+                label: context.l10n.details,
+                valueWidget: metadata,
+              ),
             const SizedBox(height: 14),
             if (isImage) ...[
               SizedBox(
@@ -488,6 +492,38 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     );
   }
 
+  Widget? _metadataValue(BuildContext context, ClipboardItem item) {
+    final valueStyle = CupertinoTheme.of(context).textTheme.textStyle;
+    if (item.contentType == ClipboardContentType.text) {
+      return Text(
+        '${item.content.runes.length} ${context.l10n.chars_unit}',
+        key: const Key('detail-pane-text-metadata'),
+        style: valueStyle,
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.image ||
+        isImageUrl(item.content)) {
+      return ImageDimensionsText(
+        path: item.imagePath ?? item.content,
+        textKey: const Key('detail-pane-image-metadata'),
+        style: valueStyle,
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.color) {
+      final format = ColorParser.formatName(item.content);
+      if (format != null) {
+        return Text(
+          format,
+          key: const Key('detail-pane-color-metadata'),
+          style: valueStyle,
+        );
+      }
+    }
+    return null;
+  }
+
   IconData _typeIcon(ClipboardContentType type) => switch (type) {
     ClipboardContentType.text => CupertinoIcons.doc_text,
     ClipboardContentType.url => CupertinoIcons.link,
@@ -603,11 +639,13 @@ class MetadataRowWidget extends StatelessWidget {
   const MetadataRowWidget({
     super.key,
     required this.label,
-    required this.value,
-  });
+    this.value,
+    this.valueWidget,
+  }) : assert((value == null) != (valueWidget == null));
 
   final String label;
-  final String value;
+  final String? value;
+  final Widget? valueWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -623,7 +661,7 @@ class MetadataRowWidget extends StatelessWidget {
               ),
             ),
           ),
-          Text(value),
+          valueWidget ?? Text(value!),
         ],
       ),
     );
