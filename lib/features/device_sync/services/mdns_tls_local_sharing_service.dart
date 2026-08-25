@@ -8,6 +8,7 @@ import 'package:bonsoir/bonsoir.dart';
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:cryptography/cryptography.dart';
 
+import '../../../core/constants/app_version.dart';
 import '../../settings/domain/app_settings.dart';
 import '../domain/local_sharing_protocol.dart';
 import '../domain/local_sharing_state.dart';
@@ -22,7 +23,7 @@ class MdnsTlsLocalSharingService implements LocalSharingService {
   MdnsTlsLocalSharingService({
     DeviceIdentityStore? identityStore,
     this.enableMdns = true,
-    this.appVersion = '1.1.7',
+    this.appVersion = ClipFlowVersion.current,
     this.platformOverride,
     this.reconnectDelayOverride,
   }) : _identityStore =

@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as path;
 
+import '../constants/app_version.dart';
+
 class UpdateInfo {
   const UpdateInfo({
     required this.hasUpdate,
@@ -31,7 +33,7 @@ class UpdateInfo {
 class UpdateService {
   const UpdateService();
 
-  static const String currentVersion = '1.2.0';
+  static const String currentVersion = ClipFlowVersion.current;
   static const MethodChannel _windowChannel = MethodChannel('clipflow/window');
   static bool _autoUpdateChecked = false;
 

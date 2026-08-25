@@ -6,6 +6,8 @@ import 'package:path/path.dart' as path;
 
 void main() {
   test('selects the release asset for the requested platform', () {
+    expect(UpdateService.currentVersion, '2.0.0');
+
     final assets = <Map<String, String>>[
       {
         'name': 'ClipFlow-macOS.zip',

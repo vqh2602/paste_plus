@@ -29,6 +29,7 @@ ClipFlow is built using **Flutter** and follows a **Feature-First Architecture**
 ├── lib/
 │   ├── app/                          # Bootstrap, routing, app providers & themes
 │   ├── core/
+│   │   ├── constants/                # Shared application metadata such as the release version
 │   │   ├── database/                 # SQLite selection, migrations, FTS, embeddings & indexes
 │   │   ├── localization/             # BuildContext localization helpers
 │   │   ├── platform/                 # Hotkeys, tray, auto-paste & startup integrations
@@ -245,5 +246,5 @@ ClipFlow exports portable `.clipflow` ZIP archives with two independently protec
 
 ### GitHub Actions CI/CD Pipeline
 The project incorporates automated multi-platform release workflows configured in `.github/workflows/`:
-- **Triggers**: Pushing a semver release tag (e.g. `v1.0.8`) or triggering release workflows.
+- **Triggers**: Pushing a semver release tag (e.g. `v2.0.0`) or triggering release workflows.
 - **Pipeline Workflow**: Runs localization verification and tests, then builds macOS (`ClipFlow-macOS.zip`), Windows Beta (`ClipFlow-Windows.zip`), unsigned iOS Beta (`ClipFlow-iOS.ipa`), and Android Beta (`ClipFlow-Android.apk`) artifacts. Release workflows attach the platform artifacts to GitHub Releases; iOS artifacts still require user signing/sideloading.

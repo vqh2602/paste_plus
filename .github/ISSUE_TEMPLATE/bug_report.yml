@@ -13,8 +13,8 @@ body:
     id: version
     attributes:
       label: "Phiên bản ClipFlow / ClipFlow Version"
-      description: "Phiên bản ClipFlow bạn đang sử dụng (ví dụ: v1.1.6)"
-      placeholder: "v1.1.6"
+      description: "Phiên bản ClipFlow bạn đang sử dụng (ví dụ: v2.0.0)"
+      placeholder: "v2.0.0"
     validations:
       required: true
 

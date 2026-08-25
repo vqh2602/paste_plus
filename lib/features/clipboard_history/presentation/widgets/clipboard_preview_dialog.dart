@@ -8,6 +8,7 @@ import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show SelectableText;
 
+import '../../../../core/constants/app_version.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
@@ -470,7 +471,10 @@ class _ImageDimensionsTextState extends State<ImageDimensionsText> {
     final client = HttpClient();
     try {
       final request = await client.getUrl(Uri.parse(url));
-      request.headers.set(HttpHeaders.userAgentHeader, 'ClipFlow/1.1.7');
+      request.headers.set(
+        HttpHeaders.userAgentHeader,
+        'ClipFlow/${ClipFlowVersion.current}',
+      );
       final response = await request.close();
       if (response.statusCode != HttpStatus.ok) {
         throw HttpException('Image request failed', uri: Uri.parse(url));

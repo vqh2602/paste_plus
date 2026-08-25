@@ -35,8 +35,8 @@ jobs:
       - name: Run unit tests
         run: flutter test
 
-      - name: Build macOS App (Develop 1.0.0)
-        run: flutter build macos --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+      - name: Build macOS App (Develop 2.0.0)
+        run: flutter build macos --release --build-name="2.0.0" --build-number=${{ github.run_number }}
 
       - name: Create ZIP archive of macOS App
         run: |
@@ -66,8 +66,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build iOS App (Develop 1.0.0 - Unsigned IPA/Payload)
-        run: flutter build ios --release --no-codesign --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+      - name: Build iOS App (Develop 2.0.0 - Unsigned IPA/Payload)
+        run: flutter build ios --release --no-codesign --build-name="2.0.0" --build-number=${{ github.run_number }}
 
       - name: Package iOS payload as ZIP
         run: |
@@ -105,8 +105,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Android APK (Develop 1.0.0)
-        run: flutter build apk --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+      - name: Build Android APK (Develop 2.0.0)
+        run: flutter build apk --release --build-name="2.0.0" --build-number=${{ github.run_number }}
 
       - name: Rename APK
         run: cp build/app/outputs/flutter-apk/app-release.apk ClipFlow-Android-develop.apk
@@ -137,8 +137,8 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Windows App (Develop 1.0.0)
-        run: flutter build windows --release --build-name="1.0.0-develop" --build-number=${{ github.run_number }}
+      - name: Build Windows App (Develop 2.0.0)
+        run: flutter build windows --release --build-name="2.0.0" --build-number=${{ github.run_number }}
 
       - name: Verify and archive the complete Windows bundle
         run: |
@@ -187,14 +187,14 @@ jobs:
         with:
           name: ClipFlow-Windows-develop
 
-      - name: Create or Update GitHub Release (v1.0.0-develop)
+      - name: Create or Update GitHub Release (v2.0.0-develop)
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0-develop
-          name: "ClipFlow v1.0.0-develop"
+          tag_name: v2.0.0-develop
+          name: "ClipFlow v2.0.0-develop"
           body: |
             Build Develop mới nhất tự động từ nhánh `develop`.
-            - Phiên bản: `1.0.0-develop` (Build #${{ github.run_number }})
+            - Phiên bản: `2.0.0-develop` (Build #${{ github.run_number }})
             - Commit: `${{ github.sha }}`
           prerelease: true
           make_latest: false
