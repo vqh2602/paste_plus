@@ -65,6 +65,9 @@ jobs:
             echo "tag=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
           fi
 
+      - name: Extract Changelog from CHANGELOG.md
+        run: python3 tool/extract_changelog.py "${{ steps.tag_info.outputs.tag }}" RELEASE_NOTES.md
+
       - name: Create GitHub Release & Upload macOS Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
@@ -73,7 +76,8 @@ jobs:
           name: Release ${{ steps.tag_info.outputs.tag }}
           draft: ${{ github.event.inputs.draft || false }}
           prerelease: ${{ github.event.inputs.prerelease || false }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
           files: |
             build/macos/Build/Products/Release/ClipFlow-macOS.zip
         env:
@@ -117,6 +121,10 @@ jobs:
           }
         shell: powershell
 
+      - name: Extract Changelog from CHANGELOG.md
+        run: python tool/extract_changelog.py "${{ steps.tag_info.outputs.tag }}" RELEASE_NOTES.md
+        shell: bash
+
       - name: Create GitHub Release & Upload Windows Asset
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
@@ -125,7 +133,8 @@ jobs:
           name: Release ${{ steps.tag_info.outputs.tag }}
           draft: ${{ github.event.inputs.draft || false }}
           prerelease: ${{ github.event.inputs.prerelease || false }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
           files: ClipFlow-Windows.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -176,6 +185,9 @@ jobs:
           name: ClipFlow-iOS
           path: build/ios/iphoneos/ClipFlow-iOS.ipa
 
+      - name: Extract Changelog from CHANGELOG.md
+        run: python3 tool/extract_changelog.py "${{ steps.tag_info.outputs.tag }}" RELEASE_NOTES.md
+
       - name: Upload iOS asset to GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
@@ -184,7 +196,8 @@ jobs:
           name: Release ${{ steps.tag_info.outputs.tag }}
           draft: ${{ github.event.inputs.draft || false }}
           prerelease: ${{ github.event.inputs.prerelease || false }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
           files: build/ios/iphoneos/ClipFlow-iOS.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -237,6 +250,9 @@ jobs:
           name: ClipFlow-Android
           path: ClipFlow-Android.apk
 
+      - name: Extract Changelog from CHANGELOG.md
+        run: python3 tool/extract_changelog.py "${{ steps.tag_info.outputs.tag }}" RELEASE_NOTES.md
+
       - name: Upload Android asset to GitHub Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
@@ -245,7 +261,8 @@ jobs:
           name: Release ${{ steps.tag_info.outputs.tag }}
           draft: ${{ github.event.inputs.draft || false }}
           prerelease: ${{ github.event.inputs.prerelease || false }}
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
           files: ClipFlow-Android.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
