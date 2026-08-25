@@ -95,6 +95,10 @@ abstract final class AiLanguageRegistry {
       'Japanese': 'ja-JP',
       'ko': 'ko-KR',
       'Korean': 'ko-KR',
+      'zh': 'zh-Hans-CN',
+      'zh-CN': 'zh-Hans-CN',
+      'Chinese': 'zh-Hans-CN',
+      'Simplified Chinese': 'zh-Hans-CN',
       'de': 'de-DE',
       'German': 'de-DE',
     };

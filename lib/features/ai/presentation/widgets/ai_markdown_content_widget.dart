@@ -356,6 +356,8 @@ bool _isImageUrl(String url) {
   const domains = [
     'iili.io',
     'freeimage.host',
+    'i.ibb.co',
+    'ibb.co',
     'imgur.com',
     'gyazo.com',
     'cloudinary.com',

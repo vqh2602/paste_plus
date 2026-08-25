@@ -19,6 +19,7 @@ class AppSettings {
     this.targetTranslationLanguage = 'vi',
     this.cloudImageHost = 'freeimage',
     this.freeImageApiKey = '6d207e02198a847aa98d0a2a901485a5',
+    this.imgBbApiKey = '670005d0dea70dbc4350f1ff1ad1dc33',
     this.ignoreDuplicates = true,
     this.ignoreSensitive = true,
     this.ignoreOtp = true,
@@ -91,6 +92,7 @@ class AppSettings {
   final String targetTranslationLanguage;
   final String cloudImageHost;
   final String freeImageApiKey;
+  final String imgBbApiKey;
   final bool ignoreDuplicates;
   final bool ignoreSensitive;
   final bool ignoreOtp;
@@ -140,6 +142,7 @@ class AppSettings {
     String? targetTranslationLanguage,
     String? cloudImageHost,
     String? freeImageApiKey,
+    String? imgBbApiKey,
     bool? ignoreDuplicates,
     bool? ignoreSensitive,
     bool? ignoreOtp,
@@ -194,6 +197,7 @@ class AppSettings {
           targetTranslationLanguage ?? this.targetTranslationLanguage,
       cloudImageHost: cloudImageHost ?? this.cloudImageHost,
       freeImageApiKey: freeImageApiKey ?? this.freeImageApiKey,
+      imgBbApiKey: imgBbApiKey ?? this.imgBbApiKey,
       ignoreDuplicates: ignoreDuplicates ?? this.ignoreDuplicates,
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
       ignoreOtp: ignoreOtp ?? this.ignoreOtp,
@@ -245,6 +249,7 @@ class AppSettings {
     'targetTranslationLanguage': targetTranslationLanguage,
     'cloudImageHost': cloudImageHost,
     'freeImageApiKey': freeImageApiKey,
+    'imgBbApiKey': imgBbApiKey,
     'ignoreDuplicates': ignoreDuplicates,
     'ignoreSensitive': ignoreSensitive,
     'ignoreOtp': ignoreOtp,
@@ -313,6 +318,7 @@ class AppSettings {
         'freeImageApiKey',
         '6d207e02198a847aa98d0a2a901485a5',
       ),
+      imgBbApiKey: value('imgBbApiKey', '670005d0dea70dbc4350f1ff1ad1dc33'),
       ignoreDuplicates: value('ignoreDuplicates', true),
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),

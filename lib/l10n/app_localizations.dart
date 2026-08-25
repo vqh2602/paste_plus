@@ -10,6 +10,7 @@ import 'app_localizations_en.dart';
 import 'app_localizations_ja.dart';
 import 'app_localizations_ko.dart';
 import 'app_localizations_vi.dart';
+import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
 
@@ -102,6 +103,7 @@ abstract class AppLocalizations {
     Locale('ja'),
     Locale('ko'),
     Locale('vi'),
+    Locale('zh'),
   ];
 
   /// No description provided for @aiTitle.
@@ -1327,6 +1329,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google Drive (Coming soon)'**
   String get cloud_coming_soon;
+
+  /// No description provided for @cloud_provider_freeimage.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeImage.host'**
+  String get cloud_provider_freeimage;
+
+  /// No description provided for @cloud_provider_imgbb.
+  ///
+  /// In en, this message translates to:
+  /// **'ImgBB'**
+  String get cloud_provider_imgbb;
+
+  /// No description provided for @freeimage_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'FreeImage API Key'**
+  String get freeimage_api_key;
+
+  /// No description provided for @imgbb_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'ImgBB API Key'**
+  String get imgbb_api_key;
 
   /// No description provided for @api_key_placeholder.
   ///
@@ -3127,8 +3153,14 @@ class _AppLocalizationsDelegate
   }
 
   @override
-  bool isSupported(Locale locale) =>
-      <String>['de', 'en', 'ja', 'ko', 'vi'].contains(locale.languageCode);
+  bool isSupported(Locale locale) => <String>[
+    'de',
+    'en',
+    'ja',
+    'ko',
+    'vi',
+    'zh',
+  ].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -3147,6 +3179,8 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
       return AppLocalizationsKo();
     case 'vi':
       return AppLocalizationsVi();
+    case 'zh':
+      return AppLocalizationsZh();
   }
 
   throw FlutterError(

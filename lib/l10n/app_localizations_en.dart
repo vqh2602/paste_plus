@@ -640,6 +640,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive (Coming soon)';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'FreeImage API Key';
+
+  @override
+  String get imgbb_api_key => 'ImgBB API Key';
+
+  @override
   String get api_key_placeholder => 'Enter API key...';
 
   @override

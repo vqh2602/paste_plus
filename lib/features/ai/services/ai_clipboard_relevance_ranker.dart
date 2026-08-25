@@ -149,6 +149,8 @@ class AiClipboardRelevanceRanker {
   static const _imageHostDomains = {
     'iili.io',
     'freeimage.host',
+    'i.ibb.co',
+    'ibb.co',
     'imgur.com',
     'gyazo.com',
     'cloudinary.com',

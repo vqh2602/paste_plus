@@ -627,6 +627,18 @@ class AppLocalizationsJa extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive（近日公開）';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'FreeImage APIキー';
+
+  @override
+  String get imgbb_api_key => 'ImgBB APIキー';
+
+  @override
   String get api_key_placeholder => 'APIキーを入力...';
 
   @override

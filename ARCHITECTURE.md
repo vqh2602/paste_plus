@@ -1,13 +1,13 @@
 # ClipFlow Technical Architecture & Developer Guide 🛠️
 
-Welcome to the technical architecture documentation for **ClipFlow** (Paste Plus). This document provides an in-depth overview of the codebase design, cross-platform architecture (macOS & Windows Beta), data flow, native platform channels, storage engine, local AI engine, and CI/CD pipelines.
+Welcome to the technical architecture documentation for **ClipFlow** (Paste Plus). This document provides an in-depth overview of the codebase design, cross-platform architecture (**macOS Stable; Windows, iOS, and Android Beta**), data flow, native platform channels, storage engine, local AI engine, optional cloud actions, and CI/CD pipelines.
 
 ---
 
 ## 🏛️ System Overview & Design Patterns
 
 ClipFlow is built using **Flutter** and follows a **Feature-First Architecture** combined with **Riverpod** state management. The core guiding principles are:
-- **Local-First & Offline**: Zero network dependency for core features. All clipboard records, images, metadata, and user configurations are stored locally on the device.
+- **Local-First Core**: Clipboard capture, history, search, collections, metadata, and configuration remain on-device. Network access is isolated to explicit user actions such as image hosting, online translation, update checks, LAN sharing, or model downloads.
 - **On-Device Local AI Engine**: Integrated with `llamadart` / `llama.cpp` to run local GGUF Large Language Models directly on the user's CPU/GPU without cloud APIs.
 - **Local-First LAN Synchronization**: Deep, secure, real-time synchronization of clipboard items, pinned statuses, and collection folders across devices in the same local network:
   - **TLS-secured Connection**: Native FFI socket encryption.
@@ -15,42 +15,39 @@ ClipFlow is built using **Flutter** and follows a **Feature-First Architecture**
   - **Smart Reconnection Flow**: Background reconnection mechanism utilizing an Exponential Backoff retry schedule (up to 5 attempts, with staggered timing based on device preference hierarchy).
   - **Complete Drain Synchronization**: Enqueues and synchronizes the entire historical clipboard dataset including categorized collections and pinned flags right when a pairing connection completes.
 - **Unidirectional Data Flow**: State is managed via Riverpod controllers (`StateNotifier` / `Notifier`), ensuring predictable reactivity across UI components.
-- **Cross-Platform Interoperability**: Deep native integration on **macOS**, **Windows (Beta)**, **iOS**, and **Android**:
+- **Cross-Platform Interoperability**: Deep native integration on **macOS**, **Windows (Beta)**, **iOS (Beta)**, and **Android (Beta)**:
   - **macOS**: MethodChannels for global hotkeys, Accessibility permissions (`AXIsProcessTrusted`), AppleScript system events auto-paste, Apple Vision OCR, and System Menu Bar tray.
   - **Windows (Beta)**: Win32 API (`win32` & `win32_registry`), `window_manager`, `tray_manager`, `hotkey_manager`, simulated `keybd_event` / `SendInput` `Ctrl+V` auto-pasting, and SQLite FFI backend.
-  - **Mobile (iOS & Android)**: Specialized `SafeArea` layouts, platform clipboard sync, and mobile-friendly local AI interfaces.
+  - **Mobile (iOS & Android Beta)**: Specialized `SafeArea` layouts, foreground clipboard workflows, platform SQLite, and mobile-friendly local AI interfaces. Continuous background clipboard access remains subject to operating-system privacy and lifecycle restrictions.
 
 ---
 
 ## 📁 Directory & Project Structure
 
 ```text
-lib/
-├── app/                              # Application bootstrap, routing, app-level providers & themes
-│   ├── app.dart                      # Root ClipFlowApp widget
-│   └── app_router.dart               # Navigation routes (Home, Quick Panel, Onboarding, Settings)
-├── core/
-│   ├── database/                     # SQLite engine (sqflite on Darwin / sqflite_common_ffi on Windows), migrations, & indexing
-│   ├── localization/                 # AppTranslations dictionary & String.tr GetX-style extension
-│   ├── platform/                     # Native platform integrations (Hotkey, System Tray, Auto-Paste, Launch-at-Startup)
-│   ├── services/                     # Background clipboard monitoring isolate, OCR, Update Service & Backup services
-│   ├── theme/                        # Theme system, accent colors (Pastel & Mac palettes), typography
-│   └── ui/                           # Shared Cupertino design primitives, dialogs, & toast notifications
-├── features/
-│   ├── ai/                           # On-device Local AI Domain
-│   │   ├── data/                     # Saved AI conversation repository & SQLite tables
-│   │   ├── domain/                   # AI Model Info catalog, Request Planner, & Token Budget Manager
-│   │   ├── presentation/             # AI Chat Screen, Chat Dialog, Debug Controller, & Model Selector
-│   │   └── services/                 # Local AI Engine (llamadart), GGUF Model Downloader, & Relevance Ranker
-│   ├── clipboard_history/            # Main Clipboard domain feature
-│   │   ├── data/                     # Database repository implementation & query builders
-│   │   ├── domain/                   # Content classifier, normalizer, search syntax & retention policies
-│   │   └── presentation/             # Quick Panel floating window, Home window, cards & controllers
-│   ├── onboarding/                   # Multi-step onboarding experience & retention setup
-│   └── settings/                     # User preferences domain
-│       ├── domain/                   # AppSettings model & backup serialization
-│       └── presentation/             # Tabbed settings screen & exclusion app picker
-└── windows/                          # Windows native C++ Runner & Win32 platform code
+.
+├── lib/
+│   ├── app/                          # Bootstrap, routing, app providers & themes
+│   ├── core/
+│   │   ├── database/                 # SQLite selection, migrations, FTS, embeddings & indexes
+│   │   ├── localization/             # BuildContext localization helpers
+│   │   ├── platform/                 # Hotkeys, tray, auto-paste & startup integrations
+│   │   ├── services/                 # Clipboard, cloud upload, OCR, translation & update services
+│   │   ├── theme/                    # Theme, accent colors & typography
+│   │   └── ui/                       # Shared Cupertino components, dialogs & notices
+│   ├── features/
+│   │   ├── ai/                       # Local AI engine, planning, tools, conversations & UI
+│   │   ├── clipboard_history/        # Classifier, repository, Home, Quick Panel & actions
+│   │   ├── device_sync/              # TLS LAN pairing, peer state, queues & metadata sync
+│   │   ├── onboarding/               # First-run and retention setup
+│   │   └── settings/                 # AppSettings, encrypted backup & settings UI
+│   └── l10n/                         # ARB sources and generated vi/en/ja/ko/de/zh classes
+├── android/                          # Android Beta runner and platform configuration
+├── ios/                              # iOS Beta runner and entitlements
+├── macos/                            # macOS Swift runner and native MethodChannels
+├── windows/                          # Windows C++ runner, CF_HDROP and Win32 integrations
+├── linux/                            # Flutter Linux runner scaffold
+└── test/                             # Unit, widget, database and networking tests
 ```
 
 ---
@@ -58,9 +55,9 @@ lib/
 ## 💾 Storage & Data Management Engine
 
 ### 1. Cross-Platform Database Engine (SQLite & SQLite FFI)
-ClipFlow dynamically selects the optimal SQLite engine per target platform:
-- **macOS / iOS**: Uses `sqflite` with native iOS/Darwin SQLite bindings.
-- **Windows / Desktop**: Uses `sqflite_common_ffi` with `sqflite_common_ffi_windows` C FFI binaries.
+ClipFlow selects the SQLite backend per target platform:
+- **macOS / Windows / Linux**: Initializes `sqflite_common_ffi` and uses the desktop FFI database factory.
+- **iOS / Android Beta**: Uses the registered mobile SQLite platform implementation.
 
 #### Database Schema (`clipboard_items` & `collections`)
 - **`clipboard_items` Table**:
@@ -68,14 +65,14 @@ ClipFlow dynamically selects the optimal SQLite engine per target platform:
   - `content_hash`: TEXT UNIQUE (SHA-256 hash for O(1) deduplication)
   - `content`: TEXT
   - `normalized_content`: TEXT
-  - `type`: TEXT (text, url, email, phone, color, json, file, code, image)
+  - `content_type`: TEXT (text, url, email, phone, color, json, file, code, image)
   - `image_path`: TEXT (Local relative file path to application support storage)
   - `is_pinned`: INTEGER (0 or 1)
   - `is_sensitive`: INTEGER (0 or 1)
-  - `collection_id`: TEXT (FOREIGN KEY -> `collections.id`)
   - `source_app_name`: TEXT (Bundle ID or app executable name)
   - `source_app_identifier`: TEXT
   - `copy_count`: INTEGER
+  - Structured search features: `contains_url`, `primary_url`, `url_host`, `url_kind`, `mime_type`, `file_extension`, `has_ocr_text`, and `searchable_text`
   - `created_at`: INTEGER (Epoch timestamp)
   - `updated_at`: INTEGER
   - `last_copied_at`: INTEGER
@@ -83,14 +80,21 @@ ClipFlow dynamically selects the optimal SQLite engine per target platform:
 - **`collections` Table**:
   - `id`: TEXT PRIMARY KEY
   - `name`: TEXT UNIQUE
-  - `color`: TEXT
   - `icon`: TEXT
   - `created_at`: INTEGER
+  - `updated_at`: INTEGER
+  - `sort_order`: INTEGER
+
+- **`clipboard_item_collections` Join Table**:
+  - Composite primary key: (`clipboard_item_id`, `collection_id`)
+  - Enables many-to-many Collection membership without embedding a single Collection ID in the clipboard item.
+  - Foreign keys cascade on item or Collection deletion.
 
 ### 2. File & Image Storage Directory
 Images copied to the clipboard are written to disk under the sandboxed Application Support directory:
 - **macOS**: `/Users/{user}/Library/Application Support/com.clipflow.clipflow/clipboard_images/`
 - **Windows (Beta)**: `%LOCALAPPDATA%\clipflow\clipboard_images\`
+- **iOS / Android Beta**: The platform Application Support directory returned by `path_provider`.
 
 ### 3. Retention & Protection Policy
 - **Automatic Purge**: Evaluated on startup and upon new clipboard additions.
@@ -101,6 +105,22 @@ Images copied to the clipboard are written to disk under the sandboxed Applicati
 
 ---
 
+## 📋 Clipboard Ingestion & Classification Pipeline
+
+1. **Platform watcher selection** (`clipboardWatcherProvider`):
+   - macOS uses `MacOSClipboardWatcher` and `NSPasteboard.changeCount`.
+   - Windows Beta uses `WindowsClipboardWatcher` and `GetClipboardSequenceNumber()`.
+   - iOS/Android Beta and other platforms use the foreground `FlutterClipboardWatcher` fallback.
+2. **Typed native payload** (`ClipboardPayload`): text, image bytes, source application metadata, and an explicit `filePaths` list travel through one domain object.
+3. **File-first native decoding**:
+   - macOS reads Finder file URLs before `.png`/TIFF thumbnail data.
+   - Windows reads Explorer `CF_HDROP` paths before `CF_UNICODETEXT` or bitmap formats.
+   - A file-list payload suppresses thumbnail bytes, so copied Word, Excel, PDF, folder, or image files are stored as **File** rather than **Image**.
+4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
+5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Clipboard cards can be dragged onto Collections with hover feedback.
+
+---
+
 ## 🤖 On-Device Local AI Architecture
 
 ClipFlow features a 100% local AI assistant powered by GGUF Large Language Models:
@@ -108,6 +128,30 @@ ClipFlow features a 100% local AI assistant powered by GGUF Large Language Model
 2. **Context-Aware Request Planner (`AiRequestPlanner`)**: Automatically analyzes user prompts and clipboard context to route requests (Conversation, Clipboard Action, Search RAG, or Follow-up).
 3. **Automatic Vision & OCR Integration**: When an image is attached as AI context, ClipFlow automatically executes native OCR (Apple Vision on macOS) to extract text and format a rich context block for the model.
 4. **Token Budget Manager (`AiTokenBudgetManager`)**: Dynamically manages prompt token counts, context window limits, and safe response generation buffers.
+
+---
+
+## ☁️ Optional Network & Cloud Image Flow
+
+Core clipboard storage never uploads automatically. Cloud image hosting only runs after the user explicitly chooses **Upload to Cloud** for an image:
+
+1. `HistoryController.uploadImageToCloud()` resolves the local image path and current `AppSettings` provider.
+2. `CloudUploadService` dispatches to:
+   - **FreeImage.host**: `POST multipart/form-data` with file field `source`.
+   - **ImgBB API v1**: `POST https://api.imgbb.com/1/upload`, API key in the query, binary file field `image`, and a 32 MB client-side limit.
+3. The service validates the provider JSON response and returns only the resulting HTTPS image URL.
+4. The URL is written to the system clipboard and stored as a new URL history item.
+
+Provider selection and API keys are stored separately in `AppSettings` and are included in the existing encrypted settings backup. No background or automatic cloud upload is performed.
+
+---
+
+## 🌐 Localization Architecture
+
+- Flutter `gen_l10n` uses `lib/l10n/app_en.arb` as the template and generates strongly typed `AppLocalizations` classes.
+- Supported application locales are Vietnamese (`vi`), English (`en`), Japanese (`ja`), Korean (`ko`), German (`de`), and Simplified Chinese (`zh`).
+- The Settings language picker is derived from `AppLocalizations.supportedLocales`, preventing translated locales from being hidden by a separate hard-coded allowlist.
+- AI response and translation language tags are normalized through `AiLanguageRegistry`, including `zh` / `zh-CN` → `zh-Hans-CN`.
 
 ---
 
@@ -125,7 +169,7 @@ When a user selects an item in the Quick Panel:
   3. Simulates `Ctrl+V` keypress sequence via Win32 API (`keybd_event` / `SendInput`).
 
 ### 2. Global Hotkey & System Tray
-- Uses `hotkey_manager` and `tray_manager` to register `⌘ShiftV` (macOS) / `Ctrl+Shift+V` (Windows) system-wide, toggling the Quick Panel under the mouse cursor.
+- Uses `hotkey_manager` and `tray_manager` to register `Control+V` (`⌃V`) on macOS / `Ctrl+Shift+V` on Windows system-wide, toggling the Quick Panel under the mouse cursor.
 
 ---
 
@@ -161,9 +205,15 @@ ClipFlow configuration backups are exported as encrypted `.clipflow` archives:
 
    # Build Windows (Beta) Release
    flutter build windows --release
+
+   # Build unsigned iOS (Beta) app
+   flutter build ios --release --no-codesign
+
+   # Build Android (Beta) APK
+   flutter build apk --release
    ```
 
 ### GitHub Actions CI/CD Pipeline
 The project incorporates automated multi-platform release workflows configured in `.github/workflows/`:
 - **Triggers**: Pushing a semver release tag (e.g. `v1.0.8`) or triggering release workflows.
-- **Pipeline Workflow**: Runs static analysis (`flutter analyze`), unit test suite (`flutter test`), compiles release binaries for macOS (`ClipFlow-macOS.zip`) and Windows (`ClipFlow-Windows.zip`), and attaches artifacts to GitHub Releases.
+- **Pipeline Workflow**: Runs localization verification and tests, then builds macOS (`ClipFlow-macOS.zip`), Windows Beta (`ClipFlow-Windows.zip`), unsigned iOS Beta (`ClipFlow-iOS.ipa`), and Android Beta (`ClipFlow-Android.apk`) artifacts. Release workflows attach the platform artifacts to GitHub Releases; iOS artifacts still require user signing/sideloading.

@@ -644,6 +644,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get cloud_coming_soon => 'Google Drive (Sắp có)';
 
   @override
+  String get cloud_provider_freeimage => 'FreeImage.host';
+
+  @override
+  String get cloud_provider_imgbb => 'ImgBB';
+
+  @override
+  String get freeimage_api_key => 'Khóa API FreeImage';
+
+  @override
+  String get imgbb_api_key => 'Khóa API ImgBB';
+
+  @override
   String get api_key_placeholder => 'Nhập API key...';
 
   @override

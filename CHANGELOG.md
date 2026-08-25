@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.1.6] - 2026-08-25
+
+### 🚀 Tính năng mới & Cải tiến
+- **Quản lý Clipboard và Collection trực quan hơn**:
+  - Cho phép kéo thả clipboard vào Collection ngay trên màn hình danh sách; Collection đích được làm nổi bật khi rê qua và thông báo xác nhận hiển thị đúng tên Collection sau khi thêm.
+  - Thu gọn menu thao tác của clipboard, Collection và Quick Panel theo phong cách menu native, không thay đổi bố cục thẻ hiện có.
+  - Bổ sung Preview, Edit, Share, Paste as Plain Text và Open cho liên kết; hỗ trợ chỉnh sửa văn bản, màu và xoay ảnh trước khi lưu.
+- **Preview và metadata đầy đủ hơn**:
+  - Preview văn bản toàn màn hình nội dung và hiển thị kích thước pixel thực tế đối với hình ảnh.
+  - Hiển thị số ký tự, kích thước ảnh hoặc kiểu mã màu trong Quick Panel và vùng thông tin chi tiết của cửa sổ chính.
+- **Nhận diện file chính xác trên macOS và Windows**:
+  - Ưu tiên file URL từ Finder và `CF_HDROP` từ Windows Explorer trước thumbnail hoặc dữ liệu text đi kèm.
+  - File Word, Excel, PDF, file ảnh và nhiều file được copy cùng lúc đều được lưu dưới loại File với đường dẫn tương ứng; ảnh copy trực tiếp từ ứng dụng vẫn giữ loại Image.
+- **Cloud Image Hosting với ImgBB**:
+  - Thêm ImgBB API v1 bên cạnh FreeImage.host, upload file cục bộ bằng `POST multipart/form-data` và hỗ trợ ảnh tối đa 32 MB.
+  - Cho phép chọn nhà cung cấp, lưu API key riêng và tự động sao chép/lưu URL ảnh sau khi upload thành công.
+- **Bản địa hóa mở rộng**:
+  - Cho phép chọn toàn bộ ngôn ngữ đã dịch: Tiếng Việt, English, 日本語, 한국어, Deutsch và 简体中文.
+  - Bổ sung đầy đủ bản dịch tiếng Trung giản thể và đồng bộ locale với các tính năng AI/dịch thuật.
+
+### 📱 Nền tảng & Chất lượng
+- Cập nhật tài liệu xác định **iOS (Beta)** và **Android (Beta)**, kèm hướng dẫn build/chạy từ source.
+- Mở rộng kiểm thử hồi quy cho clipboard file, chỉnh sửa/menu, bản địa hóa và request upload ImgBB; toàn bộ 229 kiểm thử đều đạt.
+
 ## [1.1.5] - 2026-08-06
 
 ### 🚀 Tính năng mới & Cải tiến
