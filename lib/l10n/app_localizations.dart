@@ -368,6 +368,12 @@ abstract class AppLocalizations {
   /// **'Ask AI Assistant'**
   String get ask_ai;
 
+  /// No description provided for @preview.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview'**
+  String get preview;
+
   /// No description provided for @delete.
   ///
   /// In en, this message translates to:

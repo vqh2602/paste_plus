@@ -44,6 +44,7 @@ class MockClipboardWatcher implements ClipboardWatcher {
 
 class InMemoryClipboardRepository implements ClipboardRepository {
   final collections = <ClipboardCollection>[];
+  final collectionItems = <String, Set<String>>{};
   final items = <ClipboardItem>[
     ClipboardItem(
       id: 'item-1',
@@ -61,7 +62,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
   ];
 
   @override
-  Future<void> addToCollection(String itemId, String collectionId) async {}
+  Future<void> addToCollection(String itemId, String collectionId) async {
+    collectionItems.putIfAbsent(collectionId, () => {}).add(itemId);
+  }
 
   @override
   Future<int> approximateStorageBytes() async => 0;
@@ -107,7 +110,9 @@ class InMemoryClipboardRepository implements ClipboardRepository {
         .where(
           (item) =>
               (!pinnedOnly || item.isPinned) &&
-              (type == null || item.contentType == type),
+              (type == null || item.contentType == type) &&
+              (collectionId == null ||
+                  (collectionItems[collectionId]?.contains(item.id) ?? false)),
         )
         .take(limit)
         .toList();
@@ -221,6 +226,135 @@ void main() {
     final pinned = await repository.getItems(pinnedOnly: true);
     expect(pinned, hasLength(1));
     await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('clipboard menu is compact and opens a full preview', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('clipboard-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(tester.getSize(menu).height, lessThan(400));
+    expect(find.text('Xem trước'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-action-preview')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('clipboard-preview-dialog')), findsOneWidget);
+    expect(find.text('19 ký tự'), findsOneWidget);
+    expect(find.text('1 từ'), findsOneWidget);
+    expect(find.text('1 dòng'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('clipboard-preview-close')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('clipboard-preview-dialog')), findsNothing);
+  });
+
+  testWidgets('collection options use the compact anchored menu', (
+    tester,
+  ) async {
+    repository.collections.add(
+      ClipboardCollection(
+        id: 'work',
+        name: 'Work',
+        icon: 'folder',
+        createdAt: DateTime(2026, 8, 25),
+        updatedAt: DateTime(2026, 8, 25),
+        sortOrder: 0,
+      ),
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final collectionTile = find.widgetWithText(SidebarTileWidget, 'Work');
+    final optionsButton = find.descendant(
+      of: collectionTile,
+      matching: find.byIcon(CupertinoIcons.ellipsis),
+    );
+    await tester.tap(optionsButton);
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('collection-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(tester.getSize(menu).height, lessThan(120));
+    expect(find.text('Đổi tên'), findsOneWidget);
+    expect(find.text('Xóa collection'), findsOneWidget);
+  });
+
+  testWidgets('dragging a clipboard item onto a collection adds it', (
+    tester,
+  ) async {
+    final collection = ClipboardCollection(
+      id: 'work',
+      name: 'Work',
+      icon: 'folder',
+      createdAt: DateTime(2026, 8, 25),
+      updatedAt: DateTime(2026, 8, 25),
+      sortOrder: 0,
+    );
+    repository.collections.add(collection);
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final item = find.byKey(const Key('clipboard-item'));
+    final target = find.byKey(const Key('collection-drop-target-work'));
+    final start = tester.getCenter(item);
+    final end = tester.getCenter(target);
+    final gesture = await tester.startGesture(start);
+    await gesture.moveTo(end);
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<SidebarTileWidget>(
+            find.widgetWithText(SidebarTileWidget, 'Work'),
+          )
+          .highlighted,
+      isTrue,
+    );
+
+    await gesture.up();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(repository.collectionItems['work'], contains('item-1'));
+    expect(find.text('Đã thêm vào collection "Work"'), findsOneWidget);
+    expect(
+      tester
+          .widget<SidebarTileWidget>(
+            find.widgetWithText(SidebarTileWidget, 'Work'),
+          )
+          .highlighted,
+      isFalse,
+    );
+    await tester.pump(const Duration(seconds: 2));
+  });
+
+  testWidgets('quick panel item options use the compact menu', (tester) async {
+    tester.view.physicalSize = const Size(1400, 390);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('quick-item-more-button')));
+    await tester.pumpAndSettle();
+
+    final menu = find.byKey(const Key('clipboard-action-menu'));
+    expect(menu, findsOneWidget);
+    expect(tester.getSize(menu).width, lessThanOrEqualTo(238));
+    expect(find.text('Sao chép & Dán'), findsOneWidget);
+    expect(find.text('Xem trước'), findsOneWidget);
   });
 
   testWidgets('main history header shows AI button when AI is enabled', (

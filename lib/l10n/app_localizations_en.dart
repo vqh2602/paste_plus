@@ -141,6 +141,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ask_ai => 'Ask AI Assistant';
 
   @override
+  String get preview => 'Preview';
+
+  @override
   String get delete => 'Delete';
 
   @override

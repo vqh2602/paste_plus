@@ -44,6 +44,7 @@
   "translate_text": "Translate Text",
   "upload_cloud": "Upload to Cloud",
   "ask_ai": "Ask AI Assistant",
+  "preview": "Preview",
   "delete": "Delete",
   "delete_item_title": "Delete item?",
   "delete_item_confirm": "Are you sure you want to delete this clipboard item?",

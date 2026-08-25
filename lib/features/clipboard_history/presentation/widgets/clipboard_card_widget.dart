@@ -127,9 +127,9 @@ class ClipboardCardWidget extends ConsumerWidget {
                   key: const Key('pin-button'),
                   icon:
                       (ref.watch(pinnedStateOverrideProvider)[item.id] ??
-                              item.isPinned)
-                          ? CupertinoIcons.pin_fill
-                          : CupertinoIcons.pin,
+                          item.isPinned)
+                      ? CupertinoIcons.pin_fill
+                      : CupertinoIcons.pin,
                   size: 15,
                   onPressed: () async {
                     final isCurrentlyPinned =
@@ -157,16 +157,18 @@ class ClipboardCardWidget extends ConsumerWidget {
                   size: 15,
                   onPressed: () => onCopy(item),
                 ),
-                CupertinoIconControl(
-                  key: const Key('item-more-button'),
-                  icon: CupertinoIcons.ellipsis,
-                  size: 15,
-                  onPressed: () => onShowItemActions(
-                    context,
-                    ref,
-                    item,
-                    onDelete,
-                    onAddToCollection,
+                Builder(
+                  builder: (menuContext) => CupertinoIconControl(
+                    key: const Key('item-more-button'),
+                    icon: CupertinoIcons.ellipsis,
+                    size: 15,
+                    onPressed: () => onShowItemActions(
+                      menuContext,
+                      ref,
+                      item,
+                      onDelete,
+                      onAddToCollection,
+                    ),
                   ),
                 ),
               ],
@@ -300,8 +302,7 @@ class ClipboardCardWidget extends ConsumerWidget {
                         color: item.contentType == ClipboardContentType.url
                             ? CupertinoColors.activeBlue
                             : null,
-                        decoration:
-                            item.contentType == ClipboardContentType.url
+                        decoration: item.contentType == ClipboardContentType.url
                             ? TextDecoration.underline
                             : TextDecoration.none,
                         fontFamily:

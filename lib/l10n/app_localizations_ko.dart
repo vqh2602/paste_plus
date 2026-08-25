@@ -141,6 +141,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ask_ai => 'AI 어시스턴트에 질문';
 
   @override
+  String get preview => '미리보기';
+
+  @override
   String get delete => '삭제';
 
   @override

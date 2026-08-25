@@ -141,6 +141,9 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ask_ai => 'AIアシスタントに質問';
 
   @override
+  String get preview => 'プレビュー';
+
+  @override
   String get delete => '削除';
 
   @override

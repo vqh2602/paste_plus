@@ -142,6 +142,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get ask_ai => 'KI-Assistenten fragen';
 
   @override
+  String get preview => 'Vorschau';
+
+  @override
   String get delete => 'Löschen';
 
   @override

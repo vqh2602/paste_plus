@@ -142,20 +142,47 @@ class SidebarWidget extends ConsumerWidget {
                     padding: EdgeInsets.zero,
                     children: [
                       for (final collection in collections)
-                        SidebarTileWidget(
-                          icon: CupertinoIcons.folder,
-                          label: _displayCollectionName(context, collection),
-                          selected:
-                              state.section == HistorySection.collection &&
-                              state.collectionId == collection.id,
-                          onTap: () => selectSection(
-                            HistorySection.collection,
-                            collectionId: collection.id,
-                          ),
-                          onLongPress: () =>
-                              _showCollectionActions(context, ref, collection),
-                          onOptionsPressed: () =>
-                              _showCollectionActions(context, ref, collection),
+                        DragTarget<ClipboardItem>(
+                          key: Key('collection-drop-target-${collection.id}'),
+                          onWillAcceptWithDetails: (details) => true,
+                          onAcceptWithDetails: (details) {
+                            unawaited(
+                              _addItemToCollection(
+                                context,
+                                historyNotifier,
+                                details.data,
+                                collection,
+                              ),
+                            );
+                          },
+                          builder: (context, candidateData, rejectedData) =>
+                              SidebarTileWidget(
+                                icon: CupertinoIcons.folder,
+                                label: _displayCollectionName(
+                                  context,
+                                  collection,
+                                ),
+                                selected:
+                                    state.section ==
+                                        HistorySection.collection &&
+                                    state.collectionId == collection.id,
+                                highlighted: candidateData.isNotEmpty,
+                                onTap: () => selectSection(
+                                  HistorySection.collection,
+                                  collectionId: collection.id,
+                                ),
+                                onLongPress: () => _showCollectionActions(
+                                  context,
+                                  ref,
+                                  collection,
+                                ),
+                                onOptionsPressed: (menuContext) =>
+                                    _showCollectionActions(
+                                      menuContext,
+                                      ref,
+                                      collection,
+                                    ),
+                              ),
                         ),
                     ],
                   ),
@@ -217,31 +244,47 @@ class SidebarWidget extends ConsumerWidget {
     };
   }
 
+  Future<void> _addItemToCollection(
+    BuildContext context,
+    ClipboardHistoryController historyNotifier,
+    ClipboardItem item,
+    ClipboardCollection collection,
+  ) async {
+    await historyNotifier.addToCollection(item.id, collection.id);
+    if (context.mounted) {
+      showCupertinoNotice(
+        context,
+        context.l10n.added_to_collection_named.replaceAll(
+          '@name',
+          _displayCollectionName(context, collection),
+        ),
+      );
+    }
+  }
+
   Future<void> _showCollectionActions(
     BuildContext context,
     WidgetRef ref,
     ClipboardCollection collection,
   ) async {
-    final action = await showCupertinoModalPopup<String>(
+    final action = await showCompactActionMenu(
       context: context,
-      builder: (context) => CupertinoActionSheet(
-        title: Text(collection.name),
-        actions: [
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, 'rename'),
-            child: Text(context.l10n.rename),
-          ),
-          CupertinoActionSheetAction(
-            isDestructiveAction: true,
-            onPressed: () => Navigator.pop(context, 'delete'),
-            child: Text(context.l10n.delete_collection),
-          ),
-        ],
-        cancelButton: CupertinoActionSheetAction(
-          onPressed: () => Navigator.pop(context),
-          child: Text(context.l10n.cancel),
+      menuKey: const Key('collection-action-menu'),
+      itemKeyPrefix: 'collection-action',
+      actions: [
+        CompactMenuAction(
+          value: 'rename',
+          icon: CupertinoIcons.pencil,
+          label: context.l10n.rename,
         ),
-      ),
+        CompactMenuAction(
+          value: 'delete',
+          icon: CupertinoIcons.trash,
+          label: context.l10n.delete_collection,
+          dividerBefore: true,
+          destructive: true,
+        ),
+      ],
     );
     if (!context.mounted) return;
     if (action == 'delete') {

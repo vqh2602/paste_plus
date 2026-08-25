@@ -141,6 +141,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ask_ai => 'Hỏi AI Assistant';
 
   @override
+  String get preview => 'Xem trước';
+
+  @override
   String get delete => 'Xóa';
 
   @override
