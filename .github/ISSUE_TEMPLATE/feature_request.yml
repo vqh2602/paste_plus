@@ -1,0 +1,57 @@
+name: "💡 Đề xuất tính năng / Feature Request"
+description: "Đề xuất tính năng mới hoặc ý tưởng cải tiến trải nghiệm người dùng trên ClipFlow"
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Cảm ơn bạn đã đóng góp ý tưởng để ClipFlow ngày càng hữu ích và tiện lợi hơn!
+        *Thank you for proposing new features and improving ClipFlow!*
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: "Tóm tắt tính năng / Feature Summary"
+      description: "Mô tả ngắn gọn về tính năng hoặc cải tiến bạn muốn đề xuất"
+      placeholder: "Cho phép..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: "Vấn đề hoặc nhu cầu thực tế / Problem or Use Case"
+      description: "Tính năng này giải quyết vấn đề khó khăn hoặc nhu cầu cụ thể nào trong quy trình làm việc của bạn?"
+      placeholder: "Tôi thường gặp khó khăn hoặc mất thời gian khi..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Giải pháp đề xuất / Proposed Solution"
+      description: "Bạn hình dung tính năng này sẽ hoạt động, tương tác và hiển thị như thế nào trong ứng dụng?"
+      placeholder: "Thêm tuỳ chọn trong Cài đặt hoặc phím tắt nhanh..."
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: "Nền tảng áp dụng / Target Platforms"
+      options:
+        - label: "macOS"
+        - label: "Windows"
+        - label: "iOS / iPadOS"
+        - label: "Android"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Giải pháp thay thế đã xem xét / Alternatives Considered"
+      description: "Có công cụ hoặc cách xử lý tạm thời nào bạn đã từng thử qua?"
+    validations:
+      required: false

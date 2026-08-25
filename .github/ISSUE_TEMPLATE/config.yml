@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Thảo luận & Hỏi đáp / GitHub Discussions
+    url: https://github.com/vqh2602/paste_plus/discussions
+    about: Đặt câu hỏi, chia sẻ ý tưởng hoặc thảo luận chung về dự án ClipFlow
+  - name: 📖 Tài liệu hướng dẫn & Privacy Policy
+    url: https://github.com/vqh2602/paste_plus#readme
+    about: Xem tài liệu sử dụng, hướng dẫn cài đặt và chính sách bảo mật

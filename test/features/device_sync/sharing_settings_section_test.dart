@@ -31,7 +31,7 @@ class _FakeSharingService implements LocalSharingService {
     pendingItems: 0,
     isTrusted: false,
     isBlocked: false,
-    appVersion: '1.1.5',
+    appVersion: '1.1.6',
     protocolVersion: '1',
   );
 
