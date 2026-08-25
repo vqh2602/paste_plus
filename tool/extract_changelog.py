@@ -12,6 +12,17 @@ import sys
 from pathlib import Path
 
 
+def configure_utf8_output() -> None:
+    """Use UTF-8 for console output, including on Windows runners."""
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+            except (OSError, ValueError):
+                # Some embedded or already-closed streams cannot be reconfigured.
+                continue
+
+
 def extract_changelog(tag_or_version: str, changelog_path: str = "CHANGELOG.md") -> str:
     version = tag_or_version.lstrip("v").strip()
 
@@ -37,13 +48,14 @@ def extract_changelog(tag_or_version: str, changelog_path: str = "CHANGELOG.md")
 
 
 def main():
+    configure_utf8_output()
+
     tag_or_version = sys.argv[1] if len(sys.argv) > 1 else "latest"
     output_file = sys.argv[2] if len(sys.argv) > 2 else "RELEASE_NOTES.md"
 
     notes = extract_changelog(tag_or_version)
     Path(output_file).write_text(notes + "\n", encoding="utf-8")
-    print(f"Extracted changelog for '{tag_or_version}' to '{output_file}':\n")
-    print(notes)
+    print(f"Extracted changelog for '{tag_or_version}' to '{output_file}'.")
 
 
 if __name__ == "__main__":
