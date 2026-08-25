@@ -1061,10 +1061,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get export_backup_prompt => '输入密码以保护备份文件。';
 
   @override
-  String get export_backup_sub => '将设置保存到加密的 .clipflow 文件';
+  String get export_backup_sub => '将剪贴板历史和设置保存到加密的 .clipflow 文件';
 
   @override
-  String get export_backup_title => '导出设置';
+  String get export_backup_title => '导出数据';
 
   @override
   String get filter_by_type => '按内容类型过滤';
@@ -1088,6 +1088,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ignore_long_token_sub => '不要保存长秘密或类似令牌的文本';
 
   @override
+  String get ignore_financial_identity => '过滤支付和身份数据';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      '跳过通过 Luhn 校验的银行卡号，以及受支持国家中已识别的身份证件或护照号码';
+
+  @override
+  String get protect_sensitive_windows => '敏感窗口保护';
+
+  @override
+  String get protect_sensitive_windows_sub => '在密码字段和登录窗口中暂停采集';
+
+  @override
+  String get hide_during_screen_sharing => '屏幕共享时隐藏';
+
+  @override
+  String get hide_during_screen_sharing_sub => '从屏幕截图和录屏中排除 ClipFlow 窗口';
+
+  @override
   String get ignore_sensitive_sub => '不要保存看起来敏感的内容';
 
   @override
@@ -1103,10 +1122,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get import_backup_prompt => '输入密码以解密备份文件。';
 
   @override
-  String get import_backup_sub => '从 .clipflow 文件恢复设置';
+  String get import_backup_sub => '从 .clipflow 文件恢复剪贴板历史和设置';
 
   @override
-  String get import_backup_title => '导入设置';
+  String get import_backup_title => '导入数据';
 
   @override
   String get in_app_shortcuts => '应用内快捷方式';
@@ -1606,6 +1625,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get vault_enabled_sub => '使用加密和身份验证保护系统收藏夹。';
+
+  @override
+  String get vault_enable_failed => '无法访问设备安全存储。请检查 Keychain 或 Keystore 权限后重试。';
 
   @override
   String get vault_create_password_title => '创建保险库密码';

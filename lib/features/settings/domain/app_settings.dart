@@ -24,6 +24,9 @@ class AppSettings {
     this.ignoreSensitive = true,
     this.ignoreOtp = true,
     this.ignoreLongToken = true,
+    this.ignoreFinancialAndIdentity = true,
+    this.protectSensitiveWindows = true,
+    this.hideDuringScreenSharing = false,
     this.minTextLength = 1,
     this.maxTextLength = 100000,
     this.maxImageMb = 20,
@@ -101,6 +104,9 @@ class AppSettings {
   final bool ignoreSensitive;
   final bool ignoreOtp;
   final bool ignoreLongToken;
+  final bool ignoreFinancialAndIdentity;
+  final bool protectSensitiveWindows;
+  final bool hideDuringScreenSharing;
   final int minTextLength;
   final int maxTextLength;
   final int maxImageMb;
@@ -153,6 +159,9 @@ class AppSettings {
     bool? ignoreSensitive,
     bool? ignoreOtp,
     bool? ignoreLongToken,
+    bool? ignoreFinancialAndIdentity,
+    bool? protectSensitiveWindows,
+    bool? hideDuringScreenSharing,
     int? minTextLength,
     int? maxTextLength,
     int? maxImageMb,
@@ -210,6 +219,12 @@ class AppSettings {
       ignoreSensitive: ignoreSensitive ?? this.ignoreSensitive,
       ignoreOtp: ignoreOtp ?? this.ignoreOtp,
       ignoreLongToken: ignoreLongToken ?? this.ignoreLongToken,
+      ignoreFinancialAndIdentity:
+          ignoreFinancialAndIdentity ?? this.ignoreFinancialAndIdentity,
+      protectSensitiveWindows:
+          protectSensitiveWindows ?? this.protectSensitiveWindows,
+      hideDuringScreenSharing:
+          hideDuringScreenSharing ?? this.hideDuringScreenSharing,
       minTextLength: minTextLength ?? this.minTextLength,
       maxTextLength: maxTextLength ?? this.maxTextLength,
       maxImageMb: maxImageMb ?? this.maxImageMb,
@@ -265,6 +280,9 @@ class AppSettings {
     'ignoreSensitive': ignoreSensitive,
     'ignoreOtp': ignoreOtp,
     'ignoreLongToken': ignoreLongToken,
+    'ignoreFinancialAndIdentity': ignoreFinancialAndIdentity,
+    'protectSensitiveWindows': protectSensitiveWindows,
+    'hideDuringScreenSharing': hideDuringScreenSharing,
     'minTextLength': minTextLength,
     'maxTextLength': maxTextLength,
     'maxImageMb': maxImageMb,
@@ -341,6 +359,9 @@ class AppSettings {
       ignoreSensitive: value('ignoreSensitive', true),
       ignoreOtp: value('ignoreOtp', true),
       ignoreLongToken: value('ignoreLongToken', true),
+      ignoreFinancialAndIdentity: value('ignoreFinancialAndIdentity', true),
+      protectSensitiveWindows: value('protectSensitiveWindows', true),
+      hideDuringScreenSharing: value('hideDuringScreenSharing', false),
       minTextLength: value('minTextLength', 1),
       maxTextLength: value('maxTextLength', 100000),
       maxImageMb: value('maxImageMb', 20),

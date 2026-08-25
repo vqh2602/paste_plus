@@ -173,6 +173,9 @@ class SqliteClipboardRepository
         )) {
       return null;
     }
+    if (settings.protectSensitiveWindows && payload.sensitiveContext) {
+      return null;
+    }
 
     final payloadText = payload.filePaths.isEmpty
         ? payload.text
@@ -195,6 +198,7 @@ class SqliteClipboardRepository
           normalized,
           ignoreOtp: settings.ignoreOtp,
           ignoreLongToken: settings.ignoreLongToken,
+          ignoreFinancialAndIdentity: settings.ignoreFinancialAndIdentity,
         )) {
       return null;
     }

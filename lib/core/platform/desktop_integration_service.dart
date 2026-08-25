@@ -68,6 +68,37 @@ class DesktopIntegrationService with TrayListener {
       Platform.isMacOS || Platform.isWindows || Platform.isLinux;
   bool get hasWindowPlugin => Platform.isMacOS || Platform.isWindows;
   bool get isTrayActive => _trayActive;
+  bool get shouldIgnoreWindowBlur => DateTime.now().isBefore(_ignoreBlurUntil);
+
+  Future<void> restoreFocusAfterSystemAuthentication() async {
+    if (!isDesktop) return;
+    _ignoreBlurUntil = DateTime.now().add(const Duration(milliseconds: 900));
+    try {
+      await windowManager.show();
+      await windowManager.focus();
+    } on Object catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'Could not restore focus after system authentication',
+        error: error,
+      );
+    }
+  }
+
+  Future<bool> setCaptureProtection(bool enabled) async {
+    if (!hasWindowPlugin) return false;
+    try {
+      await _windowChannel.invokeMethod<void>('setCaptureProtection', enabled);
+      return true;
+    } on Object catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'Could not update screen-capture protection',
+        error: error,
+      );
+      return false;
+    }
+  }
 
   Future<void> initialize({
     required bool runInTray,

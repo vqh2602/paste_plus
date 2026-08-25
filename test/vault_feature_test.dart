@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:clipflow/core/database/app_database.dart';
@@ -200,6 +201,42 @@ void main() {
     );
     controller.dispose();
   });
+
+  test('secure-storage failure does not partially enable the vault', () async {
+    final failingCrypto = VaultCrypto(
+      secretStore: _FailingWriteSecretStore(),
+      deviceAuthenticator: _FakeDeviceAuthenticator(),
+    );
+
+    await expectLater(
+      failingCrypto.enable('correct-password'),
+      throwsA(isA<PlatformException>()),
+    );
+    expect(failingCrypto.isConfigured, isFalse);
+    expect(failingCrypto.isUnlocked, isFalse);
+  });
+
+  test('device authentication keeps the vault transition active', () async {
+    final authenticator = _ControlledDeviceAuthenticator();
+    final transitionCrypto = VaultCrypto(
+      secretStore: _MemorySecretStore(),
+      deviceAuthenticator: authenticator,
+    );
+    await transitionCrypto.enable('correct-password');
+    final controller = VaultController(transitionCrypto, repository);
+    await controller.initialize();
+
+    final enabling = controller.setDeviceUnlock(true, 'Authenticate');
+    await Future<void>.delayed(Duration.zero);
+    expect(controller.state.deviceAuthenticationInProgress, isTrue);
+
+    authenticator.result.complete(true);
+    expect(await enabling, isTrue);
+    expect(controller.state.deviceAuthenticationInProgress, isTrue);
+    await Future<void>.delayed(const Duration(milliseconds: 950));
+    expect(controller.state.deviceAuthenticationInProgress, isFalse);
+    controller.dispose();
+  });
 }
 
 class _MemorySecretStore implements SecretStore {
@@ -218,6 +255,32 @@ class _MemorySecretStore implements SecretStore {
 class _FakeDeviceAuthenticator implements VaultDeviceAuthenticator {
   @override
   Future<bool> authenticate(String reason) async => true;
+
+  @override
+  Future<bool> isAvailable() async => true;
+}
+
+class _FailingWriteSecretStore implements SecretStore {
+  @override
+  Future<void> delete(String key) async {}
+
+  @override
+  Future<String?> read(String key) async => null;
+
+  @override
+  Future<void> write(String key, String value) async {
+    throw PlatformException(
+      code: '-34018',
+      message: 'A required entitlement is not present.',
+    );
+  }
+}
+
+class _ControlledDeviceAuthenticator implements VaultDeviceAuthenticator {
+  final result = Completer<bool>();
+
+  @override
+  Future<bool> authenticate(String reason) => result.future;
 
   @override
   Future<bool> isAvailable() async => true;

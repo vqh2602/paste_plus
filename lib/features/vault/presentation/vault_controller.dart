@@ -14,6 +14,7 @@ class VaultState {
     this.unlocked = false,
     this.deviceAuthenticationAvailable = false,
     this.deviceUnlockEnabled = false,
+    this.deviceAuthenticationInProgress = false,
     this.failedAttempts = 0,
   });
 
@@ -22,6 +23,7 @@ class VaultState {
   final bool unlocked;
   final bool deviceAuthenticationAvailable;
   final bool deviceUnlockEnabled;
+  final bool deviceAuthenticationInProgress;
   final int failedAttempts;
 
   VaultState copyWith({
@@ -30,6 +32,7 @@ class VaultState {
     bool? unlocked,
     bool? deviceAuthenticationAvailable,
     bool? deviceUnlockEnabled,
+    bool? deviceAuthenticationInProgress,
     int? failedAttempts,
   }) {
     return VaultState(
@@ -39,6 +42,8 @@ class VaultState {
       deviceAuthenticationAvailable:
           deviceAuthenticationAvailable ?? this.deviceAuthenticationAvailable,
       deviceUnlockEnabled: deviceUnlockEnabled ?? this.deviceUnlockEnabled,
+      deviceAuthenticationInProgress:
+          deviceAuthenticationInProgress ?? this.deviceAuthenticationInProgress,
       failedAttempts: failedAttempts ?? this.failedAttempts,
     );
   }
@@ -51,6 +56,24 @@ class VaultController extends StateNotifier<VaultState> {
 
   final VaultCrypto _crypto;
   final ClipboardRepository _repository;
+  Timer? _deviceAuthenticationTransitionTimer;
+
+  void _beginDeviceAuthentication() {
+    _deviceAuthenticationTransitionTimer?.cancel();
+    state = state.copyWith(deviceAuthenticationInProgress: true);
+  }
+
+  void _finishDeviceAuthenticationAfterSystemTransition() {
+    _deviceAuthenticationTransitionTimer?.cancel();
+    _deviceAuthenticationTransitionTimer = Timer(
+      const Duration(milliseconds: 900),
+      () {
+        if (mounted) {
+          state = state.copyWith(deviceAuthenticationInProgress: false);
+        }
+      },
+    );
+  }
 
   Future<void> initialize() async {
     try {
@@ -111,19 +134,29 @@ class VaultController extends StateNotifier<VaultState> {
     if (!state.deviceAuthenticationAvailable || !state.deviceUnlockEnabled) {
       return VaultUnlockResult.unavailable;
     }
-    final success = await _crypto.unlockWithDevice(reason);
-    if (!success) return VaultUnlockResult.unavailable;
-    state = state.copyWith(unlocked: true, failedAttempts: 0);
-    return VaultUnlockResult.success;
+    _beginDeviceAuthentication();
+    try {
+      final success = await _crypto.unlockWithDevice(reason);
+      if (!success) return VaultUnlockResult.unavailable;
+      state = state.copyWith(unlocked: true, failedAttempts: 0);
+      return VaultUnlockResult.success;
+    } on Object {
+      return VaultUnlockResult.error;
+    } finally {
+      _finishDeviceAuthenticationAfterSystemTransition();
+    }
   }
 
   Future<bool> setDeviceUnlock(bool enabled, String reason) async {
+    if (enabled) _beginDeviceAuthentication();
     try {
       final updated = await _crypto.setDeviceUnlock(enabled, reason);
       if (updated) state = state.copyWith(deviceUnlockEnabled: enabled);
       return updated;
     } on Object {
       return false;
+    } finally {
+      if (enabled) _finishDeviceAuthenticationAfterSystemTransition();
     }
   }
 
@@ -153,5 +186,11 @@ class VaultController extends StateNotifier<VaultState> {
       unawaited((repository as VaultClipboardRepository).clearVaultPreviews());
     }
     if (state.unlocked) state = state.copyWith(unlocked: false);
+  }
+
+  @override
+  void dispose() {
+    _deviceAuthenticationTransitionTimer?.cancel();
+    super.dispose();
   }
 }

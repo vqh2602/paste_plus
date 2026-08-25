@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
+import '../../../../core/ui/cupertino_components.dart';
 import '../../../clipboard_history/presentation/history_controller.dart';
 import '../../../vault/presentation/vault_dialogs.dart';
 import 'settings_helpers.dart';
@@ -130,6 +131,39 @@ class PrivacySettingsSection extends ConsumerWidget {
                 (current) => current.copyWith(ignoreLongToken: value),
               ),
             ),
+            SwitchRowWidget(
+              title: context.l10n.ignore_financial_identity,
+              subtitle: context.l10n.ignore_financial_identity_sub,
+              value: settings.ignoreFinancialAndIdentity,
+              onChanged: (value) => updateSettings(
+                ref,
+                (current) =>
+                    current.copyWith(ignoreFinancialAndIdentity: value),
+              ),
+            ),
+            SwitchRowWidget(
+              title: context.l10n.protect_sensitive_windows,
+              subtitle: context.l10n.protect_sensitive_windows_sub,
+              value: settings.protectSensitiveWindows,
+              onChanged: (value) => updateSettings(
+                ref,
+                (current) => current.copyWith(protectSensitiveWindows: value),
+              ),
+            ),
+            SwitchRowWidget(
+              title: context.l10n.hide_during_screen_sharing,
+              subtitle: context.l10n.hide_during_screen_sharing_sub,
+              value: settings.hideDuringScreenSharing,
+              onChanged: (value) async {
+                await updateSettings(
+                  ref,
+                  (current) => current.copyWith(hideDuringScreenSharing: value),
+                );
+                await ref
+                    .read(desktopIntegrationProvider)
+                    .setCaptureProtection(value);
+              },
+            ),
           ],
         ),
       ],
@@ -153,7 +187,14 @@ class PrivacySettingsSection extends ConsumerWidget {
           title: context.l10n.vault_create_password_title,
         );
         if (password == null || !context.mounted) return;
-        await ref.read(vaultControllerProvider.notifier).enable(password);
+        try {
+          await ref.read(vaultControllerProvider.notifier).enable(password);
+        } on Object {
+          if (context.mounted) {
+            showCupertinoNotice(context, context.l10n.vault_enable_failed);
+          }
+          return;
+        }
       }
       await updateSettings(
         ref,
@@ -216,6 +257,11 @@ class PrivacySettingsSection extends ConsumerWidget {
     final updated = await ref
         .read(vaultControllerProvider.notifier)
         .setDeviceUnlock(enabled, context.l10n.vault_unlock_sub);
+    if (enabled) {
+      await ref
+          .read(desktopIntegrationProvider)
+          .restoreFocusAfterSystemAuthentication();
+    }
     if (!updated && context.mounted) {
       showCupertinoDialog<void>(
         context: context,

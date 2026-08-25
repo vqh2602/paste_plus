@@ -1094,10 +1094,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get export_backup_sub =>
-      'Save settings to an encrypted .clipflow file';
+      'Save clipboard history and settings to an encrypted .clipflow file';
 
   @override
-  String get export_backup_title => 'Export Settings';
+  String get export_backup_title => 'Export Data';
 
   @override
   String get filter_by_type => 'Filter by content type';
@@ -1122,6 +1122,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do not save long secrets or token-like text';
 
   @override
+  String get ignore_financial_identity => 'Filter payment and identity data';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Skip Luhn-valid payment cards and recognized identity or passport numbers from supported countries';
+
+  @override
+  String get protect_sensitive_windows => 'Sensitive window protection';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Pause capture for password fields and sign-in windows';
+
+  @override
+  String get hide_during_screen_sharing => 'Hide during screen sharing';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'Exclude ClipFlow windows from screenshots and screen recordings';
+
+  @override
   String get ignore_sensitive_sub =>
       'Do not save content that appears sensitive';
 
@@ -1139,10 +1160,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter the password to decrypt the backup file.';
 
   @override
-  String get import_backup_sub => 'Restore settings from a .clipflow file';
+  String get import_backup_sub =>
+      'Restore clipboard history and settings from a .clipflow file';
 
   @override
-  String get import_backup_title => 'Import Settings';
+  String get import_backup_title => 'Import Data';
 
   @override
   String get in_app_shortcuts => 'In-App Shortcuts';
@@ -1665,6 +1687,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get vault_enabled_sub =>
       'Protect a system collection with encryption and authentication.';
+
+  @override
+  String get vault_enable_failed =>
+      'Vault could not access secure device storage. Check the Keychain or Keystore permission and try again.';
 
   @override
   String get vault_create_password_title => 'Create Vault password';

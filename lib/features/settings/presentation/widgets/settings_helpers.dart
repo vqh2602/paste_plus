@@ -517,6 +517,7 @@ Future<void> exportBackupDialog(BuildContext context, WidgetRef ref) async {
         settings: settings,
         password: pwd,
         filePath: filePath,
+        database: ref.read(appDatabaseProvider),
       );
 
       if (context.mounted) {
@@ -574,6 +575,7 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
     final res = await const SettingsBackupService().importSettings(
       filePath: filePath,
       password: pwd,
+      database: ref.read(appDatabaseProvider),
     );
 
     if (res.isSuccess && res.settings != null) {
@@ -582,13 +584,16 @@ Future<void> importBackupDialog(BuildContext context, WidgetRef ref) async {
       // imported backup cannot hide an existing Vault or enable one without
       // its secure-storage key material.
       final current = ref.read(settingsControllerProvider);
-      await updateSettings(
-        ref,
-        (_) => res.settings!.copyWith(
-          vaultEnabled: current.vaultEnabled,
-          vaultWipeAfterFiveFailures: current.vaultWipeAfterFiveFailures,
-        ),
+      final importedSettings = res.settings!.copyWith(
+        vaultEnabled: current.vaultEnabled,
+        vaultWipeAfterFiveFailures: current.vaultWipeAfterFiveFailures,
       );
+      await updateSettings(ref, (_) => importedSettings);
+      await ref
+          .read(desktopIntegrationProvider)
+          .setCaptureProtection(importedSettings.hideDuringScreenSharing);
+      await ref.read(collectionsControllerProvider.notifier).reload();
+      await ref.read(historyControllerProvider.notifier).reload();
     }
 
     if (context.mounted) {

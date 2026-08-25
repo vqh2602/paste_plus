@@ -308,5 +308,6 @@ ClipboardPayload _payloadFromNativeResult(Map<String, dynamic> result) {
     filePaths: filePaths,
     sourceAppName: result['sourceAppName'] as String?,
     sourceAppIdentifier: result['sourceAppIdentifier'] as String?,
+    sensitiveContext: result['sensitiveContext'] as bool? ?? false,
   );
 }

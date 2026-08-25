@@ -91,15 +91,20 @@ class VaultCrypto {
       secretKey: wrappingKey,
       aad: utf8.encode(_configKey),
     );
-    _masterKey = masterKey;
-    _config = _VaultConfig(
+    final config = _VaultConfig(
       salt: salt,
       wrappedKey: wrappedKey,
       failedAttempts: 0,
       deviceUnlockEnabled: false,
     );
-    await _persistConfig();
-    await _secretStore.delete(_deviceKey);
+    // Commit secure storage before changing in-memory state. A stale device
+    // key is harmless while deviceUnlockEnabled is false and will be
+    // overwritten if device authentication is enabled later. Avoiding an
+    // unnecessary delete also keeps non-provisioned macOS builds on the
+    // supported login-Keychain path.
+    await _secretStore.write(_configKey, jsonEncode(config.toJson()));
+    _masterKey = masterKey;
+    _config = config;
   }
 
   Future<bool> unlockWithPassword(String password) async {

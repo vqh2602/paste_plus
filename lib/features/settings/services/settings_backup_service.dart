@@ -4,21 +4,31 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart' as secure;
+import 'package:path/path.dart' as p;
+import 'package:sqflite/sqflite.dart';
 
+import '../../../core/database/app_database.dart';
+import '../../clipboard_history/domain/clipboard_content_type.dart';
+import '../../clipboard_history/domain/content_classifier.dart';
 import '../domain/app_settings.dart';
 
 class SettingsBackupResult {
-  const SettingsBackupResult.success([this.settings])
-    : isSuccess = true,
-      errorMessage = null;
+  const SettingsBackupResult.success([
+    this.settings,
+    this.importedClipboardItems = 0,
+  ]) : isSuccess = true,
+       errorMessage = null;
 
   const SettingsBackupResult.failure(this.errorMessage)
     : isSuccess = false,
-      settings = null;
+      settings = null,
+      importedClipboardItems = 0;
 
   final bool isSuccess;
   final String? errorMessage;
   final AppSettings? settings;
+  final int importedClipboardItems;
 }
 
 class SettingsBackupService {
@@ -29,6 +39,7 @@ class SettingsBackupService {
     required AppSettings settings,
     required String password,
     required String filePath,
+    AppDatabase? database,
   }) async {
     if (password.trim().isEmpty) {
       return const SettingsBackupResult.failure(
@@ -52,20 +63,52 @@ class SettingsBackupService {
       final hmac = Hmac(sha256, macKey).convert(hmacInput).bytes;
 
       final manifestMap = {
-        'format': 'clipflow_config_v1',
+        'format': database == null
+            ? 'clipflow_config_v1'
+            : 'clipflow_archive_v2',
+        'archive_schema': database == null ? 1 : 2,
         'app': 'ClipFlow',
-        'version': '1.0.4',
+        'version': '1.2.0',
         'created_at': DateTime.now().toIso8601String(),
         'salt': _toHex(salt),
         'iv': _toHex(iv),
         'hmac': _toHex(hmac),
       };
 
+      Uint8List? historyCiphertext;
+      if (database != null) {
+        const historyKdfIterations = 210000;
+        final historySalt = _randomBytes(16);
+        final historyNonce = _randomBytes(12);
+        final historyJson = await _exportHistory(database);
+        final historyKey = await _deriveSecureKey(
+          password,
+          historySalt,
+          historyKdfIterations,
+        );
+        final secretBox = await secure.AesGcm.with256bits().encrypt(
+          utf8.encode(jsonEncode(historyJson)),
+          secretKey: historyKey,
+          nonce: historyNonce,
+        );
+        historyCiphertext = Uint8List.fromList(secretBox.cipherText);
+        manifestMap
+          ..['history_format'] = 'clipflow_history_v1'
+          ..['history_encryption'] = 'aes-256-gcm'
+          ..['history_kdf'] = 'pbkdf2-hmac-sha256'
+          ..['history_kdf_iterations'] = historyKdfIterations
+          ..['history_salt'] = _toHex(historySalt)
+          ..['history_nonce'] = _toHex(historyNonce)
+          ..['history_mac'] = _toHex(secretBox.mac.bytes);
+      }
+
       final manifestBytes = utf8.encode(jsonEncode(manifestMap));
 
       final zipBytes = _createZip([
         _ZipEntry('manifest.json', manifestBytes),
         _ZipEntry('settings.enc', ciphertext),
+        if (historyCiphertext != null)
+          _ZipEntry('history.enc', historyCiphertext),
       ]);
 
       final file = File(filePath);
@@ -81,6 +124,7 @@ class SettingsBackupService {
   Future<SettingsBackupResult> importSettings({
     required String filePath,
     required String password,
+    AppDatabase? database,
   }) async {
     if (password.trim().isEmpty) {
       return const SettingsBackupResult.failure(
@@ -145,7 +189,44 @@ class SettingsBackupService {
       final jsonString = utf8.decode(decryptedBytes);
       final settings = AppSettings.fromJson(jsonString);
 
-      return SettingsBackupResult.success(settings);
+      var importedClipboardItems = 0;
+      final historyCiphertext = entries['history.enc'];
+      if (database != null && historyCiphertext != null) {
+        final historySaltHex = manifestMap['history_salt'] as String?;
+        final historyNonceHex = manifestMap['history_nonce'] as String?;
+        final historyMacHex = manifestMap['history_mac'] as String?;
+        final historyKdfIterations =
+            (manifestMap['history_kdf_iterations'] as num?)?.toInt() ?? 210000;
+        if (historySaltHex == null ||
+            historyNonceHex == null ||
+            historyMacHex == null) {
+          return const SettingsBackupResult.failure(
+            'Tệp lịch sử thiếu dữ liệu mã hóa.',
+          );
+        }
+        final historyKey = await _deriveSecureKey(
+          password,
+          _fromHex(historySaltHex),
+          historyKdfIterations.clamp(10000, 1000000),
+        );
+        final historyBytes = await secure.AesGcm.with256bits().decrypt(
+          secure.SecretBox(
+            historyCiphertext,
+            nonce: _fromHex(historyNonceHex),
+            mac: secure.Mac(_fromHex(historyMacHex)),
+          ),
+          secretKey: historyKey,
+        );
+        final history = jsonDecode(utf8.decode(historyBytes));
+        if (history is! Map<String, dynamic>) {
+          return const SettingsBackupResult.failure(
+            'Định dạng lịch sử clipboard không hợp lệ.',
+          );
+        }
+        importedClipboardItems = await _importHistory(database, history);
+      }
+
+      return SettingsBackupResult.success(settings, importedClipboardItems);
     } on FormatException catch (_) {
       return const SettingsBackupResult.failure(
         'Mật khẩu không đúng hoặc nội dung giải mã không hợp lệ.',
@@ -153,6 +234,292 @@ class SettingsBackupService {
     } on Object catch (e) {
       return SettingsBackupResult.failure('Không thể đọc tệp cấu hình: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> _exportHistory(AppDatabase database) async {
+    final db = database.database;
+    final itemRows = await db.query(
+      'clipboard_items',
+      where: 'is_vault = 0',
+      orderBy: 'created_at ASC',
+    );
+    final items = <Map<String, dynamic>>[];
+    for (final sourceRow in itemRows) {
+      final row = <String, dynamic>{...sourceRow};
+      final imagePath = row['image_path'] as String?;
+      row['image_path'] = null;
+      if (imagePath != null && imagePath.isNotEmpty) {
+        final image = File(imagePath);
+        if (await image.exists()) {
+          row['image_data'] = base64Encode(await image.readAsBytes());
+          row['image_extension'] = p.extension(imagePath).replaceFirst('.', '');
+        }
+      }
+      items.add(row);
+    }
+    final collections = await db.query(
+      'collections',
+      where: 'id != ?',
+      whereArgs: ['vault'],
+      orderBy: 'sort_order ASC',
+    );
+    final memberships = await db.rawQuery('''
+      SELECT clipboard_item_id, collection_id, created_at
+      FROM clipboard_item_collections
+      WHERE collection_id != 'vault'
+        AND clipboard_item_id IN (
+          SELECT id FROM clipboard_items WHERE is_vault = 0
+        )
+      ''');
+    return {
+      'format': 'clipflow_history_v1',
+      'schema_version': 1,
+      'exported_at': DateTime.now().toUtc().toIso8601String(),
+      'items': items,
+      'collections': collections,
+      'memberships': memberships,
+    };
+  }
+
+  Future<secure.SecretKey> _deriveSecureKey(
+    String password,
+    Uint8List salt,
+    int iterations,
+  ) {
+    return secure.Pbkdf2(
+      macAlgorithm: secure.Hmac.sha256(),
+      iterations: iterations,
+      bits: 256,
+    ).deriveKeyFromPassword(password: password, nonce: salt);
+  }
+
+  Future<int> _importHistory(
+    AppDatabase database,
+    Map<String, dynamic> history,
+  ) async {
+    final db = database.database;
+    final itemColumns = await _tableColumns(db, 'clipboard_items');
+    final collectionColumns = await _tableColumns(db, 'collections');
+    final membershipColumns = await _tableColumns(
+      db,
+      'clipboard_item_collections',
+    );
+    final collectionIdMap = <String, String>{};
+    final itemIdMap = <String, String>{};
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    for (final record in _mapRecords(history['collections'])) {
+      final archiveId = record['id']?.toString();
+      final name = record['name']?.toString().trim();
+      if (archiveId == null ||
+          archiveId.isEmpty ||
+          archiveId == 'vault' ||
+          name == null ||
+          name.isEmpty) {
+        continue;
+      }
+      final sameName = await db.query(
+        'collections',
+        columns: ['id'],
+        where: 'LOWER(name) = LOWER(?)',
+        whereArgs: [name],
+        limit: 1,
+      );
+      if (sameName.isNotEmpty) {
+        collectionIdMap[archiveId] = sameName.single['id']! as String;
+        continue;
+      }
+      final values = _knownValues(record, collectionColumns)
+        ..['id'] = archiveId
+        ..['name'] = name
+        ..putIfAbsent('icon', () => 'folder')
+        ..putIfAbsent('created_at', () => now)
+        ..putIfAbsent('updated_at', () => now)
+        ..putIfAbsent('sort_order', () => 0);
+      await db.insert(
+        'collections',
+        values,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      final resolved = await db.query(
+        'collections',
+        columns: ['id'],
+        where: 'id = ? OR LOWER(name) = LOWER(?)',
+        whereArgs: [archiveId, name],
+        limit: 1,
+      );
+      if (resolved.isNotEmpty) {
+        collectionIdMap[archiveId] = resolved.single['id']! as String;
+      }
+    }
+
+    var importedItems = 0;
+    final imageDirectory = await _importImageDirectory(database);
+    for (final record in _mapRecords(history['items'])) {
+      final archiveId = record['id']?.toString();
+      final content = record['content']?.toString() ?? '';
+      Uint8List? imageBytes;
+      final encodedImage = record['image_data'];
+      if (encodedImage is String && encodedImage.isNotEmpty) {
+        try {
+          imageBytes = base64Decode(encodedImage);
+        } on FormatException {
+          imageBytes = null;
+        }
+      }
+      if (archiveId == null ||
+          archiveId.isEmpty ||
+          (content.trim().isEmpty && imageBytes == null)) {
+        continue;
+      }
+      final normalized =
+          record['normalized_content']?.toString() ??
+          ContentNormalizer.normalize(content);
+      // Recompute instead of trusting archive metadata. Besides preserving the
+      // live database invariant, this prevents a crafted archive from mapping
+      // memberships onto an unrelated item by supplying its content hash.
+      final hash = sha256
+          .convert(imageBytes ?? utf8.encode(normalized))
+          .toString();
+      final duplicate = await db.query(
+        'clipboard_items',
+        columns: ['id'],
+        where: 'content_hash = ? AND is_vault = 0',
+        whereArgs: [hash],
+        limit: 1,
+      );
+      if (duplicate.isNotEmpty) {
+        itemIdMap[archiveId] = duplicate.single['id']! as String;
+        continue;
+      }
+
+      final rawType = record['content_type']?.toString();
+      final type =
+          ClipboardContentType.values.any(
+            (candidate) => candidate.name == rawType,
+          )
+          ? rawType!
+          : imageBytes != null
+          ? ClipboardContentType.image.name
+          : ContentClassifier.classify(normalized).name;
+      final values = _knownValues(record, itemColumns)
+        ..remove('image_data')
+        ..remove('image_extension')
+        ..['id'] = archiveId
+        ..['content'] = content
+        ..['normalized_content'] = normalized
+        ..['content_hash'] = hash
+        ..['content_type'] = type
+        ..['is_vault'] = 0
+        ..putIfAbsent('created_at', () => now)
+        ..putIfAbsent('updated_at', () => now)
+        ..putIfAbsent('last_copied_at', () => now)
+        ..putIfAbsent('is_pinned', () => 0)
+        ..putIfAbsent('is_sensitive', () => 0)
+        ..putIfAbsent('copy_count', () => 1)
+        ..putIfAbsent('contains_url', () => 0)
+        ..putIfAbsent('has_ocr_text', () => 0)
+        ..putIfAbsent('searchable_text', () => normalized);
+
+      if (imageBytes != null) {
+        try {
+          final extension = _safeImageExtension(
+            record['image_extension']?.toString(),
+          );
+          final image = File(p.join(imageDirectory.path, '$hash.$extension'));
+          await image.writeAsBytes(imageBytes, flush: true);
+          values['image_path'] = image.path;
+        } on Object {
+          values['image_path'] = null;
+        }
+      } else {
+        values['image_path'] = null;
+      }
+
+      final inserted = await db.insert(
+        'clipboard_items',
+        values,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+      if (inserted > 0) importedItems++;
+      final resolved = await db.query(
+        'clipboard_items',
+        columns: ['id'],
+        where: 'id = ? OR content_hash = ?',
+        whereArgs: [archiveId, hash],
+        limit: 1,
+      );
+      if (resolved.isNotEmpty) {
+        itemIdMap[archiveId] = resolved.single['id']! as String;
+      }
+    }
+
+    for (final record in _mapRecords(history['memberships'])) {
+      final itemId = itemIdMap[record['clipboard_item_id']?.toString()];
+      final collectionId = collectionIdMap[record['collection_id']?.toString()];
+      if (itemId == null || collectionId == null) continue;
+      final values = _knownValues(record, membershipColumns)
+        ..['clipboard_item_id'] = itemId
+        ..['collection_id'] = collectionId
+        ..putIfAbsent('created_at', () => now);
+      await db.insert(
+        'clipboard_item_collections',
+        values,
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+    return importedItems;
+  }
+
+  Iterable<Map<String, dynamic>> _mapRecords(Object? value) sync* {
+    if (value is! List) return;
+    for (final record in value) {
+      if (record is Map) {
+        yield record.map((key, value) => MapEntry(key.toString(), value));
+      }
+    }
+  }
+
+  Future<Set<String>> _tableColumns(Database db, String table) async {
+    final rows = await db.rawQuery('PRAGMA table_info($table)');
+    return rows.map((row) => row['name'] as String).toSet();
+  }
+
+  Map<String, Object?> _knownValues(
+    Map<String, dynamic> source,
+    Set<String> columns,
+  ) => {
+    for (final entry in source.entries)
+      if (columns.contains(entry.key) &&
+          (entry.value is String || entry.value is num || entry.value == null))
+        entry.key: entry.value,
+  };
+
+  Future<Directory> _importImageDirectory(AppDatabase database) async {
+    final base = database.databasePath == inMemoryDatabasePath
+        ? Directory(p.join(Directory.systemTemp.path, 'clipflow_import_images'))
+        : Directory(
+            p.join(p.dirname(database.databasePath), 'clipboard_images'),
+          );
+    await base.create(recursive: true);
+    return base;
+  }
+
+  String _safeImageExtension(String? value) {
+    final normalized = value?.toLowerCase().replaceAll(
+      RegExp(r'[^a-z0-9]'),
+      '',
+    );
+    return const {
+          'png',
+          'jpg',
+          'jpeg',
+          'gif',
+          'webp',
+          'bmp',
+        }.contains(normalized)
+        ? normalized!
+        : 'png';
   }
 
   Uint8List _randomBytes(int length) {

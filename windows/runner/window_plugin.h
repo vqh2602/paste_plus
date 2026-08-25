@@ -5,18 +5,22 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <flutter/encodable_value.h>
+#include <windows.h>
 
 #include <memory>
 #include <string>
 
 class WindowPlugin {
  public:
-  static void RegisterWithMessenger(flutter::BinaryMessenger* messenger);
+  static void RegisterWithMessenger(
+      flutter::BinaryMessenger* messenger,
+      HWND window_handle);
 
-  WindowPlugin();
+  explicit WindowPlugin(HWND window_handle);
   ~WindowPlugin();
 
  private:
+  HWND window_handle_;
   void HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue>& method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);

@@ -54,6 +54,9 @@ void main() {
       allConnectionsPaused: true,
       vaultEnabled: true,
       vaultWipeAfterFiveFailures: true,
+      ignoreFinancialAndIdentity: false,
+      protectSensitiveWindows: false,
+      hideDuringScreenSharing: true,
     );
 
     await repository.save(changed);
@@ -75,6 +78,9 @@ void main() {
     expect(loaded.allConnectionsPaused, isTrue);
     expect(loaded.vaultEnabled, isTrue);
     expect(loaded.vaultWipeAfterFiveFailures, isTrue);
+    expect(loaded.ignoreFinancialAndIdentity, isFalse);
+    expect(loaded.protectSensitiveWindows, isFalse);
+    expect(loaded.hideDuringScreenSharing, isTrue);
     expect(
       shortcutSignature(
         decodeShortcut(loaded.openPanelShortcut, ShortcutAction.openPanel),

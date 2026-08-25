@@ -1066,10 +1066,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get export_backup_prompt => '백업 파일을 보호할 비밀번호를 입력하세요.';
 
   @override
-  String get export_backup_sub => '설정을 암호화된 .clipflow 파일로 저장';
+  String get export_backup_sub => '클립보드 기록과 설정을 암호화된 .clipflow 파일로 저장';
 
   @override
-  String get export_backup_title => '설정 내보내기';
+  String get export_backup_title => '데이터 내보내기';
 
   @override
   String get filter_by_type => '콘텐츠 유형별 필터';
@@ -1093,6 +1093,26 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ignore_long_token_sub => '긴 시크릿이나 토큰 같은 텍스트를 저장하지 않음';
 
   @override
+  String get ignore_financial_identity => '결제 및 신원 데이터 필터링';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Luhn 검증 카드 번호와 지원 국가에서 인식된 신분증 또는 여권 번호를 저장하지 않습니다';
+
+  @override
+  String get protect_sensitive_windows => '민감한 창 보호';
+
+  @override
+  String get protect_sensitive_windows_sub => '비밀번호 필드와 로그인 창에서는 수집을 일시 중지합니다';
+
+  @override
+  String get hide_during_screen_sharing => '화면 공유 중 숨기기';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      '스크린샷과 화면 녹화에서 ClipFlow 창을 제외합니다';
+
+  @override
   String get ignore_sensitive_sub => '민감해 보이는 콘텐츠를 저장하지 않음';
 
   @override
@@ -1108,10 +1128,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get import_backup_prompt => '백업 파일 복호화를 위한 비밀번호를 입력하세요.';
 
   @override
-  String get import_backup_sub => '설정을 .clipflow 파일에서 복원';
+  String get import_backup_sub => '클립보드 기록과 설정을 .clipflow 파일에서 복원';
 
   @override
-  String get import_backup_title => '설정 가져오기';
+  String get import_backup_title => '데이터 가져오기';
 
   @override
   String get in_app_shortcuts => '인앱 단축키';
@@ -1615,6 +1635,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get vault_enabled_sub => '시스템 컬렉션을 암호화와 인증으로 보호합니다.';
+
+  @override
+  String get vault_enable_failed =>
+      '안전한 기기 저장소에 접근할 수 없습니다. Keychain 또는 Keystore 권한을 확인한 후 다시 시도하세요.';
 
   @override
   String get vault_create_password_title => '비밀 보관함 비밀번호 만들기';

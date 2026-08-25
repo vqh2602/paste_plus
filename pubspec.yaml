@@ -61,6 +61,7 @@ dependencies:
   cryptography_flutter: ^2.3.4
   local_auth: ^3.0.2
   basic_utils: ^5.8.2
+  phone_numbers_parser: ^9.0.25
 
 dev_dependencies:
   flutter_test:

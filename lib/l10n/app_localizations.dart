@@ -2209,13 +2209,13 @@ abstract class AppLocalizations {
   /// No description provided for @export_backup_sub.
   ///
   /// In en, this message translates to:
-  /// **'Save settings to an encrypted .clipflow file'**
+  /// **'Save clipboard history and settings to an encrypted .clipflow file'**
   String get export_backup_sub;
 
   /// No description provided for @export_backup_title.
   ///
   /// In en, this message translates to:
-  /// **'Export Settings'**
+  /// **'Export Data'**
   String get export_backup_title;
 
   /// No description provided for @filter_by_type.
@@ -2260,6 +2260,42 @@ abstract class AppLocalizations {
   /// **'Do not save long secrets or token-like text'**
   String get ignore_long_token_sub;
 
+  /// No description provided for @ignore_financial_identity.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter payment and identity data'**
+  String get ignore_financial_identity;
+
+  /// No description provided for @ignore_financial_identity_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip Luhn-valid payment cards and recognized identity or passport numbers from supported countries'**
+  String get ignore_financial_identity_sub;
+
+  /// No description provided for @protect_sensitive_windows.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensitive window protection'**
+  String get protect_sensitive_windows;
+
+  /// No description provided for @protect_sensitive_windows_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause capture for password fields and sign-in windows'**
+  String get protect_sensitive_windows_sub;
+
+  /// No description provided for @hide_during_screen_sharing.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide during screen sharing'**
+  String get hide_during_screen_sharing;
+
+  /// No description provided for @hide_during_screen_sharing_sub.
+  ///
+  /// In en, this message translates to:
+  /// **'Exclude ClipFlow windows from screenshots and screen recordings'**
+  String get hide_during_screen_sharing_sub;
+
   /// No description provided for @ignore_sensitive_sub.
   ///
   /// In en, this message translates to:
@@ -2293,13 +2329,13 @@ abstract class AppLocalizations {
   /// No description provided for @import_backup_sub.
   ///
   /// In en, this message translates to:
-  /// **'Restore settings from a .clipflow file'**
+  /// **'Restore clipboard history and settings from a .clipflow file'**
   String get import_backup_sub;
 
   /// No description provided for @import_backup_title.
   ///
   /// In en, this message translates to:
-  /// **'Import Settings'**
+  /// **'Import Data'**
   String get import_backup_title;
 
   /// No description provided for @in_app_shortcuts.
@@ -3291,6 +3327,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Protect a system collection with encryption and authentication.'**
   String get vault_enabled_sub;
+
+  /// No description provided for @vault_enable_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Vault could not access secure device storage. Check the Keychain or Keystore permission and try again.'**
+  String get vault_enable_failed;
 
   /// No description provided for @vault_create_password_title.
   ///

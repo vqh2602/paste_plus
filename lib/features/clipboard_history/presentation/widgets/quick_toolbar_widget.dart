@@ -9,6 +9,7 @@ import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
 import 'content_type_filter_sheet.dart';
 import '../../../vault/presentation/vault_dialogs.dart';
+import 'search_syntax_field.dart';
 
 class QuickToolbarWidget extends ConsumerWidget {
   const QuickToolbarWidget({
@@ -180,8 +181,8 @@ class QuickToolbarWidget extends ConsumerWidget {
           const SizedBox(width: 8),
           SizedBox(
             width: 260,
-            child: CupertinoSearchTextField(
-              key: const Key('quick-panel-search'),
+            child: SearchSyntaxField(
+              fieldKey: const Key('quick-panel-search'),
               controller: searchController,
               focusNode: searchFocusNode,
               placeholder: context.l10n.search_in_clipboard,

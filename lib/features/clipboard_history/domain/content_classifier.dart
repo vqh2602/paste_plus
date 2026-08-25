@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import '../../../../core/utils/color_parser.dart';
 import 'clipboard_content_type.dart';
+import 'identity_document_detector.dart';
+import 'international_phone_detector.dart';
 import 'smart_text_tools.dart';
 
 class ContentNormalizer {
@@ -19,7 +21,6 @@ class ContentClassifier {
     r'^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$',
     caseSensitive: false,
   );
-  static final RegExp _phone = RegExp(r'^\+?[0-9][0-9 ()-]{6,18}$');
   static final RegExp _filePath = RegExp(
     r'^(?:/[^\n]+|[A-Za-z]:[\\/][^\n]+|\\\\[^\\/\n]+[\\/][^\n]+|file://[^\n]+)$',
   );
@@ -36,7 +37,15 @@ class ContentClassifier {
     if (_email.hasMatch(value)) return ClipboardContentType.email;
     if (ColorParser.parse(value) != null) return ClipboardContentType.color;
     if (_isEmojiOnly(value)) return ClipboardContentType.emoji;
-    if (_phone.hasMatch(value)) return ClipboardContentType.phone;
+    // Numeric identity documents can also satisfy regional phone metadata.
+    // Keep verified IDs as text so they can be filtered as sensitive data
+    // instead of being presented as phone numbers.
+    if (SensitiveContentDetector.containsIdentityDocument(value)) {
+      return ClipboardContentType.text;
+    }
+    if (InternationalPhoneDetector.isPhoneNumber(value)) {
+      return ClipboardContentType.phone;
+    }
     if (SmartTextTools.isJwt(value)) return ClipboardContentType.jwt;
     if (_isFilePathList(value)) return ClipboardContentType.file;
     if (SmartTextTools.programmingLanguage(value) != null ||
@@ -153,6 +162,7 @@ class SensitiveContentDetector {
     String value, {
     bool ignoreOtp = true,
     bool ignoreLongToken = true,
+    bool ignoreFinancialAndIdentity = true,
   }) {
     final normalized = ContentNormalizer.normalize(value);
     if (ignoreOtp && RegExp(r'^\d{4,8}$').hasMatch(normalized)) return true;
@@ -162,6 +172,40 @@ class SensitiveContentDetector {
         RegExp(r'^[A-Za-z0-9_\-+.=/]+$').hasMatch(normalized)) {
       return true;
     }
+    if (ignoreFinancialAndIdentity && containsFinancialOrIdentity(normalized)) {
+      return true;
+    }
     return false;
+  }
+
+  static bool containsFinancialOrIdentity(String value) {
+    for (final match in RegExp(
+      r'(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)',
+    ).allMatches(value)) {
+      final digits = match.group(0)!.replaceAll(RegExp(r'\D'), '');
+      if (digits.length >= 13 && digits.length <= 19 && _passesLuhn(digits)) {
+        return true;
+      }
+    }
+    return containsIdentityDocument(value);
+  }
+
+  static bool containsIdentityDocument(String value) {
+    return IdentityDocumentDetector.contains(value);
+  }
+
+  static bool _passesLuhn(String digits) {
+    var sum = 0;
+    var doubleDigit = false;
+    for (var index = digits.length - 1; index >= 0; index--) {
+      var digit = digits.codeUnitAt(index) - 0x30;
+      if (doubleDigit) {
+        digit *= 2;
+        if (digit > 9) digit -= 9;
+      }
+      sum += digit;
+      doubleDigit = !doubleDigit;
+    }
+    return sum % 10 == 0;
   }
 }

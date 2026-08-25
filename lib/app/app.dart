@@ -91,6 +91,11 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp>
               );
             },
           );
+      unawaited(
+        ref
+            .read(desktopIntegrationProvider)
+            .setCaptureProtection(settings.hideDuringScreenSharing),
+      );
     });
   }
 
@@ -113,13 +118,24 @@ class _ClipFlowAppState extends ConsumerState<ClipFlowApp>
 
   @override
   void onWindowBlur() {
+    if (_shouldKeepWindowDuringDeviceAuthentication()) return;
     _lockVault();
     unawaited(ref.read(desktopIntegrationProvider).handleWindowBlur());
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state != AppLifecycleState.resumed) _lockVault();
+    if (state != AppLifecycleState.resumed &&
+        !_shouldKeepWindowDuringDeviceAuthentication()) {
+      _lockVault();
+    }
+  }
+
+  bool _shouldKeepWindowDuringDeviceAuthentication() {
+    final vault = ref.read(vaultControllerProvider);
+    final desktop = ref.read(desktopIntegrationProvider);
+    return vault.deviceAuthenticationInProgress ||
+        desktop.shouldIgnoreWindowBlur;
   }
 
   void _lockVault() {

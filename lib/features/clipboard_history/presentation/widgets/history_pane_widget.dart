@@ -12,6 +12,7 @@ import '../../domain/clipboard_item.dart';
 import '../history_controller.dart';
 import 'clipboard_card_widget.dart';
 import 'content_type_filter_sheet.dart';
+import 'search_syntax_field.dart';
 
 class HistoryPaneWidget extends ConsumerWidget {
   const HistoryPaneWidget({
@@ -72,8 +73,8 @@ class HistoryPaneWidget extends ConsumerWidget {
                 const SizedBox(width: 8),
               ],
               Expanded(
-                child: CupertinoSearchTextField(
-                  key: const Key('history-search'),
+                child: SearchSyntaxField(
+                  fieldKey: const Key('history-search'),
                   controller: searchController,
                   focusNode: focusNode,
                   placeholder: context.l10n.search_history_placeholder,

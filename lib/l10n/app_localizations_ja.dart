@@ -1067,10 +1067,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get export_backup_prompt => 'バックアップファイルを保護するパスワードを入力してください。';
 
   @override
-  String get export_backup_sub => '設定を暗号化した .clipflow ファイルに保存';
+  String get export_backup_sub => 'クリップボード履歴と設定を暗号化した .clipflow ファイルに保存';
 
   @override
-  String get export_backup_title => '設定をエクスポート';
+  String get export_backup_title => 'データをエクスポート';
 
   @override
   String get filter_by_type => 'コンテンツタイプでフィルター';
@@ -1094,6 +1094,26 @@ class AppLocalizationsJa extends AppLocalizations {
   String get ignore_long_token_sub => '長いシークレットやトークン的なテキストを保存しない';
 
   @override
+  String get ignore_financial_identity => '支払い・本人確認データを除外';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Luhn 検証済みカード番号と、対応国の認識済み身分証・旅券番号を保存しません';
+
+  @override
+  String get protect_sensitive_windows => '機密ウインドウ保護';
+
+  @override
+  String get protect_sensitive_windows_sub => 'パスワード欄とログイン画面では収集を一時停止します';
+
+  @override
+  String get hide_during_screen_sharing => '画面共有中に非表示';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'ClipFlow ウインドウをスクリーンショットと録画から除外します';
+
+  @override
   String get ignore_sensitive_sub => '機密と思われるコンテンツを保存しない';
 
   @override
@@ -1109,10 +1129,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get import_backup_prompt => 'バックアップファイルを復号化するパスワードを入力してください。';
 
   @override
-  String get import_backup_sub => '設定を .clipflow ファイルから復元';
+  String get import_backup_sub => 'クリップボード履歴と設定を .clipflow ファイルから復元';
 
   @override
-  String get import_backup_title => '設定をインポート';
+  String get import_backup_title => 'データをインポート';
 
   @override
   String get in_app_shortcuts => 'アプリ内ショートカット';
@@ -1616,6 +1636,10 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get vault_enabled_sub => 'システムコレクションを暗号化と認証で保護します。';
+
+  @override
+  String get vault_enable_failed =>
+      '保護されたデバイスストレージにアクセスできませんでした。Keychain または Keystore の権限を確認して再試行してください。';
 
   @override
   String get vault_create_password_title => '保管庫のパスワードを作成';

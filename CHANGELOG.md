@@ -2,6 +2,20 @@
 
 ## [1.2.0] - 2026-08-25
 
+### 🛡️ Bảo vệ dữ liệu nhạy cảm & quyền riêng tư
+- Thêm bộ lọc tùy chọn để bỏ qua số thẻ thanh toán hợp lệ theo thuật toán **Luhn** và mã định danh/hộ chiếu. Nhận dạng trực tiếp bằng checksum hoặc cấu trúc chặt cho Việt Nam, Mỹ, Trung Quốc, Ấn Độ, Nhật Bản, Thái Lan, Singapore, Đài Loan, Tây Ban Nha và Hàn Quốc; hộ chiếu quốc tế còn được nhận qua nhãn đa ngôn ngữ hoặc MRZ ICAO, đồng thời không còn bị phân loại nhầm thành số điện thoại.
+- Mở rộng phân loại số điện thoại bằng metadata libphonenumber cho các quốc gia trên toàn cầu; hỗ trợ mã quốc gia `+`/`00`, định dạng nội địa phổ biến, dấu chấm/gạch/ngoặc, `tel:`, số máy lẻ và chữ số Unicode trong khi loại trừ ngày tháng, mã định danh và mã quốc gia không hợp lệ.
+- Thêm bảo vệ cửa sổ nhạy cảm trên macOS/Windows: bỏ qua clipboard khi con trỏ đang ở ô mật khẩu hoặc tiêu đề cửa sổ thể hiện đăng nhập, xác thực, thanh toán hay ngân hàng.
+- Thêm tùy chọn loại cửa sổ ClipFlow khỏi ảnh chụp, bản ghi và luồng chia sẻ màn hình bằng API bảo vệ nội dung native của hệ điều hành.
+- Tất cả ba lớp bảo vệ đều có công tắc riêng trong **Cài đặt > Quyền riêng tư**.
+- Sửa lỗi bật Tủ khóa trên macOS có thể phát sinh Keychain `-34018`: loại bỏ thao tác xóa khóa xác thực thiết bị không cần thiết, chỉ cập nhật trạng thái sau khi ghi kho bảo mật thành công và hiển thị lỗi có kiểm soát nếu secure storage không khả dụng.
+- Sửa Quick Panel bị ẩn và khóa lại Tủ khóa khi Touch ID/Windows Hello tạm thời làm mất focus; cửa sổ nay giữ nguyên trong quá trình xác thực và tự lấy lại focus sau khi hộp thoại hệ thống đóng.
+
+### 📦 Xuất dữ liệu & tìm kiếm có hướng dẫn
+- Nâng `.clipflow` thành gói dữ liệu đầy đủ gồm cài đặt, lịch sử clipboard, ảnh, Collection và quan hệ phân loại; Tủ khóa cùng khóa mã hóa thiết bị luôn bị loại trừ.
+- Lịch sử được mã hóa xác thực bằng **AES-256-GCM** với khóa PBKDF2-HMAC-SHA256 210.000 vòng; trình nhập bỏ qua trường tương lai chưa biết, bù giá trị mặc định cho trường cũ và vẫn đọc được tệp cấu hình `.clipflow` v1.
+- Thêm đề xuất cú pháp `app:`, `note:`, `type:`, `is:pinned` và `after:` ngay tại ô tìm kiếm của cửa sổ chính lẫn Quick Panel.
+
 ### 🔐 Tủ khóa bảo mật
 - Thêm **Tủ khóa** dưới dạng Collection hệ thống được tạo sẵn, không thể đổi tên hoặc xóa.
 - Clipboard được kéo vào Tủ khóa sẽ biến mất khỏi lịch sử, tìm kiếm, AI và đồng bộ thiết bị; nội dung chỉ hiển thị sau khi mở khóa đúng cách.
@@ -18,7 +32,7 @@
 - Tủ khóa bị loại khỏi FTS, truy vấn AI, dọn lịch sử thông thường và luồng đồng bộ LAN để tránh rò rỉ dữ liệu ngoài ý muốn.
 - Khi tắt Tủ khóa, dữ liệu được giải mã và đưa trở lại lịch sử trước khi khóa mã hóa bị xóa.
 - Bổ sung cấu hình native cho Local Authentication trên Android/iOS và bản địa hóa giao diện Tủ khóa trên cả 6 ngôn ngữ.
-- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh và phân loại Emoji/JWT; toàn bộ **257 kiểm thử** đều đạt.
+- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh, phân loại Emoji/JWT, bộ lọc nhạy cảm, archive và gợi ý tìm kiếm; toàn bộ **272 kiểm thử** đều đạt.
 
 ## [1.1.7] - 2026-08-25
 

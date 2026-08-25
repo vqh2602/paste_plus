@@ -1094,10 +1094,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get export_backup_prompt => 'Nhập mật khẩu để bảo vệ tệp sao lưu.';
 
   @override
-  String get export_backup_sub => 'Lưu cài đặt vào tệp .clipflow được mã hóa';
+  String get export_backup_sub =>
+      'Lưu lịch sử clipboard và cài đặt vào tệp .clipflow được mã hóa';
 
   @override
-  String get export_backup_title => 'Xuất cấu hình';
+  String get export_backup_title => 'Xuất dữ liệu';
 
   @override
   String get filter_by_type => 'Lọc theo loại nội dung';
@@ -1121,6 +1122,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ignore_long_token_sub => 'Không lưu chuỗi bí mật hoặc token dài';
 
   @override
+  String get ignore_financial_identity => 'Lọc dữ liệu thanh toán và định danh';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Bỏ qua số thẻ hợp lệ theo Luhn và số định danh hoặc hộ chiếu được nhận diện từ các quốc gia hỗ trợ';
+
+  @override
+  String get protect_sensitive_windows => 'Bảo vệ cửa sổ nhạy cảm';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Tạm dừng thu thập tại ô mật khẩu và cửa sổ đăng nhập';
+
+  @override
+  String get hide_during_screen_sharing => 'Ẩn khi chia sẻ màn hình';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'Loại cửa sổ ClipFlow khỏi ảnh chụp và bản ghi màn hình';
+
+  @override
   String get ignore_sensitive_sub => 'Không lưu nội dung có vẻ nhạy cảm';
 
   @override
@@ -1136,10 +1158,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get import_backup_prompt => 'Nhập mật khẩu để giải mã tệp sao lưu.';
 
   @override
-  String get import_backup_sub => 'Khôi phục cài đặt từ tệp .clipflow';
+  String get import_backup_sub =>
+      'Khôi phục lịch sử clipboard và cài đặt từ tệp .clipflow';
 
   @override
-  String get import_backup_title => 'Nhập cấu hình';
+  String get import_backup_title => 'Nhập dữ liệu';
 
   @override
   String get in_app_shortcuts => 'Phím tắt trong ứng dụng';
@@ -1662,6 +1685,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get vault_enabled_sub =>
       'Bảo vệ một Collection hệ thống bằng mã hóa và xác thực.';
+
+  @override
+  String get vault_enable_failed =>
+      'Tủ khóa không truy cập được kho bảo mật của thiết bị. Hãy kiểm tra quyền Keychain hoặc Keystore rồi thử lại.';
 
   @override
   String get vault_create_password_title => 'Tạo mật mã Tủ khóa';

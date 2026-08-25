@@ -153,9 +153,11 @@ class _VaultUnlockDialogState extends ConsumerState<_VaultUnlockDialog> {
       _busy = true;
       _error = null;
     });
+    final desktop = ref.read(desktopIntegrationProvider);
     final result = await ref
         .read(vaultControllerProvider.notifier)
         .unlockWithDevice(context.l10n.vault_unlock_sub);
+    await desktop.restoreFocusAfterSystemAuthentication();
     if (!mounted) return;
     if (result == VaultUnlockResult.success) {
       Navigator.pop(context, true);

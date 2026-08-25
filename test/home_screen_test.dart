@@ -243,6 +243,30 @@ void main() {
     expect(find.text('Không tìm thấy kết quả'), findsOneWidget);
   });
 
+  testWidgets('search field suggests and inserts supported syntax', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const Key('history-search')));
+    await tester.pump();
+    expect(find.byKey(const Key('search-syntax-suggestions')), findsOneWidget);
+    expect(find.text('app:'), findsOneWidget);
+    expect(find.text('note:'), findsOneWidget);
+    expect(find.text('type:'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('search-suggestion-app:')));
+    await tester.pump();
+    final editable = tester.widget<EditableText>(
+      find.descendant(
+        of: find.byKey(const Key('history-search')),
+        matching: find.byType(EditableText),
+      ),
+    );
+    expect(editable.controller.text, 'app:');
+  });
+
   testWidgets('pin button persists pinned state', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();

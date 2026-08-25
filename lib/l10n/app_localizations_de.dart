@@ -1119,10 +1119,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get export_backup_sub =>
-      'Einstellungen in eine verschlüsselte .clipflow-Datei speichern';
+      'Zwischenablageverlauf und Einstellungen in einer verschlüsselten .clipflow-Datei speichern';
 
   @override
-  String get export_backup_title => 'Einstellungen exportieren';
+  String get export_backup_title => 'Daten exportieren';
 
   @override
   String get filter_by_type => 'Nach Inhaltstyp filtern';
@@ -1147,6 +1147,28 @@ class AppLocalizationsDe extends AppLocalizations {
       'Lange Geheimnisse oder token-ähnlichen Text nicht speichern';
 
   @override
+  String get ignore_financial_identity =>
+      'Zahlungs- und Identitätsdaten filtern';
+
+  @override
+  String get ignore_financial_identity_sub =>
+      'Luhn-gültige Kartennummern und erkannte Ausweis- oder Passnummern aus unterstützten Ländern überspringen';
+
+  @override
+  String get protect_sensitive_windows => 'Schutz sensibler Fenster';
+
+  @override
+  String get protect_sensitive_windows_sub =>
+      'Erfassung bei Passwortfeldern und Anmeldefenstern pausieren';
+
+  @override
+  String get hide_during_screen_sharing => 'Bei Bildschirmfreigabe ausblenden';
+
+  @override
+  String get hide_during_screen_sharing_sub =>
+      'ClipFlow-Fenster von Screenshots und Aufzeichnungen ausschließen';
+
+  @override
   String get ignore_sensitive_sub =>
       'Inhalte, die sensibel erscheinen, nicht speichern';
 
@@ -1165,10 +1187,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get import_backup_sub =>
-      'Einstellungen aus einer .clipflow-Datei wiederherstellen';
+      'Zwischenablageverlauf und Einstellungen aus einer .clipflow-Datei wiederherstellen';
 
   @override
-  String get import_backup_title => 'Einstellungen importieren';
+  String get import_backup_title => 'Daten importieren';
 
   @override
   String get in_app_shortcuts => 'In-App-Tastenkürzel';
@@ -1701,6 +1723,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get vault_enabled_sub =>
       'Schützt eine System-Sammlung mit Verschlüsselung und Authentifizierung.';
+
+  @override
+  String get vault_enable_failed =>
+      'Der Tresor konnte nicht auf den sicheren Gerätespeicher zugreifen. Keychain- oder Keystore-Berechtigung prüfen und erneut versuchen.';
 
   @override
   String get vault_create_password_title => 'Tresor-Passwort erstellen';
