@@ -1,12 +1,20 @@
 # Changelog
 
+## [1.1.7] - 2026-08-25
+
+### 🐛 Sửa lỗi & Cải tiến
+- **Chia sẻ Clipboard an toàn hơn**:
+  - Refactor cơ chế chia sẻ clipboard để bảo toàn đúng loại nội dung (content types) khi chia sẻ giữa các thiết bị.
+  - Bổ sung kiểm tra an toàn (`mounted context checks`) để tránh lỗi khi widget đã bị huỷ trước khi thao tác hoàn tất.
+
 ## [1.1.6] - 2026-08-25
 
 ### 🚀 Tính năng mới & Cải tiến
 - **Quản lý Clipboard và Collection trực quan hơn**:
   - Cho phép kéo thả clipboard vào Collection ngay trên màn hình danh sách; Collection đích được làm nổi bật khi rê qua và thông báo xác nhận hiển thị đúng tên Collection sau khi thêm.
   - Thu gọn menu thao tác của clipboard, Collection và Quick Panel theo phong cách menu native, không thay đổi bố cục thẻ hiện có.
-  - Bổ sung Preview, Edit, Share, Paste as Plain Text và Open cho liên kết; hỗ trợ chỉnh sửa văn bản, màu và xoay ảnh trước khi lưu.
+  - Bổ sung Preview, Edit, Share, Paste as Plain Text và Open cho liên kết; Share khả dụng với mọi loại clipboard và gửi đúng payload URL, file/ảnh hoặc văn bản để hệ điều hành lọc đích chia sẻ phù hợp.
+  - Hỗ trợ chỉnh sửa văn bản, màu và xoay ảnh trước khi lưu.
 - **Preview và metadata đầy đủ hơn**:
   - Preview văn bản toàn màn hình nội dung và hiển thị kích thước pixel thực tế đối với hình ảnh.
   - Hiển thị số ký tự, kích thước ảnh hoặc kiểu mã màu trong Quick Panel và vùng thông tin chi tiết của cửa sổ chính.
@@ -22,7 +30,7 @@
 
 ### 📱 Nền tảng & Chất lượng
 - Cập nhật tài liệu xác định **iOS (Beta)** và **Android (Beta)**, kèm hướng dẫn build/chạy từ source.
-- Mở rộng kiểm thử hồi quy cho clipboard file, chỉnh sửa/menu, bản địa hóa và request upload ImgBB; toàn bộ 229 kiểm thử đều đạt.
+- Mở rộng kiểm thử hồi quy cho clipboard file, chỉnh sửa/menu, chia sẻ theo loại dữ liệu, bản địa hóa và request upload ImgBB; toàn bộ 235 kiểm thử đều đạt.
 
 ## [1.1.5] - 2026-08-06
 

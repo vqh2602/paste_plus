@@ -470,7 +470,7 @@ class _ImageDimensionsTextState extends State<ImageDimensionsText> {
     final client = HttpClient();
     try {
       final request = await client.getUrl(Uri.parse(url));
-      request.headers.set(HttpHeaders.userAgentHeader, 'ClipFlow/1.1.6');
+      request.headers.set(HttpHeaders.userAgentHeader, 'ClipFlow/1.1.7');
       final response = await request.close();
       if (response.statusCode != HttpStatus.ok) {
         throw HttpException('Image request failed', uri: Uri.parse(url));

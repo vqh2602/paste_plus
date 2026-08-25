@@ -117,7 +117,7 @@ Images copied to the clipboard are written to disk under the sandboxed Applicati
    - Windows reads Explorer `CF_HDROP` paths before `CF_UNICODETEXT` or bitmap formats.
    - A file-list payload suppresses thumbnail bytes, so copied Word, Excel, PDF, folder, or image files are stored as **File** rather than **Image**.
 4. **Classification and persistence**: `ContentClassifier` recognizes URLs, email, phone, color, JSON, code, single/multiple POSIX paths, Windows paths, UNC paths, and file URLs. `SqliteClipboardRepository` normalizes, hashes, deduplicates, extracts searchable features, and persists the item.
-5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Clipboard cards can be dragged onto Collections with hover feedback.
+5. **Presentation actions**: Home and Quick Panel share compact action menus for preview, edit, open, paste-as-plain-text, share, pin, delete, OCR, translation, and cloud upload. Share routing preserves the clipboard type by sending a URI, file/image payload, or text to the platform. Clipboard cards can be dragged onto Collections with hover feedback.
 
 ---
 
