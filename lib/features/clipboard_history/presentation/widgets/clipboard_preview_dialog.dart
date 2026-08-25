@@ -1,4 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
@@ -49,6 +53,8 @@ class _ClipboardPreviewDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final content = item.content;
+    final isImage =
+        item.contentType == ClipboardContentType.image || isImageUrl(content);
     final characterCount = content.runes.length;
     final wordCount = content.trim().isEmpty
         ? 0
@@ -94,22 +100,31 @@ class _ClipboardPreviewDialog extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 11, 16, 13),
                     child: Row(
-                      children: [
-                        _PreviewStat(
-                          value: characterCount,
-                          label: context.l10n.characters,
-                        ),
-                        const _PreviewStatDivider(),
-                        _PreviewStat(
-                          value: wordCount,
-                          label: context.l10n.words,
-                        ),
-                        const _PreviewStatDivider(),
-                        _PreviewStat(
-                          value: lineCount,
-                          label: context.l10n.lines,
-                        ),
-                      ],
+                      children: isImage
+                          ? [
+                              ImageDimensionsText(
+                                path: item.imagePath ?? item.content,
+                                textKey: const Key(
+                                  'clipboard-preview-image-dimensions',
+                                ),
+                              ),
+                            ]
+                          : [
+                              _PreviewStat(
+                                value: characterCount,
+                                label: context.l10n.characters,
+                              ),
+                              const _PreviewStatDivider(),
+                              _PreviewStat(
+                                value: wordCount,
+                                label: context.l10n.words,
+                              ),
+                              const _PreviewStatDivider(),
+                              _PreviewStat(
+                                value: lineCount,
+                                label: context.l10n.lines,
+                              ),
+                            ],
                     ),
                   ),
                 ],
@@ -286,6 +301,203 @@ class _PreviewStat extends StatelessWidget {
           color: resolveColor(context, ClipFlowColors.secondaryText),
         ),
       ),
+    );
+  }
+}
+
+class ImageDimensionsText extends StatefulWidget {
+  const ImageDimensionsText({
+    super.key,
+    required this.path,
+    this.textKey,
+    this.style,
+  });
+
+  final String path;
+  final Key? textKey;
+  final TextStyle? style;
+
+  @override
+  State<ImageDimensionsText> createState() => _ImageDimensionsTextState();
+}
+
+class _ImageDimensionsTextState extends State<ImageDimensionsText> {
+  int? _width;
+  int? _height;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(covariant ImageDimensionsText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.path != widget.path) {
+      _width = null;
+      _height = null;
+      _resolve();
+    }
+  }
+
+  void _resolve() {
+    final path = widget.path;
+    if (!isImageUrl(path)) {
+      final dimensions = _readLocalDimensions(path);
+      if (dimensions != null) {
+        _width = dimensions.$1;
+        _height = dimensions.$2;
+        return;
+      }
+    }
+    unawaited(_resolveWithCodec(path));
+  }
+
+  Future<void> _resolveWithCodec(String path) async {
+    try {
+      final bytes = isImageUrl(path)
+          ? await _download(path)
+          : await File(path).readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final width = frame.image.width;
+      final height = frame.image.height;
+      frame.image.dispose();
+      codec.dispose();
+      if (!mounted || widget.path != path) return;
+      setState(() {
+        _width = width;
+        _height = height;
+      });
+    } on Object {
+      // The preview can still render its normal missing-image state.
+    }
+  }
+
+  (int, int)? _readLocalDimensions(String path) {
+    RandomAccessFile? file;
+    try {
+      file = File(path).openSync();
+      final bytes = file.readSync(math.min(file.lengthSync(), 256 * 1024));
+
+      if (bytes.length >= 24 &&
+          bytes[0] == 0x89 &&
+          bytes[1] == 0x50 &&
+          bytes[2] == 0x4E &&
+          bytes[3] == 0x47) {
+        return (_uint32BigEndian(bytes, 16), _uint32BigEndian(bytes, 20));
+      }
+
+      if (bytes.length >= 10 &&
+          bytes[0] == 0x47 &&
+          bytes[1] == 0x49 &&
+          bytes[2] == 0x46) {
+        return (_uint16LittleEndian(bytes, 6), _uint16LittleEndian(bytes, 8));
+      }
+
+      if (bytes.length >= 30 &&
+          bytes[0] == 0x52 &&
+          bytes[1] == 0x49 &&
+          bytes[2] == 0x46 &&
+          bytes[3] == 0x46 &&
+          bytes[12] == 0x56 &&
+          bytes[13] == 0x50 &&
+          bytes[14] == 0x38 &&
+          bytes[15] == 0x58) {
+        final width = 1 + bytes[24] + (bytes[25] << 8) + (bytes[26] << 16);
+        final height = 1 + bytes[27] + (bytes[28] << 8) + (bytes[29] << 16);
+        return (width, height);
+      }
+
+      if (bytes.length >= 4 && bytes[0] == 0xFF && bytes[1] == 0xD8) {
+        var offset = 2;
+        while (offset + 8 < bytes.length) {
+          if (bytes[offset] != 0xFF) {
+            offset++;
+            continue;
+          }
+          final marker = bytes[offset + 1];
+          if (marker == 0xD8 || marker == 0xD9) {
+            offset += 2;
+            continue;
+          }
+          final segmentLength = (bytes[offset + 2] << 8) + bytes[offset + 3];
+          if (segmentLength < 2 || offset + segmentLength + 2 > bytes.length) {
+            break;
+          }
+          const sizeMarkers = {
+            0xC0,
+            0xC1,
+            0xC2,
+            0xC3,
+            0xC5,
+            0xC6,
+            0xC7,
+            0xC9,
+            0xCA,
+            0xCB,
+            0xCD,
+            0xCE,
+            0xCF,
+          };
+          if (sizeMarkers.contains(marker)) {
+            final height = (bytes[offset + 5] << 8) + bytes[offset + 6];
+            final width = (bytes[offset + 7] << 8) + bytes[offset + 8];
+            return (width, height);
+          }
+          offset += segmentLength + 2;
+        }
+      }
+    } on Object {
+      return null;
+    } finally {
+      file?.closeSync();
+    }
+    return null;
+  }
+
+  int _uint32BigEndian(Uint8List bytes, int offset) =>
+      (bytes[offset] << 24) |
+      (bytes[offset + 1] << 16) |
+      (bytes[offset + 2] << 8) |
+      bytes[offset + 3];
+
+  int _uint16LittleEndian(Uint8List bytes, int offset) =>
+      bytes[offset] | (bytes[offset + 1] << 8);
+
+  Future<Uint8List> _download(String url) async {
+    final client = HttpClient();
+    try {
+      final request = await client.getUrl(Uri.parse(url));
+      request.headers.set(HttpHeaders.userAgentHeader, 'ClipFlow/1.1.5');
+      final response = await request.close();
+      if (response.statusCode != HttpStatus.ok) {
+        throw HttpException('Image request failed', uri: Uri.parse(url));
+      }
+      final builder = BytesBuilder(copy: false);
+      await for (final chunk in response) {
+        builder.add(chunk);
+      }
+      return builder.takeBytes();
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = _width;
+    final height = _height;
+    return Text(
+      width != null && height != null ? '$width × $height px' : '— × — px',
+      key: widget.textKey,
+      style:
+          widget.style ??
+          TextStyle(
+            fontSize: 12,
+            color: resolveColor(context, ClipFlowColors.secondaryText),
+          ),
     );
   }
 }
