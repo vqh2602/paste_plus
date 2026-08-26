@@ -8,6 +8,7 @@ import 'package:cryptography/cryptography.dart' as secure;
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
 
+import '../../../core/constants/app_version.dart';
 import '../../../core/database/app_database.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/content_classifier.dart';
@@ -68,7 +69,7 @@ class SettingsBackupService {
             : 'clipflow_archive_v2',
         'archive_schema': database == null ? 1 : 2,
         'app': 'ClipFlow',
-        'version': '1.2.0',
+        'version': ClipFlowVersion.current,
         'created_at': DateTime.now().toIso8601String(),
         'salt': _toHex(salt),
         'iv': _toHex(iv),

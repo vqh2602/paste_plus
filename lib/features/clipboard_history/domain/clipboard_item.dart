@@ -62,6 +62,7 @@ class ClipboardItem {
     int? copyCount,
     String? note,
     bool clearNote = false,
+    String? metadataJson,
   }) {
     return ClipboardItem(
       id: id,
@@ -77,7 +78,7 @@ class ClipboardItem {
       isPinned: isPinned ?? this.isPinned,
       isSensitive: isSensitive,
       imagePath: imagePath,
-      metadataJson: metadataJson,
+      metadataJson: metadataJson ?? this.metadataJson,
       note: clearNote ? null : (note ?? this.note),
       copyCount: copyCount ?? this.copyCount,
       containsUrl: containsUrl,

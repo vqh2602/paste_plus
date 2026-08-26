@@ -63,7 +63,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get phone => 'Telefon';
 
   @override
-  String get color => 'HEX-Farbe';
+  String get color => 'Farbe';
 
   @override
   String get json => 'JSON';
@@ -140,6 +140,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get open_link => 'Öffnen';
+
+  @override
+  String get open_in_browser => 'Im Browser öffnen';
+
+  @override
+  String get show_in_folder => 'Im Ordner anzeigen';
 
   @override
   String get paste_as_plain_text => 'Als reinen Text einfügen';
@@ -563,6 +569,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get text_transform => 'Text umwandeln';
+
+  @override
+  String get convert_color => 'Farbcode umwandeln';
 
   @override
   String get format_json => 'JSON formatieren';
@@ -1809,4 +1818,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get vault_locked_notice => 'Entsperre zuerst den Tresor.';
+
+  @override
+  String get file_size => 'Dateigröße';
 }

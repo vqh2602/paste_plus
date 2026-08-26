@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/cupertino.dart';
 
+import '../constants/app_version.dart';
+
 bool isImageUrl(String content) {
   final trimmed = content.trim();
   if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
@@ -119,7 +121,7 @@ class _CachedNetworkImageState extends State<CachedNetworkImage> {
       final request = await client.getUrl(Uri.parse(widget.url));
       request.headers.set(
         HttpHeaders.userAgentHeader,
-        'ClipFlow/1.1.7 ImageCache',
+        'ClipFlow/${ClipFlowVersion.current} ImageCache',
       );
       final response = await request.close();
 

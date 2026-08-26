@@ -740,6 +740,34 @@ class DesktopIntegrationService with TrayListener {
     } catch (_) {}
   }
 
+  Future<void> revealInFileManager(String path) async {
+    final trimmed = path.trim();
+    if (trimmed.isEmpty) return;
+    try {
+      final type = FileSystemEntity.typeSync(trimmed, followLinks: true);
+      if (type == FileSystemEntityType.notFound) return;
+      final isDirectory = type == FileSystemEntityType.directory;
+      if (Platform.isMacOS) {
+        await Process.run('open', isDirectory ? [trimmed] : ['-R', trimmed]);
+      } else if (Platform.isWindows) {
+        await Process.run(
+          'explorer.exe',
+          isDirectory ? [trimmed] : ['/select,', trimmed],
+        );
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [
+          isDirectory ? trimmed : File(trimmed).parent.path,
+        ]);
+      }
+    } on Object catch (error) {
+      _logger.log(
+        LogLevel.warning,
+        'Could not reveal clipboard file in the file manager',
+        error: error,
+      );
+    }
+  }
+
   Future<void> restartApp() async {
     if (hasWindowPlugin) {
       try {

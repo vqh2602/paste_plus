@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'clipboard_content_type.dart';
 import 'search_query.dart';
+import 'url_preview_metadata.dart';
 
 class ClipboardFeatures {
   const ClipboardFeatures({
@@ -51,12 +52,15 @@ class ClipboardFeatureExtractor {
       if (uri != null && uri.host.isNotEmpty) urls.add(uri.toString());
     }
     if (contentType == ClipboardContentType.url && urls.isEmpty) {
-      final normalized = content.startsWith('www.') ? 'https://$content' : content;
+      final normalized = content.startsWith('www.')
+          ? 'https://$content'
+          : content;
       final uri = Uri.tryParse(normalized.trim());
       if (uri != null && uri.host.isNotEmpty) urls.add(uri.toString());
     }
 
     String? ocrText;
+    final urlPreview = UrlPreviewMetadata.fromClipboardMetadata(metadataJson);
     if (metadataJson?.isNotEmpty == true) {
       try {
         final metadata = jsonDecode(metadataJson!) as Map<String, dynamic>;
@@ -77,13 +81,21 @@ class ClipboardFeatureExtractor {
       mimeType: _mimeType(extension, contentType),
       fileExtension: extension,
       hasOcrText: ocrText?.isNotEmpty == true,
-      searchableText: [
-        content,
-        ocrText,
-        note,
-        sourceAppName,
-        imagePath,
-      ].whereType<String>().where((value) => value.isNotEmpty).join(' ').toLowerCase(),
+      searchableText:
+          [
+                content,
+                ocrText,
+                urlPreview?.title,
+                urlPreview?.description,
+                urlPreview?.siteName,
+                note,
+                sourceAppName,
+                imagePath,
+              ]
+              .whereType<String>()
+              .where((value) => value.isNotEmpty)
+              .join(' ')
+              .toLowerCase(),
     );
   }
 
@@ -91,8 +103,10 @@ class ClipboardFeatureExtractor {
     if (uri == null) return null;
     final host = uri.host.toLowerCase();
     final path = uri.path.toLowerCase();
-    if (host == 'github.com' || host.endsWith('.github.com') ||
-        host == 'gitlab.com' || host == 'bitbucket.org') {
+    if (host == 'github.com' ||
+        host.endsWith('.github.com') ||
+        host == 'gitlab.com' ||
+        host == 'bitbucket.org') {
       return ClipboardUrlKind.repository;
     }
     if (RegExp(r'\.(png|jpe?g|gif|webp|svg|avif)$').hasMatch(path)) {
@@ -114,7 +128,9 @@ class ClipboardFeatureExtractor {
   }
 
   String? _mimeType(String? extension, ClipboardContentType type) {
-    if (type == ClipboardContentType.image && extension == null) return 'image/png';
+    if (type == ClipboardContentType.image && extension == null) {
+      return 'image/png';
+    }
     return switch (extension) {
       'png' => 'image/png',
       'jpg' || 'jpeg' => 'image/jpeg',

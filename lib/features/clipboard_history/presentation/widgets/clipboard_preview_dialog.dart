@@ -8,12 +8,15 @@ import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show SelectableText;
 
+import '../../../../core/constants/app_version.dart';
 import '../../../../core/ui/cached_network_image_widget.dart';
 import '../../../../core/ui/cupertino_components.dart';
 import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
+import 'clipboard_file_preview.dart';
 import 'detail_pane_widget.dart';
+import 'url_preview_card.dart';
 
 Future<void> showClipboardPreviewDialog({
   required BuildContext context,
@@ -55,6 +58,7 @@ class _ClipboardPreviewDialog extends StatelessWidget {
     final content = item.content;
     final isImage =
         item.contentType == ClipboardContentType.image || isImageUrl(content);
+    final isFile = item.contentType == ClipboardContentType.file;
     final characterCount = content.runes.length;
     final wordCount = content.trim().isEmpty
         ? 0
@@ -106,6 +110,56 @@ class _ClipboardPreviewDialog extends StatelessWidget {
                                 path: item.imagePath ?? item.content,
                                 textKey: const Key(
                                   'clipboard-preview-image-dimensions',
+                                ),
+                              ),
+                              const _PreviewStatDivider(),
+                              Text(
+                                '${context.l10n.file_size}:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.secondaryText,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              ClipboardFileSizeText(
+                                key: const Key(
+                                  'clipboard-preview-image-file-size',
+                                ),
+                                content: item.imagePath ?? item.content,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.secondaryText,
+                                  ),
+                                ),
+                              ),
+                            ]
+                          : isFile
+                          ? [
+                              Text(
+                                '${context.l10n.file_size}:',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.secondaryText,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              ClipboardFileSizeText(
+                                key: const Key('clipboard-preview-file-size'),
+                                content: item.content,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.secondaryText,
+                                  ),
                                 ),
                               ),
                             ]
@@ -228,6 +282,56 @@ class _PreviewContent extends StatelessWidget {
               ],
             ],
           ),
+        ),
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.file) {
+      return LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipboardFilePreview(
+                content: item.content,
+                height: math.max(
+                  180,
+                  math.min(360, constraints.maxHeight - 50),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SelectableText(
+                item.content,
+                key: const Key('clipboard-preview-file-path'),
+                style: TextStyle(
+                  fontSize: 13,
+                  height: 1.45,
+                  color: resolveColor(context, ClipFlowColors.secondaryText),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.url) {
+      return SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            UrlPreviewCard(item: item, imageHeight: 240),
+            const SizedBox(height: 12),
+            SelectableText(
+              item.primaryUrl ?? item.content,
+              key: const Key('clipboard-preview-full-url'),
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.45,
+                color: CupertinoColors.activeBlue,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -470,7 +574,10 @@ class _ImageDimensionsTextState extends State<ImageDimensionsText> {
     final client = HttpClient();
     try {
       final request = await client.getUrl(Uri.parse(url));
-      request.headers.set(HttpHeaders.userAgentHeader, 'ClipFlow/1.1.7');
+      request.headers.set(
+        HttpHeaders.userAgentHeader,
+        'ClipFlow/${ClipFlowVersion.current}',
+      );
       final response = await request.close();
       if (response.statusCode != HttpStatus.ok) {
         throw HttpException('Image request failed', uri: Uri.parse(url));

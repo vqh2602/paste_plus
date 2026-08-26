@@ -18,7 +18,7 @@
   "file": "File Path",
   "email": "Email",
   "phone": "Phone",
-  "color": "HEX Color",
+  "color": "Color",
   "json": "JSON",
   "jwt": "JWT",
   "image": "Image",
@@ -44,6 +44,8 @@
   "clipboard_update_failed": "Unable to update this clipboard",
   "invalid_color_code": "Enter a valid color code",
   "open_link": "Open",
+  "open_in_browser": "Open in browser",
+  "show_in_folder": "Show in folder",
   "paste_as_plain_text": "Paste as Plain Text",
   "share_clipboard": "Share",
   "share_failed": "Unable to share this clipboard",
@@ -178,6 +180,7 @@
   "translate_success": "Text translated & copy created",
   "translate_failed": "Unable to translate text",
   "text_transform": "Text conversion",
+  "convert_color": "Convert color code",
   "format_json": "Format JSON",
   "minify_json": "Minify JSON",
   "encode_base64": "Encode Base64",
@@ -561,5 +564,6 @@
   "vault_encryption_title": "AES-256 encrypted at rest",
   "vault_encryption_sub": "Clipboard content, metadata and image files are encrypted before being stored.",
   "vault_disable_confirm": "Disable Vault and restore its decrypted items to clipboard history?",
-  "vault_locked_notice": "Unlock the Vault before continuing."
+  "vault_locked_notice": "Unlock the Vault before continuing.",
+  "file_size": "File size"
 }

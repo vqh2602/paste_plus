@@ -4,7 +4,7 @@ Extracts changelog release notes for a specific version or tag from CHANGELOG.md
 Usage:
     python3 tool/extract_changelog.py [tag_or_version] [output_file]
 Example:
-    python3 tool/extract_changelog.py v1.1.6 RELEASE_NOTES.md
+    python3 tool/extract_changelog.py v2.0.0 RELEASE_NOTES.md
 """
 
 import re
@@ -32,7 +32,7 @@ def extract_changelog(tag_or_version: str, changelog_path: str = "CHANGELOG.md")
 
     content = file_path.read_text(encoding="utf-8")
 
-    # Try exact match for ## [1.1.6]
+    # Try exact match for a heading such as ## [2.0.0]
     pattern = rf"(##\s*\[{re.escape(version)}\][^\n]*\n(?:(?!##\s*\[).)*)"
     match = re.search(pattern, content, re.DOTALL)
 

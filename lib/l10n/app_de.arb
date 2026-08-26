@@ -20,7 +20,7 @@
   "file": "Dateipfad",
   "email": "E-Mail",
   "phone": "Telefon",
-  "color": "HEX-Farbe",
+  "color": "Farbe",
   "json": "JSON",
   "jwt": "JWT",
   "image": "Bild",
@@ -46,6 +46,8 @@
   "clipboard_update_failed": "Zwischenablage konnte nicht aktualisiert werden",
   "invalid_color_code": "Gültigen Farbcode eingeben",
   "open_link": "Öffnen",
+  "open_in_browser": "Im Browser öffnen",
+  "show_in_folder": "Im Ordner anzeigen",
   "paste_as_plain_text": "Als reinen Text einfügen",
   "share_clipboard": "Teilen",
   "share_failed": "Zwischenablage konnte nicht geteilt werden",
@@ -180,6 +182,7 @@
   "translate_success": "Text übersetzt & Kopie erstellt",
   "translate_failed": "Text konnte nicht übersetzt werden",
   "text_transform": "Text umwandeln",
+  "convert_color": "Farbcode umwandeln",
   "format_json": "JSON formatieren",
   "minify_json": "JSON minimieren",
   "encode_base64": "Base64 kodieren",
@@ -563,5 +566,6 @@
   "vault_encryption_title": "AES-256-Verschlüsselung im Ruhezustand",
   "vault_encryption_sub": "Inhalt, Metadaten und Bilddateien werden vor dem Speichern verschlüsselt.",
   "vault_disable_confirm": "Tresor deaktivieren und entschlüsselte Objekte in den Verlauf zurückholen?",
-  "vault_locked_notice": "Entsperre zuerst den Tresor."
+  "vault_locked_notice": "Entsperre zuerst den Tresor.",
+  "file_size": "Dateigröße"
 }

@@ -4,6 +4,7 @@ import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../../../core/ui/cupertino_components.dart';
+import '../../../../core/utils/color_parser.dart';
 import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../../domain/smart_text_tools.dart';
@@ -21,7 +22,8 @@ Future<String?> showClipboardActionMenu({
   final canTransformText =
       hasPlainText &&
       item.contentType != ClipboardContentType.image &&
-      item.contentType != ClipboardContentType.file;
+      item.contentType != ClipboardContentType.file &&
+      item.contentType != ClipboardContentType.color;
   final l10n = context.l10n;
 
   final actions = <CompactMenuAction>[
@@ -49,6 +51,14 @@ Future<String?> showClipboardActionMenu({
         value: 'text_transform',
         icon: CupertinoIcons.arrow_2_squarepath,
         label: l10n.text_transform,
+        trailingIcon: CupertinoIcons.chevron_right,
+        dividerBefore: true,
+      ),
+    if (!protectVaultContent && item.contentType == ClipboardContentType.color)
+      CompactMenuAction(
+        value: 'color_convert',
+        icon: CupertinoIcons.paintbrush,
+        label: l10n.convert_color,
         trailingIcon: CupertinoIcons.chevron_right,
         dividerBefore: true,
       ),
@@ -129,6 +139,42 @@ Future<String?> showClipboardActionMenu({
     itemKeyPrefix: 'clipboard-action',
   );
 }
+
+Future<ClipboardColorFormat?> showColorConversionMenu({
+  required BuildContext context,
+  required String value,
+}) async {
+  final color = ColorParser.parse(value);
+  if (color == null) return null;
+  final action = await showCompactActionMenu(
+    context: context,
+    menuKey: const Key('color-convert-menu'),
+    itemKeyPrefix: 'color-convert',
+    preferredWidth: 340,
+    actions: [
+      for (final format in ClipboardColorFormat.values)
+        CompactMenuAction(
+          value: format.name,
+          icon: _colorFormatIcon(format),
+          label:
+              '${format.name.toUpperCase()}  ·  '
+              '${ColorParser.formatColor(color, format)}',
+        ),
+    ],
+  );
+  if (action == null) return null;
+  return ClipboardColorFormat.values.firstWhere(
+    (format) => format.name == action,
+  );
+}
+
+IconData _colorFormatIcon(ClipboardColorFormat format) => switch (format) {
+  ClipboardColorFormat.hex => CupertinoIcons.number,
+  ClipboardColorFormat.rgb => CupertinoIcons.circle_grid_hex,
+  ClipboardColorFormat.hsl => CupertinoIcons.slider_horizontal_3,
+  ClipboardColorFormat.hsv => CupertinoIcons.drop,
+  ClipboardColorFormat.cmyk => CupertinoIcons.paintbrush,
+};
 
 Future<TextTransform?> showTextTransformMenu({
   required BuildContext context,
@@ -218,6 +264,7 @@ Future<String?> showCompactActionMenu({
   required List<CompactMenuAction> actions,
   Key? menuKey,
   String itemKeyPrefix = 'compact-action',
+  double preferredWidth = 238,
 }) {
   final anchorBox = context.findRenderObject() as RenderBox?;
   final overlayBox =
@@ -228,7 +275,10 @@ Future<String?> showCompactActionMenu({
   final anchorSize = anchorBox?.size ?? Size.zero;
   final viewport = MediaQuery.sizeOf(context);
   final safePadding = MediaQuery.paddingOf(context);
-  final menuWidth = math.min(238.0, math.max(1.0, viewport.width - 16));
+  final menuWidth = math.min(
+    preferredWidth,
+    math.max(1.0, viewport.width - 16),
+  );
   final dividerCount = actions.where((action) => action.dividerBefore).length;
   final estimatedHeight = actions.length * 36.0 + dividerCount * 9.0 + 14;
   final maxBottom = viewport.height - safePadding.bottom - 8;

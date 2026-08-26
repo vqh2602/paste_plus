@@ -10,14 +10,18 @@ import 'package:clipflow/features/clipboard_history/domain/clipboard_item.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_payload.dart';
 import 'package:clipflow/features/clipboard_history/domain/clipboard_repository.dart';
 import 'package:clipflow/features/clipboard_history/domain/content_classifier.dart';
+import 'package:clipflow/features/clipboard_history/domain/url_preview_metadata.dart';
 import 'package:clipflow/features/clipboard_history/presentation/home_screen.dart';
 import 'package:clipflow/features/clipboard_history/presentation/history_controller.dart';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/search_syntax_field.dart';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/sidebar_widget.dart';
+import 'package:clipflow/features/clipboard_history/presentation/widgets/clipboard_file_preview.dart';
+import 'package:clipflow/features/clipboard_history/services/url_preview_service.dart';
 import 'package:clipflow/features/settings/data/settings_repository.dart';
 import 'package:clipflow/features/settings/domain/app_settings.dart';
 import 'package:clipflow/l10n/app_localizations.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -45,6 +49,13 @@ class MockClipboardWatcher implements ClipboardWatcher {
   }
 
   Future<void> dispose() => controller.close();
+}
+
+class _NoopUrlPreviewService extends UrlPreviewService {
+  const _NoopUrlPreviewService();
+
+  @override
+  Future<UrlPreviewMetadata?> fetch(String value) async => null;
 }
 
 class InMemoryClipboardRepository
@@ -217,6 +228,9 @@ void main() {
     overrides: [
       clipboardRepositoryProvider.overrideWithValue(repository),
       clipboardWatcherProvider.overrideWithValue(watcher),
+      urlPreviewServiceProvider.overrideWithValue(
+        const _NoopUrlPreviewService(),
+      ),
       settingsRepositoryProvider.overrideWithValue(settingsRepository),
       if (quickPanel) quickPanelModeProvider.overrideWith((ref) => true),
     ],
@@ -242,6 +256,140 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Không tìm thấy kết quả'), findsOneWidget);
+  });
+
+  testWidgets('clicking empty card space activates a short clipboard item', (
+    tester,
+  ) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    final card = find.byKey(const Key('clipboard-item'));
+    final bounds = tester.getRect(card);
+
+    await tester.tapAt(Offset(bounds.right - 16, bounds.bottom - 16));
+    await tester.pump();
+
+    expect(watcher.current?.text, 'https://flutter.dev');
+  });
+
+  testWidgets('shows rich URL preview in the desktop detail pane', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final metadataJson = UrlPreviewMetadata(
+      resolvedUrl: 'https://flutter.dev',
+      fetchedAt: DateTime.now().toUtc(),
+      title: 'Flutter documentation',
+      description: 'Build apps for any screen from a single codebase.',
+      siteName: 'Flutter',
+    ).mergeIntoClipboardMetadata(null);
+    repository.items[0] = repository.items[0].copyWith(
+      metadataJson: metadataJson,
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('url-preview-card')), findsOneWidget);
+    expect(find.byKey(const Key('url-preview-image-fallback')), findsOneWidget);
+    expect(find.text('Flutter documentation'), findsOneWidget);
+    expect(
+      find.text('Build apps for any screen from a single codebase.'),
+      findsOneWidget,
+    );
+    final fullUrl = find.byKey(const Key('detail-pane-full-url'));
+    expect(fullUrl, findsOneWidget);
+    expect(tester.widget<Text>(fullUrl).textAlign, TextAlign.start);
+    expect(tester.widget<Text>(fullUrl).data, 'https://\u2060flutter.dev');
+    expect(find.byKey(const Key('detail-copy-action')), findsOneWidget);
+    expect(find.byKey(const Key('detail-open-browser-action')), findsOneWidget);
+    expect(find.byKey(const Key('detail-translate-action')), findsOneWidget);
+    expect(find.byKey(const Key('detail-pin-action')), findsOneWidget);
+    expect(find.text('Sao chép lại'), findsNothing);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    await mouse.moveTo(
+      tester.getCenter(find.byKey(const Key('detail-open-browser-action'))),
+    );
+    await tester.pump(const Duration(milliseconds: 700));
+    expect(find.text('Mở trong trình duyệt'), findsOneWidget);
+    await mouse.removePointer();
+  });
+
+  testWidgets('file detail exposes show-in-folder as a top icon', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final directory = Directory.systemTemp.createTempSync(
+      'clipflow-detail-file-',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+    final file = File('${directory.path}/notes.txt');
+    file.writeAsStringSync('notes');
+    repository.items[0] = ClipboardItem(
+      id: 'file-detail-item',
+      content: file.path,
+      normalizedContent: file.path,
+      contentHash: 'file-detail-hash',
+      contentType: ClipboardContentType.file,
+      createdAt: DateTime(2026, 8, 26),
+      updatedAt: DateTime(2026, 8, 26),
+      lastCopiedAt: DateTime(2026, 8, 26),
+      isPinned: false,
+      isSensitive: false,
+      copyCount: 1,
+    );
+
+    await tester.pumpWidget(app());
+    await tester.pump(const Duration(milliseconds: 700));
+
+    final action = find.byKey(const Key('detail-show-in-folder-action'));
+    expect(action, findsOneWidget);
+    expect(tester.widget<CupertinoIconControl>(action).onPressed, isNotNull);
+    expect(
+      tester.widget<CupertinoIconControl>(action).tooltip,
+      'Hiển thị trong thư mục',
+    );
+    expect(find.byKey(const Key('clipboard-file-preview')), findsOneWidget);
+    expect(find.byKey(const Key('detail-pane-file-path')), findsOneWidget);
+    final size = find.byKey(const Key('detail-pane-file-size'));
+    expect(size, findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(find.descendant(of: size, matching: find.byType(Text)))
+          .data,
+      '5 B',
+    );
+    expect(find.text('Kích thước file'), findsOneWidget);
+    expect(find.byKey(const Key('detail-translate-action')), findsNothing);
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('clipboard-action-preview')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('clipboard-preview-dialog')), findsOneWidget);
+    expect(
+      find.byKey(const Key('clipboard-preview-file-path')),
+      findsOneWidget,
+    );
+    final previewSize = find.byKey(const Key('clipboard-preview-file-size'));
+    expect(previewSize, findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: previewSize, matching: find.byType(Text)),
+          )
+          .data,
+      '5 B',
+    );
   });
 
   testWidgets('search field suggests and inserts supported syntax', (
@@ -441,6 +589,48 @@ void main() {
     await tester.pump(const Duration(seconds: 2));
   });
 
+  testWidgets('color menu converts to another color-code format', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    repository.items[0] = repository.items[0].copyWith(
+      content: '#ea3380',
+      normalizedContent: '#ea3380',
+      contentType: ClipboardContentType.color,
+    );
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('clipboard-color-preview-compact')),
+      findsNothing,
+    );
+    expect(find.byKey(const Key('clipboard-color-preview')), findsOneWidget);
+    expect(find.text('Violet Red'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('item-more-button')));
+    await tester.pumpAndSettle();
+    expect(find.text('Chuyển đổi mã màu'), findsOneWidget);
+    expect(find.text('Chuyển đổi văn bản'), findsNothing);
+
+    await tester.tap(find.byKey(const Key('clipboard-action-color_convert')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('color-convert-menu')), findsOneWidget);
+    expect(find.textContaining('rgb(234, 51, 128)'), findsOneWidget);
+    expect(find.textContaining('hsl(335°'), findsOneWidget);
+    expect(find.textContaining('cmyk(0%'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('color-convert-rgb')));
+    await tester.pump(const Duration(milliseconds: 400));
+
+    expect(watcher.current?.text, 'rgb(234, 51, 128)');
+    expect(find.text('Đã sao chép kết quả chuyển đổi'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+  });
+
   testWidgets('valid math expression shows its instant result', (tester) async {
     repository.items[0] = repository.items[0].copyWith(
       content: '2 + 3 * (4 - 1)',
@@ -579,6 +769,16 @@ void main() {
     );
     expect(dimensions, findsOneWidget);
     expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+    final fileSize = find.byKey(const Key('clipboard-preview-image-file-size'));
+    expect(fileSize, findsOneWidget);
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: fileSize, matching: find.byType(Text)),
+          )
+          .data,
+      formatFileSize(imageFile.lengthSync()),
+    );
   });
 
   testWidgets('collection options use the compact anchored menu', (
@@ -751,12 +951,20 @@ void main() {
     expect(find.text('Finder'), findsOneWidget);
     expect(find.text('Design Tool'), findsOneWidget);
     expect(find.text('5 ký tự'), findsOneWidget);
+    expect(
+      find.byKey(const Key('clipboard-color-preview-compact')),
+      findsNothing,
+    );
 
     final dimensions = find.byKey(
       const Key('quick-card-image-metadata-image-item'),
     );
     expect(dimensions, findsOneWidget);
     expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+    final quickFileSize = find.byKey(
+      const Key('quick-card-image-file-size-image-item'),
+    );
+    expect(quickFileSize, findsOneWidget);
 
     final colorFormat = find.byKey(
       const Key('quick-card-color-metadata-color-item'),
@@ -819,6 +1027,24 @@ void main() {
     final dimensions = find.byKey(const Key('detail-pane-image-metadata'));
     expect(dimensions, findsOneWidget);
     expect(tester.widget<Text>(dimensions).data, '1254 × 1254 px');
+    expect(find.text('Kích thước'), findsOneWidget);
+    final imageFileSize = find.byKey(const Key('detail-pane-image-file-size'));
+    expect(imageFileSize, findsOneWidget);
+    final imagePath =
+        '${Directory.current.path}/assets/branding/clipflow_app_icon.png';
+    expect(
+      tester
+          .widget<Text>(
+            find.descendant(of: imageFileSize, matching: find.byType(Text)),
+          )
+          .data,
+      formatFileSize(File(imagePath).lengthSync()),
+    );
+    expect(find.text('Kích thước file'), findsOneWidget);
+    expect(find.byKey(const Key('detail-ocr-action')), findsOneWidget);
+    expect(find.byKey(const Key('detail-cloud-upload-action')), findsOneWidget);
+    expect(find.byKey(const Key('detail-copy-action')), findsOneWidget);
+    expect(find.text('Sao chép lại'), findsNothing);
 
     await show(
       item(

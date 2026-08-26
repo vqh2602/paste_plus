@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0] - 2026-08-25
+## [2.0.0] - 2026-08-25
 
 ### 🛡️ Bảo vệ dữ liệu nhạy cảm & quyền riêng tư
 - Thêm bộ lọc tùy chọn để bỏ qua số thẻ thanh toán hợp lệ theo thuật toán **Luhn** và mã định danh/hộ chiếu. Nhận dạng trực tiếp bằng checksum hoặc cấu trúc chặt cho Việt Nam, Mỹ, Trung Quốc, Ấn Độ, Nhật Bản, Thái Lan, Singapore, Đài Loan, Tây Ban Nha và Hàn Quốc; hộ chiếu quốc tế còn được nhận qua nhãn đa ngôn ngữ hoặc MRZ ICAO, đồng thời không còn bị phân loại nhầm thành số điện thoại.
@@ -34,7 +34,7 @@
 - Tủ khóa bị loại khỏi FTS, truy vấn AI, dọn lịch sử thông thường và luồng đồng bộ LAN để tránh rò rỉ dữ liệu ngoài ý muốn.
 - Khi tắt Tủ khóa, dữ liệu được giải mã và đưa trở lại lịch sử trước khi khóa mã hóa bị xóa.
 - Bổ sung cấu hình native cho Local Authentication trên Android/iOS và bản địa hóa giao diện Tủ khóa trên cả 6 ngôn ngữ.
-- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh, phân loại Emoji/JWT, bộ lọc nhạy cảm, archive và gợi ý tìm kiếm; toàn bộ **272 kiểm thử** đều đạt.
+- Nâng schema SQLite lên phiên bản 8, bổ sung kiểm thử mã hóa văn bản/ảnh, khóa/mở khóa, khôi phục, tự xóa, công cụ văn bản thông minh, phân loại Emoji/JWT, bộ lọc nhạy cảm, archive và gợi ý tìm kiếm; toàn bộ **273 kiểm thử** đều đạt.
 
 ## [1.1.7] - 2026-08-25
 

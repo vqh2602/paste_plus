@@ -12,6 +12,7 @@ import '../../domain/clipboard_content_type.dart';
 import '../../domain/clipboard_item.dart';
 import '../../domain/smart_text_tools.dart';
 import 'calculation_result_line.dart';
+import 'clipboard_file_preview.dart';
 import 'clipboard_preview_dialog.dart';
 
 class QuickClipboardCardWidget extends ConsumerWidget {
@@ -421,7 +422,7 @@ class _SourceAndMetadata extends StatelessWidget {
     final metadata = _metadata(context);
     return Row(
       children: [
-        Flexible(
+        Expanded(
           child: Text(
             item.sourceAppName ?? context.l10n.this_device,
             key: Key('quick-card-source-${item.id}'),
@@ -429,7 +430,16 @@ class _SourceAndMetadata extends StatelessWidget {
             style: _style,
           ),
         ),
-        if (metadata != null) ...[const Text(' · ', style: _style), metadata],
+        if (metadata != null) ...[
+          const Text(' · ', style: _style),
+          Flexible(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FittedBox(fit: BoxFit.scaleDown, child: metadata),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -445,10 +455,21 @@ class _SourceAndMetadata extends StatelessWidget {
 
     if (item.contentType == ClipboardContentType.image ||
         isImageUrl(item.content)) {
-      return ImageDimensionsText(
-        path: item.imagePath ?? item.content,
-        textKey: Key('quick-card-image-metadata-${item.id}'),
-        style: _style,
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ImageDimensionsText(
+            path: item.imagePath ?? item.content,
+            textKey: Key('quick-card-image-metadata-${item.id}'),
+            style: _style,
+          ),
+          const Text(' · ', style: _style),
+          ClipboardFileSizeText(
+            key: Key('quick-card-image-file-size-${item.id}'),
+            content: item.imagePath ?? item.content,
+            style: _style,
+          ),
+        ],
       );
     }
 

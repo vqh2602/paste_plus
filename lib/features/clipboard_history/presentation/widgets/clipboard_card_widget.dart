@@ -69,7 +69,9 @@ class ClipboardCardWidget extends ConsumerWidget {
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // Stretch the body pressable across the card so short clipboard
+        // content does not leave a non-clickable empty area on the right.
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 10, 8, 4),

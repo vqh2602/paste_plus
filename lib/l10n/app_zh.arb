@@ -18,7 +18,7 @@
   "file": "文件路径",
   "email": "电子邮件",
   "phone": "电话",
-  "color": "十六进制颜色",
+  "color": "颜色",
   "json": "JSON",
   "jwt": "JWT 令牌",
   "image": "图片",
@@ -44,6 +44,8 @@
   "clipboard_update_failed": "无法更新此剪贴板",
   "invalid_color_code": "输入有效的颜色代码",
   "open_link": "打开",
+  "open_in_browser": "在浏览器中打开",
+  "show_in_folder": "在文件夹中显示",
   "paste_as_plain_text": "粘贴为纯文本",
   "share_clipboard": "分享",
   "share_failed": "无法共享此剪贴板",
@@ -178,6 +180,7 @@
   "translate_success": "翻译文本并创建副本",
   "translate_failed": "无法翻译文本",
   "text_transform": "文本转换",
+  "convert_color": "转换颜色代码",
   "format_json": "格式化 JSON",
   "minify_json": "压缩 JSON",
   "encode_base64": "Base64 编码",
@@ -561,5 +564,6 @@
   "vault_encryption_title": "AES-256 静态加密",
   "vault_encryption_sub": "剪贴板内容、元数据和图片文件在存储前会被加密。",
   "vault_disable_confirm": "禁用保险库并将解密后的项目恢复到剪贴板历史记录？",
-  "vault_locked_notice": "请先解锁保险库。"
+  "vault_locked_notice": "请先解锁保险库。",
+  "file_size": "文件大小"
 }

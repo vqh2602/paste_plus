@@ -217,7 +217,7 @@ abstract class AppLocalizations {
   /// No description provided for @color.
   ///
   /// In en, this message translates to:
-  /// **'HEX Color'**
+  /// **'Color'**
   String get color;
 
   /// No description provided for @json.
@@ -369,6 +369,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open'**
   String get open_link;
+
+  /// No description provided for @open_in_browser.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in browser'**
+  String get open_in_browser;
+
+  /// No description provided for @show_in_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in folder'**
+  String get show_in_folder;
 
   /// No description provided for @paste_as_plain_text.
   ///
@@ -1173,6 +1185,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Text conversion'**
   String get text_transform;
+
+  /// No description provided for @convert_color.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert color code'**
+  String get convert_color;
 
   /// No description provided for @format_json.
   ///
@@ -3477,6 +3495,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unlock the Vault before continuing.'**
   String get vault_locked_notice;
+
+  /// No description provided for @file_size.
+  ///
+  /// In en, this message translates to:
+  /// **'File size'**
+  String get file_size;
 }
 
 class _AppLocalizationsDelegate
