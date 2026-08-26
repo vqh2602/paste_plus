@@ -73,59 +73,15 @@ class SidebarWidget extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(
-                  key: const Key('sidebar-library-title'),
-                  padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
-                  child: Text(
-                    context.l10n.library,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: resolveColor(
-                        context,
-                        ClipFlowColors.secondaryText,
-                      ),
-                    ),
-                  ),
-                ),
-                SidebarTileWidget(
-                  icon: CupertinoIcons.tray_full,
-                  label: context.l10n.all,
-                  selected: state.section == HistorySection.all,
-                  onTap: () => selectSection(HistorySection.all),
-                ),
-                SidebarTileWidget(
-                  icon: CupertinoIcons.pin,
-                  label: context.l10n.pinned,
-                  selected: state.section == HistorySection.pinned,
-                  onTap: () => selectSection(HistorySection.pinned),
-                ),
-                SidebarTileWidget(
-                  icon: CupertinoIcons.photo,
-                  label: context.l10n.images,
-                  selected: state.section == HistorySection.images,
-                  onTap: () => selectSection(HistorySection.images),
-                ),
-                SidebarTileWidget(
-                  icon: CupertinoIcons.link,
-                  label: context.l10n.links,
-                  selected: state.section == HistorySection.links,
-                  onTap: () => selectSection(HistorySection.links),
-                ),
-                SidebarTileWidget(
-                  icon: CupertinoIcons.chevron_left_slash_chevron_right,
-                  label: context.l10n.code,
-                  selected: state.section == HistorySection.code,
-                  onTap: () => selectSection(HistorySection.code),
-                ),
-                const SizedBox(height: 18),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 10),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      Padding(
+                        key: const Key('sidebar-library-title'),
+                        padding: const EdgeInsets.fromLTRB(10, 2, 10, 8),
                         child: Text(
-                          context.l10n.collections,
+                          context.l10n.library,
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -136,18 +92,63 @@ class SidebarWidget extends ConsumerWidget {
                           ),
                         ),
                       ),
-                    ),
-                    CupertinoIconControl(
-                      icon: CupertinoIcons.add,
-                      size: 16,
-                      onPressed: onCreateCollection,
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
+                      SidebarTileWidget(
+                        icon: CupertinoIcons.tray_full,
+                        label: context.l10n.all,
+                        selected: state.section == HistorySection.all,
+                        onTap: () => selectSection(HistorySection.all),
+                      ),
+                      SidebarTileWidget(
+                        icon: CupertinoIcons.pin,
+                        label: context.l10n.pinned,
+                        selected: state.section == HistorySection.pinned,
+                        onTap: () => selectSection(HistorySection.pinned),
+                      ),
+                      SidebarTileWidget(
+                        icon: CupertinoIcons.photo,
+                        label: context.l10n.images,
+                        selected: state.section == HistorySection.images,
+                        onTap: () => selectSection(HistorySection.images),
+                      ),
+                      SidebarTileWidget(
+                        icon: CupertinoIcons.link,
+                        label: context.l10n.links,
+                        selected: state.section == HistorySection.links,
+                        onTap: () => selectSection(HistorySection.links),
+                      ),
+                      SidebarTileWidget(
+                        icon: CupertinoIcons.chevron_left_slash_chevron_right,
+                        label: context.l10n.code,
+                        selected: state.section == HistorySection.code,
+                        onTap: () => selectSection(HistorySection.code),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(
+                                context.l10n.collections,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: resolveColor(
+                                    context,
+                                    ClipFlowColors.secondaryText,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          CupertinoIconControl(
+                            icon: CupertinoIcons.add,
+                            size: 16,
+                            onPressed: onCreateCollection,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
                       for (final collection in collections)
                         DragTarget<ClipboardItem>(
                           key: Key('collection-drop-target-${collection.id}'),

@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:clipflow/features/clipboard_history/presentation/widgets/clipboard_file_preview.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test('parses file URIs and reports the combined size', () {
@@ -35,7 +36,6 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
 
     expect(find.byKey(const Key('clipboard-file-preview')), findsOneWidget);
     expect(
@@ -64,5 +64,33 @@ void main() {
     );
     expect(find.text('PDF'), findsOneWidget);
     expect(find.text('report.pdf'), findsOneWidget);
+  });
+
+  testWidgets('renders a folder icon for a copied directory path', (
+    tester,
+  ) async {
+    final directory = Directory.systemTemp.createTempSync(
+      'clipflow-folder-preview-',
+    );
+    addTearDown(() => directory.deleteSync(recursive: true));
+
+    await tester.pumpWidget(
+      CupertinoApp(
+        home: CupertinoPageScaffold(
+          child: ClipboardFilePreview(content: directory.path, height: 240),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('clipboard-file-preview-folder-icon')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('clipboard-file-preview-document-icon')),
+      findsNothing,
+    );
+    expect(find.text(p.basename(directory.path)), findsOneWidget);
   });
 }

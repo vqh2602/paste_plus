@@ -84,6 +84,37 @@ class MainFlutterWindow: NSWindow {
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
         result(nil)
+      case "writeFiles":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let filePaths = arguments["filePaths"] as? [String],
+          !filePaths.isEmpty
+        else {
+          result(FlutterError(code: "invalid_arguments", message: "Missing file paths", details: nil))
+          return
+        }
+        let fileURLs = filePaths.map { NSURL(fileURLWithPath: $0) }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        guard pasteboard.writeObjects(fileURLs) else {
+          result(FlutterError(code: "clipboard_write_failed", message: "Could not write files", details: nil))
+          return
+        }
+        // Some chat inputs ignore file URLs but accept image clipboard data.
+        // Publish the original compressed bytes instead of decoding the full
+        // image and encoding it again as both PNG and TIFF on the main thread.
+        if
+          let imageBase64 = arguments["imageBase64"] as? String,
+          let imageData = Data(base64Encoded: imageBase64)
+        {
+          pasteboard.setData(imageData, forType: .png)
+        } else if
+          filePaths.count == 1,
+          let imageRepresentation = Self.originalImageRepresentation(at: filePaths[0])
+        {
+          pasteboard.setData(imageRepresentation.data, forType: imageRepresentation.type)
+        }
+        result(pasteboard.changeCount)
       case "writeImage":
         guard
           let arguments = call.arguments as? [String: Any],
@@ -442,6 +473,42 @@ class MainFlutterWindow: NSWindow {
       return nil
     }
     return representation.representation(using: .png, properties: [:])
+  }
+
+  private static func originalImageRepresentation(
+    at path: String
+  ) -> (type: NSPasteboard.PasteboardType, data: Data)? {
+    let fileExtension = URL(fileURLWithPath: path).pathExtension.lowercased()
+    let pasteboardType: NSPasteboard.PasteboardType
+    switch fileExtension {
+    case "png":
+      pasteboardType = .png
+    case "jpg", "jpeg", "jpe":
+      pasteboardType = NSPasteboard.PasteboardType("public.jpeg")
+    case "tif", "tiff":
+      pasteboardType = .tiff
+    case "gif":
+      pasteboardType = NSPasteboard.PasteboardType("com.compuserve.gif")
+    case "bmp":
+      pasteboardType = NSPasteboard.PasteboardType("com.microsoft.bmp")
+    case "webp":
+      pasteboardType = NSPasteboard.PasteboardType("org.webmproject.webp")
+    case "heic", "heif":
+      pasteboardType = NSPasteboard.PasteboardType("public.heic")
+    case "avif":
+      pasteboardType = NSPasteboard.PasteboardType("public.avif")
+    default:
+      return nil
+    }
+    guard
+      let data = try? Data(
+        contentsOf: URL(fileURLWithPath: path),
+        options: .mappedIfSafe
+      )
+    else {
+      return nil
+    }
+    return (pasteboardType, data)
   }
 
   private static func migrateLegacySandboxPreferences() {

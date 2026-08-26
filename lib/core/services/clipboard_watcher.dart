@@ -166,6 +166,15 @@ class MacOSClipboardWatcher extends FlutterClipboardWatcher {
 
   @override
   Future<void> write(ClipboardPayload payload) async {
+    if (payload.filePaths.isNotEmpty) {
+      suppress(payload);
+      _lastChangeCount = await _channel.invokeMethod<int>('writeFiles', {
+        'filePaths': payload.filePaths,
+        if (payload.imageBytes != null)
+          'imageBase64': base64Encode(payload.imageBytes!),
+      });
+      return;
+    }
     if (payload.imageBytes == null) {
       if (payload.text == null) return;
       // Text write — suppress and sync changeCount
@@ -267,6 +276,15 @@ class WindowsClipboardWatcher extends FlutterClipboardWatcher {
 
   @override
   Future<void> write(ClipboardPayload payload) async {
+    if (payload.filePaths.isNotEmpty) {
+      suppress(payload);
+      _lastSequenceNumber = await _channel.invokeMethod<int>('writeFiles', {
+        'filePaths': payload.filePaths,
+        if (payload.imageBytes != null)
+          'imageBase64': base64Encode(payload.imageBytes!),
+      });
+      return;
+    }
     if (payload.imageBytes == null) {
       if (payload.text == null) return;
       suppress(payload);

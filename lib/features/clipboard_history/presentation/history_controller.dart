@@ -11,6 +11,7 @@ import '../../../core/services/cloud_upload_service.dart';
 import '../../../core/services/ocr_service.dart';
 import '../../../core/services/translation_service.dart';
 import '../../settings/domain/app_settings.dart';
+import '../domain/clipboard_file_paths.dart';
 import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import '../domain/clipboard_payload.dart';
@@ -326,15 +327,21 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
 
   Future<void> copy(ClipboardItem item) async {
     final imageFile = item.imagePath == null ? null : File(item.imagePath!);
+    final filePaths = item.contentType == ClipboardContentType.file
+        ? clipboardFilePaths(item.content)
+        : const <String>[];
     final payload = ClipboardPayload(
-      text: item.content.isEmpty ? null : item.content,
-      imageBytes: imageFile != null && await imageFile.exists()
+      // Do not also publish paths as text: chat inputs otherwise paste the
+      // path string instead of receiving native file attachments.
+      text: filePaths.isNotEmpty || item.content.isEmpty ? null : item.content,
+      filePaths: filePaths,
+      imageBytes:
+          filePaths.isEmpty && imageFile != null && await imageFile.exists()
           ? await imageFile.readAsBytes()
           : null,
     );
     _suppressVaultRecapture(payload);
     await _watcher.write(payload);
-    await _repository.markCopied(item.id);
     final copiedAt = DateTime.now();
     state = state.copyWith(
       items: [
@@ -348,6 +355,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
             current,
       ],
     );
+    unawaited(_markCopiedBestEffort(item.id));
   }
 
   Future<bool> copyAsPlainText(ClipboardItem item) async {
@@ -355,7 +363,6 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     final payload = ClipboardPayload(text: item.content);
     _suppressVaultRecapture(payload);
     await _watcher.write(payload);
-    await _repository.markCopied(item.id);
     final copiedAt = DateTime.now();
     state = state.copyWith(
       items: [
@@ -369,7 +376,17 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
             current,
       ],
     );
+    unawaited(_markCopiedBestEffort(item.id));
     return true;
+  }
+
+  Future<void> _markCopiedBestEffort(String id) async {
+    try {
+      await _repository.markCopied(id);
+    } on Object {
+      // The clipboard is already populated. Copy-count persistence is
+      // secondary and must never prevent the native paste that follows.
+    }
   }
 
   void _suppressVaultRecapture(ClipboardPayload payload) {

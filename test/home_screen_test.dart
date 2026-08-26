@@ -61,6 +61,7 @@ class _NoopUrlPreviewService extends UrlPreviewService {
 class InMemoryClipboardRepository
     implements ClipboardRepository, EditableClipboardRepository {
   Uint8List? lastEditedImageBytes;
+  Object? markCopiedError;
   final collections = <ClipboardCollection>[];
   final collectionItems = <String, Set<String>>{};
   final items = <ClipboardItem>[
@@ -138,6 +139,8 @@ class InMemoryClipboardRepository
 
   @override
   Future<void> markCopied(String id) async {
+    final error = markCopiedError;
+    if (error != null) throw error;
     final index = items.indexWhere((item) => item.id == id);
     if (index < 0) return;
     final item = items.removeAt(index);
@@ -1216,6 +1219,42 @@ void main() {
     expect(find.text('https://example.com/khong-khop'), findsOneWidget);
   });
 
+  testWidgets('quick panel previews and pastes a file as a native file', (
+    tester,
+  ) async {
+    final imageFile = File(
+      '${Directory.current.path}/assets/branding/clipflow_app_icon.png',
+    );
+    repository.items[0] = ClipboardItem(
+      id: 'quick-file-item',
+      content: imageFile.path,
+      normalizedContent: imageFile.path,
+      contentHash: 'quick-file-hash',
+      contentType: ClipboardContentType.file,
+      createdAt: DateTime(2026, 8, 26),
+      updatedAt: DateTime(2026, 8, 26),
+      lastCopiedAt: DateTime(2026, 8, 26),
+      isPinned: false,
+      isSensitive: false,
+      copyCount: 1,
+      sourceAppName: 'Finder',
+    );
+
+    await tester.pumpWidget(app(quickPanel: true));
+    await tester.pumpAndSettle();
+
+    final preview = find.byKey(const Key('clipboard-file-preview-image'));
+    expect(preview, findsOneWidget);
+    expect(find.textContaining('clipflow_app_icon.png'), findsOneWidget);
+
+    await tester.tap(preview);
+    await tester.pumpAndSettle();
+
+    expect(watcher.current?.filePaths, [imageFile.path]);
+    expect(watcher.current?.text, isNull);
+    expect(watcher.current?.imageBytes, isNull);
+  });
+
   testWidgets(
     'mobile sidebar is inset and closes after tab or collection selection',
     (tester) async {
@@ -1308,5 +1347,22 @@ void main() {
 
     expect(controller.state.items.map((item) => item.id), ['item-1', 'item-2']);
     expect(repository.items.map((item) => item.id), ['item-2', 'item-1']);
+  });
+
+  test('copy succeeds when persisting copy statistics fails', () async {
+    final controller = ClipboardHistoryController(
+      repository,
+      watcher,
+      () => const AppSettings(monitoringEnabled: false),
+    );
+    addTearDown(controller.dispose);
+    await controller.reload();
+    repository.markCopiedError = Exception('database is locked');
+
+    await controller.copy(controller.state.items.single);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(watcher.current?.text, 'https://flutter.dev');
+    expect(controller.state.items.single.copyCount, 2);
   });
 }

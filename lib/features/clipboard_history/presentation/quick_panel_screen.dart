@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../app/providers.dart';
 import '../../../core/ui/cupertino_components.dart';
 import '../../../core/utils/color_parser.dart';
+import '../domain/clipboard_content_type.dart';
 import '../domain/clipboard_item.dart';
 import '../domain/smart_text_tools.dart';
 import 'history_controller.dart';
@@ -120,8 +121,17 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
     ref.read(historyControllerProvider.notifier).search('');
     if (mounted) setState(() => _selectedIndex = 0);
     ref.read(quickPanelModeProvider.notifier).state = false;
+    final hideBeforeCopy = item.contentType == ClipboardContentType.file;
+    // Resolving a file on disk and preparing its native clipboard formats can
+    // take longer than copying text. Start hiding immediately and do both
+    // operations concurrently so the quick panel never looks frozen.
+    final hideFuture = hideBeforeCopy ? desktop.hideQuickPanel() : null;
     await ref.read(historyControllerProvider.notifier).copy(item);
-    await desktop.hideQuickPanel();
+    if (hideFuture != null) {
+      await hideFuture;
+    } else {
+      await desktop.hideQuickPanel();
+    }
     await desktop.pasteToPreviousApplication();
   }
 

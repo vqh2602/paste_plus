@@ -30,6 +30,13 @@ class AppDatabase {
       dbPath,
       version: version,
       onConfigure: (database) async {
+        // Clipboard capture, sync, cleanup, and quick-paste can all write in
+        // close succession. Let SQLite wait briefly for the active writer
+        // instead of immediately surfacing SQLITE_BUSY to the UI.
+        await database.execute('PRAGMA busy_timeout = 3000');
+        if (!inMemory) {
+          await database.rawQuery('PRAGMA journal_mode = WAL');
+        }
         await database.execute('PRAGMA foreign_keys = ON');
       },
       onCreate: _createV1,

@@ -251,6 +251,37 @@ class QuickClipboardCardWidget extends ConsumerWidget {
                                   ),
                                 ],
                               )
+                            : item.contentType == ClipboardContentType.file
+                            ? LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final previewHeight =
+                                      (constraints.maxHeight - 38)
+                                          .clamp(60.0, 160.0)
+                                          .toDouble();
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ClipboardFilePreview(
+                                        content: item.content,
+                                        height: previewHeight,
+                                      ),
+                                      const SizedBox(height: 6),
+                                      HighlightedText(
+                                        text: item.content,
+                                        query: query,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 11,
+                                          height: 1.25,
+                                          color: ClipFlowColors.secondaryText,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              )
                             : parsedColor != null
                             ? Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,

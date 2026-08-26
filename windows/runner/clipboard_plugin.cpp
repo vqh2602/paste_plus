@@ -314,6 +314,96 @@ void ClipboardPlugin::HandleMethodCall(
     }
     
     result->Success(flutter::EncodableValue(map));
+  } else if (method_call.method_name().compare("writeFiles") == 0) {
+    std::vector<std::wstring> filePaths;
+    std::string imageBase64;
+    if (const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments())) {
+      if (auto it = args->find(flutter::EncodableValue("filePaths")); it != args->end()) {
+        if (const auto* values = std::get_if<flutter::EncodableList>(&it->second)) {
+          for (const auto& value : *values) {
+            if (const auto* path = std::get_if<std::string>(&value)) {
+              if (!path->empty()) filePaths.push_back(utf8_decode(*path));
+            }
+          }
+        }
+      }
+      if (auto it = args->find(flutter::EncodableValue("imageBase64")); it != args->end()) {
+        if (const auto* value = std::get_if<std::string>(&it->second)) {
+          imageBase64 = *value;
+        }
+      }
+    }
+
+    if (filePaths.empty()) {
+      result->Error("invalid_arguments", "Missing file paths");
+      return;
+    }
+
+    SIZE_T characterCount = 1;
+    for (const auto& path : filePaths) characterCount += path.size() + 1;
+    const SIZE_T allocationSize =
+        sizeof(DROPFILES) + characterCount * sizeof(wchar_t);
+    HGLOBAL memory = GlobalAlloc(GHND, allocationSize);
+    if (!memory) {
+      result->Error("clipboard_write_failed", "Could not allocate file clipboard data");
+      return;
+    }
+
+    auto* dropFiles = static_cast<DROPFILES*>(GlobalLock(memory));
+    dropFiles->pFiles = sizeof(DROPFILES);
+    dropFiles->fWide = TRUE;
+    auto* cursor = reinterpret_cast<wchar_t*>(
+        reinterpret_cast<BYTE*>(dropFiles) + sizeof(DROPFILES));
+    for (const auto& path : filePaths) {
+      CopyMemory(cursor, path.c_str(), path.size() * sizeof(wchar_t));
+      cursor += path.size();
+      *cursor++ = L'\0';
+    }
+    *cursor = L'\0';
+    GlobalUnlock(memory);
+
+    HBITMAP imageBitmap = nullptr;
+    if (!imageBase64.empty()) {
+      std::vector<BYTE> imageData = base64_decode(imageBase64);
+      IStream* stream = nullptr;
+      if (!imageData.empty() &&
+          CreateStreamOnHGlobal(nullptr, TRUE, &stream) == S_OK) {
+        stream->Write(
+            imageData.data(), static_cast<ULONG>(imageData.size()), nullptr);
+        LARGE_INTEGER beginning = {};
+        stream->Seek(beginning, STREAM_SEEK_SET, nullptr);
+        Bitmap* bitmap = Bitmap::FromStream(stream);
+        if (bitmap && bitmap->GetLastStatus() == Ok) {
+          bitmap->GetHBITMAP(Color(0, 0, 0), &imageBitmap);
+        }
+        delete bitmap;
+        stream->Release();
+      }
+    } else if (filePaths.size() == 1) {
+      Bitmap bitmap(filePaths.front().c_str());
+      if (bitmap.GetLastStatus() == Ok) {
+        bitmap.GetHBITMAP(Color(0, 0, 0), &imageBitmap);
+      }
+    }
+
+    bool succeeded = false;
+    if (OpenClipboard(nullptr)) {
+      EmptyClipboard();
+      succeeded = SetClipboardData(CF_HDROP, memory) != nullptr;
+      if (imageBitmap && SetClipboardData(CF_BITMAP, imageBitmap) == nullptr) {
+        DeleteObject(imageBitmap);
+        imageBitmap = nullptr;
+      }
+      CloseClipboard();
+    }
+    if (!succeeded) {
+      GlobalFree(memory);
+      if (imageBitmap) DeleteObject(imageBitmap);
+      result->Error("clipboard_write_failed", "Could not write files");
+      return;
+    }
+    result->Success(flutter::EncodableValue(
+        static_cast<int64_t>(GetClipboardSequenceNumber())));
   } else if (method_call.method_name().compare("writeImage") == 0) {
     std::string base64Str = "";
     if (const auto* args = std::get_if<flutter::EncodableMap>(method_call.arguments())) {

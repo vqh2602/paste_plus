@@ -300,25 +300,45 @@ class SqliteClipboardRepository
 
   @override
   Future<void> markCopied(String id) async {
-    final rows = await _db.query(
-      'clipboard_items',
-      columns: ['copy_count'],
-      where: 'id = ?',
-      whereArgs: [id],
-      limit: 1,
-    );
-    if (rows.isEmpty) return;
     final now = DateTime.now().millisecondsSinceEpoch;
-    await _db.update(
-      'clipboard_items',
-      {
-        'last_copied_at': now,
-        'updated_at': now,
-        'copy_count': (rows.first['copy_count'] as int? ?? 1) + 1,
-      },
-      where: 'id = ?',
-      whereArgs: [id],
+    await _retryWhileDatabaseIsBusy(
+      () => _db.rawUpdate(
+        '''
+        UPDATE clipboard_items
+        SET last_copied_at = ?,
+            updated_at = ?,
+            copy_count = copy_count + 1
+        WHERE id = ?
+        ''',
+        [now, now, id],
+      ),
     );
+  }
+
+  Future<T> _retryWhileDatabaseIsBusy<T>(Future<T> Function() operation) async {
+    const retryDelays = <Duration>[
+      Duration(milliseconds: 40),
+      Duration(milliseconds: 100),
+      Duration(milliseconds: 250),
+    ];
+    for (var attempt = 0; ; attempt++) {
+      try {
+        return await operation();
+      } on Object catch (error) {
+        if (!_isDatabaseBusy(error) || attempt >= retryDelays.length) {
+          rethrow;
+        }
+        await Future<void>.delayed(retryDelays[attempt]);
+      }
+    }
+  }
+
+  bool _isDatabaseBusy(Object error) {
+    final message = error.toString().toLowerCase();
+    return message.contains('database is locked') ||
+        message.contains('database is busy') ||
+        message.contains('sqlite_busy') ||
+        message.contains('sqlite_error: 5');
   }
 
   @override

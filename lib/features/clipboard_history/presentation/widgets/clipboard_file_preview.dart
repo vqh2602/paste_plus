@@ -7,63 +7,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:path/path.dart' as p;
 
 import '../../../../core/ui/cupertino_components.dart';
+import '../../domain/clipboard_file_paths.dart';
 
-/// Returns the paths carried by a file clipboard item, including `file://`
-/// values and newline-separated multi-file selections.
-List<String> clipboardFilePaths(String content) {
-  final paths = <String>[];
-  final seen = <String>{};
-  for (final line in content.replaceAll('\r\n', '\n').split('\n')) {
-    final raw = line.trim();
-    if (raw.isEmpty) continue;
-
-    var path = raw;
-    if (raw.toLowerCase().startsWith('file://')) {
-      try {
-        final uri = Uri.parse(raw);
-        if (uri.scheme != 'file') continue;
-        path = uri.toFilePath(windows: Platform.isWindows);
-      } on FormatException {
-        continue;
-      }
-    }
-
-    if (seen.add(path)) paths.add(path);
-  }
-  return paths;
-}
-
-String? firstExistingClipboardFilePath(String content) {
-  for (final path in clipboardFilePaths(content)) {
-    try {
-      if (FileSystemEntity.typeSync(path, followLinks: true) !=
-          FileSystemEntityType.notFound) {
-        return path;
-      }
-    } on FileSystemException {
-      // Keep looking in case a multi-file clipboard item has another file.
-    }
-  }
-  return null;
-}
-
-int? clipboardFilesSize(String content) {
-  var total = 0;
-  var hasFile = false;
-  for (final path in clipboardFilePaths(content)) {
-    try {
-      if (FileSystemEntity.typeSync(path, followLinks: true) !=
-          FileSystemEntityType.file) {
-        continue;
-      }
-      total += File(path).lengthSync();
-      hasFile = true;
-    } on FileSystemException {
-      // A clipboard item may outlive its source file.
-    }
-  }
-  return hasFile ? total : null;
-}
+export '../../domain/clipboard_file_paths.dart';
 
 String formatFileSize(int bytes) {
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -107,6 +53,7 @@ class ClipboardFilePreview extends StatefulWidget {
 
 class _ClipboardFilePreviewState extends State<ClipboardFilePreview> {
   String? _path;
+  bool _isDirectory = false;
   Future<String?>? _thumbnail;
 
   @override
@@ -123,10 +70,13 @@ class _ClipboardFilePreviewState extends State<ClipboardFilePreview> {
 
   void _resolve() {
     _path = firstExistingClipboardFilePath(widget.content);
-    _thumbnail = switch (_path) {
-      final path? when _isDirectlyRenderableImage(path) => Future.value(path),
-      final path? => _FileThumbnailService.thumbnailFor(path),
-      null => Future.value(),
+    _isDirectory = _path != null && _pathIsDirectory(_path!);
+    _thumbnail = switch ((_path, _isDirectory)) {
+      (_, true) => Future.value(),
+      (final path?, false) when _isDirectlyRenderableImage(path) =>
+        Future.value(path),
+      (final path?, false) => _FileThumbnailService.thumbnailFor(path),
+      _ => Future.value(),
     };
   }
 
@@ -141,34 +91,45 @@ class _ClipboardFilePreviewState extends State<ClipboardFilePreview> {
       );
     }
 
+    if (!_isDirectory && _isDirectlyRenderableImage(path)) {
+      return _PreviewFrame(
+        height: widget.height,
+        child: Image.file(
+          File(path),
+          key: const Key('clipboard-file-preview-image'),
+          fit: BoxFit.contain,
+          gaplessPlayback: true,
+          errorBuilder: (context, error, stackTrace) =>
+              _FileFallback(path: path, height: widget.height),
+        ),
+      );
+    }
+
     return FutureBuilder<String?>(
       future: _thumbnail,
       builder: (context, snapshot) {
         final thumbnailPath = snapshot.data;
-        return Container(
-          key: const Key('clipboard-file-preview'),
-          width: double.infinity,
+        return _PreviewFrame(
           height: widget.height,
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: resolveColor(context, ClipFlowColors.sidebar),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: resolveColor(context, ClipFlowColors.border),
-            ),
-          ),
           child: switch ((thumbnailPath, snapshot.connectionState)) {
             (final thumbnail?, _) => Image.file(
               File(thumbnail),
               key: const Key('clipboard-file-preview-image'),
               fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  _FileFallback(path: path, height: widget.height),
+              errorBuilder: (context, error, stackTrace) => _FileFallback(
+                path: path,
+                height: widget.height,
+                isDirectory: _isDirectory,
+              ),
             ),
             (null, ConnectionState.waiting) => const Center(
               child: CupertinoActivityIndicator(),
             ),
-            _ => _FileFallback(path: path, height: widget.height),
+            _ => _FileFallback(
+              path: path,
+              height: widget.height,
+              isDirectory: _isDirectory,
+            ),
           },
         );
       },
@@ -176,52 +137,100 @@ class _ClipboardFilePreviewState extends State<ClipboardFilePreview> {
   }
 }
 
-class _FileFallback extends StatelessWidget {
-  const _FileFallback({super.key, required this.path, required this.height});
+class _PreviewFrame extends StatelessWidget {
+  const _PreviewFrame({required this.height, required this.child});
 
-  final String path;
   final double height;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    final extension = p.extension(path).replaceFirst('.', '').toUpperCase();
     return Container(
-      key: const Key('clipboard-file-preview-fallback'),
+      key: const Key('clipboard-file-preview'),
       width: double.infinity,
       height: height,
-      padding: const EdgeInsets.all(24),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: resolveColor(context, ClipFlowColors.sidebar),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: resolveColor(context, ClipFlowColors.border)),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            CupertinoIcons.doc_fill,
-            size: 58,
-            color: resolveColor(context, ClipFlowColors.secondaryText),
+      child: child,
+    );
+  }
+}
+
+class _FileFallback extends StatelessWidget {
+  const _FileFallback({
+    super.key,
+    required this.path,
+    required this.height,
+    this.isDirectory = false,
+  });
+
+  final String path;
+  final double height;
+  final bool isDirectory;
+
+  @override
+  Widget build(BuildContext context) {
+    final extension = p.extension(path).replaceFirst('.', '').toUpperCase();
+    final isCompact = height < 150;
+    final isVeryCompact = height < 90;
+    final iconSize = isVeryCompact ? 24.0 : (isCompact ? 36.0 : 48.0);
+    final verticalPadding = isVeryCompact ? 4.0 : (isCompact ? 8.0 : 16.0);
+
+    return Container(
+      key: const Key('clipboard-file-preview-fallback'),
+      width: double.infinity,
+      height: height,
+      padding: EdgeInsets.symmetric(horizontal: 12, vertical: verticalPadding),
+      decoration: BoxDecoration(
+        color: resolveColor(context, ClipFlowColors.sidebar),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: resolveColor(context, ClipFlowColors.border)),
+      ),
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isDirectory
+                    ? CupertinoIcons.folder_fill
+                    : CupertinoIcons.doc_fill,
+                key: isDirectory
+                    ? const Key('clipboard-file-preview-folder-icon')
+                    : const Key('clipboard-file-preview-document-icon'),
+                size: iconSize,
+                color: resolveColor(context, ClipFlowColors.secondaryText),
+              ),
+              if (!isDirectory && extension.isNotEmpty) ...[
+                SizedBox(height: isCompact ? 4 : 8),
+                Text(
+                  extension,
+                  style: TextStyle(
+                    fontSize: isCompact ? 11 : 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+              SizedBox(height: isCompact ? 4 : 6),
+              Text(
+                p.basename(path),
+                maxLines: isCompact ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: isCompact ? 11 : 13,
+                  color: resolveColor(context, ClipFlowColors.secondaryText),
+                ),
+              ),
+            ],
           ),
-          if (extension.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Text(
-              extension,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
-            ),
-          ],
-          const SizedBox(height: 8),
-          Text(
-            p.basename(path),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13,
-              color: resolveColor(context, ClipFlowColors.secondaryText),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -235,6 +244,15 @@ bool _isDirectlyRenderableImage(String path) => {
   '.webp',
   '.bmp',
 }.contains(p.extension(path).toLowerCase());
+
+bool _pathIsDirectory(String path) {
+  try {
+    return FileSystemEntity.typeSync(path, followLinks: true) ==
+        FileSystemEntityType.directory;
+  } on FileSystemException {
+    return false;
+  }
+}
 
 class _FileThumbnailService {
   const _FileThumbnailService._();

@@ -63,6 +63,20 @@ void main() {
     expect(await repository.getItems(), isEmpty);
   });
 
+  test('markCopied increments atomically during concurrent writes', () async {
+    final stored = await repository.store(
+      const ClipboardPayload(text: 'Copy concurrently'),
+      const AppSettings(ignoreSensitive: false),
+    );
+
+    await Future.wait<void>([
+      for (var index = 0; index < 20; index++)
+        repository.markCopied(stored!.id),
+    ]);
+
+    expect((await repository.getItems()).single.copyCount, 21);
+  });
+
   test('a native file list takes priority over an image thumbnail', () async {
     const filePath = '/Users/demo/Documents/report.xlsx';
     final stored = await repository.store(
