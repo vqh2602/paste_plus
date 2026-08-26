@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/legacy.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/services/ai_debug_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../clipboard_history/domain/clipboard_content_type.dart';
 import '../../clipboard_history/domain/clipboard_item.dart';
 import '../data/ai_conversation_repository.dart';
@@ -678,12 +679,12 @@ class AiController extends StateNotifier<AiState> {
       final currentMsgs = [...state.chatMessages];
       final index = currentMsgs.indexWhere((m) => m.id == assistantMsgId);
       if (index != -1) {
+        final lang = _ref.read(settingsControllerProvider).language;
+        final l10n = lookupAppLocalizations(Locale(lang));
         currentMsgs[index]
           ..isThinking = false
           ..thinkingContent = null
-          ..content =
-              'Mình chưa thể tạo câu trả lời lúc này. Hãy thử lại hoặc '
-              'chọn một model khác.\n\nChi tiết: $error';
+          ..content = l10n.ai_generation_failed.replaceAll('@error', error.toString());
         state = state.copyWith(chatMessages: currentMsgs);
       }
     } finally {

@@ -68,7 +68,7 @@ Future<void> showNoteEditDialog(
             ),
             const SizedBox(height: 6),
             Text(
-              'Tự động lưu khi nhập',
+              ctx.l10n.auto_save_note_hint,
               style: TextStyle(
                 fontSize: 11,
                 fontStyle: FontStyle.italic,

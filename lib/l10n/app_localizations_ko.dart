@@ -1723,4 +1723,70 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get file_size => '파일 크기';
+
+  @override
+  String get image_zoom_hint => '스크롤 / 핀치하여 확대 • 더블 클릭하여 빠른 확대';
+
+  @override
+  String get auto_save_note_hint => '입력하는 동안 자동 저장됩니다';
+
+  @override
+  String get ai_classifier_banner_desc =>
+      '질문 의도를 더 정확하게 파악하려면 Qwen 0.6B를 다운로드하세요';
+
+  @override
+  String get ai_offline_processed_model => '@model 모델로 100% 기기 내 오프라인 처리';
+
+  @override
+  String get new_version_tag => '새 버전: @v';
+
+  @override
+  String get checking_for_updates => '업데이트 확인 중…';
+
+  @override
+  String get update_found_preparing => '@v 발견 — 다운로드 준비 중…';
+
+  @override
+  String get update_downloading_progress => '@v 다운로드 중… @p%';
+
+  @override
+  String get update_downloading => '@v 다운로드 중…';
+
+  @override
+  String get update_downloaded_restarting => '@v 다운로드 완료. 재시작 중…';
+
+  @override
+  String get update_failed => '업데이트 실패';
+
+  @override
+  String get up_to_date => '최신 버전을 사용 중입니다';
+
+  @override
+  String get ai_debug_open_log => 'AI 디버그 로그 열기';
+
+  @override
+  String get ai_debug_clear_log => '로그 지우기';
+
+  @override
+  String get ai_debug_disable => '디버그 끄기';
+
+  @override
+  String get ai_debug_no_logs => '아직 AI 로그가 없습니다. AI 요청을 보내보세요.';
+
+  @override
+  String get download => '다운로드';
+
+  @override
+  String get ai_standalone_window_desc =>
+      '독립된 AI 창 — @model 모델로 100% 기기 내 오프라인 처리';
+
+  @override
+  String get ai_badge_thinking => '추론 AI';
+
+  @override
+  String get ai_badge_vision => '비전 AI';
+
+  @override
+  String get ai_generation_failed =>
+      '지금은 답변을 생성할 수 없습니다. 다시 시도하거나 다른 모델을 선택해 주세요.\n\n상세 정보: @error';
 }

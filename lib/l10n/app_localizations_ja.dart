@@ -1724,4 +1724,69 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get file_size => 'ファイルサイズ';
+
+  @override
+  String get image_zoom_hint => 'スクロール / ピンチで拡大 • ダブルクリックでクイックズーム';
+
+  @override
+  String get auto_save_note_hint => '入力時に自動保存されます';
+
+  @override
+  String get ai_classifier_banner_desc => '質問の意図を正確に理解するためにQwen 0.6Bをダウンロード';
+
+  @override
+  String get ai_offline_processed_model => '@model を使用した完全端末内オフライン処理';
+
+  @override
+  String get new_version_tag => '新バージョン: @v';
+
+  @override
+  String get checking_for_updates => 'アップデートを確認中…';
+
+  @override
+  String get update_found_preparing => '@v が見つかりました — ダウンロードを準備中…';
+
+  @override
+  String get update_downloading_progress => '@v をダウンロード中… @p%';
+
+  @override
+  String get update_downloading => '@v をダウンロード中…';
+
+  @override
+  String get update_downloaded_restarting => '@v をダウンロードしました。再起動しています…';
+
+  @override
+  String get update_failed => 'アップデートに失敗しました';
+
+  @override
+  String get up_to_date => '最新バージョンを使用しています';
+
+  @override
+  String get ai_debug_open_log => 'AIデバッグログを開く';
+
+  @override
+  String get ai_debug_clear_log => 'ログをクリア';
+
+  @override
+  String get ai_debug_disable => 'デバッグを無効化';
+
+  @override
+  String get ai_debug_no_logs => 'まだAIログがありません。AIリクエストを送信してください。';
+
+  @override
+  String get download => 'ダウンロード';
+
+  @override
+  String get ai_standalone_window_desc =>
+      '独立したAIウィンドウ — @model を使用した完全端末内オフライン処理';
+
+  @override
+  String get ai_badge_thinking => '思考AI';
+
+  @override
+  String get ai_badge_vision => '画像認識AI';
+
+  @override
+  String get ai_generation_failed =>
+      '現在回答を生成できません。もう一度試すか、別のモデルを選択してください。\n\n詳細: @error';
 }

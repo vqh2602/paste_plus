@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
 import 'cached_network_image_widget.dart';
+import 'package:clipflow/core/localization/localization_extensions.dart';
 import 'cupertino_components.dart';
 
 /// Opens a full-screen interactive image viewer with zoom, pan, and copy capabilities.
@@ -116,9 +117,11 @@ class _ImageZoomViewerModalState extends State<_ImageZoomViewerModal> {
                                 File(widget.path),
                                 fit: BoxFit.contain,
                               )
-                            : const Text(
-                                'Không tìm thấy hình ảnh',
-                                style: TextStyle(color: CupertinoColors.white),
+                            : Text(
+                                context.l10n.image_not_found,
+                                style: const TextStyle(
+                                  color: CupertinoColors.white,
+                                ),
                               )),
                   ),
                 ),
@@ -177,7 +180,7 @@ class _ImageZoomViewerModalState extends State<_ImageZoomViewerModal> {
                         borderRadius: BorderRadius.circular(20),
                         onPressed: () {
                           widget.onCopy!();
-                          showCupertinoNotice(context, 'Đã sao chép');
+                          showCupertinoNotice(context, context.l10n.copied);
                         },
                         child: const Icon(
                           CupertinoIcons.doc_on_doc,
@@ -205,9 +208,9 @@ class _ImageZoomViewerModalState extends State<_ImageZoomViewerModal> {
                       color: CupertinoColors.black.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Text(
-                      'Cuộn / Nhúm để phóng to • Nhấp kép để thu phóng nhanh',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.image_zoom_hint,
+                      style: const TextStyle(
                         color: CupertinoColors.systemGrey4,
                         fontSize: 11,
                       ),

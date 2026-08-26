@@ -1785,4 +1785,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get file_size => 'File size';
+
+  @override
+  String get image_zoom_hint =>
+      'Scroll / Pinch to zoom • Double click for quick zoom';
+
+  @override
+  String get auto_save_note_hint => 'Auto-saves while typing';
+
+  @override
+  String get ai_classifier_banner_desc =>
+      'Download Qwen 0.6B to help AI understand query intents more accurately';
+
+  @override
+  String get ai_offline_processed_model =>
+      '100% on-device offline processing with @model';
+
+  @override
+  String get new_version_tag => 'New version: @v';
+
+  @override
+  String get checking_for_updates => 'Checking for updates...';
+
+  @override
+  String get update_found_preparing => 'Found @v — preparing download...';
+
+  @override
+  String get update_downloading_progress => 'Downloading @v... @p%';
+
+  @override
+  String get update_downloading => 'Downloading @v...';
+
+  @override
+  String get update_downloaded_restarting => 'Downloaded @v. Restarting...';
+
+  @override
+  String get update_failed => 'Update failed';
+
+  @override
+  String get up_to_date => 'You are using the latest version';
+
+  @override
+  String get ai_debug_open_log => 'Open AI Debug log';
+
+  @override
+  String get ai_debug_clear_log => 'Clear log';
+
+  @override
+  String get ai_debug_disable => 'Disable debug';
+
+  @override
+  String get ai_debug_no_logs => 'No AI logs yet. Send an AI request.';
+
+  @override
+  String get download => 'Download';
+
+  @override
+  String get ai_standalone_window_desc =>
+      'Standalone AI Window — 100% on-device offline processing with @model';
+
+  @override
+  String get ai_badge_thinking => 'Thinking AI';
+
+  @override
+  String get ai_badge_vision => 'Vision AI';
+
+  @override
+  String get ai_generation_failed =>
+      'I cannot generate a response right now. Please try again or choose a different model.\n\nDetails: @error';
 }

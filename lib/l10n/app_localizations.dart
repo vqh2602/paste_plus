@@ -3501,6 +3501,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'File size'**
   String get file_size;
+
+  /// No description provided for @image_zoom_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Scroll / Pinch to zoom • Double click for quick zoom'**
+  String get image_zoom_hint;
+
+  /// No description provided for @auto_save_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-saves while typing'**
+  String get auto_save_note_hint;
+
+  /// No description provided for @ai_classifier_banner_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Download Qwen 0.6B to help AI understand query intents more accurately'**
+  String get ai_classifier_banner_desc;
+
+  /// No description provided for @ai_offline_processed_model.
+  ///
+  /// In en, this message translates to:
+  /// **'100% on-device offline processing with @model'**
+  String get ai_offline_processed_model;
+
+  /// No description provided for @new_version_tag.
+  ///
+  /// In en, this message translates to:
+  /// **'New version: @v'**
+  String get new_version_tag;
+
+  /// No description provided for @checking_for_updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking for updates...'**
+  String get checking_for_updates;
+
+  /// No description provided for @update_found_preparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Found @v — preparing download...'**
+  String get update_found_preparing;
+
+  /// No description provided for @update_downloading_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading @v... @p%'**
+  String get update_downloading_progress;
+
+  /// No description provided for @update_downloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading @v...'**
+  String get update_downloading;
+
+  /// No description provided for @update_downloaded_restarting.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded @v. Restarting...'**
+  String get update_downloaded_restarting;
+
+  /// No description provided for @update_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed'**
+  String get update_failed;
+
+  /// No description provided for @up_to_date.
+  ///
+  /// In en, this message translates to:
+  /// **'You are using the latest version'**
+  String get up_to_date;
+
+  /// No description provided for @ai_debug_open_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Open AI Debug log'**
+  String get ai_debug_open_log;
+
+  /// No description provided for @ai_debug_clear_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear log'**
+  String get ai_debug_clear_log;
+
+  /// No description provided for @ai_debug_disable.
+  ///
+  /// In en, this message translates to:
+  /// **'Disable debug'**
+  String get ai_debug_disable;
+
+  /// No description provided for @ai_debug_no_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'No AI logs yet. Send an AI request.'**
+  String get ai_debug_no_logs;
+
+  /// No description provided for @download.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get download;
+
+  /// No description provided for @ai_standalone_window_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Standalone AI Window — 100% on-device offline processing with @model'**
+  String get ai_standalone_window_desc;
+
+  /// No description provided for @ai_badge_thinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Thinking AI'**
+  String get ai_badge_thinking;
+
+  /// No description provided for @ai_badge_vision.
+  ///
+  /// In en, this message translates to:
+  /// **'Vision AI'**
+  String get ai_badge_vision;
+
+  /// No description provided for @ai_generation_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'I cannot generate a response right now. Please try again or choose a different model.\n\nDetails: @error'**
+  String get ai_generation_failed;
 }
 
 class _AppLocalizationsDelegate

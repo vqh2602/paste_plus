@@ -33,7 +33,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get code => 'Code';
 
   @override
-  String get collections => 'COLLECTIONS';
+  String get collections => 'BỘ SƯU TẬP';
 
   @override
   String get settings => 'Cài đặt';
@@ -1278,7 +1278,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ai_active_model => 'Model đang dùng';
 
   @override
-  String get ai_chat_assistant => 'ClipFlow Local AI Assistant';
+  String get ai_chat_assistant => 'Trợ lý AI ngoại tuyến ClipFlow';
 
   @override
   String get ai_thinking_process => 'Quá trình suy luận (Thinking process)';
@@ -1598,7 +1598,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Thiết bị sẽ bị ngắt kết nối và mọi yêu cầu mới sẽ bị từ chối.';
 
   @override
-  String get delete_collection_confirm => 'Delete Collection Confirm';
+  String get delete_collection_confirm => 'Xác nhận xoá bộ sưu tập';
 
   @override
   String get ai_performance_mode => 'Mức độ thông minh AI';
@@ -1780,4 +1780,72 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get file_size => 'Kích thước file';
+
+  @override
+  String get image_zoom_hint =>
+      'Cuộn / Nhúm để phóng to • Nhấp đúp để thu phóng nhanh';
+
+  @override
+  String get auto_save_note_hint => 'Tự động lưu khi nhập';
+
+  @override
+  String get ai_classifier_banner_desc =>
+      'Tải Qwen 0.6B để AI tự hiểu ý định câu hỏi chính xác hơn';
+
+  @override
+  String get ai_offline_processed_model =>
+      'Xử lý 100% ngoại tuyến trên thiết bị với @model';
+
+  @override
+  String get new_version_tag => 'Bản mới: @v';
+
+  @override
+  String get checking_for_updates => 'Đang kiểm tra cập nhật…';
+
+  @override
+  String get update_found_preparing => 'Tìm thấy @v — đang chuẩn bị tải…';
+
+  @override
+  String get update_downloading_progress => 'Đang tải @v… @p%';
+
+  @override
+  String get update_downloading => 'Đang tải @v…';
+
+  @override
+  String get update_downloaded_restarting => 'Đã tải @v. Đang khởi động lại…';
+
+  @override
+  String get update_failed => 'Cập nhật thất bại';
+
+  @override
+  String get up_to_date => 'Bạn đang dùng phiên bản mới nhất';
+
+  @override
+  String get ai_debug_open_log => 'Mở nhật ký AI Debug';
+
+  @override
+  String get ai_debug_clear_log => 'Xóa nhật ký';
+
+  @override
+  String get ai_debug_disable => 'Tắt debug';
+
+  @override
+  String get ai_debug_no_logs => 'Chưa có log AI. Hãy gửi một yêu cầu AI.';
+
+  @override
+  String get download => 'Tải về';
+
+  @override
+  String get ai_standalone_window_desc =>
+      'Cửa sổ AI độc lập — Xử lý 100% ngoại tuyến với @model';
+
+  @override
+  String get ai_badge_thinking => 'Suy luận AI';
+
+  @override
+  String get ai_badge_vision => 'Thị giác AI';
+
+  @override
+  String get ai_generation_failed =>
+      'Mình chưa thể tạo câu trả lời lúc này. Hãy thử lại hoặc chọn một model khác.\n\nChi tiết: @error';
 }

@@ -1119,7 +1119,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ignore_sensitive_sub => '不要保存看起来敏感的内容';
 
   @override
-  String get image_not_found => '找不到图片';
+  String get image_not_found => '未找到图片';
 
   @override
   String get import => '进口';
@@ -1712,4 +1712,67 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get file_size => '文件大小';
+
+  @override
+  String get image_zoom_hint => '滚动 / 缩放 • 双击快速缩放';
+
+  @override
+  String get auto_save_note_hint => '输入时自动保存';
+
+  @override
+  String get ai_classifier_banner_desc => '下载 Qwen 0.6B 以便 AI 更精准地理解问题意图';
+
+  @override
+  String get ai_offline_processed_model => '使用 @model 在设备本地 100% 离线处理';
+
+  @override
+  String get new_version_tag => '新版本: @v';
+
+  @override
+  String get checking_for_updates => '正在检查更新…';
+
+  @override
+  String get update_found_preparing => '发现新版本 @v — 正在准备下载…';
+
+  @override
+  String get update_downloading_progress => '正在下载 @v… @p%';
+
+  @override
+  String get update_downloading => '正在下载 @v…';
+
+  @override
+  String get update_downloaded_restarting => '已下载 @v。正在重启…';
+
+  @override
+  String get update_failed => '更新失败';
+
+  @override
+  String get up_to_date => '您正在使用最新版本';
+
+  @override
+  String get ai_debug_open_log => '打开 AI 调试日志';
+
+  @override
+  String get ai_debug_clear_log => '清空日志';
+
+  @override
+  String get ai_debug_disable => '关闭调试';
+
+  @override
+  String get ai_debug_no_logs => '暂无 AI 日志。请发送一个 AI 请求。';
+
+  @override
+  String get download => '下载';
+
+  @override
+  String get ai_standalone_window_desc => '独立 AI 窗口 — 使用 @model 进行 100% 本地离线处理';
+
+  @override
+  String get ai_badge_thinking => '推理 AI';
+
+  @override
+  String get ai_badge_vision => '视觉 AI';
+
+  @override
+  String get ai_generation_failed => '暂无法生成回复。请重试或选择其他模型。\n\n详情：@error';
 }

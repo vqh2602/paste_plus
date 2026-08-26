@@ -3,6 +3,7 @@ import 'package:flutter/material.dart' show LinearProgressIndicator;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/providers.dart';
+import '../../../../core/localization/localization_extensions.dart';
 import '../../domain/ai_model_info.dart';
 import '../../services/ai_model_downloader_service.dart';
 import '../../services/ai_utility_classifier.dart';
@@ -58,7 +59,7 @@ class AiClassifierBanner extends ConsumerWidget {
                 const SizedBox(width: 7),
                 Expanded(
                   child: Text(
-                    'Tải Qwen 0.6B để AI tự hiểu ý định câu hỏi chính xác hơn',
+                    context.l10n.ai_classifier_banner_desc,
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -75,9 +76,9 @@ class AiClassifierBanner extends ConsumerWidget {
                         ref.read(aiControllerProvider.notifier).cancelDownload(
                           classifierId,
                         ),
-                    child: const Text(
-                      'Hủy',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.cancel,
+                      style: const TextStyle(
                         fontSize: 11,
                         color: CupertinoColors.systemOrange,
                       ),
@@ -96,7 +97,7 @@ class AiClassifierBanner extends ConsumerWidget {
                         .read(aiControllerProvider.notifier)
                         .downloadClassifierModel(),
                     child: Text(
-                      'Tải về  •  ${classifierModel.fileSizeFormatted}',
+                      '${context.l10n.download}  •  ${classifierModel.fileSizeFormatted}',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

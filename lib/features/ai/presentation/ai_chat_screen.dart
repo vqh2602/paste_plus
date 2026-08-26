@@ -438,9 +438,9 @@ class _AiChatScreenState extends ConsumerState<AiChatScreen> {
                         size: 18,
                       ),
                       const SizedBox(width: 8),
-                      const Text(
-                        'ClipFlow Local AI Assistant',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.ai_chat_assistant,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                         ),
@@ -731,13 +731,16 @@ class _AiScreenWelcomeState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          const Text(
-            'ClipFlow Local AI Assistant',
-            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+          Text(
+            context.l10n.ai_chat_assistant,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            'Cửa sổ AI độc lập — Xử lý 100% ngoại tuyến với ${model.name}',
+            context.l10n.ai_standalone_window_desc.replaceAll(
+              '@model',
+              model.name,
+            ),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 14,

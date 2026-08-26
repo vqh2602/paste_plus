@@ -294,9 +294,12 @@ class _ModelCard extends StatelessWidget {
         return CupertinoButton(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           onPressed: onCancel,
-          child: const Text(
-            'Hủy tải',
-            style: TextStyle(fontSize: 12, color: CupertinoColors.systemOrange),
+          child: Text(
+            context.l10n.ai_cancel_download,
+            style: const TextStyle(
+              fontSize: 12,
+              color: CupertinoColors.systemOrange,
+            ),
           ),
         );
 

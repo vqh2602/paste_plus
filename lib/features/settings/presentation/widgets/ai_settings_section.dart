@@ -168,9 +168,9 @@ class AiSettingsSection extends ConsumerWidget {
                                             8,
                                           ),
                                         ),
-                                        child: const Text(
-                                          'Thinking AI',
-                                          style: TextStyle(
+                                        child: Text(
+                                          context.l10n.ai_badge_thinking,
+                                          style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: CupertinoColors.systemPurple,
@@ -192,9 +192,9 @@ class AiSettingsSection extends ConsumerWidget {
                                             8,
                                           ),
                                         ),
-                                        child: const Text(
-                                          'Vision AI',
-                                          style: TextStyle(
+                                        child: Text(
+                                          context.l10n.ai_badge_vision,
+                                          style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.w600,
                                             color: CupertinoColors.activeBlue,

@@ -1821,4 +1821,76 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get file_size => 'Dateigröße';
+
+  @override
+  String get image_zoom_hint =>
+      'Scrollen / Zoomen mit zwei Fingern • Doppelklick für Schnellzoom';
+
+  @override
+  String get auto_save_note_hint =>
+      'Wird bei der Eingabe automatisch gespeichert';
+
+  @override
+  String get ai_classifier_banner_desc =>
+      'Laden Sie Qwen 0.6B herunter, damit die KI Absichten präziser erkennt';
+
+  @override
+  String get ai_offline_processed_model =>
+      '100% geräteinterne Offline-Verarbeitung mit @model';
+
+  @override
+  String get new_version_tag => 'Neue Version: @v';
+
+  @override
+  String get checking_for_updates => 'Nach Updates suchen...';
+
+  @override
+  String get update_found_preparing =>
+      '@v gefunden — Download wird vorbereitet...';
+
+  @override
+  String get update_downloading_progress => '@v wird heruntergeladen... @p%';
+
+  @override
+  String get update_downloading => '@v wird heruntergeladen...';
+
+  @override
+  String get update_downloaded_restarting =>
+      '@v heruntergeladen. Neustart wird durchgeführt...';
+
+  @override
+  String get update_failed => 'Aktualisierung fehlgeschlagen';
+
+  @override
+  String get up_to_date => 'Sie verwenden die neueste Version';
+
+  @override
+  String get ai_debug_open_log => 'KI-Debug-Protokoll öffnen';
+
+  @override
+  String get ai_debug_clear_log => 'Protokoll löschen';
+
+  @override
+  String get ai_debug_disable => 'Debug deaktivieren';
+
+  @override
+  String get ai_debug_no_logs =>
+      'Noch keine KI-Protokolle. Senden Sie eine KI-Anfrage.';
+
+  @override
+  String get download => 'Herunterladen';
+
+  @override
+  String get ai_standalone_window_desc =>
+      'Eigenständiges KI-Fenster — 100% Offline-Verarbeitung auf dem Gerät mit @model';
+
+  @override
+  String get ai_badge_thinking => 'Denkmodell';
+
+  @override
+  String get ai_badge_vision => 'Bilderkennung';
+
+  @override
+  String get ai_generation_failed =>
+      'Ich kann derzeit keine Antwort generieren. Bitte versuchen Sie es erneut oder wählen Sie ein anderes Modell.\n\nDetails: @error';
 }

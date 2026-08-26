@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../../app/providers.dart';
+import '../localization/localization_extensions.dart';
 import '../services/ai_debug_service.dart';
 import 'cupertino_components.dart';
 
@@ -101,7 +102,7 @@ class _DebugFloatingButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Mở AI Debug log',
+      label: context.l10n.ai_debug_open_log,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: GestureDetector(
@@ -256,7 +257,7 @@ class _DebugLogPanel extends StatelessWidget {
                                     ),
                                     minimumSize: const Size(34, 34),
                                     onPressed: onCopy,
-                                    child: const Text('Sao chép'),
+                                    child: Text(context.l10n.copy),
                                   ),
                                   CupertinoButton(
                                     padding: const EdgeInsets.symmetric(
@@ -264,7 +265,9 @@ class _DebugLogPanel extends StatelessWidget {
                                     ),
                                     minimumSize: const Size(34, 34),
                                     onPressed: onClear,
-                                    child: const Text('Xóa log'),
+                                    child: Text(
+                                      context.l10n.ai_debug_clear_log,
+                                    ),
                                   ),
                                   CupertinoButton(
                                     padding: const EdgeInsets.symmetric(
@@ -272,9 +275,9 @@ class _DebugLogPanel extends StatelessWidget {
                                     ),
                                     minimumSize: const Size(34, 34),
                                     onPressed: onDisable,
-                                    child: const Text(
-                                      'Tắt debug',
-                                      style: TextStyle(
+                                    child: Text(
+                                      context.l10n.ai_debug_disable,
+                                      style: const TextStyle(
                                         color: CupertinoColors.systemRed,
                                       ),
                                     ),
@@ -287,9 +290,9 @@ class _DebugLogPanel extends StatelessWidget {
                         const CupertinoDivider(),
                         Expanded(
                           child: entries.isEmpty
-                              ? const Center(
+                              ? Center(
                                   child: Text(
-                                    'Chưa có log AI. Hãy gửi một yêu cầu AI.',
+                                    context.l10n.ai_debug_no_logs,
                                   ),
                                 )
                               : CupertinoScrollbar(

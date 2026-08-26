@@ -103,7 +103,10 @@ class _AboutSettingsSectionState extends ConsumerState<AboutSettingsSection> {
                         if (update.latestVersion != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            'Bản mới: ${update.latestVersion}',
+                            context.l10n.new_version_tag.replaceAll(
+                              '@v',
+                              update.latestVersion!,
+                            ),
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
@@ -227,7 +230,7 @@ class _UpdateStatusRow extends StatelessWidget {
             const CupertinoActivityIndicator(radius: 7),
             const SizedBox(width: 8),
             Text(
-              'Đang kiểm tra cập nhật…',
+              context.l10n.checking_for_updates,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],
@@ -239,13 +242,25 @@ class _UpdateStatusRow extends StatelessWidget {
             Icon(CupertinoIcons.arrow_down_circle, size: 14, color: primary),
             const SizedBox(width: 6),
             Text(
-              'Tìm thấy ${update.latestVersion} — đang chuẩn bị tải…',
+              context.l10n.update_found_preparing.replaceAll(
+                '@v',
+                update.latestVersion ?? '',
+              ),
               style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],
         );
 
       case UpdateDownloadStatus.downloading:
+        final progressPercent = (update.progress * 100).round().toString();
+        final downloadText = update.progress > 0
+            ? context.l10n.update_downloading_progress
+                .replaceAll('@v', update.latestVersion ?? '')
+                .replaceAll('@p', progressPercent)
+            : context.l10n.update_downloading.replaceAll(
+                '@v',
+                update.latestVersion ?? '',
+              );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -260,9 +275,7 @@ class _UpdateStatusRow extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              update.progress > 0
-                  ? 'Đang tải ${update.latestVersion}… ${(update.progress * 100).round()}%'
-                  : 'Đang tải ${update.latestVersion}…',
+              downloadText,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],
@@ -271,14 +284,17 @@ class _UpdateStatusRow extends StatelessWidget {
       case UpdateDownloadStatus.done:
         return Row(
           children: [
-            Icon(
+            const Icon(
               CupertinoIcons.checkmark_circle_fill,
               size: 14,
               color: CupertinoColors.activeGreen,
             ),
             const SizedBox(width: 6),
             Text(
-              'Đã tải ${update.latestVersion}. Đang khởi động lại…',
+              context.l10n.update_downloaded_restarting.replaceAll(
+                '@v',
+                update.latestVersion ?? '',
+              ),
               style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],
@@ -295,7 +311,7 @@ class _UpdateStatusRow extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                update.errorMessage ?? 'Cập nhật thất bại',
+                update.errorMessage ?? context.l10n.update_failed,
                 style: TextStyle(fontSize: 12, color: secondary),
               ),
             ),
@@ -312,7 +328,7 @@ class _UpdateStatusRow extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Bạn đang dùng phiên bản mới nhất',
+              context.l10n.up_to_date,
               style: TextStyle(fontSize: 12, color: secondary),
             ),
           ],

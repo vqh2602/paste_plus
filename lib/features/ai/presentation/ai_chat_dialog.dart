@@ -696,13 +696,16 @@ class _AiWelcomeState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          const Text(
-            'ClipFlow Local AI Assistant',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          Text(
+            context.l10n.ai_chat_assistant,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
-            'Xử lý 100% ngoại tuyến trên thiết bị với ${model.name}',
+            context.l10n.ai_offline_processed_model.replaceAll(
+              '@model',
+              model.name,
+            ),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
