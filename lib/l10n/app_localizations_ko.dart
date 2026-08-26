@@ -63,7 +63,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get phone => '전화';
 
   @override
-  String get color => 'HEX 색상';
+  String get color => '색상';
 
   @override
   String get json => 'JSON';
@@ -139,6 +139,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get open_link => '열기';
+
+  @override
+  String get open_in_browser => '브라우저에서 열기';
+
+  @override
+  String get show_in_folder => '폴더에서 보기';
 
   @override
   String get paste_as_plain_text => '일반 텍스트로 붙여넣기';
@@ -542,6 +548,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get text_transform => '텍스트 변환';
+
+  @override
+  String get convert_color => '색상 코드 변환';
 
   @override
   String get format_json => 'JSON 서식 지정';
@@ -1711,4 +1720,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get vault_locked_notice => '계속하려면 비밀 보관함을 잠금 해제하세요.';
+
+  @override
+  String get file_size => '파일 크기';
 }

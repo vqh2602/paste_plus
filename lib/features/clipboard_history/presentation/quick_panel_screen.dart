@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/ui/cupertino_components.dart';
+import '../../../core/utils/color_parser.dart';
 import '../domain/clipboard_item.dart';
 import '../domain/smart_text_tools.dart';
 import 'history_controller.dart';
@@ -221,6 +222,24 @@ class _QuickPanelScreenState extends ConsumerState<QuickPanelScreen>
       }
     } else if (action == 'paste_plain') {
       await _pasteItemAsPlainText(item);
+    } else if (action == 'color_convert') {
+      final format = await showColorConversionMenu(
+        context: context,
+        value: item.content,
+      );
+      if (!context.mounted || format == null) return;
+      try {
+        await historyNotifier.addTextItem(
+          ColorParser.convert(item.content, format),
+        );
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transformed_copied);
+        }
+      } on FormatException {
+        if (context.mounted) {
+          showCupertinoNotice(context, context.l10n.transform_failed);
+        }
+      }
     } else if (action == 'text_transform') {
       final transform = await showTextTransformMenu(context: context);
       if (!context.mounted || transform == null) return;

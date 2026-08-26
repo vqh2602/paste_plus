@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Tooltip;
 
 import '../../app/theme/app_theme.dart';
 export '../../app/theme/app_theme.dart';
@@ -218,7 +219,7 @@ class CupertinoIconControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CupertinoPressable(
+    final control = CupertinoPressable(
       onPressed: onPressed,
       child: Container(
         width: size + 14,
@@ -242,6 +243,9 @@ class CupertinoIconControl extends StatelessWidget {
         ),
       ),
     );
+    final message = tooltip?.trim();
+    if (message == null || message.isEmpty) return control;
+    return Tooltip(message: message, child: control);
   }
 }
 

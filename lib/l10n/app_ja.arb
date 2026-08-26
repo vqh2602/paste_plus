@@ -20,7 +20,7 @@
   "file": "ファイルパス",
   "email": "メール",
   "phone": "電話",
-  "color": "HEXカラー",
+  "color": "カラー",
   "json": "JSON",
   "jwt": "JWT",
   "image": "画像",
@@ -46,6 +46,8 @@
   "clipboard_update_failed": "このクリップボードを更新できません",
   "invalid_color_code": "有効なカラーコードを入力してください",
   "open_link": "開く",
+  "open_in_browser": "ブラウザで開く",
+  "show_in_folder": "フォルダに表示",
   "paste_as_plain_text": "プレーンテキストとして貼り付け",
   "share_clipboard": "共有",
   "share_failed": "このクリップボードを共有できません",
@@ -180,6 +182,7 @@
   "translate_success": "テキスト翻訳 & コピー作成完了",
   "translate_failed": "テキストを翻訳できませんでした",
   "text_transform": "テキスト変換",
+  "convert_color": "カラーコードを変換",
   "format_json": "JSON を整形",
   "minify_json": "JSON を圧縮",
   "encode_base64": "Base64 エンコード",
@@ -563,5 +566,6 @@
   "vault_encryption_title": "保存時にAES-256で暗号化",
   "vault_encryption_sub": "内容、メタデータ、画像ファイルは保存前に暗号化されます。",
   "vault_disable_confirm": "保管庫を無効にし、復号した項目を履歴に戻しますか？",
-  "vault_locked_notice": "続行する前に保管庫をロック解除してください。"
+  "vault_locked_notice": "続行する前に保管庫をロック解除してください。",
+  "file_size": "ファイルサイズ"
 }

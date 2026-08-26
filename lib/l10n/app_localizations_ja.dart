@@ -63,7 +63,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get phone => '電話';
 
   @override
-  String get color => 'HEXカラー';
+  String get color => 'カラー';
 
   @override
   String get json => 'JSON';
@@ -139,6 +139,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get open_link => '開く';
+
+  @override
+  String get open_in_browser => 'ブラウザで開く';
+
+  @override
+  String get show_in_folder => 'フォルダに表示';
 
   @override
   String get paste_as_plain_text => 'プレーンテキストとして貼り付け';
@@ -542,6 +548,9 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get text_transform => 'テキスト変換';
+
+  @override
+  String get convert_color => 'カラーコードを変換';
 
   @override
   String get format_json => 'JSON を整形';
@@ -1712,4 +1721,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get vault_locked_notice => '続行する前に保管庫をロック解除してください。';
+
+  @override
+  String get file_size => 'ファイルサイズ';
 }

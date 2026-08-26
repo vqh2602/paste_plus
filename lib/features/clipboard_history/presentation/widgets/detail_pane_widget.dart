@@ -19,8 +19,11 @@ import '../../domain/smart_text_tools.dart';
 import 'calculation_result_line.dart';
 import '../history_controller.dart';
 
+import 'clipboard_file_preview.dart';
+import 'clipboard_color_preview.dart';
 import 'clipboard_preview_dialog.dart';
 import 'note_edit_dialog.dart';
+import 'url_preview_card.dart';
 
 class DetailPaneWidget extends ConsumerStatefulWidget {
   const DetailPaneWidget({super.key});
@@ -94,6 +97,39 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     }
   }
 
+  Future<void> _handleCopy(ClipboardItem item) async {
+    await ref.read(historyControllerProvider.notifier).copy(item);
+    if (mounted) showCupertinoNotice(context, context.l10n.copied);
+  }
+
+  Future<void> _handleTogglePinned(ClipboardItem item) async {
+    final wasPinned = item.isPinned;
+    await ref.read(historyControllerProvider.notifier).togglePinned(item);
+    if (!mounted) return;
+    showCupertinoNotice(
+      context,
+      wasPinned ? context.l10n.unpin : context.l10n.pinned,
+    );
+  }
+
+  Future<void> _handleOpenUrl(ClipboardItem item) async {
+    final raw = item.primaryUrl?.trim().isNotEmpty == true
+        ? item.primaryUrl!.trim()
+        : item.content.trim();
+    final uri = Uri.tryParse(raw);
+    if (uri == null ||
+        !uri.hasScheme ||
+        !{'http', 'https'}.contains(uri.scheme.toLowerCase()) ||
+        uri.host.isEmpty) {
+      return;
+    }
+    await ref.read(desktopIntegrationProvider).openUrl(uri.toString());
+  }
+
+  Future<void> _handleRevealFile(String path) {
+    return ref.read(desktopIntegrationProvider).revealInFileManager(path);
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(historyControllerProvider);
@@ -113,6 +149,15 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     final viewingVault =
         state.section == HistorySection.collection &&
         state.collectionId == ClipboardCollection.vaultId;
+    final filePath = item.contentType == ClipboardContentType.file
+        ? firstExistingClipboardFilePath(item.content)
+        : null;
+    final filePaths = item.contentType == ClipboardContentType.file
+        ? clipboardFilePaths(item.content)
+        : const <String>[];
+    final displayedFilePath = item.contentType == ClipboardContentType.file
+        ? (filePaths.isEmpty ? null : filePaths.first)
+        : null;
     return ColoredBox(
       color: resolveColor(context, ClipFlowColors.sidebar),
       child: Padding(
@@ -122,11 +167,36 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
           children: [
             Row(
               children: [
-                Icon(_typeIcon(item.contentType), size: 19),
-                const SizedBox(width: 9),
-                Text(
-                  _typeLabel(item.contentType),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(_typeIcon(item.contentType), size: 19),
+                      const SizedBox(width: 9),
+                      Flexible(
+                        child: Text(
+                          _typeLabel(item.contentType),
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _DetailActionToolbar(
+                  item: item,
+                  viewingVault: viewingVault,
+                  isProcessing: _isProcessing,
+                  isUploading: _isUploading,
+                  filePath: filePath,
+                  onCopy: () => _handleCopy(item!),
+                  onOpenUrl: () => _handleOpenUrl(item!),
+                  onRevealFile: filePath == null
+                      ? null
+                      : () => _handleRevealFile(filePath),
+                  onOcr: () => _handleOcr(item!),
+                  onTranslate: () => _handleTranslate(item!),
+                  onCloudUpload: () => _handleCloudUpload(item!),
+                  onTogglePinned: () => _handleTogglePinned(item!),
                 ),
               ],
             ),
@@ -181,40 +251,14 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
                           ),
                         ],
                       )
+                    : item.contentType == ClipboardContentType.file
+                    ? ClipboardFilePreview(content: item.content, height: 260)
+                    : item.contentType == ClipboardContentType.url
+                    ? UrlPreviewCard(item: item)
                     : parsedColor != null
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            height: 200,
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: parsedColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: resolveColor(
-                                  context,
-                                  ClipFlowColors.border,
-                                ),
-                                width: 1.0,
-                              ),
-                            ),
-                          ),
-                          HighlightedText(
-                            text: item.content,
-                            query: state.query,
-                            style: TextStyle(
-                              fontSize: 14,
-                              height: 1.55,
-                              color: resolveColor(
-                                context,
-                                ClipFlowColors.secondaryText,
-                              ),
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ],
+                    ? ClipboardColorPreview(
+                        value: item.content,
+                        color: parsedColor,
                       )
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -379,134 +423,55 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
               label: context.l10n.source_app,
               value: item.sourceAppName ?? context.l10n.unknown,
             ),
+            if (item.contentType == ClipboardContentType.url)
+              MetadataRowWidget(
+                label: context.l10n.url,
+                valueWidget: Text(
+                  _displayUrl(item.primaryUrl ?? item.content),
+                  key: const Key('detail-pane-full-url'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.start,
+                  style: const TextStyle(color: CupertinoColors.activeBlue),
+                ),
+              ),
+            if (displayedFilePath != null)
+              MetadataRowWidget(
+                label: context.l10n.file,
+                valueWidget: Text(
+                  displayedFilePath,
+                  key: const Key('detail-pane-file-path'),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                ),
+              ),
             MetadataRowWidget(
               label: context.l10n.usage_count,
               value: '${item.copyCount}',
             ),
             if (_metadataValue(context, item) case final metadata?)
               MetadataRowWidget(
-                label: context.l10n.details,
+                label:
+                    item.contentType == ClipboardContentType.image ||
+                        isImageUrl(item.content)
+                    ? context.l10n.ai_size_label
+                    : item.contentType == ClipboardContentType.file
+                    ? context.l10n.file_size
+                    : context.l10n.details,
                 valueWidget: metadata,
               ),
-            const SizedBox(height: 14),
-            if (!viewingVault && isImage) ...[
-              SizedBox(
-                width: double.infinity,
-                child: CupertinoButton(
-                  color: CupertinoColors.activeBlue.withValues(alpha: 0.15),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  onPressed: _isProcessing ? null : () => _handleOcr(item!),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isProcessing)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: CupertinoActivityIndicator(radius: 8),
-                        )
-                      else
-                        const Icon(CupertinoIcons.doc_text_search, size: 16),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          context.l10n.extract_ocr,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: CupertinoColors.activeBlue,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+            if (item.contentType == ClipboardContentType.image ||
+                isImageUrl(item.content))
+              MetadataRowWidget(
+                label: context.l10n.file_size,
+                valueWidget: ClipboardFileSizeText(
+                  key: const Key('detail-pane-image-file-size'),
+                  content: item.imagePath ?? item.content,
+                  style: CupertinoTheme.of(context).textTheme.textStyle,
                 ),
               ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: CupertinoButton(
-                  color: CupertinoColors.activeGreen.withValues(alpha: 0.15),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  onPressed: _isUploading
-                      ? null
-                      : () => _handleCloudUpload(item!),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isUploading)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: CupertinoActivityIndicator(radius: 8),
-                        )
-                      else
-                        const Icon(
-                          CupertinoIcons.cloud_upload,
-                          size: 16,
-                          color: CupertinoColors.activeGreen,
-                        ),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          context.l10n.upload_cloud,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: CupertinoColors.activeGreen,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ] else if (!viewingVault) ...[
-              SizedBox(
-                width: double.infinity,
-                child: CupertinoButton(
-                  color: CupertinoColors.activeBlue.withValues(alpha: 0.15),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  onPressed: _isProcessing
-                      ? null
-                      : () => _handleTranslate(item!),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      if (_isProcessing)
-                        const Padding(
-                          padding: EdgeInsets.only(right: 8),
-                          child: CupertinoActivityIndicator(radius: 8),
-                        )
-                      else
-                        const Icon(CupertinoIcons.globe, size: 16),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          context.l10n.translate_text,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: CupertinoColors.activeBlue,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-            SizedBox(
-              width: double.infinity,
-              child: CupertinoButton.filled(
-                onPressed: () =>
-                    ref.read(historyControllerProvider.notifier).copy(item!),
-                child: Text(context.l10n.copy_again),
-              ),
-            ),
+            const SizedBox(height: 4),
           ],
         ),
       ),
@@ -528,6 +493,14 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
       return ImageDimensionsText(
         path: item.imagePath ?? item.content,
         textKey: const Key('detail-pane-image-metadata'),
+        style: valueStyle,
+      );
+    }
+
+    if (item.contentType == ClipboardContentType.file) {
+      return ClipboardFileSizeText(
+        key: const Key('detail-pane-file-size'),
+        content: item.content,
         style: valueStyle,
       );
     }
@@ -562,6 +535,16 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     return null;
   }
 
+  String _displayUrl(String value) {
+    final trimmed = value.trim();
+    final schemeEnd = trimmed.indexOf('://');
+    if (schemeEnd < 0 || schemeEnd + 3 >= trimmed.length) return trimmed;
+    // Keep the scheme attached to the hostname. Otherwise Flutter may wrap a
+    // long URL immediately after `https://`, leaving a nearly empty first row.
+    return '${trimmed.substring(0, schemeEnd + 3)}\u2060'
+        '${trimmed.substring(schemeEnd + 3)}';
+  }
+
   IconData _typeIcon(ClipboardContentType type) => switch (type) {
     ClipboardContentType.text => CupertinoIcons.doc_text,
     ClipboardContentType.url => CupertinoIcons.link,
@@ -591,6 +574,102 @@ class _DetailPaneWidgetState extends ConsumerState<DetailPaneWidget> {
     ClipboardContentType.file => 'FILE',
     ClipboardContentType.image => 'IMAGE',
   };
+}
+
+class _DetailActionToolbar extends StatelessWidget {
+  const _DetailActionToolbar({
+    required this.item,
+    required this.viewingVault,
+    required this.isProcessing,
+    required this.isUploading,
+    required this.filePath,
+    required this.onCopy,
+    required this.onOpenUrl,
+    required this.onRevealFile,
+    required this.onOcr,
+    required this.onTranslate,
+    required this.onCloudUpload,
+    required this.onTogglePinned,
+  });
+
+  final ClipboardItem item;
+  final bool viewingVault;
+  final bool isProcessing;
+  final bool isUploading;
+  final String? filePath;
+  final VoidCallback onCopy;
+  final VoidCallback onOpenUrl;
+  final VoidCallback? onRevealFile;
+  final VoidCallback onOcr;
+  final VoidCallback onTranslate;
+  final VoidCallback onCloudUpload;
+  final VoidCallback onTogglePinned;
+
+  @override
+  Widget build(BuildContext context) {
+    final isImage = item.contentType == ClipboardContentType.image;
+    final isFile = item.contentType == ClipboardContentType.file;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        CupertinoIconControl(
+          key: const Key('detail-copy-action'),
+          icon: CupertinoIcons.doc_on_doc,
+          size: 17,
+          tooltip: context.l10n.copy_again,
+          onPressed: onCopy,
+        ),
+        if (item.contentType == ClipboardContentType.url)
+          CupertinoIconControl(
+            key: const Key('detail-open-browser-action'),
+            icon: CupertinoIcons.arrow_up_right_square,
+            size: 17,
+            tooltip: context.l10n.open_in_browser,
+            onPressed: onOpenUrl,
+          ),
+        if (isFile)
+          CupertinoIconControl(
+            key: const Key('detail-show-in-folder-action'),
+            icon: CupertinoIcons.folder_open,
+            size: 17,
+            tooltip: context.l10n.show_in_folder,
+            onPressed: filePath == null ? null : onRevealFile,
+          ),
+        if (!viewingVault && isImage) ...[
+          CupertinoIconControl(
+            key: const Key('detail-ocr-action'),
+            icon: CupertinoIcons.doc_text_search,
+            size: 17,
+            tooltip: context.l10n.extract_ocr,
+            onPressed: isProcessing ? null : onOcr,
+          ),
+          CupertinoIconControl(
+            key: const Key('detail-cloud-upload-action'),
+            icon: CupertinoIcons.cloud_upload,
+            size: 17,
+            // color: CupertinoColors.activeGreen,
+            tooltip: context.l10n.upload_cloud,
+            onPressed: isUploading ? null : onCloudUpload,
+          ),
+        ] else if (!viewingVault && !isFile)
+          CupertinoIconControl(
+            key: const Key('detail-translate-action'),
+            icon: CupertinoIcons.globe,
+            size: 17,
+            tooltip: context.l10n.translate_text,
+            onPressed: isProcessing ? null : onTranslate,
+          ),
+        CupertinoIconControl(
+          key: const Key('detail-pin-action'),
+          icon: item.isPinned ? CupertinoIcons.pin_fill : CupertinoIcons.pin,
+          size: 17,
+          color: item.isPinned ? CupertinoTheme.of(context).primaryColor : null,
+          tooltip: item.isPinned ? context.l10n.unpin : context.l10n.pin,
+          onPressed: onTogglePinned,
+        ),
+      ],
+    );
+  }
 }
 
 class ClipboardImagePreviewWidget extends ConsumerWidget {
@@ -703,7 +782,16 @@ class MetadataRowWidget extends StatelessWidget {
               ),
             ),
           ),
-          valueWidget ?? Text(value!),
+          Flexible(
+            child:
+                valueWidget ??
+                Text(
+                  value!,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                ),
+          ),
         ],
       ),
     );

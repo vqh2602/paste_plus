@@ -18,7 +18,7 @@
   "file": "Đường dẫn file",
   "email": "Email",
   "phone": "Điện thoại",
-  "color": "Màu HEX",
+  "color": "Màu sắc",
   "json": "JSON",
   "jwt": "JWT",
   "image": "Hình ảnh",
@@ -44,6 +44,8 @@
   "clipboard_update_failed": "Không thể cập nhật clipboard này",
   "invalid_color_code": "Hãy nhập mã màu hợp lệ",
   "open_link": "Mở",
+  "open_in_browser": "Mở trong trình duyệt",
+  "show_in_folder": "Hiển thị trong thư mục",
   "paste_as_plain_text": "Dán dưới dạng văn bản thuần",
   "share_clipboard": "Chia sẻ",
   "share_failed": "Không thể chia sẻ clipboard này",
@@ -209,6 +211,7 @@
   "translate_success": "Đã dịch & tạo bản sao mới",
   "translate_failed": "Không thể dịch văn bản này",
   "text_transform": "Chuyển đổi văn bản",
+  "convert_color": "Chuyển đổi mã màu",
   "format_json": "Định dạng JSON",
   "minify_json": "Thu nhỏ JSON",
   "encode_base64": "Mã hóa Base64",
@@ -561,5 +564,6 @@
   "vault_encryption_title": "Mã hóa AES-256 khi lưu trữ",
   "vault_encryption_sub": "Nội dung, metadata và file ảnh được mã hóa trước khi lưu.",
   "vault_disable_confirm": "Tắt Tủ khóa và khôi phục các mục đã giải mã về lịch sử clipboard?",
-  "vault_locked_notice": "Hãy mở khóa Tủ khóa trước khi tiếp tục."
+  "vault_locked_notice": "Hãy mở khóa Tủ khóa trước khi tiếp tục.",
+  "file_size": "Kích thước file"
 }

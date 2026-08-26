@@ -63,7 +63,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get phone => '电话';
 
   @override
-  String get color => '十六进制颜色';
+  String get color => '颜色';
 
   @override
   String get json => 'JSON';
@@ -139,6 +139,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get open_link => '打开';
+
+  @override
+  String get open_in_browser => '在浏览器中打开';
+
+  @override
+  String get show_in_folder => '在文件夹中显示';
 
   @override
   String get paste_as_plain_text => '粘贴为纯文本';
@@ -541,6 +547,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get text_transform => '文本转换';
+
+  @override
+  String get convert_color => '转换颜色代码';
 
   @override
   String get format_json => '格式化 JSON';
@@ -1700,4 +1709,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get vault_locked_notice => '请先解锁保险库。';
+
+  @override
+  String get file_size => '文件大小';
 }

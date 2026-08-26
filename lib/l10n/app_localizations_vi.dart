@@ -63,7 +63,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phone => 'Điện thoại';
 
   @override
-  String get color => 'Màu HEX';
+  String get color => 'Màu sắc';
 
   @override
   String get json => 'JSON';
@@ -139,6 +139,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get open_link => 'Mở';
+
+  @override
+  String get open_in_browser => 'Mở trong trình duyệt';
+
+  @override
+  String get show_in_folder => 'Hiển thị trong thư mục';
 
   @override
   String get paste_as_plain_text => 'Dán dưới dạng văn bản thuần';
@@ -557,6 +563,9 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get text_transform => 'Chuyển đổi văn bản';
+
+  @override
+  String get convert_color => 'Chuyển đổi mã màu';
 
   @override
   String get format_json => 'Định dạng JSON';
@@ -1768,4 +1777,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get vault_locked_notice => 'Hãy mở khóa Tủ khóa trước khi tiếp tục.';
+
+  @override
+  String get file_size => 'Kích thước file';
 }

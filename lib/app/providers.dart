@@ -26,6 +26,7 @@ import '../features/clipboard_history/domain/clipboard_item.dart';
 import '../features/clipboard_history/domain/clipboard_payload.dart';
 import '../features/clipboard_history/domain/clipboard_repository.dart';
 import '../features/clipboard_history/presentation/history_controller.dart';
+import '../features/clipboard_history/services/url_preview_service.dart';
 import '../features/device_sync/domain/local_sharing_state.dart';
 import '../features/device_sync/data/item_sync_state_repository.dart';
 import '../features/device_sync/presentation/local_sharing_controller.dart';
@@ -89,6 +90,10 @@ final clipboardWatcherProvider = Provider<ClipboardWatcher>((ref) {
       : FlutterClipboardWatcher();
   ref.onDispose(watcher.dispose);
   return watcher;
+});
+
+final urlPreviewServiceProvider = Provider<UrlPreviewService>((ref) {
+  return const UrlPreviewService();
 });
 
 final desktopIntegrationProvider = Provider<DesktopIntegrationService>((ref) {
@@ -181,6 +186,7 @@ final historyControllerProvider =
         onCollectionsChanged: () =>
             ref.read(collectionsControllerProvider.notifier).reload(),
         onVaultExit: () => ref.read(vaultControllerProvider.notifier).lock(),
+        urlPreviewService: ref.watch(urlPreviewServiceProvider),
       );
       final incomingSubscription = ref
           .watch(localSharingServiceProvider)

@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'dart:math' as math;
-import 'package:flutter/painting.dart' show HSVColor;
+import 'package:flutter/painting.dart' show HSLColor, HSVColor;
+
+enum ClipboardColorFormat { hex, rgb, hsl, hsv, cmyk }
 
 class ColorParser {
   const ColorParser._();
@@ -207,6 +209,142 @@ class ColorParser {
 
     return null;
   }
+
+  static String convert(String value, ClipboardColorFormat format) {
+    final color = parse(value);
+    if (color == null) throw const FormatException('Invalid color');
+    return formatColor(color, format);
+  }
+
+  static String formatColor(Color color, ClipboardColorFormat format) {
+    final red = _channel(color.r);
+    final green = _channel(color.g);
+    final blue = _channel(color.b);
+    final alpha = _channel(color.a);
+
+    return switch (format) {
+      ClipboardColorFormat.hex =>
+        alpha == 255
+            ? '#${_hex(red)}${_hex(green)}${_hex(blue)}'
+            : '#${_hex(red)}${_hex(green)}${_hex(blue)}${_hex(alpha)}',
+      ClipboardColorFormat.rgb =>
+        alpha == 255
+            ? 'rgb($red, $green, $blue)'
+            : 'rgba($red, $green, $blue, ${_trim(alpha / 255, 2)})',
+      ClipboardColorFormat.hsl => _formatHsl(color, alpha),
+      ClipboardColorFormat.hsv => _formatHsv(color, alpha),
+      ClipboardColorFormat.cmyk => _formatCmyk(red, green, blue),
+    };
+  }
+
+  static String nearestName(Color color) {
+    final red = _channel(color.r);
+    final green = _channel(color.g);
+    final blue = _channel(color.b);
+    var bestName = _namedColors.first.$1;
+    var bestDistance = double.infinity;
+    for (final (name, hex) in _namedColors) {
+      final namedRed = (hex >> 16) & 0xff;
+      final namedGreen = (hex >> 8) & 0xff;
+      final namedBlue = hex & 0xff;
+      final redMean = (red + namedRed) / 2;
+      final redDelta = red - namedRed;
+      final greenDelta = green - namedGreen;
+      final blueDelta = blue - namedBlue;
+      final distance =
+          (2 + redMean / 256) * redDelta * redDelta +
+          4 * greenDelta * greenDelta +
+          (2 + (255 - redMean) / 256) * blueDelta * blueDelta;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestName = name;
+      }
+    }
+    return bestName;
+  }
+
+  static String _formatHsl(Color color, int alpha) {
+    final hsl = HSLColor.fromColor(color);
+    final body =
+        '${hsl.hue.round()}°, ${(hsl.saturation * 100).round()}%, '
+        '${(hsl.lightness * 100).round()}%';
+    return alpha == 255
+        ? 'hsl($body)'
+        : 'hsla($body, ${_trim(alpha / 255, 2)})';
+  }
+
+  static String _formatHsv(Color color, int alpha) {
+    final hsv = HSVColor.fromColor(color);
+    final body =
+        '${hsv.hue.round()}°, ${(hsv.saturation * 100).round()}%, '
+        '${(hsv.value * 100).round()}%';
+    return alpha == 255 ? 'hsv($body)' : 'hsv($body, ${_trim(alpha / 255, 2)})';
+  }
+
+  static String _formatCmyk(int red, int green, int blue) {
+    final r = red / 255;
+    final g = green / 255;
+    final b = blue / 255;
+    final black = 1 - math.max(r, math.max(g, b));
+    if (black >= 1) return 'cmyk(0%, 0%, 0%, 100%)';
+    final cyan = (1 - r - black) / (1 - black);
+    final magenta = (1 - g - black) / (1 - black);
+    final yellow = (1 - b - black) / (1 - black);
+    return 'cmyk(${(cyan * 100).round()}%, ${(magenta * 100).round()}%, '
+        '${(yellow * 100).round()}%, ${(black * 100).round()}%)';
+  }
+
+  static int _channel(double value) => (value * 255).round().clamp(0, 255);
+
+  static String _hex(int value) =>
+      value.toRadixString(16).padLeft(2, '0').toUpperCase();
+
+  static String _trim(double value, int decimals) {
+    final fixed = value.toStringAsFixed(decimals);
+    return fixed.replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+
+  static const _namedColors = <(String, int)>[
+    ('Black', 0x000000),
+    ('Charcoal', 0x36454F),
+    ('Gray', 0x808080),
+    ('Silver', 0xC0C0C0),
+    ('White', 0xFFFFFF),
+    ('Red', 0xFF0000),
+    ('Crimson', 0xDC143C),
+    ('Scarlet', 0xFF2400),
+    ('Coral', 0xFF7F50),
+    ('Orange', 0xFFA500),
+    ('Amber', 0xFFBF00),
+    ('Gold', 0xFFD700),
+    ('Yellow', 0xFFFF00),
+    ('Lime', 0xBFFF00),
+    ('Green', 0x008000),
+    ('Emerald', 0x50C878),
+    ('Mint', 0x3EB489),
+    ('Teal', 0x008080),
+    ('Cyan', 0x00FFFF),
+    ('Sky Blue', 0x87CEEB),
+    ('Blue', 0x0000FF),
+    ('Royal Blue', 0x4169E1),
+    ('Navy', 0x000080),
+    ('Indigo', 0x4B0082),
+    ('Purple', 0x800080),
+    ('Violet', 0x8F00FF),
+    ('Lavender', 0xE6E6FA),
+    ('Magenta', 0xFF00FF),
+    ('Violet Red', 0xEA3380),
+    ('Cerise', 0xDE3163),
+    ('Rose', 0xFF007F),
+    ('Pink', 0xFFC0CB),
+    ('Salmon', 0xFA8072),
+    ('Maroon', 0x800000),
+    ('Brown', 0xA52A2A),
+    ('Chocolate', 0xD2691E),
+    ('Tan', 0xD2B48C),
+    ('Beige', 0xF5F5DC),
+    ('Ivory', 0xFFFFF0),
+  ];
 
   // --- Helpers for color conversion ---
 

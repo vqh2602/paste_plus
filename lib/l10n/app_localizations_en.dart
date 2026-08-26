@@ -63,7 +63,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get phone => 'Phone';
 
   @override
-  String get color => 'HEX Color';
+  String get color => 'Color';
 
   @override
   String get json => 'JSON';
@@ -139,6 +139,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get open_link => 'Open';
+
+  @override
+  String get open_in_browser => 'Open in browser';
+
+  @override
+  String get show_in_folder => 'Show in folder';
 
   @override
   String get paste_as_plain_text => 'Paste as Plain Text';
@@ -553,6 +559,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get text_transform => 'Text conversion';
+
+  @override
+  String get convert_color => 'Convert color code';
 
   @override
   String get format_json => 'Format JSON';
@@ -1773,4 +1782,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get vault_locked_notice => 'Unlock the Vault before continuing.';
+
+  @override
+  String get file_size => 'File size';
 }

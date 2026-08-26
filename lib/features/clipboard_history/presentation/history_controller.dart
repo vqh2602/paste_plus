@@ -16,6 +16,8 @@ import '../domain/clipboard_item.dart';
 import '../domain/clipboard_payload.dart';
 import '../domain/clipboard_repository.dart';
 import '../domain/search_query.dart';
+import '../domain/url_preview_metadata.dart';
+import '../services/url_preview_service.dart';
 
 enum HistorySection { all, pinned, images, links, code, collection }
 
@@ -97,6 +99,7 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     this.onItemMetadataChanged,
     this.onCollectionsChanged,
     this.onVaultExit,
+    this.urlPreviewService,
   }) : super(const ClipboardHistoryState()) {
     _subscription = _watcher.watch().listen(
       _capture,
@@ -116,6 +119,8 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
   final Future<void> Function(ClipboardItem item)? onItemMetadataChanged;
   final Future<void> Function()? onCollectionsChanged;
   final void Function()? onVaultExit;
+  final UrlPreviewService? urlPreviewService;
+  final Map<String, Future<UrlPreviewMetadata?>> _urlPreviewLoads = {};
   ClipboardPayload? _suppressedRemotePayload;
   DateTime? _suppressRemoteUntil;
   late final StreamSubscription<ClipboardPayload> _subscription;
@@ -501,6 +506,60 @@ class ClipboardHistoryController extends StateNotifier<ClipboardHistoryState> {
     await _repository.updateMetadata(item.id, jsonEncode(metadata));
     await addTextItem(extractedText);
     return extractedText;
+  }
+
+  Future<UrlPreviewMetadata?> ensureUrlPreview(
+    ClipboardItem item, {
+    bool force = false,
+  }) async {
+    if (item.contentType != ClipboardContentType.url || _isViewingVault) {
+      return UrlPreviewMetadata.fromClipboardMetadata(item.metadataJson);
+    }
+    final cached = UrlPreviewMetadata.fromClipboardMetadata(item.metadataJson);
+    if (!force && cached != null && cached.isFresh(DateTime.now().toUtc())) {
+      return cached;
+    }
+    final service = urlPreviewService;
+    if (service == null) return cached;
+    final activeLoad = _urlPreviewLoads[item.id];
+    if (activeLoad != null) return activeLoad;
+
+    final load = _loadUrlPreview(item, service, cached);
+    _urlPreviewLoads[item.id] = load;
+    try {
+      return await load;
+    } finally {
+      _urlPreviewLoads.remove(item.id);
+    }
+  }
+
+  Future<UrlPreviewMetadata?> _loadUrlPreview(
+    ClipboardItem item,
+    UrlPreviewService service,
+    UrlPreviewMetadata? fallback,
+  ) async {
+    final value = item.primaryUrl?.trim().isNotEmpty == true
+        ? item.primaryUrl!
+        : item.content;
+    final preview = await service.fetch(value);
+    if (preview == null) return fallback;
+    final current = state.items
+        .where((entry) => entry.id == item.id)
+        .firstOrNull;
+    final sourceItem = current ?? item;
+    final metadataJson = preview.mergeIntoClipboardMetadata(
+      sourceItem.metadataJson,
+    );
+    await _repository.updateMetadata(item.id, metadataJson);
+    final updated = sourceItem.copyWith(metadataJson: metadataJson);
+    state = state.copyWith(
+      items: [
+        for (final current in state.items)
+          if (current.id == item.id) updated else current,
+      ],
+    );
+    await onItemMetadataChanged?.call(updated);
+    return preview;
   }
 
   Future<String?> translateItem(ClipboardItem item, String targetLang) async {
