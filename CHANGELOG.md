@@ -1,5 +1,29 @@
 # Changelog
 
+## [2.0.2] - 2026-08-26
+
+### 🛠️ Khắc phục sự cố giao diện & Tràn viền (RenderFlex Overflow)
+- **Thanh điều hướng bên (Sidebar Navigation)**:
+  - Di chuyển toàn bộ các mục thư viện điều hướng (*All*, *Pinned*, *Images*, *Links*, *Code*) và tiêu đề *Bộ sưu tập* vào bên trong danh sách cuộn linh hoạt (`ListView` bọc bởi `Expanded`).
+  - Đảm bảo thanh bên hiển thị mượt mà trên mọi độ cao cửa sổ thu nhỏ mà không bao giờ bị lỗi `RenderFlex overflow`.
+- **Xem trước tệp tin thu gọn (Compact File Preview)**:
+  - Tự động co giãn kích thước biểu tượng, khoảng cách đệm (padding) theo chiều cao vùng chứa và bao bọc bằng `SingleChildScrollView` tránh lỗi tràn viền trong thẻ clipboard thu gọn.
+
+### 🌐 Hoàn thiện & Chuẩn hóa bản địa hóa đa ngôn ngữ (Localization)
+- Chuyển đổi 100% các đoạn văn bản hardcode trong giao diện sang hệ thống đa ngôn ngữ (`l10n`):
+  - Hộp thoại chỉnh sửa ghi chú tự động lưu (`note_edit_dialog`).
+  - Trình xem ảnh phóng to toàn màn hình (`image_zoom_viewer`).
+  - Toàn bộ thông báo tiến trình & trạng thái cập nhật phần mềm (`about_settings_section`).
+  - Banner tải model tiện ích phân loại (`ai_classifier_banner`).
+  - Overlay và cửa sổ bảng nhật ký gỡ lỗi AI (`ai_debug_overlay`).
+  - Huy hiệu phân loại model AI (`Thinking AI` / `Vision AI`).
+  - Phản hồi thông báo lỗi sinh câu trả lời AI (`ai_controller`).
+- Sửa lỗi các khóa chưa được dịch sang tiếng Việt trong `app_vi.arb` (`delete_collection_confirm`, `collections`, `ai_chat_assistant`).
+- Dọn dẹp khóa cũ và đồng bộ hoàn hảo 587 khóa bản dịch trên toàn bộ 6 ngôn ngữ hỗ trợ (**Tiếng Việt**, **English**, **Deutsch**, **日本語**, **한국어**, **简体中文**).
+
+### 📦 Đồng bộ phiên bản
+- Nâng phiên bản toàn dự án lên **2.0.2** (build **22**) đồng bộ trên `pubspec.yaml`, `ClipFlowVersion` và Windows `Runner.rc`.
+
 ## [2.0.1] - 2026-08-26
 
 ### 🎨 Xem trước nội dung phong phú (Rich Previews) trong vùng Chi tiết
