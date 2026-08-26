@@ -89,6 +89,70 @@
 
 ---
 
+## 🎯 Clipboard Context Menu & Quick Actions
+
+ClipFlow provides a native macOS-style popup menu on every clipboard item (click the `···` button or right-click) and on the Detail Pane toolbar:
+
+```
+┌────────────────────────────────────────────────────────┐
+│  ↗ Open Link                          (URLs only)      │
+│  📄 Paste as Plain Text               (Rich / Text)    │
+│  📋 Copy                                               │
+│ ────────────────────────────────────────────────────── │
+│  🔀 Text Transformations              ▶ (Submenu)      │
+│     ├─ Format JSON (Beautify)                          │
+│     ├─ Minify JSON (Compact)                           │
+│     ├─ Encode / Decode Base64                          │
+│     ├─ Encode / Decode URL                             │
+│     ├─ UPPERCASE / lowercase / Title Case              │
+│     ├─ Parse Unix Timestamp                            │
+│     ├─ MD5 Hash                                        │
+│     ├─ Sort Lines Alphabetically                       │
+│     └─ Remove Duplicate Lines                          │
+│  🎨 Convert Color                     ▶ (Submenu)      │
+│     └─ HEX ⇄ RGB ⇄ HSL ⇄ HSV ⇄ CMYK                   │
+│  🧹 Link Cleaner                      (Strip tracking) │
+│ ────────────────────────────────────────────────────── │
+│  ✏️ Edit Clipboard                    (Text/Color/Img) │
+│  📝 Add / Edit Note                   (Search by note:)│
+│  🔍 Extract Text (OCR)                (Images only)    │
+│  ☁️ Upload to Cloud                   (ImgBB/FreeImage)│
+│  🌐 Translate Text                    (6 Languages)    │
+│  ✨ Ask AI Assistant                  (Local GGUF LLM) │
+│ ────────────────────────────────────────────────────── │
+│  📌 Pin / Unpin Item                  (Never expires)  │
+│  📁 Add to Collection / Move to Vault                  │
+│  👁️ Full Preview                     (Fullscreen/Zoom)│
+│  📤 Share Clipboard                   (Native OS Share)│
+│  🗑️ Delete                            (Destructive)    │
+└────────────────────────────────────────────────────────┘
+```
+
+### Detailed Action Breakdown:
+- **↗ Open Link**: Automatically detects URLs and opens them directly in your default browser.
+- **📄 Paste as Plain Text**: Strips rich text, styling, fonts, and HTML formatting, auto-pasting pure plain text straight into the target app.
+- **🔀 Text Transformations (Submenu)**: Pure local operations that generate a new clipboard item without altering the original:
+  - **Format / Minify JSON**: Formats messy JSON with indentation or compresses it to a single line.
+  - **Base64 Encode / Decode**: Instant encoding and decoding of Base64 strings.
+  - **URL Encode / Decode**: Escape or unescape special URI characters.
+  - **Case Converters**: Toggle text between `ALL CAPS`, `lowercase`, and `Title Case`.
+  - **Unix Timestamp**: Converts epoch seconds/milliseconds into a human-readable local date & time.
+  - **MD5 Hash**: Calculates an MD5 hash digest on copied text.
+  - **Line Sorter & Deduplicator**: Sorts text lines alphabetically or purges duplicate rows.
+- **🎨 Convert Color (Submenu)**: Dynamic color parser supporting live conversion across **HEX**, **RGB**, **HSL**, **HSV**, and **CMYK**.
+- **🧹 Link Cleaner**: Strips UTM tags, marketing trackers, `fbclid`, `gclid`, and analytics query strings while preserving routing and functional parameters.
+- **✏️ Edit Clipboard**: In-app editor allowing you to alter text snippets, tweak color values, or rotate copied images prior to saving.
+- **📝 Attach & Edit Notes**: Attach personal notes to any item; search by syntax `note:keyword` anytime.
+- **🔍 Extract Text (OCR)**: On-device optical character recognition (Apple Vision on macOS / MLKit) to pull text out of screenshots and photos.
+- **☁️ Upload to Cloud**: Explicit one-click upload to ImgBB or FreeImage.host with secure local API key storage.
+- **🌐 Translate Text**: Instant offline or AI translation into English, Vietnamese, Japanese, Korean, German, or Chinese.
+- **✨ Ask AI Assistant**: Opens the on-device AI workspace with the selected item already attached as conversational context.
+- **📁 Add to Collection / Move to Vault**: Organize items into custom folders or transfer confidential records into the Biometric Encrypted Vault.
+- **👁️ Fullscreen Preview**: Detailed inspect modal with text zooming, image dimension display, and aspect ratio controls.
+- **📤 Native OS Share**: Intelligently routes data to system share targets based on payload (URL, file list, image, or text).
+
+---
+
 ## 🚀 Quick Start & Installation
 
 ### Option 1: Download Pre-built Release (Recommended)
