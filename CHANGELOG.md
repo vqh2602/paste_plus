@@ -1,5 +1,23 @@
 # Changelog
 
+## [2.0.1] - 2026-08-26
+
+### 🎨 Xem trước nội dung phong phú (Rich Previews) trong vùng Chi tiết
+- **Xem trước liên kết (URL Preview)**: Tự động trích xuất metadata OpenGraph / Twitter Cards (tiêu đề, mô tả tóm tắt, ảnh thumbnail, favicon và domain) với cơ chế cache an toàn, hiển thị thẻ preview trực quan ngay trên vùng chi tiết.
+- **Xem trước tệp tin nâng cao (File Preview)**:
+  - Nhận diện và hiển thị biểu tượng thông minh theo từng định dạng (PDF, Word, Excel, Code, Audio, Video, Zip/Archive,...), dung lượng tệp, ngày sửa đổi và đường dẫn đầy đủ.
+  - Tích hợp thao tác mở trực tiếp tệp (`Open File`) hoặc hiển thị trong thư mục hệ thống (`Show in Finder` / `Show in Explorer`).
+  - Hỗ trợ xem danh sách nhiều tệp (Multi-file clipboard) kèm thống kê tổng dung lượng.
+- **Bộ công cụ & xem trước màu sắc (Color Preview & Converter)**:
+  - Nhận diện và phân tích toàn diện các hệ màu: **HEX**, **RGB/RGBA**, **HSL/HSLA**, **HSV**, **CMYK**.
+  - Hiển thị ô màu mẫu lớn (Color Swatch) trực quan kèm danh sách chuyển đổi giữa tất cả các hệ màu với nút sao chép nhanh 1 chạm.
+
+### 📑 Tối ưu hóa tài liệu & đồng bộ phiên bản
+- Cập nhật số phiên bản đồng bộ `2.0.1` trên toàn bộ dự án (`pubspec.yaml`, `ClipFlowVersion`, Windows Runner).
+- Tinh giản mục **Điểm bán hàng chính (Key Selling Points)** trong tài liệu `README.md`, tập trung vào các giá trị cốt lõi rõ ràng và dễ nắm bắt.
+- Gộp mục **Clipboard Context Menu & Quick Actions** trực quan vào bảng tính năng chính (**Feature Highlights**), loại bỏ các đoạn mô tả trùng lặp.
+- Bổ sung bộ kiểm thử tự động toàn diện cho `ColorParser`, `FilePreview`, `UrlPreview` và `HomeScreen`.
+
 ## [2.0.0] - 2026-08-25
 
 ### 🛡️ Bảo vệ dữ liệu nhạy cảm & quyền riêng tư

@@ -27,7 +27,7 @@ class UpdateDownloadState {
   });
 
   final UpdateDownloadStatus status;
-  final String? latestVersion; // e.g. "v2.0.0"
+  final String? latestVersion; // e.g. "v2.0.1"
   final double progress; // 0.0 – 1.0
   final String? errorMessage;
 

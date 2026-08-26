@@ -4,7 +4,7 @@ Extracts changelog release notes for a specific version or tag from CHANGELOG.md
 Usage:
     python3 tool/extract_changelog.py [tag_or_version] [output_file]
 Example:
-    python3 tool/extract_changelog.py v2.0.0 RELEASE_NOTES.md
+    python3 tool/extract_changelog.py v2.0.1 RELEASE_NOTES.md
 """
 
 import re
