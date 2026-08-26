@@ -1,12 +1,13 @@
 import 'dart:io';
 
+import 'package:clipflow/core/constants/app_version.dart';
 import 'package:clipflow/core/services/update_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
 void main() {
   test('selects the release asset for the requested platform', () {
-    expect(UpdateService.currentVersion, '2.0.0');
+    expect(UpdateService.currentVersion, ClipFlowVersion.current);
 
     final assets = <Map<String, String>>[
       {

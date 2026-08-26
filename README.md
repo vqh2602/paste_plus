@@ -34,42 +34,40 @@
 **ClipFlow** turns your clipboard into an intelligent workspace. Built with native desktop aesthetics in mind, ClipFlow lives silently in your System Tray / Menu Bar and pops up instantly whenever you need your history.
 
 ### ⚡ Key Selling Points
-- 🚀 **Auto-Paste Magic**: Select any history item and ClipFlow automatically pastes (`⌘V` on macOS / `Ctrl+V` on Windows) it straight into your active application.
-- 🌐 **Real-time Local Device Sync**: Seamlessly sync clipboard records across your devices over local Wi-Fi / LAN with TLS-encrypted security.
-  - **Auto-Sync Pins & Collections**: Automatically synchronizes pinned status and custom category folders (Collections) between devices.
-  - **Complete Drain Sync**: Syncs your entire existing clipboard history (including categorized and pinned items) immediately upon device pairing.
-  - **Auto-Reconnect (Exponential Backoff)**: Smart background auto-reconnection for trusted devices.
-- 🤖 **On-Device Local AI**: Smart AI assistant running 100% locally on your machine (via GGUF models). Analyze images, summarize text, rewrite code, and chat with your clipboard context offline.
-- 🔒 **Local-First & Private**: Clipboard history stays on your device with no cloud sync or tracking. Network access only occurs when you explicitly use an online action such as image hosting, translation, update checks, or model downloads.
-- 🔐 **Encrypted Vault**: Move private clipboard items into an undeletable system Vault protected by a password or device authentication. Vault database fields and image files are encrypted at rest with AES-256-GCM and excluded from search, AI, retention cleanup, and LAN sync.
-- 🎨 **15+ Aesthetic Themes & Pastel Accents**: Express your desktop setup with curated palettes, Emerald Mint, Cyber Violet, Sunset Orange, and Soft Pastel colors.
-- 📱 **Mobile Beta**: Responsive `SafeArea` layouts and mobile-friendly navigation for iOS and Android beta builds.
-- 🌐 **Six App Languages**: Switch instantly between Vietnamese, English, Japanese, Korean, German, and Simplified Chinese.
-- 📦 **Password-Protected Encrypted Backups**: Export and import your entire setup with `.clipflow` encrypted files.
-- 🚫 **Smart Exclusion Protection**: Automatically bypass password managers (Bitwarden, 1Password) or exclude specific applications from history recording.
-- 🛡️ **Sensitive Capture Protection**: Optionally skip Luhn-valid payment cards, labeled identity/passport numbers, password fields, and sensitive login/payment windows.
-- 🎥 **Screen Capture Privacy**: Exclude the ClipFlow window from OS screenshots, screen recordings, and screen-sharing streams when enabled.
+- 🚀 **Instant Auto-Paste**: Summon the horizontal Quick Panel under your cursor and paste directly into any active app.
+- 🔐 **Biometric Encrypted Vault**: Secure confidential snippets and images with Touch ID, Face ID, Windows Hello, or Master Password (AES-256-GCM).
+- 🛡️ **Zero-Leak Privacy**: Proactively filters payment cards (Luhn check), national IDs, password fields, and hides windows from screen capture.
+- 🌐 **Local LAN Sync**: Real-time TLS-encrypted sync for history, pinned items, and collections across devices on your local Wi-Fi.
+- 🧰 **Built-in Power Utilities**: One-click JSON formatting, tracking link cleaner, inline math solver, color converter, and text transformations.
+- 🤖 **100% On-Device AI & OCR**: Local GGUF models for offline chat/summarization and native OCR to extract text from images.
 
 ---
 
 ## 🔥 Feature Highlights
 
-| Feature | Description |
-|---|---|
-| **⚡ Floating Quick Panel** | Press `Control+V` (macOS) / `Ctrl+Shift+V` (Windows) anywhere to summon a sleek horizontal paste bar right under your cursor. |
-| **🤖 Local AI Assistant** | Ask questions, translate, summarize, or analyze clipboard items using on-device GGUF LLMs without sending data to cloud servers. |
-| **🔍 Instant Smart Search** | Filter history instantly with text or syntax like `type:link`, `app:Xcode`, or `is:pinned`; both the main window and Quick Panel suggest supported filters as you search. |
-| **📦 Portable `.clipflow` Archive** | Export encrypted settings, normal clipboard history, embedded images, Collections, and memberships; import tolerates older archives and unknown future fields. |
-| **🔍 OCR & Translate** | Extract text from copied images via native OCR and translate snippets through the selected local-AI or translation workflow. |
-| **📑 Content Auto-Classification** | Automatically categorizes Links, Emails, Phone Numbers, Hex Colors, Emoji, Code Snippets, JSON, Files, & Images. |
-| **🧰 Smart Text Tools** | Convert JSON, Base64, URL encoding, letter case, timestamps, MD5 and line lists from a compact submenu; clean tracking parameters from links and calculate copied expressions instantly. |
-| **🧠 Smart Text Recognition** | Recognizes JWT tokens and common programming languages in addition to URLs, email addresses, phone numbers, JSON, code and Emoji. |
-| **☁️ Optional Image Hosting** | Explicitly upload an image to FreeImage.host or ImgBB and save the returned URL as a new clipboard item. |
-| **🖱️ Drag to Collections** | Drag clipboard cards directly onto a collection with hover highlighting and a named confirmation notice. |
-| **🛡️ Sensitive Content Shield** | Ignores OTP verification codes, API keys, and long sensitive tokens automatically. |
-| **🔐 Password-Protected Vault** | Hide selected clipboard items behind password, fingerprint/Face ID/Windows Hello or device authentication, with optional wipe after five failed attempts and AES-256-GCM encryption at rest. |
-| **📌 Pinning & Custom Collections** | Group frequent prompts, code snippets, or notes into color-coded collections that never expire. |
-| **💾 Flexible Retention Control** | Keep history for 1 day, 7 days, 30 days, 1 year, or unlimited with smart image cleanup. |
+| Category | Feature | Description |
+|---|---|---|
+| **⚡ Productivity** | **Floating Quick Panel** | Press `Control+V` (macOS) / `Ctrl+Shift+V` (Windows) anywhere for a sleek horizontal paste bar right under your cursor. |
+| | **Auto-Paste & Plain Text** | Instantly paste items back into the active app, with an option to strip rich formatting and paste as plain text. |
+| | **Context Menu & Quick Actions** | Right-click / `···` action menu: In-app text/color/image editor, attached notes (`note:` search), full preview/zoom, and native OS sharing. |
+| | **Drag to Collections** | Organize snippets by dragging cards directly into sidebar folders with interactive hover states. |
+| | **Guided Smart Search** | Live search syntax suggestions (`type:`, `app:`, `note:`, `is:pinned`, `after:`) in both Main Window and Quick Panel. |
+| **🧰 Smart Utilities** | **Text Transformations** | Pretty-print/minify JSON, Base64 & URL encode/decode, case converters, Unix timestamps, MD5 hash, sort & deduplicate lines. |
+| | **Link Cleaner** | Automatically strip marketing and tracking query parameters (`utm_*`, `fbclid`, `gclid`) while keeping essential URLs intact. |
+| | **Math & Smart Detect** | Inline math evaluation plus auto-detection for JWT tokens, colors, phone numbers, and programming code blocks. |
+| | **Color Converter** | Dynamic color parser supporting live conversions across **HEX**, **RGB**, **HSL**, **HSV**, and **CMYK**. |
+| **🔐 Privacy & Security** | **Biometric Secure Vault** | Keep sensitive snippets in an AES-256-GCM encrypted vault (PBKDF2 210k rounds); excluded from search, AI, cleanup, and sync. |
+| | **Sensitive Data Shields** | Automatic filtering for payment cards (Luhn algorithm), national IDs/passports, OTP codes, and API keys. |
+| | **Window & Password Shield** | Ignores clipboard copying when focused on password fields (`ES_PASSWORD`) or sensitive banking/auth windows. |
+| | **Screen Capture Privacy** | Hides ClipFlow windows from OS screenshots, screen recordings, and screen-sharing sessions. |
+| **🤖 AI & Vision** | **Local GGUF AI Assistant** | Run offline LLMs (Qwen, Gemma, DeepSeek) for contextual chat, translation, summarization, and code rewriting. |
+| | **Native Vision & OCR** | Extract text from copied screenshots and images via on-device OCR (Apple Vision / MLKit). |
+| | **Optional Cloud Upload** | One-click image upload to ImgBB or FreeImage.host with encrypted API key management. |
+| **🔄 Sync & Backup** | **TLS Local LAN Sync** | Real-time encrypted peer-to-peer sync for history, pins, and collections with complete drain sync and auto-reconnect. |
+| | **Encrypted `.clipflow` Archive** | Export/import full workspace backups (history, settings, collections, images) with AES-256-GCM encryption. |
+| **🎨 Customization** | **Themes & Dark Mode** | 15+ rich themes (Emerald Mint, Cyber Violet, Sunset Orange, Pastel accents) with full Dark Mode support. |
+| | **Multi-Language** | Instant interface switching across 6 languages: Vietnamese, English, Japanese, Korean, German, and Simplified Chinese. |
+| | **Retention Control** | Customizable retention (1 day, 7 days, 30 days, 1 year, or unlimited) with automated image cleanup. |
 
 ---
 
