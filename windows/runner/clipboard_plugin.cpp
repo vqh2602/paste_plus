@@ -4,9 +4,10 @@
 #include <gdiplus.h>
 #include <psapi.h>
 #include <shellapi.h>
+#include <shlobj.h>
+#include <shlwapi.h>
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
-#include <shlwapi.h>
 
 #include <memory>
 #include <string>
